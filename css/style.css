@@ -1,40 +1,15 @@
 html,
 body {
   margin: 0;
-  padding: 5px;
+  /* padding: 5px; */
   align-items: center;
   text-align: center;
 }
+
 canvas {
   display: block;
 }
 
-#one {
-  display: block;
-  width: 800px;
-  height: 600px;
-}
-
-#two {
-  display: block;
-  margin-top: 10px;
-  width: 800px;
-  height: 600px;
-}
-
-/* Options in index.html */
-.options {
-  display: inline-block;
-  clear: both;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-}
-
-.option {
-  float: left;
-  padding: 50px;
-}
 
 .emoji {
   font-size: 100px;
