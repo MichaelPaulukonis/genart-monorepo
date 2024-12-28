@@ -16,6 +16,8 @@ Convert b&w monochromes to black+transparent:
 
 Then with `image.mask('foo.png')` it should be WAAAAAAY faster than the pixel stuff
 
+NOTE: ACKSHUALLY it uses pGraphics not image.mask and `pg.drawingContext.globalCompositeOperation = 'source-in'`
+
 see POC @ <https://editor.p5js.org/MichaelPaulukonis/sketches/6gqXLICTo>
 
 
