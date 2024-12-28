@@ -49,8 +49,8 @@ const sketch = function (p) {
   let autoSave = false
 
   const imageColorPairs = [
-    { img: null, color: null, buffer: null },
-    { img: null, color: null, buffer: null }
+    { img: null, color: null, buffer: null , scale: 1},
+    { img: null, color: null, buffer: null , scale: 1}
   ]
 
   p.setup = function () {
@@ -180,9 +180,10 @@ const sketch = function (p) {
 
     imageColorPairs[pairIndex].img = selectedImage
     imageColorPairs[pairIndex].color = selectedColor
+    imageColorPairs[pairIndex].scale = p.random(0.8, 1.2)
 
     p.loadImage('./images/' + selectedImage, function (img) {
-      if (imageColorPairs[pairIndex].buffer && imageColorPairs[pairIndex].buffer.remove) {
+      if (imageColorPairs[pairIndex].img && imageColorPairs[pairIndex].img.remove) {
         imageColorPairs[pairIndex].buffer.remove()
       }
       imageColorPairs[pairIndex].buffer = p.createMonochromeImage(
@@ -199,7 +200,8 @@ const sketch = function (p) {
     p.background(currentBackgroundMode.color)
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
     imageColorPairs.forEach((pair) => {
-      if (pair.buffer) p.image(pair.buffer, p.width / 2, p.height / 2)
+      if (pair.buffer) p.image(pair.buffer, p.width / 2, p.height / 2, 
+        pair.buffer.width * pair.scale, pair.buffer.height * pair.scale)
     })
   }
 

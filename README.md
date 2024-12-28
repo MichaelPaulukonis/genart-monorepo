@@ -8,6 +8,17 @@ Whatevs.
 - inspired by https://bsky.app/profile/leedoughty.bsky.social/post/3ldh2esstd22h
   - https://leedoughty.com/
 
+## TODO: use image.mask
+
+Convert b&w monochromes to black+transparent:
+
+`convert monochrome.png -fuzz 80% -transparent white transparent.png`
+
+Then with `image.mask('foo.png')` it should be WAAAAAAY faster than the pixel stuff
+
+see POC @ <https://editor.p5js.org/MichaelPaulukonis/sketches/6gqXLICTo>
+
+
 ## P5.js-vite Starter Template 🚀
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
