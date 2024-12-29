@@ -14,6 +14,9 @@ Convert b&w monochromes to black+transparent:
 
 `convert monochrome.png -fuzz 80% -transparent white transparent.png`
 
+`convert '*.png' -set filename:fn './transparent/%[basename]-transparent' -fuzz 80% -transparent white '%[filename:fn].png'`
+
+
 Then with `image.mask('foo.png')` it should be WAAAAAAY faster than the pixel stuff
 
 NOTE: ACKSHUALLY it uses pGraphics not image.mask and `pg.drawingContext.globalCompositeOperation = 'source-in'`
