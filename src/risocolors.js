@@ -80,3 +80,24 @@ export const RISOCOLORS = [
   // { name: "BISQUE", color: [242, 205, 207] },
   // { name: "CLEARMEDIUM", color: [242, 242, 242] },
 ]
+
+export const PALETTE = [
+  { name: 'pinkish', color: '#e75397' },
+  { name: 'bluish', color: '#01b2e8' },
+  { name: 'yellowish', color: '#ffec00' },
+  { name: 'greenish', color: '#25a33d' },
+  { name: 'mandarinish', color: '#f9b814' },
+  { name: 'reddish', color: '#e53d1e' },
+  { name: 'violetish', color: '#9a7ee8' }
+]
+
+export const PALETTE_TWO = [
+  { name: 'foo', color: '#e8441f' },
+  { name: 'foo', color: '#fa920d' },
+  { name: 'foo', color: '#f4cd00' },
+  { name: 'foo', color: '#54ab1d' },
+  { name: 'foo', color: '#3d58e3' },
+  { name: 'foo', color: '#e195bb' },
+  { name: 'foo', color: '#aa4d7e' },
+  { name: 'foo', color: '#34495e' }
+]

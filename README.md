@@ -8,7 +8,47 @@ Whatevs.
 - inspired by https://bsky.app/profile/leedoughty.bsky.social/post/3ldh2esstd22h
   - https://leedoughty.com/
 
-## TODO: use image.mask
+## TODO
+
+- colors
+  - try `["#e8441f", "#fa920d", "#f4cd00", "#54ab1d", "#3d58e3", "#e195bb", "#aa4d7e", "#34495e"]`
+  - switch between options
+- render to offscreen layers
+  - will allow for UI etc to be not saved
+- UI
+  - colors
+  - image names
+  - help screen
+- change one image w/o changing colors
+- change color w/o changing image
+- advance one frame only
+- save should work when not focused on canvas
+  - and not require a click. so maybe just "s" and not CMD-S ???
+- image picker like in collage-thing
+- image-filter
+- save image-lists
+- more palettes
+- image-mask from original image 
+  - to allow for solid-color overlay (not merged)
+- image-mask from original image onto ANOTHER image 
+  - to allow for weirdness
+
+
+```
+	PALETTE = [
+    "#e75397",
+    "#01b2e8",
+    "#ffec00",
+    "#25a33d",
+    "#f9b814",
+    "#e53d1e",
+    "#9a7ee8",
+  ];
+```
+
+from https://openprocessing.org/sketch/2369145
+
+## DONE: use image.mask
 
 Convert b&w monochromes to black+transparent:
 

@@ -1,5 +1,5 @@
 import { p5 } from 'p5js-wrapper'
-import { RISOCOLORS } from './risocolors'
+import { RISOCOLORS, PALETTE, PALETTE_TWO } from './risocolors'
 import { imgs } from './imagelist'
 import '../css/style.css'
 
@@ -33,14 +33,15 @@ const backgroundModes = [
     blendModes: ['MULTIPLY', 'EXCLUSION', 'DIFFERENCE', 'DARKEST', 'HARD_LIGHT']
   }
 ]
-let currentBackgroundModeIndex = 0 // Start with the first background mode
 
 const sketch = function (p) {
   let currentPair = 0 // Track which image-color pair to update next
   let pause = false
   let autoSave = false
   let colorLayer1 = null
-  let colorLayer2 = null
+  let currentBackgroundModeIndex = 0 // Start with the first background mode
+  const COLORS = [RISOCOLORS, PALETTE, PALETTE_TWO]
+  let colorIndex = 0
 
   const imageColorPairs = [
     { img: null, color: null, layer: null, scale: 1 },
@@ -49,12 +50,13 @@ const sketch = function (p) {
 
   p.setup = function () {
     p.pixelDensity(2)
+    // display mode
     // const c = p.createCanvas(p.windowWidth, p.windowHeight);
+    // production mode
     const c = p.createCanvas(1000, 1000)
     c.elt.focus()
     p.imageMode(p.CENTER)
     colorLayer1 = p.createGraphics(100, 100)
-    colorLayer2 = p.createGraphics(100, 100)
     setBlendModeAndBackground()
     initializeImageColorPairs() // Initialize both pairs initially
     updateImageColorPair(0)
@@ -72,6 +74,8 @@ const sketch = function (p) {
     } else if (p.key === 'b') {
       toggleBackgroundColor()
       regenerateLayers()
+    } else if (p.key === 'c') {
+      colorIndex = (colorIndex + 1) % COLORS.length
     } else if (p.key === 'm') {
       cycleBlendMode()
     } else if (p.key === 'p' || p.keyCode === 32) {
@@ -94,7 +98,6 @@ const sketch = function (p) {
 
   function setBlendModeAndBackground () {
     const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
-    // backgroundColor = p.color(...currentBackgroundMode.color)
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
     p.background(p.color(...currentBackgroundMode.color))
   }
@@ -154,9 +157,9 @@ const sketch = function (p) {
 
   function initializeImageColorPairs () {
     imageColorPairs[0].img = getRandomUniqueItem(imgs, [])
-    imageColorPairs[0].color = getRandomUniqueItem(RISOCOLORS, [])
+    imageColorPairs[0].color = getRandomUniqueItem(COLORS[colorIndex], [])
     imageColorPairs[1].img = getRandomUniqueItem(imgs, [imageColorPairs[0].img])
-    imageColorPairs[1].color = getRandomUniqueItem(RISOCOLORS, [
+    imageColorPairs[1].color = getRandomUniqueItem(COLORS[colorIndex], [
       imageColorPairs[0].color
     ])
   }
@@ -167,12 +170,13 @@ const sketch = function (p) {
   }
 
   function updateImageColorPair (pairIndex) {
+    // NOTE: this gets a filename, not an image
     const selectedImage = getRandomUniqueItem(
       imgs,
       imageColorPairs.map(pair => pair.img)
     )
     const selectedColor = getRandomUniqueItem(
-      RISOCOLORS,
+      COLORS[colorIndex],
       imageColorPairs.map(pair => pair.color)
     )
 
@@ -180,7 +184,7 @@ const sketch = function (p) {
     imageColorPairs[pairIndex].color = selectedColor
     imageColorPairs[pairIndex].scale = p.random(0.8, 1.2).toFixed(2)
 
-    p.loadImage('./images/' + selectedImage, (img) => {
+    p.loadImage('./images/' + selectedImage, img => {
       if (
         imageColorPairs[pairIndex].layer &&
         imageColorPairs[pairIndex].layer.remove
@@ -201,7 +205,7 @@ const sketch = function (p) {
     p.background(currentBackgroundMode.color)
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
     imageColorPairs.forEach(pair => {
-      if (pair.layer)
+      if (pair.layer) {
         p.image(
           pair.layer,
           p.width / 2,
@@ -209,6 +213,7 @@ const sketch = function (p) {
           pair.layer.width * pair.scale,
           pair.layer.height * pair.scale
         )
+      }
     })
   }
 
