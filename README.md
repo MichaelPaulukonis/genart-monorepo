@@ -1,8 +1,6 @@
-# TWO-TONE
+# DUO-CHROME
 
 Display two different monochrome images in two different colors.<br>
-So, two-hue, not two-tone.<br>
-Whatevs.
 
 
 - inspired by https://bsky.app/profile/leedoughty.bsky.social/post/3ldh2esstd22h

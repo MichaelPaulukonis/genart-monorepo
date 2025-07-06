@@ -140,19 +140,9 @@ const sketch = function (p) {
 
   function generateFilename () {
     const d = new Date()
-    return (
-      'two_tone_image.' +
-      d.getFullYear() +
-      '.' +
-      (d.getMonth() + 1) +
-      '.' +
-      d.getDate() +
-      '.' +
-      d.getHours() +
-      d.getMinutes() +
-      d.getSeconds() +
-      '.png'
-    )
+    return `duo_chrome_image.${d.getFullYear()}.${
+      d.getMonth() + 1
+    }.${d.getDate()}.${d.getHours()}${d.getMinutes()}${d.getSeconds()}.png`
   }
 
   function initializeImageColorPairs () {
