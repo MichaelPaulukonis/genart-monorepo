@@ -222,8 +222,7 @@ docs/
 ## Quick Start Guide
 
 1. **Clone and Install**: `git clone [repo] && cd duo-chrome && npm install`
-2. **Start Development**: `npm run dev`
-3. **Open Browser**: Navigate to `http://localhost:3000`
+2. **Start Development**: `npm run dev` (automatically opens browser on available port)
 
 ## Key Contact Points
 

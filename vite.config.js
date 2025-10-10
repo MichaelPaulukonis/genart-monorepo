@@ -3,6 +3,10 @@ const { resolve } = require('path')
 const { defineConfig } = require('vite')
 
 module.exports = defineConfig({
+  server: {
+    port: 5173, // Vite's default port, or specify any available port
+    open: true  // Automatically open browser
+  },
   build: {
     rollupOptions: {
       input: {

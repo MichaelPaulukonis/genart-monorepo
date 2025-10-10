@@ -25,19 +25,19 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`
+The development server will automatically open in your browser on an available port.
 
 ## Controls
 
-| Input | Action |
-|-------|--------|
-| Mouse Click | Generate new image combination |
-| `b` | Toggle background color (black/white) |
-| `c` | Cycle through color palettes |
-| `m` | Cycle through blend modes |
-| `p` or Space | Pause/resume auto-generation |
-| `S` | Toggle auto-save mode |
-| `Cmd+S` | Save current composition |
+| Input        | Action                                |
+| ------------ | ------------------------------------- |
+| Mouse Click  | Generate new image combination        |
+| `b`          | Toggle background color (black/white) |
+| `c`          | Cycle through color palettes          |
+| `m`          | Cycle through blend modes             |
+| `p` or Space | Pause/resume auto-generation          |
+| `S`          | Toggle auto-save mode                 |
+| `Cmd+S`      | Save current composition              |
 
 ## Development
 
@@ -52,17 +52,20 @@ npm run clean    # Fix code style with StandardJS
 Uses StandardJS code style and ESLint with p5.js rules.
 
 ### Adding Images
+
 1. Add image to `public/images/`
 2. Update `imgs` array in `src/imagelist.js`
 3. Works best with high-contrast black and white graphics
 
 ### Adding Colors
+
 Edit `src/risocolors.js`:
+
 ```javascript
 export const CUSTOM_PALETTE = [
-  { name: 'CUSTOM_COLOR', color: [255, 100, 50] },
+  { name: "CUSTOM_COLOR", color: [255, 100, 50] },
   // ...
-]
+];
 ```
 
 ## How It Works
@@ -78,11 +81,11 @@ export const CUSTOM_PALETTE = [
 ```javascript
 // Simplified version of the core process
 function createMonochromeImage(img, monoColor) {
-  const layer = p.createGraphics(scaledWidth, scaledHeight)
-  layer.image(img, 0, 0, scaledWidth, scaledHeight)
-  layer.drawingContext.globalCompositeOperation = 'source-in'
-  layer.image(colorLayer, 0, 0, scaledWidth, scaledHeight)
-  return layer
+  const layer = p.createGraphics(scaledWidth, scaledHeight);
+  layer.image(img, 0, 0, scaledWidth, scaledHeight);
+  layer.drawingContext.globalCompositeOperation = "source-in";
+  layer.image(colorLayer, 0, 0, scaledWidth, scaledHeight);
+  return layer;
 }
 ```
 
@@ -98,7 +101,7 @@ public/images/        # Curated image collection
 
 ## Contributing
 
-PRs welcome. Follow StandardJS style. 
+PRs welcome. Follow StandardJS style.
 
 ## License
 
