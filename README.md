@@ -1,8 +1,67 @@
 # DUO-CHROME 🎨
 
 > Generative duotone art through random image fusion and vintage color palettes
+# DUO-CHROME 🎨
+
+> Generative duotone art through random image fusion and vintage color palettes
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Made with p5.js](https://img.shields.io/badge/Made%20with-p5.js-ED225D.svg)](https://p5js.org/)
+[![Built with Vite](https://img.shields.io/badge/Built%20with-Vite-646CFF.svg)](https://vitejs.dev/)
+
+**Duo-Chrome** is a creative coding web application that creates dynamic visual compositions by overlaying two randomly selected monochrome images in different colors. Inspired by [Lee Doughty's work](https://leedoughty.com/) and duotone printing techniques, it explores unexpected juxtapositions through algorithmic image selection and RISO printing color palettes.
+
+---
+
+## Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+- [🎮 Controls](#-controls)
+- [🛠️ Development](#️-development)
+- [🎨 How It Works](#-how-it-works)
+- [📁 Project Structure](#-project-structure)
+- [🤝 Contributing](#-contributing)
+- [🔧 Troubleshooting](#-troubleshooting)
+- [📝 License](#-license)
+
+---
+
+## ✨ Features
+
+- **🎲 Random Image Fusion**: Algorithmically combines 160+ curated vintage and pop-art images
+- **🌈 RISO Color Palettes**: Authentic risograph printing colors plus custom palettes
+- **🔄 Dynamic Blend Modes**: Multiple blend modes (ADD, MULTIPLY, EXCLUSION, DIFFERENCE, etc.)
+- **⚡ Real-time Generation**: Auto-generates new compositions every second
+- **🖱️ Interactive Controls**: Manual control via mouse clicks and keyboard shortcuts
+- **💾 Export Functionality**: Save your favorite compositions as PNG files
+- **🎨 Seamless Transitions**: Overlapping image pairs create visual continuity
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Node.js** (v14 or higher)
+- **npm** or **yarn**
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/MichaelPaulukonis/duo-chrome.git
+   cd duo-chrome
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 [![Made with p5.js](https://img.shields.io/badge/Made%20with-p5.js-ED225D.svg)](https://p5js.org/)
 [![Built with Vite](https://img.shields.io/badge/Built%20with-Vite-646CFF.svg)](https://vitejs.dev/)
 
@@ -119,7 +178,7 @@ export const CUSTOM_PALETTE = [
 
 ## 🎨 How It Works
 
-Duo-Chrome uses a sophisticated image processing pipeline:
+Duo-Chrome uses a multi-step image processing pipeline:
 
 1. **Image Selection**: Two images are randomly selected from a curated collection
 2. **Monochrome Conversion**: Each image is processed into a monochrome layer
@@ -248,6 +307,10 @@ Contributions are welcome! This project is shared with the creative coding commu
 ## 📝 License
 
 This project is open source and available under the [MIT License](LICENSE).
+
+**Made with ❤️ for the creative coding community**
+
+*I learned from the community, I give my code back to the community.*
 
 **Made with ❤️ for the creative coding community**
 
