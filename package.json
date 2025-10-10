@@ -9,15 +9,20 @@
     "lint": "nx run-many --target=lint --all"
   },
   "devDependencies": {
-    "nx": "^21.6.4",
-    "@nx/vite": "^21.6.4",
+    "@nx/eslint": "^21.6.4",
     "@nx/js": "^21.6.4",
-    "vite": "^5.0.0",
+    "@nx/vite": "^21.6.4",
     "eslint": "^8.57.1",
-    "standard": "^17.1.2"
+    "eslint-plugin-p5js": "^1.0.0",
+    "nx": "^21.6.4",
+    "standard": "^17.1.2",
+    "vite": "^5.0.0"
   },
   "workspaces": [
     "apps/*",
     "libs/*"
-  ]
+  ],
+  "dependencies": {
+    "p5js-wrapper": "^1.2.3"
+  }
 }

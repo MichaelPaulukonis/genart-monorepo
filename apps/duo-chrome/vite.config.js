@@ -3,11 +3,22 @@ const { resolve } = require('path')
 const { defineConfig } = require('vite')
 
 module.exports = defineConfig({
+  root: __dirname,
   server: {
-    port: 5173, // Vite's default port, or specify any available port
-    open: true  // Automatically open browser
+    port: 5173,
+    open: true,
+    fs: {
+      allow: [
+        // Allow serving files from the project root and parent directories
+        resolve(__dirname, '../..'),
+        // Allow serving from node_modules
+        resolve(__dirname, '../../node_modules')
+      ]
+    }
   },
   build: {
+    outDir: '../../dist/apps/duo-chrome',
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html')

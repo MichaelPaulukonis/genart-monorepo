@@ -1,0 +1,36 @@
+{
+  "name": "duo-chrome",
+  "sourceRoot": "apps/duo-chrome/src",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "duo-chrome:build",
+        "port": 5173
+      }
+    },
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/duo-chrome",
+        "configFile": "apps/duo-chrome/vite.config.js"
+      }
+    },
+    "preview": {
+      "executor": "@nx/vite:preview-server",
+      "options": {
+        "buildTarget": "duo-chrome:build",
+        "port": 4173
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/duo-chrome/**/*.{js,jsx}"]
+      }
+    }
+  }
+}
