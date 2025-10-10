@@ -1,0 +1,36 @@
+{
+  "name": "crude-collage-painter",
+  "sourceRoot": "apps/crude-collage-painter/src",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "crude-collage-painter:build",
+        "port": 5174
+      }
+    },
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/crude-collage-painter",
+        "configFile": "apps/crude-collage-painter/vite.config.js"
+      }
+    },
+    "preview": {
+      "executor": "@nx/vite:preview-server",
+      "options": {
+        "buildTarget": "crude-collage-painter:build",
+        "port": 4174
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/crude-collage-painter/**/*.{js,jsx}"]
+      }
+    }
+  }
+}

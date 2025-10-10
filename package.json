@@ -23,6 +23,9 @@
     "libs/*"
   ],
   "dependencies": {
-    "p5js-wrapper": "^1.2.3"
+    "file-saver": "^2.0.5",
+    "p5": "^1.11.10",
+    "p5js-wrapper": "^1.2.3",
+    "tweakpane": "^4.0.5"
   }
 }
