@@ -1,0 +1,10 @@
+{
+  "name": "@genart/p5-utils",
+  "version": "0.1.0",
+  "description": "Shared p5.js utilities for creative coding projects",
+  "main": "src/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  }
+}

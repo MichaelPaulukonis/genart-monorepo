@@ -1,0 +1,10 @@
+{
+  "name": "@genart/color-palettes",
+  "version": "0.1.0",
+  "description": "Shared color palettes for creative coding projects",
+  "main": "src/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  }
+}
