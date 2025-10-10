@@ -1,0 +1,23 @@
+{
+  "name": "genart-monorepo",
+  "version": "0.1.0",
+  "description": "Monorepo for creative coding and generative art projects",
+  "scripts": {
+    "dev": "nx run-many --target=dev --all",
+    "build": "nx run-many --target=build --all",
+    "test": "nx run-many --target=test --all",
+    "lint": "nx run-many --target=lint --all"
+  },
+  "devDependencies": {
+    "nx": "^21.6.4",
+    "@nx/vite": "^21.6.4",
+    "@nx/js": "^21.6.4",
+    "vite": "^5.0.0",
+    "eslint": "^8.57.1",
+    "standard": "^17.1.2"
+  },
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ]
+}
