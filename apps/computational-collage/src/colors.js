@@ -56,7 +56,8 @@ const namedColors = {
   green: '#008000',
   greenyellow: '#adff2f',
   grey: '#808080',
-  honeydew: '#f0fff0',
+  honey
+dew: '#f0fff0',
   hotpink: '#ff69b4',
   indianred: '#cd5c5c',
   indigo: '#4b0082',

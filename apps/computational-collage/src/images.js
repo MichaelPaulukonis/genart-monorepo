@@ -1,29 +1,29 @@
 export class CollageImage {
-  constructor ({ img = null }) {
+  constructor({ img = null }) {
     this.orig = img
     this.uuid = crypto.randomUUID()
   }
 
-  get original () {
+  get original() {
     return this.orig
   }
 }
 
 export class CroppableImage extends CollageImage {
-  constructor ({ img = null, cropped = null }) {
+  constructor({ img = null, cropped = null }) {
     super({ img })
     this.cropd = cropped
   }
 
-  get cropped () {
+  get cropped() {
     return this.cropd
   }
 
-  set cropped (cropped) {
+  set cropped(cropped) {
     this.cropd = cropped
   }
 
-  get clone () {
+  get clone() {
     const tOrig = this.orig.get()
     const tCrop = this.cropd.get()
     return new CroppableImage({ img: tOrig, cropped: tCrop })
@@ -31,21 +31,21 @@ export class CroppableImage extends CollageImage {
 }
 
 export class OutlineableImage extends CollageImage {
-  constructor ({ img, vectors = [] }) {
+  constructor({ img, vectors = [] }) {
     super({ img })
     this.vectors = vectors
     this.offset = { x: this.orig.width / 2, y: this.orig.height / 2 }
     this.scaling = 1
   }
 
-  get clone () {
+  get clone() {
     const tImage = this.orig.get()
     const tVectors = JSON.parse(JSON.stringify(this.vectors))
     return new OutlineableImage({ img: tImage, vectors: tVectors })
   }
 
   // TODO: something like this for non-outlineds?
-  draw ({ x, y, scaling, target, config }) {
+  draw({ x, y, scaling, target, config }) {
     if (config.outline) {
       target.strokeWeight(config.outlineWeight) // something different than other type
       target.stroke(config.outlineColor)
@@ -71,36 +71,36 @@ export class OutlineableImage extends CollageImage {
 
 // storage of CollageImage[]
 export class Images {
-  constructor (images = [], outlined = []) {
+  constructor(images = [], outlined = []) {
     this.imgs = [...images, ...outlined]
   }
 
-  get images () {
+  get images() {
     return this.imgs
   }
 
-  get croppeds () {
+  get croppeds() {
     return this.imgs.filter(i => i instanceof CroppableImage)
   }
 
-  get outlineds () {
+  get outlineds() {
     return this.imgs.filter(i => i instanceof OutlineableImage)
   }
 
-  get random () {
+  get random() {
     // TODO: or random outlined images
     return this.croppeds[Math.floor(Math.random() * this.croppeds.length)]
   }
 
-  get byId () {
+  get byId() {
     return (uuid) => this.imgs.find(i => i.uuid === uuid)
   }
 
-  add (imgobj) {
+  add(imgobj) {
     this.imgs.push(imgobj)
   }
 
-  remove (uuid) {
+  remove(uuid) {
     this.imgs = this.imgs.filter(i => i.uuid !== uuid)
   }
 }
