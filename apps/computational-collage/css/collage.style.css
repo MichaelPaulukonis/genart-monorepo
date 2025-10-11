@@ -1,0 +1,78 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+canvas {
+  display: block;
+  margin: auto;
+  margin-top: 50px;
+  display: block;
+}
+
+aside {
+  position: fixed;
+  right: -100vw;
+  top:0;
+  
+  height: 100vh;
+  width: calc(100vw - 300px);
+  background:#f1f1f1;
+  transition: right 0.3s ease;
+  overflow-y: scroll;
+}
+
+#images {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+
+#images img {
+  max-width: 200px;
+  padding: 1px;
+  cursor: pointer;
+  position: relative;
+}
+
+#images div.gallery-image {
+  max-width: 200px;
+  height: 200px;
+  padding: 1px;
+  cursor: pointer;
+  position: relative;
+  background-size: cover; /* Ensure the image covers the entire square */
+  background-repeat: no-repeat; /* Prevent the image from repeating */
+  background-position: center; 
+}
+
+#images div.selected > div.border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 10px solid rgba(0, 255, 0, 0.6);
+}
+
+div.selected > div.imageinfo {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.imageinfo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+  color: white;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+aside.active {
+  right: 0;
+}
+
+img {
+  width: 100%;
+}

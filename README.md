@@ -6,6 +6,8 @@ A monorepo for creative coding and generative art projects using Nx.
 
 - **[duo-chrome](./apps/duo-chrome/)** (port 5173) - Duotone image compositions using RISO colors
 - **[crude-collage-painter](./apps/crude-collage-painter/)** (port 5174) - Interactive collage painting tool
+- **[those-shape-things](./apps/those-shape-things/)** (port 5175) - Geometric tile-based compositions with color palettes
+- **[computational-collage](./apps/computational-collage/)** (port 5176) - Advanced collage creation with multiple composition modes
 
 ## Shared Libraries
 
@@ -33,6 +35,8 @@ Each project runs on its own port and can be developed independently:
 # Run specific project
 nx dev duo-chrome              # http://localhost:5173
 nx dev crude-collage-painter   # http://localhost:5174
+nx dev those-shape-things      # http://localhost:5175
+nx dev computational-collage   # http://localhost:5176
 
 # Build specific project
 nx build duo-chrome
@@ -48,7 +52,9 @@ pnpm dev
 genart-monorepo/
 ├── apps/                      # Individual applications
 │   ├── duo-chrome/           # Duotone compositions
-│   └── crude-collage-painter/ # Collage painting tool
+│   ├── crude-collage-painter/ # Collage painting tool
+│   ├── those-shape-things/   # Geometric tile compositions
+│   └── computational-collage/ # Advanced collage creation
 ├── libs/                     # Shared libraries
 │   ├── p5-utils/            # Common utilities
 │   └── color-palettes/      # Color management
