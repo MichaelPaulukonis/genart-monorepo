@@ -31,6 +31,13 @@
       "options": {
         "lintFilePatterns": ["apps/crude-collage-painter/**/*.{js,jsx}"]
       }
+    },
+    "deploy": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "gh-pages -d dist/apps/crude-collage-painter --repo https://github.com/michaelpaulukonis/crude-collage-painter.git"
+      }
     }
   }
 }
