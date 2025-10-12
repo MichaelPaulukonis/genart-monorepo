@@ -1,0 +1,42 @@
+{
+  "name": "dragline",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/dragline/src",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "dragline:build",
+        "port": 5177
+      }
+    },
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/dragline",
+        "configFile": "apps/dragline/vite.config.js"
+      }
+    },
+    "preview": {
+      "executor": "@nx/vite:preview-server",
+      "options": {
+        "buildTarget": "dragline:build",
+        "port": 5177
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["apps/dragline/**/*.js"]
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "gh-pages -d dist/apps/dragline --repo https://github.com/MichaelPaulukonis/dragline.git --nojekyll"
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+
+.info-box {
+  position: absolute;
+  cursor: move;
+  user-select: none;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -20%);
+  width: 500px;
+  padding: 20px;
+  background-color: white;
+  opacity: 80%;
+  border: 4px solid teal;
+  border-radius: 0.6em;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  text-align: left;
+
+  h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+  }
+}
+
+.info-box * {
+  pointer-events: none; /* This makes all child elements "click-through" */
+}
+
+.info-box a,
+.info-box .close-button {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.hidden {
+  display: none;
+}
+
+.close-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  /* background: none; */
+  /* border: none; */
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#close-info-box {
+  position: absolute;
+  bottom: 10px; /* Adjust the distance from the bottom of the parent container */
+  right: 10px; /* Keep it aligned to the right */
+  padding: 10px 20px; /* Add padding for better clickability */
+  background-color: #f8b500; /* Optional: Ensure the button is visually distinct */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.info-box {
+  /* position: relative; Ensure the button's position is relative to the parent */
+  padding-bottom: 50px; /* Add padding to create space for the button */
+}
