@@ -493,6 +493,14 @@ const clearCanvas = () => {
 }
 
 sketch.keyPressed = () => {
+  // Info box toggle (mode-independent)
+  if (key === '?' || key === 'h') {
+    if (window.infoBoxControls) {
+      window.infoBoxControls.toggle()
+    }
+    return false
+  }
+
   // mode invariant
   if (key === 'p') {
     renderSource()
