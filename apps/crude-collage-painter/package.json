@@ -1,5 +1,5 @@
 {
-  "name": "p5js-vite",
+  "name": "crude-collage-painter",
   "version": "0.1.0",
   "scripts": {
     "dev": "vite",
@@ -11,8 +11,7 @@
     "open": "open https://michaelpaulukonis.github.io/crude-collage-painter/"
   },
   "devDependencies": {
-    "gh-pages": "^6.1.1",
-    "vite": "^2.7.2"
+    "gh-pages": "^6.1.1"
   },
   "dependencies": {
     "file-saver": "^2.0.5",

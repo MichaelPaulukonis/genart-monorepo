@@ -7,7 +7,7 @@
     "build": "nx run-many --target=build --all",
     "test": "nx run-many --target=test --all",
     "lint": "nx run-many --target=lint --all",
-    "deploy:crude-collage-painter": "cd apps/crude-collage-painter && DEPLOY_ENV=GH_PAGES npm run build && cd ../.. && gh-pages -d apps/crude-collage-painter/dist --repo https://github.com/michaelpaulukonis/crude-collage-painter.git"
+    "deploy:crude-collage-painter": "nx deploy crude-collage-painter"
   },
   "devDependencies": {
     "@nx/eslint": "^21.6.4",

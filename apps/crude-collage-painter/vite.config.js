@@ -18,6 +18,8 @@ module.exports = defineConfig({
     }
   },
   build: {
+    outDir: '../../dist/apps/crude-collage-painter',
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html')

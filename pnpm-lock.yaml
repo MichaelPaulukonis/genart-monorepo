@@ -101,9 +101,6 @@ importers:
       gh-pages:
         specifier: ^6.1.1
         version: 6.3.0
-      vite:
-        specifier: ^2.7.2
-        version: 2.9.18
 
   apps/dragline:
     dependencies:

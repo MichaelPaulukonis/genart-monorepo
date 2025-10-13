@@ -3,10 +3,8 @@ import { sketch, p5 } from 'p5js-wrapper'
 import { Pane } from 'tweakpane'
 import saveAs from 'file-saver'
 import { datestring, filenamer } from './filelib'
-// import './utils.js'
 
 let namer = filenamer(datestring())
-// var utils
 const pane = new Pane()
 
 let elementImages = []
@@ -70,7 +68,6 @@ sketch.preload = () => {
 }
 
 sketch.setup = () => {
-  // utils = new p5.Utils()
   const mc = document.getElementById('main-canvas')
   cnvs = createCanvas(600, 600, mc)
   cnvs.drop(handleFile)
