@@ -4,7 +4,9 @@
 
 Dragline is an interactive poem-machine that scatters monospaced text blocks across a canvas and invites you to rearrange them into new constellations. Every composition is a miniature collaboration between generative code, Tumblr-fueled corpora, and your hands on the mouse.
 
-> "It's not so much a tool as it is a text of its own." — the project's guiding principle
+![screenshot](./docs/screenshots/dragline-main.png "screenshot of dragline showing text blocks and help screen")
+
+> "It's not so much a tool as it is a text of its own."
 
 **Live build:** <https://michaelpaulukonis.github.io/dragline>
 

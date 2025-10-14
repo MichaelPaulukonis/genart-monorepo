@@ -4,6 +4,8 @@ Overlays two monochrome images in different colors to create duotone composition
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+![DUO-CHROME Screenshot](./screenshots/duo-chrome-main.png)
+
 Takes two random black & white images from a curated collection, applies different RISO colors to each, and composites them using various blend modes. Images cycle automatically or manually to create unexpected juxtapositions.
 
 ## Table of Contents

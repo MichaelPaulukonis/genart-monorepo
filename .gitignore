@@ -145,3 +145,18 @@ temp/
 # Editor directories and files
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+dev-debug.log
+# Environment variables
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 

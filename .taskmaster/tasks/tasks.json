@@ -1,0 +1,142 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Create screenshot capture script",
+        "description": "Task cancelled - screenshots will be captured manually instead of via automation",
+        "status": "cancelled",
+        "dependencies": [],
+        "priority": "high",
+        "details": "After evaluation, it was determined that automating screenshot capture for only 5 apps is not worth the development effort. Manual screenshot capture will be faster and more practical in this case.\n\nInstead of creating an automation script:\n1. Screenshots will be captured manually at 1200x800 resolution\n2. Each screenshot will be saved as PNG with filename format '[app-name]-main.png'\n3. Screenshots will be optimized to ensure file size is under 500KB\n4. This work will be handled as part of Task 3",
+        "testStrategy": "This task has been cancelled. Screenshot quality verification will be performed as part of Task 3 instead.",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Create archived repo README template",
+        "description": "Create a standardized README template for archived repositories based on the template at docs/templates/archived-repo-readme.md",
+        "details": "Create a markdown template that will be used for all archived repositories. The template should include:\n\n1. A prominent notice at the top indicating the repository has moved to the monorepo\n2. Placeholder for the app screenshot\n3. Links section with placeholders for:\n   - Live demo URL\n   - Monorepo URL\n   - Source code URL within monorepo\n   - Documentation URL\n4. Brief description placeholder\n5. Development instructions pointing to the monorepo\n6. MIT license notice\n\nExample template structure:\n```markdown\n# [App Name] - MOVED TO MONOREPO\n\n> ⚠️ **REPOSITORY MOVED**: This project has been migrated to the [genart-monorepo](https://github.com/username/genart-monorepo).\n\n![Screenshot of [App Name]](screenshot.png)\n\n## Links\n- [Live Demo](https://username.github.io/[app-name]/) (still active)\n- [Source Code](https://github.com/username/genart-monorepo/tree/main/apps/[app-name])\n- [Documentation](https://github.com/username/genart-monorepo/tree/main/docs/[app-name])\n\n## About\n[Brief description of what the app does]\n\n## Development\nThis project is now developed as part of the genart-monorepo. Please refer to the [monorepo documentation](https://github.com/username/genart-monorepo) for development instructions.\n\n## License\nMIT\n```",
+        "testStrategy": "1. Verify the template includes all required sections\n2. Check that placeholder syntax is consistent and easy to replace\n3. Validate markdown formatting renders correctly on GitHub\n4. Ensure the template follows best practices for GitHub markdown\n5. Confirm the template matches the requirements specified in the PRD",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Capture screenshots for all 5 apps",
+        "description": "Use the screenshot capture script to generate high-quality screenshots for all 5 apps and save them to the monorepo",
+        "details": "Execute the screenshot capture script created in Task 1 to generate screenshots for all 5 apps:\n\n1. Ensure all apps are properly deployed and accessible via GitHub Pages\n2. Run the screenshot capture script\n3. Verify the screenshots are saved to `docs/screenshots/[app-name]-main.png`\n4. Manually review each screenshot to ensure it shows a representative example of the app's output\n5. If any screenshots don't properly showcase the app's functionality, adjust the script timing or manually capture those screenshots\n\nFor apps with randomized output, you may need to run the script multiple times or add interaction steps to get a good representative example.\n\nImplementation steps:\n```bash\n# Navigate to script directory\ncd scripts\n\n# Run the screenshot capture script\nnode capture-screenshots.js\n\n# Verify screenshots were created\nls -la ../docs/screenshots/\n```",
+        "testStrategy": "1. Visually inspect each screenshot for quality and representation of app functionality\n2. Verify all 5 screenshots exist in the correct location\n3. Check that each screenshot has the correct dimensions (1200x800)\n4. Confirm all screenshots are in PNG format\n5. Validate that file sizes are under 500KB\n6. Ensure screenshots show meaningful content (not loading screens or errors)",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Generate README for duo-chrome repository",
+        "description": "Create and update the README.md for the duo-chrome repository using the archived repo template",
+        "details": "Using the template created in Task 2, generate a README.md file for the duo-chrome repository:\n\n1. Copy the template and replace all placeholders with duo-chrome specific information\n2. Include a brief description of what duo-chrome does\n3. Update all links to point to the correct locations\n4. Reference the screenshot that will be added in a later task\n5. Ensure the README clearly indicates the repository has moved to the monorepo\n\nExample implementation:\n```markdown\n# Duo-Chrome - MOVED TO MONOREPO\n\n> ⚠️ **REPOSITORY MOVED**: This project has been migrated to the [genart-monorepo](https://github.com/username/genart-monorepo).\n\n![Screenshot of Duo-Chrome](screenshot.png)\n\n## Links\n- [Live Demo](https://username.github.io/duo-chrome/) (still active)\n- [Source Code](https://github.com/username/genart-monorepo/tree/main/apps/duo-chrome)\n- [Documentation](https://github.com/username/genart-monorepo/tree/main/docs/duo-chrome)\n\n## About\nDuo-Chrome is a generative art application that creates compositions using two-color palettes and geometric shapes.\n\n## Development\nThis project is now developed as part of the genart-monorepo. Please refer to the [monorepo documentation](https://github.com/username/genart-monorepo) for development instructions.\n\n## License\nMIT\n```",
+        "testStrategy": "1. Verify all placeholders have been replaced with duo-chrome specific information\n2. Check that all links are correctly formatted and point to valid locations\n3. Confirm the README includes all required sections from the PRD\n4. Validate that the screenshot reference uses the correct path\n5. Ensure the migration notice is prominently displayed at the top",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Generate READMEs for remaining repositories",
+        "description": "Create and update README.md files for the remaining 4 repositories using the archived repo template",
+        "details": "Using the template created in Task 2, generate README.md files for the remaining 4 repositories:\n\n1. crude-collage-painter\n2. those-shape-things\n3. computational-collage\n4. dragline\n\nFor each repository:\n1. Copy the template and replace all placeholders with app-specific information\n2. Include a brief description of what each app does\n3. Update all links to point to the correct locations\n4. Reference the screenshot that will be added in a later task\n5. Ensure each README clearly indicates the repository has moved to the monorepo\n\nConsider creating a script to automate this process if the repositories follow a consistent pattern. Example script pseudo-code:\n\n```javascript\nconst fs = require('fs');\nconst template = fs.readFileSync('docs/templates/archived-repo-readme.md', 'utf8');\n\nconst apps = [\n  {\n    name: 'crude-collage-painter',\n    description: 'An interactive collage creation tool that allows users to paint with image fragments.'\n  },\n  // Add remaining apps with descriptions\n];\n\napps.forEach(app => {\n  let readme = template\n    .replace(/\\[App Name\\]/g, app.name)\n    .replace(/\\[app-name\\]/g, app.name.toLowerCase())\n    .replace(/\\[Brief description of what the app does\\]/g, app.description);\n  \n  fs.writeFileSync(`${app.name}-README.md`, readme);\n});\n```",
+        "testStrategy": "1. Verify all placeholders have been replaced with app-specific information in each README\n2. Check that all links are correctly formatted and point to valid locations\n3. Confirm each README includes all required sections from the PRD\n4. Validate that the screenshot references use the correct paths\n5. Ensure the migration notices are prominently displayed at the top of each README\n6. Compare all READMEs to ensure consistency in formatting and structure",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Copy screenshots to duo-chrome repository",
+        "description": "Copy the duo-chrome screenshot from the monorepo to the original duo-chrome repository",
+        "details": "Copy the duo-chrome screenshot from the monorepo to the original repository:\n\n1. Locate the screenshot in the monorepo at `docs/screenshots/duo-chrome-main.png`\n2. Copy the file to the duo-chrome repository root directory\n3. Rename the file to `screenshot.png` in the destination repository\n4. Verify the screenshot is correctly referenced in the README.md\n\nImplementation steps:\n```bash\n# Assuming you have both repositories cloned locally\n# Copy the screenshot from monorepo to the original repo\ncp /path/to/genart-monorepo/docs/screenshots/duo-chrome-main.png /path/to/duo-chrome/screenshot.png\n\n# Verify the file was copied correctly\nls -la /path/to/duo-chrome/screenshot.png\n```",
+        "testStrategy": "1. Verify the screenshot file exists in the duo-chrome repository\n2. Check that the file is named 'screenshot.png'\n3. Confirm the file is identical to the one in the monorepo\n4. Validate that the image displays correctly when referenced in the README\n5. Ensure the file size is under 500KB",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Copy screenshots to remaining repositories",
+        "description": "Copy screenshots from the monorepo to the remaining 4 original repositories",
+        "details": "Copy the screenshots from the monorepo to each of the original repositories:\n\n1. For each of the remaining 4 apps (crude-collage-painter, those-shape-things, computational-collage, dragline):\n   a. Locate the screenshot in the monorepo at `docs/screenshots/[app-name]-main.png`\n   b. Copy the file to the corresponding repository root directory\n   c. Rename the file to `screenshot.png` in the destination repository\n   d. Verify the screenshot is correctly referenced in the README.md\n\nConsider creating a script to automate this process:\n\n```javascript\nconst fs = require('fs');\nconst { execSync } = require('child_process');\n\nconst apps = [\n  'crude-collage-painter',\n  'those-shape-things',\n  'computational-collage',\n  'dragline'\n];\n\napps.forEach(app => {\n  const source = `../genart-monorepo/docs/screenshots/${app}-main.png`;\n  const destination = `../${app}/screenshot.png`;\n  \n  console.log(`Copying ${source} to ${destination}`);\n  fs.copyFileSync(source, destination);\n});\n```",
+        "testStrategy": "1. Verify each screenshot file exists in its respective repository\n2. Check that each file is named 'screenshot.png'\n3. Confirm each file is identical to the one in the monorepo\n4. Validate that each image displays correctly when referenced in its README\n5. Ensure all file sizes are under 500KB\n6. Test that all 4 screenshots have been successfully copied",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Commit changes to duo-chrome repository",
+        "description": "Commit the updated README and screenshot to the duo-chrome repository",
+        "details": "Commit the changes made to the duo-chrome repository:\n\n1. Navigate to the duo-chrome repository\n2. Stage the new README.md and screenshot.png files\n3. Commit the changes with a clear message indicating the repository has been migrated\n4. Push the changes to the main branch on GitHub\n\nImplementation steps:\n```bash\n# Navigate to the duo-chrome repository\ncd /path/to/duo-chrome\n\n# Stage the files\ngit add README.md screenshot.png\n\n# Commit the changes\ngit commit -m \"Update repository to indicate migration to genart-monorepo\"\n\n# Push to GitHub\ngit push origin main\n```",
+        "testStrategy": "1. Verify the commit was successful\n2. Check that both README.md and screenshot.png were included in the commit\n3. Confirm the changes are visible on GitHub\n4. Validate that the README renders correctly on GitHub with the screenshot visible\n5. Ensure all links in the README are functional\n6. Verify the repository remains unarchived and accessible",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Commit changes to remaining repositories",
+        "description": "Commit the updated READMEs and screenshots to the remaining 4 repositories",
+        "details": "Commit the changes made to each of the remaining 4 repositories:\n\n1. For each repository (crude-collage-painter, those-shape-things, computational-collage, dragline):\n   a. Navigate to the repository\n   b. Stage the new README.md and screenshot.png files\n   c. Commit the changes with a clear message indicating the repository has been migrated\n   d. Push the changes to the main branch on GitHub\n\nConsider creating a script to automate this process:\n\n```bash\n#!/bin/bash\n\nREPOS=(\"crude-collage-painter\" \"those-shape-things\" \"computational-collage\" \"dragline\")\nBASE_DIR=\"/path/to/repos\"\n\nfor repo in \"${REPOS[@]}\"\ndo\n  echo \"Processing $repo...\"\n  cd \"$BASE_DIR/$repo\"\n  git add README.md screenshot.png\n  git commit -m \"Update repository to indicate migration to genart-monorepo\"\n  git push origin main\ndone\n\necho \"All repositories updated successfully!\"\n```",
+        "testStrategy": "1. Verify all commits were successful\n2. Check that both README.md and screenshot.png were included in each commit\n3. Confirm the changes are visible on GitHub for all repositories\n4. Validate that each README renders correctly on GitHub with the screenshot visible\n5. Ensure all links in each README are functional\n6. Verify all repositories remain unarchived and accessible",
+        "priority": "medium",
+        "dependencies": [
+          5,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Verify all success criteria",
+        "description": "Perform a final verification of all success criteria across all repositories and the monorepo",
+        "details": "Conduct a comprehensive verification of all success criteria specified in the PRD:\n\n1. Verify all 5 apps have screenshots captured and saved in the monorepo at `docs/screenshots/[app-name]-main.png`\n2. Confirm all 5 original repos have updated READMEs on their main branches\n3. Check that all screenshots are copied to original repos as `screenshot.png`\n4. Test all links in archived READMEs to ensure they are functional:\n   - Live demo links\n   - Monorepo link\n   - Source code links\n   - Documentation links\n5. Verify READMEs follow consistent format using the template\n6. Ensure all repositories remain unarchived (not read-only)\n7. Confirm all screenshots are PNG format and under 500KB\n\nCreate a verification checklist and document the results:\n\n```markdown\n# Migration Verification Checklist\n\n## Monorepo Screenshots\n- [ ] duo-chrome-main.png exists and is high quality\n- [ ] crude-collage-painter-main.png exists and is high quality\n- [ ] those-shape-things-main.png exists and is high quality\n- [ ] computational-collage-main.png exists and is high quality\n- [ ] dragline-main.png exists and is high quality\n\n## Original Repo READMEs\n- [ ] duo-chrome README updated with migration notice\n- [ ] crude-collage-painter README updated with migration notice\n- [ ] those-shape-things README updated with migration notice\n- [ ] computational-collage README updated with migration notice\n- [ ] dragline README updated with migration notice\n\n## Original Repo Screenshots\n- [ ] duo-chrome screenshot.png exists\n- [ ] crude-collage-painter screenshot.png exists\n- [ ] those-shape-things screenshot.png exists\n- [ ] computational-collage screenshot.png exists\n- [ ] dragline screenshot.png exists\n\n## Link Verification\n- [ ] All live demo links work\n- [ ] All monorepo links work\n- [ ] All source code links work\n- [ ] All documentation links work\n\n## Repository Status\n- [ ] All repositories remain unarchived\n- [ ] All gh-pages deployments still work\n```",
+        "testStrategy": "1. Use the verification checklist to systematically test all requirements\n2. Have a second team member perform an independent verification\n3. Test all links from both internal network and external network\n4. Verify screenshots display correctly on different devices and screen sizes\n5. Check GitHub Pages deployments for all 5 apps to ensure they still function\n6. Document any issues found and address them before considering the task complete",
+        "priority": "high",
+        "dependencies": [
+          8,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-10-14T18:45:46.945Z",
+      "updated": "2025-10-14T18:45:46.945Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

@@ -1,0 +1,68 @@
+# Product Requirements Document: Screenshot Capture and Archived Repo Updates
+
+## Overview
+As we migrate projects to the genart-monorepo, we need to update the original standalone repositories to indicate they've moved while maintaining their GitHub Pages deployments. This requires capturing screenshots of each app and updating the original repo READMEs with clear migration notices.
+
+## Background
+The monorepo contains 5 apps that were previously standalone repositories:
+- duo-chrome
+- crude-collage-painter
+- those-shape-things
+- computational-collage
+- dragline
+
+Each original repo will continue to host GitHub Pages from its gh-pages branch, but the main branch should clearly indicate the source has moved to the monorepo.
+
+## Goals
+1. Capture high-quality screenshots of each app for documentation
+2. Update original repository READMEs with migration notices
+3. Ensure screenshots are available in both monorepo and original repos
+4. Maintain consistency across all archived repo READMEs
+
+## Requirements
+
+### Screenshot Capture
+- Capture screenshots for all 5 apps at 1200x800 resolution (PNG format)
+- Screenshots should show representative examples of each app's output
+- Save screenshots to monorepo at `docs/screenshots/[app-name]-main.png`
+- Screenshots must be clear, high-quality, and demonstrate the app's functionality
+
+### Archived Repo README Updates
+- Create README.md for each original repo's main branch using the template at `docs/templates/archived-repo-readme.md`
+- Each README must include:
+  - Clear "moved to monorepo" notice at the top
+  - Screenshot of the app
+  - Links to live demo, monorepo, source code, and documentation
+  - Brief description of what the app does
+  - Development instructions pointing to monorepo
+  - MIT license notice
+
+### Screenshot Distribution
+- Copy each screenshot from monorepo to corresponding original repo as `screenshot.png`
+- Ensure screenshots are committed to both locations
+- Verify screenshot references work in both monorepo and original repo READMEs
+
+## Apps to Process
+1. duo-chrome
+2. crude-collage-painter
+3. those-shape-things
+4. computational-collage
+5. dragline
+
+## Success Criteria
+- All 5 apps have screenshots captured and saved in monorepo
+- All 5 original repos have updated READMEs on main branch
+- All screenshots are copied to original repos
+- All links in archived READMEs are functional
+- READMEs follow consistent format using the template
+
+## Technical Constraints
+- Original repos must remain unarchived (not read-only) to allow gh-pages updates
+- Screenshots must be PNG format, reasonable file size (< 500KB)
+- READMEs must use markdown format
+- All changes must be committed to git
+
+## Out of Scope
+- Updating gh-pages branches (handled by existing deployment workflows)
+- Archiving the original repositories (they must remain active for deployments)
+- Creating new deployment workflows (crude-collage-painter workflow already exists as reference)

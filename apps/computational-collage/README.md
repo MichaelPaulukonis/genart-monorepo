@@ -2,6 +2,8 @@
 
 An advanced collage creation tool with multiple composition modes, image manipulation, and export capabilities.
 
+![Computational Collage Screenshot](./screenshots/computational-collage-main.png)
+
 ## Features
 
 - **10 Composition Modes**: From structured grids to organic arrangements

@@ -2,6 +2,8 @@
 
 Geometric tile-based compositions with customizable color palettes and shape patterns.
 
+![Those Shape Things Screenshot](./screenshots/those-shape-things-main.png)
+
 ## Features
 
 - 8x8 grid of geometric tiles
