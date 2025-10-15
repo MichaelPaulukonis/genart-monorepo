@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<llm_context>
+  <repository>
+    <metadata>
+      <name>makinteract/p5js-wrapper</name>
+      <description>Repository contents for LLM context</description>
+      <fetch_date>2025-10-15T14:25:12.655Z</fetch_date>
+      <branch>main</branch>
+    </metadata>
+    <contents>
+      <file name="README.md" path="README.md">
+        <content><![CDATA[
+          # p5.js-wrapper
+          
+          A simple wrapper for p5.js.
+          
+          If you are looking for a template to start your code, you might be interested instead in the [p5.js-vite Starter Template](https://github.com/makinteract/p5js-vite).
+          
+          ## Installation
+          
+          `npm install p5js-wrapper`
+          
+          ## Single sketch usage
+          
+          ```js
+          import { sketch } from 'p5js-wrapper';
+          
+          sketch.setup = function () {
+            createCanvas(800, 600);
+          };
+          
+          sketch.draw = function () {
+            background(100);
+            fill(255, 0, 0);
+            noStroke();
+            rectMode(CENTER);
+            rect(mouseX, mouseY, 50, 50);
+          };
+          
+          sketch.mousePressed = function () {
+            console.log('here');
+          };
+          ```
+          
+          ## Multi sketch usage
+          
+          ```js
+          import { p5 } from 'p5js-wrapper';
+          
+          let sketch1 = new p5((p) => {
+            p.setup = () => {
+              // You can also specify the canvas size in the CSS file (size of div #one)
+              p.createCanvas(800, 600);
+            };
+          
+            p.draw = () => {
+              p.background(100);
+              p.fill(255);
+              p.noStroke();
+              p.rectMode(p.CENTER);
+              p.rect(p.mouseX, p.mouseY, 50, 50);
+            };
+          }, 'one');
+          
+          // Sketch2
+          let sketch2 = new p5((p) => {
+            p.setup = () => {
+              // You can also specify the canvas size in the CSS file (size of div #two)
+              p.createCanvas(800, 600);
+            };
+          
+            p.draw = () => {
+              p.background(170);
+              p.noStroke();
+              p.fill(255);
+              p.ellipse(p.mouseX, p.mouseY, 50, 50);
+            };
+          }, 'two');
+          ```
+          
+          This sketch assumes that there are two divs available with id 'one' and 'two'.
+          
+          ## Adding sound
+          
+          This is an [experimental feature](./README_SOUND.md).
+          
+        ]]></content>
+      </file>
+      <file name="README_SOUND.md" path="README_SOUND.md">
+        <content><![CDATA[
+          # p5 Sound
+          
+          You can add sound ([p5Sound library](https://p5js.org/reference/#/libraries/p5.sound)) but this is currently an experimental and optional feature of this wrapper. You should not encounter any issue with single sketches, but currently multiple sketches might create errors.
+          
+          Here how to use the sound library:
+          
+          ```js
+          import { sketch } from 'p5js-wrapper';
+          import 'p5js-wrapper/sound';
+          
+          import mysound from './mysound.mp3';
+          
+          let soundEffect;
+          
+          sketch.setup = function () {
+            createCanvas(100, 100);
+            soundEffect = loadSound(mysound);
+          };
+          
+          sketch.draw = function () {
+            background('#eeeeee');
+          };
+          
+          // Play sound on click
+          sketch.mousePressed = function () {
+            soundEffect.play();
+          };
+          ```
+          
+        ]]></content>
+      </file>
+      <file name="index.js" path="index.js">
+        <content><![CDATA[
+          import p5 from 'p5/lib/p5';
+          
+          const sketch = window; // for single sketch
+          window.p5 = p5;
+          export { sketch, p5 };
+          
+        ]]></content>
+      </file>
+      <file name="package.json" path="package.json">
+        <content><![CDATA[
+          {
+            "name": "p5js-wrapper",
+            "version": "1.2.3",
+            "description": "A simple wrapper for p5js",
+            "main": "index.js",
+            "repository": {
+              "type": "git",
+              "url": "git+https://github.com/makinteract/p5js-wrapper"
+            },
+            "scripts": {},
+            "keywords": [
+              "p5.js",
+              "processing",
+              "p5"
+            ],
+            "author": "MAKinteract",
+            "license": "MIT",
+            "dependencies": {
+              "p5": "^1.4.1"
+            }
+          }
+          
+        ]]></content>
+      </file>
+      <file name="sound.js" path="sound.js">
+        <content><![CDATA[
+          import * as p5s from 'p5/lib/addons/p5.sound';
+          // Yup, need to be on a separate file
+          
+        ]]></content>
+      </file>
+    </contents>
+  </repository>
+</llm_context>

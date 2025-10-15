@@ -78,6 +78,23 @@ Screenshots are stored **per-app** in `apps/[app-name]/docs/screenshots/` to kee
 3. Set custom dimensions (1200x800)
 4. Capture screenshot via DevTools menu
 
+### ImageMagick Resizing
+
+If you need to resize existing screenshots to fit the 1200px max dimension:
+
+```bash
+# Resize so max dimension is 1200px (maintains aspect ratio, only shrinks)
+magick input.png -resize 1200x1200\> output.png
+
+# Resize to fit within 1200x800 specifically
+magick input.png -resize 1200x800\> output.png
+
+# Batch resize all PNGs in current directory
+magick mogrify -resize 1200x1200\> *.png
+```
+
+The `\>` flag ensures images are only shrunk, never enlarged.
+
 ### Automated Capture (Future)
 
 Consider adding a screenshot utility to the monorepo that:

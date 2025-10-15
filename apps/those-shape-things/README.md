@@ -2,7 +2,7 @@
 
 Geometric tile-based compositions with customizable color palettes and shape patterns.
 
-![Those Shape Things Screenshot](./screenshots/those-shape-things-main.png)
+![Those Shape Things Screenshot](./docs/screenshots/those-shape-things-main.png)
 
 ## Features
 

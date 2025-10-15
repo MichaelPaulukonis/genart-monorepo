@@ -20,21 +20,67 @@
         "testStrategy": "1. Verify the template includes all required sections\n2. Check that placeholder syntax is consistent and easy to replace\n3. Validate markdown formatting renders correctly on GitHub\n4. Ensure the template follows best practices for GitHub markdown\n5. Confirm the template matches the requirements specified in the PRD",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
         "id": 3,
         "title": "Capture screenshots for all 5 apps",
-        "description": "Use the screenshot capture script to generate high-quality screenshots for all 5 apps and save them to the monorepo",
-        "details": "Execute the screenshot capture script created in Task 1 to generate screenshots for all 5 apps:\n\n1. Ensure all apps are properly deployed and accessible via GitHub Pages\n2. Run the screenshot capture script\n3. Verify the screenshots are saved to `docs/screenshots/[app-name]-main.png`\n4. Manually review each screenshot to ensure it shows a representative example of the app's output\n5. If any screenshots don't properly showcase the app's functionality, adjust the script timing or manually capture those screenshots\n\nFor apps with randomized output, you may need to run the script multiple times or add interaction steps to get a good representative example.\n\nImplementation steps:\n```bash\n# Navigate to script directory\ncd scripts\n\n# Run the screenshot capture script\nnode capture-screenshots.js\n\n# Verify screenshots were created\nls -la ../docs/screenshots/\n```",
-        "testStrategy": "1. Visually inspect each screenshot for quality and representation of app functionality\n2. Verify all 5 screenshots exist in the correct location\n3. Check that each screenshot has the correct dimensions (1200x800)\n4. Confirm all screenshots are in PNG format\n5. Validate that file sizes are under 500KB\n6. Ensure screenshots show meaningful content (not loading screens or errors)",
-        "priority": "high",
+        "description": "Use manual screenshot capture to generate high-quality screenshots for the remaining 3 apps and save them to the monorepo",
+        "status": "done",
         "dependencies": [
           1
         ],
-        "status": "pending",
-        "subtasks": []
+        "priority": "high",
+        "details": "Capture screenshots for the remaining 3 apps (duo-chrome, those-shape-things, and computational-collage):\n\n1. Ensure all apps are properly deployed and accessible via GitHub Pages\n2. Manually capture screenshots at 1200x800 resolution\n3. Save the screenshots to `apps/[app-name]/docs/screenshots/[app-name]-main.png`\n4. Manually review each screenshot to ensure it shows a representative example of the app's output\n5. If any screenshots don't properly showcase the app's functionality, recapture them\n\nFor apps with randomized output, you may need to refresh multiple times or add interaction steps to get a good representative example.\n\nNote: Screenshots for dragline and crude-collage-painter have already been captured and saved.\n\nImplementation steps:\n```bash\n# Navigate to each app directory\ncd apps/[app-name]\n\n# Create screenshots directory if it doesn't exist\nmkdir -p docs/screenshots\n\n# Capture screenshot manually and save to the correct location\n# Ensure 1200x800 resolution\n\n# Verify screenshots were created\nls -la apps/*/docs/screenshots/\n```",
+        "testStrategy": "1. Visually inspect each screenshot for quality and representation of app functionality\n2. Verify all 5 screenshots exist in the correct location (apps/[app-name]/docs/screenshots/[app-name]-main.png)\n3. Check that each screenshot has the correct dimensions (1200x800)\n4. Confirm all screenshots are in PNG format\n5. Validate that file sizes are under 500KB\n6. Ensure screenshots show meaningful content (not loading screens or errors)",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Capture screenshot for duo-chrome",
+            "description": "",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Capture screenshot for those-shape-things",
+            "description": "",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Capture screenshot for computational-collage",
+            "description": "",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Verify dragline screenshot is correctly saved",
+            "description": "",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Verify crude-collage-painter screenshot is correctly saved",
+            "description": "",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 4,
@@ -46,7 +92,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -59,7 +105,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -73,7 +119,7 @@
           3,
           4
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -87,7 +133,7 @@
           3,
           5
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -131,11 +177,66 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Add on-screen help/controls display for duo-chrome app",
+        "description": "Create a toggleable overlay that displays keyboard controls and usage instructions for the duo-chrome app, similar to dragline's info box.",
+        "details": "Implement an on-screen help display for the duo-chrome app that shows available keyboard controls and usage instructions:\n\n1. Create a new HTML element for the help overlay:\n   ```html\n   <div id=\"help-overlay\" class=\"help-overlay hidden\">\n     <div class=\"help-content\">\n       <h2>Duo-Chrome Controls</h2>\n       <ul>\n         <li><strong>Mouse Click</strong>: Generate new image</li>\n         <li><strong>B</strong>: Toggle background</li>\n         <li><strong>C</strong>: Toggle color cycling</li>\n         <li><strong>M</strong>: Cycle through blend modes</li>\n         <li><strong>P</strong>: Pause/resume animation</li>\n         <li><strong>S</strong>: Toggle auto-save</li>\n         <li><strong>Cmd+S</strong>: Manual save</li>\n         <li><strong>H/I</strong>: Toggle this help display</li>\n       </ul>\n     </div>\n   </div>\n   ```\n\n2. Add CSS styling for the help overlay:\n   ```css\n   .help-overlay {\n     position: absolute;\n     top: 0;\n     left: 0;\n     width: 100%;\n     height: 100%;\n     background-color: rgba(0, 0, 0, 0.7);\n     display: flex;\n     justify-content: center;\n     align-items: center;\n     z-index: 1000;\n   }\n   \n   .help-content {\n     background-color: rgba(255, 255, 255, 0.9);\n     padding: 20px;\n     border-radius: 8px;\n     max-width: 400px;\n     color: #333;\n   }\n   \n   .hidden {\n     display: none;\n   }\n   ```\n\n3. Implement JavaScript to toggle the help display:\n   ```javascript\n   // Add event listener for 'h' and 'i' keys to toggle help\n   document.addEventListener('keydown', function(event) {\n     if (event.key === 'h' || event.key === 'i') {\n       const helpOverlay = document.getElementById('help-overlay');\n       helpOverlay.classList.toggle('hidden');\n     }\n   });\n   ```\n\n4. Ensure the help overlay is initially hidden when the app loads.\n\n5. Test the implementation with all keyboard shortcuts to verify they work as expected.\n\n6. Make sure the help overlay is responsive and displays correctly on different screen sizes.\n\n7. Consider adding a small help icon (?) in a corner of the app that can also toggle the help display for users who may not know the keyboard shortcut.",
+        "testStrategy": "1. Verify the help overlay is hidden by default when the app loads.\n\n2. Test toggling the help overlay by pressing the 'h' key and verify it appears and disappears correctly.\n\n3. Test toggling the help overlay by pressing the 'i' key and verify it works the same way.\n\n4. Verify all keyboard shortcuts listed in the help overlay are accurate and match the actual functionality:\n   - Click the mouse to generate a new image\n   - Press 'b' to toggle background\n   - Press 'c' to toggle color cycling\n   - Press 'm' to cycle through blend modes\n   - Press 'p' to pause/resume animation\n   - Press 'S' to toggle auto-save\n   - Press Cmd+S to manually save\n\n5. Test the overlay on different screen sizes (desktop, tablet, mobile) to ensure it's responsive and readable.\n\n6. Verify the overlay has appropriate contrast for readability.\n\n7. Check that the overlay doesn't interfere with the normal operation of the app when displayed.\n\n8. Verify the overlay can be dismissed by pressing 'h' or 'i' again.\n\n9. Test with different browsers (Chrome, Firefox, Safari) to ensure cross-browser compatibility.\n\n10. Verify the help text accurately describes all available controls and features.",
+        "status": "pending",
+        "dependencies": [
+          8
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Add Save Functionality to those-shape-things App",
+        "description": "Implement functionality to save the current composition as a PNG file with timestamp using keyboard shortcuts (Cmd+S or 's' key) in the those-shape-things app.",
+        "details": "Implement save functionality for the those-shape-things app:\n\n1. Add event listeners for keyboard shortcuts:\n   ```javascript\n   function keyPressed() {\n     // Check for 's' key or Cmd+S (metaKey is Cmd on Mac)\n     if (key === 's' || (keyCode === 83 && metaKey)) {\n       saveComposition();\n       return false; // Prevent default browser save dialog\n     }\n   }\n   ```\n\n2. Create the save function that generates a timestamped filename and saves the canvas:\n   ```javascript\n   function saveComposition() {\n     // Generate timestamp in format YYYYMMDD-HHMMSS\n     let now = new Date();\n     let timestamp = now.getFullYear() +\n                    String(now.getMonth() + 1).padStart(2, '0') +\n                    String(now.getDate()).padStart(2, '0') + '-' +\n                    String(now.getHours()).padStart(2, '0') +\n                    String(now.getMinutes()).padStart(2, '0') +\n                    String(now.getSeconds()).padStart(2, '0');\n     \n     // Create filename with timestamp\n     let filename = 'those-shape-things-' + timestamp + '.png';\n     \n     // Use p5.js saveCanvas() function to save the current canvas as PNG\n     saveCanvas(canvas, filename, 'png');\n     \n     // Optional: Provide visual feedback that the image was saved\n     displaySaveNotification();\n   }\n   ```\n\n3. Add visual feedback for the user when an image is saved:\n   ```javascript\n   function displaySaveNotification() {\n     // Create a temporary notification element\n     let notification = document.createElement('div');\n     notification.className = 'save-notification';\n     notification.textContent = 'Composition saved!';\n     document.body.appendChild(notification);\n     \n     // Remove the notification after 2 seconds\n     setTimeout(() => {\n       notification.classList.add('fade-out');\n       setTimeout(() => {\n         document.body.removeChild(notification);\n       }, 500);\n     }, 2000);\n   }\n   ```\n\n4. Add CSS for the save notification:\n   ```css\n   .save-notification {\n     position: fixed;\n     bottom: 20px;\n     right: 20px;\n     background-color: rgba(0, 0, 0, 0.7);\n     color: white;\n     padding: 10px 20px;\n     border-radius: 4px;\n     z-index: 1000;\n     transition: opacity 0.5s;\n   }\n   \n   .fade-out {\n     opacity: 0;\n   }\n   ```\n\n5. Update the help overlay (if it exists) to include information about the new save functionality:\n   - Add an entry for 'S' or 'Cmd+S': Save current composition as PNG\n\n6. Ensure the canvas is properly initialized and accessible for the saveCanvas() function:\n   ```javascript\n   let canvas;\n   \n   function setup() {\n     canvas = createCanvas(800, 600);\n     // other setup code...\n   }\n   ```",
+        "testStrategy": "1. Test the 's' key shortcut:\n   - Launch the those-shape-things app\n   - Create a composition\n   - Press the 's' key\n   - Verify a PNG file is downloaded with the correct timestamp format in the filename\n   - Confirm the saved image accurately represents the current canvas state\n\n2. Test the Cmd+S (or Ctrl+S on Windows) shortcut:\n   - Launch the those-shape-things app\n   - Create a composition\n   - Press Cmd+S (Mac) or Ctrl+S (Windows)\n   - Verify a PNG file is downloaded with the correct timestamp format\n   - Confirm the browser's default save dialog is prevented from appearing\n   - Verify the saved image matches the canvas content\n\n3. Test the save notification:\n   - Trigger a save using either shortcut\n   - Verify the save notification appears in the bottom right corner\n   - Confirm the notification disappears after approximately 2 seconds\n   - Check that the notification is visible against different background colors/compositions\n\n4. Test with different browsers:\n   - Verify the save functionality works in Chrome, Firefox, Safari, and Edge\n   - Ensure the file downloads correctly in each browser\n\n5. Test with different compositions:\n   - Save compositions of varying complexity\n   - Verify all elements are correctly captured in the saved PNG\n   - Check that transparency is handled correctly if applicable\n\n6. If help overlay exists, verify it includes the new save shortcut information",
+        "status": "pending",
+        "dependencies": [
+          7,
+          9
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "Fix Black Background Toggle in those-shape-things App",
+        "description": "Debug and fix the 'b' key background toggle functionality in the those-shape-things app, which currently fails to properly switch between black and white backgrounds.",
+        "details": "Implement a fix for the black background toggle functionality in the those-shape-things app:\n\n1. Locate the keyboard event handler that processes the 'b' key press:\n   ```javascript\n   function keyPressed() {\n     if (key === 'b' || key === 'B') {\n       toggleBackground();\n     }\n     // other key handlers...\n   }\n   ```\n\n2. Debug the `toggleBackground()` function to identify why the black background is not displaying correctly:\n   - Check if the function exists and is being called when 'b' is pressed\n   - Verify the current implementation of the toggle logic\n   - Look for issues with the background color setting or rendering\n\n3. Implement the fix based on findings. Likely solutions include:\n   ```javascript\n   // Option 1: If the function exists but has a logic error\n   function toggleBackground() {\n     // Fix the existing logic, e.g.:\n     isBlackBackground = !isBlackBackground;\n     backgroundColor = isBlackBackground ? 0 : 255; // Ensure proper color values\n   }\n   \n   // Option 2: If the function is missing or needs to be rewritten\n   function toggleBackground() {\n     if (backgroundColor === 255 || backgroundColor === '#FFFFFF') {\n       backgroundColor = 0; // or '#000000' depending on how colors are handled\n     } else {\n       backgroundColor = 255; // or '#FFFFFF'\n     }\n     redraw(); // Ensure canvas is redrawn with new background\n   }\n   ```\n\n4. Ensure the background color is properly applied in the draw loop:\n   ```javascript\n   function draw() {\n     background(backgroundColor);\n     // rest of drawing code...\n   }\n   ```\n\n5. Add a state variable if one doesn't exist to track the current background state:\n   ```javascript\n   let isBlackBackground = false; // Add to global variables\n   ```\n\n6. Update the help overlay (from Task 11) to ensure it correctly describes the 'b' key functionality.",
+        "testStrategy": "1. Launch the those-shape-things app in a browser.\n\n2. Test the basic background toggle functionality:\n   - Press the 'b' key and verify the background changes from white to black\n   - Press the 'b' key again and verify it changes back to white\n   - Repeat several times to ensure consistent toggling\n\n3. Test edge cases:\n   - Rapidly press the 'b' key multiple times to ensure the toggle doesn't break\n   - Test the toggle after generating new shapes to ensure it persists correctly\n   - Test the toggle before any shapes are generated\n\n4. Verify visual appearance:\n   - Ensure shapes are clearly visible against both background colors\n   - Check that the contrast between shapes and background is appropriate in both modes\n\n5. Cross-browser testing:\n   - Test the functionality in Chrome, Firefox, and Safari to ensure consistent behavior\n   - Test on both desktop and mobile devices if applicable\n\n6. Verify the help overlay (if implemented from Task 11) correctly describes the 'b' key functionality.",
+        "status": "pending",
+        "dependencies": [
+          7,
+          11
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Add Help Screen to Computational-Collage App",
+        "description": "Create a toggleable overlay that displays keyboard controls and composition mode descriptions for the computational-collage app, providing users with an accessible reference for app functionality.",
+        "details": "Implement a help screen overlay for the computational-collage app:\n\n1. Create HTML structure for the help overlay:\n   ```html\n   <div id=\"help-overlay\" class=\"help-overlay hidden\">\n     <div class=\"help-content\">\n       <h2>Computational Collage Controls</h2>\n       <ul>\n         <li><strong>0-9</strong>: Switch between composition modes</li>\n         <li><strong>s</strong>: Save current composition</li>\n         <li><strong>g</strong>: Open gallery view</li>\n         <li><strong>b</strong>: Toggle blend mode</li>\n         <li><strong>u</strong>: Upload custom image</li>\n         <li><strong>i</strong>: Toggle parameter panel</li>\n         <li><strong>h/i</strong>: Toggle this help screen</li>\n       </ul>\n       \n       <h3>Composition Modes</h3>\n       <ul>\n         <li><strong>Mode 0</strong>: [Description of mode 0]</li>\n         <li><strong>Mode 1</strong>: [Description of mode 1]</li>\n         <!-- Add descriptions for all available modes -->\n       </ul>\n     </div>\n   </div>\n   ```\n\n2. Add CSS styling for the help overlay:\n   ```css\n   .help-overlay {\n     position: fixed;\n     top: 0;\n     left: 0;\n     width: 100%;\n     height: 100%;\n     background-color: rgba(0, 0, 0, 0.8);\n     z-index: 1000;\n     display: flex;\n     justify-content: center;\n     align-items: center;\n     color: white;\n   }\n   \n   .help-content {\n     max-width: 600px;\n     padding: 20px;\n     background-color: rgba(30, 30, 30, 0.9);\n     border-radius: 8px;\n     max-height: 80vh;\n     overflow-y: auto;\n   }\n   \n   .hidden {\n     display: none;\n   }\n   ```\n\n3. Implement JavaScript functionality to toggle the help overlay:\n   ```javascript\n   function keyPressed() {\n     // Existing key handlers...\n     \n     // Add help toggle functionality\n     if (key === 'h' || key === 'H' || key === 'i' || key === 'I') {\n       toggleHelpOverlay();\n     }\n   }\n   \n   function toggleHelpOverlay() {\n     const helpOverlay = document.getElementById('help-overlay');\n     helpOverlay.classList.toggle('hidden');\n   }\n   ```\n\n4. Ensure the help overlay content accurately describes all available keyboard shortcuts and composition modes in the computational-collage app.\n\n5. Make sure the overlay is responsive and displays correctly on different screen sizes.\n\n6. Add a small help icon in the corner of the UI that users can click to toggle the help overlay as an alternative to keyboard shortcuts.\n\n7. Consider adding a \"Click anywhere to close\" message at the bottom of the help overlay and implement the corresponding functionality:\n   ```javascript\n   document.getElementById('help-overlay').addEventListener('click', function(event) {\n     if (event.target === this) {\n       toggleHelpOverlay();\n     }\n   });\n   ```\n\n8. Review the implementation approach used in Task #11 (duo-chrome help overlay) for consistency across apps.",
+        "testStrategy": "1. Verify the help overlay is hidden by default when the app loads:\n   - Launch the computational-collage app\n   - Confirm the help overlay is not visible\n\n2. Test toggling the help overlay using keyboard shortcuts:\n   - Press the 'h' key and verify the help overlay appears\n   - Press the 'h' key again and verify the help overlay disappears\n   - Press the 'i' key and verify the help overlay appears\n   - Press the 'i' key again and verify the help overlay disappears\n\n3. Test the help overlay content:\n   - Verify all keyboard shortcuts are correctly listed\n   - Confirm all composition modes (0-9) are described accurately\n   - Check that the descriptions match the actual functionality of the app\n\n4. Test the help overlay appearance:\n   - Verify the overlay is properly centered and formatted\n   - Check that text is readable with good contrast\n   - Test on different screen sizes to ensure responsive behavior\n\n5. Test clicking functionality:\n   - If implemented, verify clicking the help icon toggles the overlay\n   - If implemented, verify clicking outside the help content area closes the overlay\n\n6. Cross-browser testing:\n   - Test the help overlay in Chrome, Firefox, and Safari\n   - Verify consistent appearance and behavior across browsers\n\n7. Accessibility testing:\n   - Verify the help overlay can be navigated using keyboard\n   - Check that screen readers can properly read the help content\n   - Ensure color contrast meets accessibility standards",
+        "status": "pending",
+        "dependencies": [
+          7,
+          11
+        ],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-10-14T18:45:46.945Z",
-      "updated": "2025-10-14T18:45:46.945Z",
+      "updated": "2025-10-14T21:05:41.006Z",
       "description": "Tasks for master context"
     }
   }

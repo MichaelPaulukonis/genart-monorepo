@@ -2,7 +2,10 @@
 
 An advanced collage creation tool with multiple composition modes, image manipulation, and export capabilities.
 
-![Computational Collage Screenshot](./screenshots/computational-collage-main.png)
+![Computational Collage Screenshot](./docs/screenshots/computational-collage-main.png "Screenshot of collage app showing a generated collage")
+
+![Computational Collage Screenshot](./docs/screenshots/computational-collage-gallery.png "Screenshot of collage app showing gallery mode")
+
 
 ## Features
 

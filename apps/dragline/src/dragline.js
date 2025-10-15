@@ -1,7 +1,6 @@
 import '../css/style.css'
 import '../css/infobox.css'
-
-await import('p5js-wrapper')
+import { p5 } from 'p5js-wrapper' // Import p5 from wrapper
 import gridify from './text-grid'
 import {
   createCharGrid,
@@ -10,7 +9,7 @@ import {
   gridBoundsToPixels
 } from './grid'
 import { createBlock, setupTextAreas } from './blocks'
-const fallbackBlocks = await import('./grids.20250403T123247766Z.json')
+import fallbackBlocks from './grids.20250403T123247766Z.json'
 import tumblrRandomPost from './tumblr-random'
 import {
   createSelectionState,
@@ -25,11 +24,12 @@ import {
   renderSelectionOverlay
 } from './selection'
 
+let blocks = fallbackBlocks // Remove .default since it's now a static import
+
 let corpus
-let blocks
 
 // Initialize blocks by fetching data from Tumblr or falling back to a local JSON file
-async function initializeBlocks () {
+const initializeBlocks = async () => {
   try {
     corpus = await tumblrRandomPost()
     blocks = gridify(corpus.join('\n'))
@@ -45,13 +45,14 @@ async function initializeBlocks () {
 await initializeBlocks()
 
 // Main p5.js instance
+/* eslint-disable-next-line no-new, new-cap */
 new p5(p => {
   let textAreas = [] // Array to store text blocks
   let previousTextAreas = [] // Track previous positions of text areas
   let dragging = false // Flag to track dragging state
   let selectedIndex = -1 // Index of the currently selected block
   let blockCount = 10 // Initial number of blocks
-  let clusteringDistance = 30 // Controls clustering tightness
+  const clusteringDistance = 30 // Controls clustering tightness
   let fieldIsDirty = false // Flag to redraw entire field
   let offsetX
   let offsetY // Offset for dragging
@@ -117,21 +118,21 @@ new p5(p => {
   // Create a gradient for the background
   const setGradient = () => {
     // Calculate angle in radians (45 degrees)
-    const angle = Math.PI / 4; 
-    
+    const angle = Math.PI / 4;
+
     // Calculate start and end points based on angle
     const startX = p.width / 2 - Math.cos(angle) * p.width / 2;
     const startY = p.height / 2 - Math.sin(angle) * p.height / 2;
     const endX = p.width / 2 + Math.cos(angle) * p.width / 2;
     const endY = p.height / 2 + Math.sin(angle) * p.height / 2;
-    
+
     gradient = p.drawingContext.createLinearGradient(startX, startY, endX, endY);
     gradient.addColorStop(0, '#fe5196');
     gradient.addColorStop(1, '#f77062');
   }
 
   // Draw the gradient background
-  function drawGradient () {
+  const drawGradient = () => {
     if (!gradient) {
       p.background(255)
       return
@@ -237,7 +238,7 @@ new p5(p => {
   }
 
   // Check if the mouse click is on the info box
-  function isClickOnInfoBox (element) {
+  const isClickOnInfoBox = (element) => {
     const rect = element.getBoundingClientRect()
     return (
       p.mouseX >= rect.left &&
@@ -259,7 +260,7 @@ new p5(p => {
         display()
         return false
       }
-      
+
       handleSelectionPointerPressed(selectionState, { x: p.mouseX, y: p.mouseY }, grid)
       display()
       return false
@@ -457,12 +458,12 @@ new p5(p => {
   }
 
   // Cycle through fill characters
-  function cycleFillChar () {
+  const cycleFillChar = () => {
     fillChar = fillChars[(fillChars.indexOf(fillChar) + 1) % fillChars.length]
   }
 
   // Reset text areas
-  function resetTextAreas () {
+  const resetTextAreas = () => {
     textAreas.length = 0
     textAreas = setupTextAreas(
       textAreas,
@@ -475,7 +476,7 @@ new p5(p => {
   }
 
   // Add a new block
-  function addBlock () {
+  const addBlock = () => {
     if (textAreas.length < blocks.length) {
       const usedIndices = new Set(textAreas.map(area => area.index))
       textAreas.push(
@@ -495,7 +496,7 @@ new p5(p => {
   }
 
   // Remove the last block
-  function removeBlock () {
+  const removeBlock = () => {
     if (textAreas.length > 1) {
       textAreas.pop()
       blockCount--
@@ -519,7 +520,7 @@ new p5(p => {
   }
 
   // Handle arrow key (non-movement) events
-  function handleArrowKeys () {
+  const handleArrowKeys = () => {
     const area = textAreas[selectedIndex]
     const isShiftPressed = p.keyIsDown(p.SHIFT)
 
@@ -557,7 +558,7 @@ new p5(p => {
   }
 
   // Fetch new blocks from Tumblr
-  async function fetchNewBlocks () {
+  const fetchNewBlocks = async () => {
     try {
       await initializeBlocks()
       textAreas.length = 0

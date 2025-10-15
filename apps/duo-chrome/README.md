@@ -4,30 +4,51 @@ Overlays two monochrome images in different colors to create duotone composition
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-![DUO-CHROME Screenshot](./screenshots/duo-chrome-main.png)
+![DUO-CHROME Screenshot](./docs/screenshots/duo-chrome-main.png)
+
+**Live build:** <https://michaelpaulukonis.github.io/duo-chrome>
 
 Takes two random black & white images from a curated collection, applies different RISO colors to each, and composites them using various blend modes. Images cycle automatically or manually to create unexpected juxtapositions.
 
 ## Table of Contents
 
-- [Installation](#installation)
+- [Getting Started](#getting-started)
 - [Controls](#controls)
 - [Development](#development)
 - [How It Works](#how-it-works)
 - [Project Structure](#project-structure)
+- [Deployment](#deployment)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Installation
+## Getting Started (Monorepo)
+
+This project is part of the genart-monorepo. To work with duo-chrome:
+
+### Prerequisites
+
+- Node.js ≥ 18
+- pnpm (workspace package manager)
+
+### Installation
+
+From the monorepo root:
 
 ```bash
-git clone https://github.com/MichaelPaulukonis/duo-chrome.git
-cd duo-chrome
-npm install
-npm run dev
+pnpm install
 ```
 
-The development server will automatically open in your browser on an available port.
+### Quick Start
+
+```bash
+# Development server (port 5173)
+nx dev duo-chrome
+
+# Or from monorepo root
+pnpm dev
+```
+
+Visit <http://localhost:5173> to view the app.
 
 ## Controls
 
@@ -43,15 +64,21 @@ The development server will automatically open in your browser on an available p
 
 ## Development
 
-```bash
-npm run dev      # Development server with hot reload
-npm run build    # Build for production
-npm run preview  # Preview production build
-npm run lint     # Run ESLint
-npm run clean    # Fix code style with StandardJS
-```
+### Available Commands
 
-Uses StandardJS code style and ESLint with p5.js rules.
+| Command                 | Purpose                                      |
+| ----------------------- | -------------------------------------------- |
+| `nx dev duo-chrome`     | Start Vite dev server on port 5173           |
+| `nx build duo-chrome`   | Produce production bundle                    |
+| `nx preview duo-chrome` | Preview the production build locally         |
+| `nx lint duo-chrome`    | Run ESLint on duo-chrome code                |
+| `nx deploy duo-chrome`  | Deploy to GitHub Pages (original repository) |
+
+### Workflow Notes
+
+- Vite hot-module reload keeps the canvas responsive—no manual refresh needed
+- Uses StandardJS code style and ESLint with p5.js rules
+- The app uses p5js-wrapper for module compatibility with p5.js
 
 ### Adding Images
 
@@ -94,17 +121,45 @@ function createMonochromeImage(img, monoColor) {
 ## Project Structure
 
 ```
-src/
-├── duo-chrome.js     # Main p5.js sketch
-├── imagelist.js      # Image inventory (~160 files)
-└── risocolors.js     # Color palettes
-public/images/        # Curated image collection
+apps/duo-chrome/
+├── src/
+│   ├── duo-chrome.js     # Main p5.js sketch
+│   ├── imagelist.js      # Image inventory (~160 files)
+│   └── risocolors.js     # Color palettes
+├── public/
+│   └── images/           # Curated image collection
+├── css/
+│   └── style.css         # Canvas and page styling
+├── docs/
+│   └── screenshots/      # App screenshots
+├── index.html            # Entry point
+├── package.json          # App dependencies
+├── project.json          # Nx configuration
+├── vite.config.js        # Vite build config
+└── README.md             # This file
 ```
+
+## Deployment
+
+Duo-chrome maintains its original GitHub Pages deployment at <https://michaelpaulukonis.github.io/duo-chrome>.
+
+To deploy from the monorepo:
+
+```bash
+# Build and deploy to original repository
+nx build duo-chrome
+nx deploy duo-chrome
+```
+
+The deploy command pushes the built files to the `gh-pages` branch of the original duo-chrome repository.
 
 ## Contributing
 
 PRs welcome. Follow StandardJS style.
 
-## License
+## Additional Info
 
-MIT
+- **License:** MIT
+- **Project Status:** Active development
+- **Original Repository:** <https://github.com/MichaelPaulukonis/duo-chrome>
+- **Monorepo:** Part of the genart-monorepo collection
