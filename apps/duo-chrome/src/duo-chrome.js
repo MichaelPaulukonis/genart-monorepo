@@ -84,6 +84,8 @@ const sketch = function (p) {
     } else if (p.key === 'S') {
       autoSave = !autoSave
       console.log(`autoSave: ${autoSave}`)
+    } else if (p.key === 'h' || p.key === 'i') {
+      toggleHelpOverlay()
     }
   }
 
@@ -143,6 +145,13 @@ const sketch = function (p) {
     return `duo_chrome_image.${d.getFullYear()}.${
       d.getMonth() + 1
     }.${d.getDate()}.${d.getHours()}${d.getMinutes()}${d.getSeconds()}.png`
+  }
+
+  function toggleHelpOverlay () {
+    const helpOverlay = document.getElementById('help-overlay')
+    if (helpOverlay) {
+      helpOverlay.classList.toggle('hidden')
+    }
   }
 
   function initializeImageColorPairs () {
