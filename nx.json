@@ -3,5 +3,13 @@
     "version": "21.6.4"
   },
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "nxCloudId": "68e92d446c557376670b1458"
+  "nxCloudId": "68e92d446c557376670b1458",
+  "plugins": [
+    {
+      "plugin": "@nx/playwright/plugin",
+      "options": {
+        "targetName": "e2e"
+      }
+    }
+  ]
 }

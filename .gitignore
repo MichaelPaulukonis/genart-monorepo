@@ -160,3 +160,8 @@ dev-debug.log
 # Task files
 # tasks.json
 # tasks/ 
+
+# Playwright Test Artifacts
+test-results/
+playwright-report/
+playwright/.cache/
