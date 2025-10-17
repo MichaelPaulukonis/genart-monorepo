@@ -69,7 +69,8 @@ This document provides a detailed reference for interacting with Taskmaster, cov
     *   `ollama <boolean>`: `Indicates the set model ID is a custom Ollama model.` (CLI: `--ollama`)
     *   `openrouter <boolean>`: `Indicates the set model ID is a custom OpenRouter model.` (CLI: `--openrouter`)
     *   `listAvailableModels <boolean>`: `If true, lists available models not currently assigned to a role.` (CLI: No direct equivalent; CLI lists available automatically)
-    *   `projectRoot <string>`: `Optional. Absolute path to the project root directory.` (CLI: Determined automatically)
+    *   `projectRoot <string>`: `Optional. Absolute path to the project root directory.` use `/Users/michaelpaulukonis/projects/genart-monorepo`
+    
 *   **Key CLI Options:**
     *   `--set-main <model_id>`: `Set the primary model.`
     *   `--set-research <model_id>`: `Set the research model.`

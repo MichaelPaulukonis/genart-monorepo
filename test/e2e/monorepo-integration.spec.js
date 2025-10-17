@@ -47,7 +47,7 @@ test.describe('Monorepo Integration', () => {
 
   test('canvas has content after initialization', async ({ page }) => {
     const testApp = process.env.TEST_APP || 'duo-chrome'
-    
+
     // Skip for apps not yet converted to instance mode
     if (testApp === 'computational-collage') {
       test.skip(true, 'Skipped: computational-collage not converted to instance mode yet')
@@ -76,7 +76,7 @@ test.describe('Monorepo Integration', () => {
 
   test('utilities can import correctly', async ({ page }) => {
     const testApp = process.env.TEST_APP || 'duo-chrome'
-    
+
     // Skip for apps with UI overlays that interfere with canvas interaction
     if (testApp === 'computational-collage') {
       test.skip(true, 'Skipped: computational-collage has overlay UI that interferes with canvas clicks')

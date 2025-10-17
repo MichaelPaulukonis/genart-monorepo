@@ -4,6 +4,7 @@ const { defineConfig } = require('vite')
 
 module.exports = defineConfig({
   root: __dirname,
+  base: process.env.DEPLOY_ENV === 'GH_PAGES' ? '/duo-chrome/' : '',
   server: {
     port: 5173,
     open: true,
@@ -17,6 +18,7 @@ module.exports = defineConfig({
     }
   },
   build: {
+    target: 'esnext',
     outDir: '../../dist/apps/duo-chrome',
     emptyOutDir: true,
     rollupOptions: {

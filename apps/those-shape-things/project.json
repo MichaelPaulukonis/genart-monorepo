@@ -1,42 +1,42 @@
 {
-  "name": "duo-chrome",
-  "sourceRoot": "apps/duo-chrome/src",
+  "name": "those-shape-things",
+  "sourceRoot": "apps/those-shape-things/src",
   "projectType": "application",
   "targets": {
     "dev": {
       "executor": "@nx/vite:dev-server",
       "options": {
-        "buildTarget": "duo-chrome:build",
-        "port": 5173
+        "buildTarget": "those-shape-things:build",
+        "port": 5175
       }
     },
     "build": {
       "executor": "@nx/vite:build",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/duo-chrome",
-        "configFile": "apps/duo-chrome/vite.config.js"
+        "outputPath": "dist/apps/those-shape-things",
+        "configFile": "apps/those-shape-things/vite.config.js"
       }
     },
     "preview": {
       "executor": "@nx/vite:preview-server",
       "options": {
-        "buildTarget": "duo-chrome:build",
-        "port": 4173
+        "buildTarget": "those-shape-things:build",
+        "port": 4175
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/duo-chrome/**/*.{js,jsx}"]
+        "lintFilePatterns": ["apps/those-shape-things/**/*.{js,jsx}"]
       }
     },
     "deploy": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "gh-pages -d dist/apps/duo-chrome --repo https://github.com/michaelpaulukonis/duo-chrome.git"
+        "command": "gh-pages -d dist/apps/those-shape-things --repo https://github.com/michaelpaulukonis/those-shape-things.git"
       }
     }
   }

@@ -4,6 +4,7 @@ const { defineConfig } = require('vite')
 
 module.exports = defineConfig({
   root: __dirname,
+  base: process.env.DEPLOY_ENV === 'GH_PAGES' ? '/those-shape-things/' : '',
   server: {
     port: 5175,
     open: true,
