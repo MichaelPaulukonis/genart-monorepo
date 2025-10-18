@@ -73,6 +73,34 @@ See [docs/guides/adding-projects.md](./docs/guides/adding-projects.md) for detai
 
 See [docs/architecture/overview.md](./docs/architecture/overview.md) for technical details about the monorepo structure and design decisions.
 
+## Version Management and Deployment
+
+This monorepo uses **Nx Release with independent versioning** - each app maintains its own version number and can be released independently.
+
+### Quick Release and Deploy
+```bash
+# Release and deploy a specific app (one command)
+nx run duo-chrome:release-deploy
+nx run crude-collage-painter:release-deploy
+nx run those-shape-things:release-deploy
+nx run computational-collage:release-deploy
+
+# Release all changed apps
+nx release
+```
+
+### Conventional Commits
+Use conventional commit messages for automatic version bumping:
+```bash
+# Feature (minor bump: 0.1.0 → 0.2.0)
+git commit -m "feat(duo-chrome): add new color blending mode"
+
+# Bug fix (patch bump: 0.1.0 → 0.1.1)  
+git commit -m "fix(dragline): resolve canvas scaling issue"
+```
+
+See [docs/guides/version-management.md](./docs/guides/version-management.md) for complete documentation.
+
 ## Commands
 
 ```bash
@@ -83,6 +111,15 @@ nx dev <project-name>       # Run specific project
 # Building
 pnpm build                  # Build all projects
 nx build <project-name>     # Build specific project
+
+# Version Management
+nx release                  # Release all changed apps
+nx release --projects=<app> # Release specific app
+nx run <app>:release-deploy # Release and deploy app
+
+# Deployment
+nx run <app>:deploy         # Deploy specific app
+nx run-many --target=deploy # Deploy all apps
 
 # Code Quality
 pnpm lint                   # Lint all projects

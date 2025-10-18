@@ -1,42 +1,42 @@
 {
-  "name": "crude-collage-painter",
-  "sourceRoot": "apps/crude-collage-painter/src",
+  "name": "computational-collage",
+  "sourceRoot": "apps/computational-collage/src",
   "projectType": "application",
   "targets": {
     "dev": {
       "executor": "@nx/vite:dev-server",
       "options": {
-        "buildTarget": "crude-collage-painter:build",
-        "port": 5174
+        "buildTarget": "computational-collage:build",
+        "port": 5176
       }
     },
     "build": {
       "executor": "@nx/vite:build",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/crude-collage-painter",
-        "configFile": "apps/crude-collage-painter/vite.config.js"
+        "outputPath": "dist/apps/computational-collage",
+        "configFile": "apps/computational-collage/vite.config.js"
       }
     },
     "preview": {
       "executor": "@nx/vite:preview-server",
       "options": {
-        "buildTarget": "crude-collage-painter:build",
-        "port": 4174
+        "buildTarget": "computational-collage:build",
+        "port": 4176
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/crude-collage-painter/**/*.{js,jsx}"]
+        "lintFilePatterns": ["apps/computational-collage/**/*.{js,jsx}"]
       }
     },
     "deploy": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx gh-pages -d dist/apps/crude-collage-painter --repo https://github.com/michaelpaulukonis/crude-collage-painter.git"
+        "command": "npx gh-pages -d dist/apps/computational-collage --repo https://github.com/michaelpaulukonis/computational-collage.git"
       }
     },
     "release-deploy": {
@@ -44,8 +44,8 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release --projects=crude-collage-painter",
-          "npx gh-pages -d dist/apps/crude-collage-painter --repo https://github.com/michaelpaulukonis/crude-collage-painter.git"
+          "nx release --projects=computational-collage",
+          "npx gh-pages -d dist/apps/computational-collage --repo https://github.com/michaelpaulukonis/computational-collage.git"
         ],
         "parallel": false
       }

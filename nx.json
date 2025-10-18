@@ -11,5 +11,20 @@
         "targetName": "e2e"
       }
     }
-  ]
+  ],
+  "release": {
+    "projectsRelationship": "independent",
+    "projects": ["apps/*"],
+    "releaseTagPattern": "{projectName}@{version}",
+    "version": {
+      "conventionalCommits": true
+    },
+    "changelog": {
+      "projectChangelogs": true,
+      "git": {
+        "commit": true,
+        "tag": true
+      }
+    }
+  }
 }

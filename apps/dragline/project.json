@@ -35,7 +35,18 @@
     "deploy": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "gh-pages -d dist/apps/dragline --repo https://github.com/MichaelPaulukonis/dragline.git --nojekyll"
+        "command": "npx gh-pages -d dist/apps/dragline --repo https://github.com/MichaelPaulukonis/dragline.git --nojekyll"
+      }
+    },
+    "release-deploy": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx release --projects=dragline",
+          "npx gh-pages -d dist/apps/dragline --repo https://github.com/MichaelPaulukonis/dragline.git --nojekyll"
+        ],
+        "parallel": false
       }
     }
   }
