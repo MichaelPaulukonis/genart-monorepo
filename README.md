@@ -9,10 +9,13 @@ A monorepo for creative coding and generative art projects using Nx.
 - **[those-shape-things](./apps/those-shape-things/)** (port 5175) - Geometric tile-based compositions with color palettes
 - **[computational-collage](./apps/computational-collage/)** (port 5176) - Advanced collage creation with multiple composition modes
 
+All applications include version display functionality accessible through help screens or about dialogs.
+
 ## Shared Libraries
 
 - **[@genart/p5-utils](./libs/p5-utils/)** - Common p5.js utilities and helper functions
 - **[@genart/color-palettes](./libs/color-palettes/)** - RISO colors and palette management
+- **[@genart/version-utils](./libs/version-utils/)** - Shared version display utilities (future consolidation)
 
 ## Quick Start
 
@@ -129,6 +132,28 @@ nx lint <project-name>      # Lint specific project
 nx graph                    # View project dependency graph
 nx affected:build           # Build only affected projects
 ```
+
+## Version Display
+
+All applications include version display functionality that shows the current version from each app's `package.json`:
+
+- **duo-chrome**: Press `H` or `I` to open help overlay with version info
+- **crude-collage-painter**: Press `?` or `h` to open help screen with version info  
+- **those-shape-things**: Press `I` to open about dialog with version info
+- **computational-collage**: Press `Q` to open about dialog with version info
+
+Version information is automatically generated during the build process and always reflects the current package.json version.
+
+### Troubleshooting Version Display
+
+If version display shows "v1.0.0" instead of the expected version:
+
+1. **Check build process**: Ensure the app was built with `nx build <app-name>`
+2. **Verify package.json**: Confirm the app's package.json has a valid version field
+3. **Clean build**: Try `rm -rf dist/apps/<app-name>` and rebuild
+4. **Check console**: Look for version loading warnings in browser developer tools
+
+The version generation happens automatically during build - no manual configuration needed.
 
 ## Contributing
 

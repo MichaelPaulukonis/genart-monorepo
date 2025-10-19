@@ -1,4 +1,5 @@
 import '../css/style.css'
+import '../../../libs/version-display/version-display.css'
 import p5 from 'p5'
 import { AboutDialog } from './AboutDialog.js'
 

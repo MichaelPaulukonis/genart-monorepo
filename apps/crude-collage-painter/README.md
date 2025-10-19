@@ -52,7 +52,16 @@ Paint by moving your cursor across the canvas. The tool samples from source imag
 | Paint           | Move cursor/drag mouse |
 | Clear canvas    | `c`                    |
 | Save image      | `s`                    |
-| Toggle controls | `h`                    |
+| Toggle help     | `?` or `h`             |
+
+### Help Screen
+
+Press `?` or `h` to open the help screen, which displays:
+- Complete keyboard shortcuts reference
+- Current application version
+- Usage instructions
+
+The help screen can be closed with `ESC` or the close button.
 
 ### Features
 

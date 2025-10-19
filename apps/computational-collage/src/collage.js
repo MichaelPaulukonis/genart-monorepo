@@ -1,5 +1,6 @@
 import saveAs from 'file-saver'
 import '../css/collage.style.css'
+import '../../../libs/version-display/version-display.css'
 import { Pane } from 'tweakpane'
 import * as JSZip from 'jszip'
 import { sketch } from 'p5js-wrapper'

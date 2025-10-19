@@ -17,6 +17,16 @@ Geometric tile-based compositions with customizable color palettes and shape pat
 - **Spacebar**: Generate new composition
 - **Mouse click**: Generate new composition  
 - **'b' key**: Toggle black/white background
+- **'i' key**: Show about dialog
+
+### About Dialog
+
+Press `I` to open the about dialog, which displays:
+- Application description and features
+- Complete keyboard shortcuts reference
+- Current application version
+
+The dialog can be closed with `ESC`, clicking the backdrop, or the close button.
 
 ## Development
 

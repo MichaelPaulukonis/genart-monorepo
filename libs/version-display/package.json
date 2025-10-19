@@ -1,0 +1,17 @@
+{
+  "name": "@genart/version-display",
+  "version": "1.0.0",
+  "description": "Shared CSS styles for version display across GenArt applications",
+  "main": "version-display.css",
+  "files": [
+    "version-display.css"
+  ],
+  "keywords": [
+    "css",
+    "version",
+    "display",
+    "genart"
+  ],
+  "author": "GenArt",
+  "license": "MIT"
+}

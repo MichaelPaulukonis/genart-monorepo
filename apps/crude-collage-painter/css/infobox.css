@@ -117,7 +117,7 @@
   background-color: #a0522d;
 }
 
-/* Version display styling */
+/* App-specific version display styling for crude-collage-painter */
 .version-info {
   margin-top: 15px;
   padding-top: 10px;
@@ -125,13 +125,14 @@
   text-align: center;
   font-family: monospace;
   font-size: 0.8em;
-  color: #8b4513;
+  color: #8b4513; /* Saddle brown to match theme */
   opacity: 0.8;
 }
 
 .version-info span {
   display: inline-block;
   padding: 2px 6px;
-  background-color: rgba(210, 105, 30, 0.1);
+  background-color: rgba(210, 105, 30, 0.1); /* Chocolate brown background */
   border-radius: 3px;
+  border: 1px solid rgba(210, 105, 30, 0.2);
 }

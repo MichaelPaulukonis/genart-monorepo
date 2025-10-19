@@ -1,4 +1,5 @@
 import '../css/style.css'
+import '../../../libs/version-display/version-display.css'
 import { sketch, p5 } from 'p5js-wrapper'
 import { Pane } from 'tweakpane'
 import saveAs from 'file-saver'

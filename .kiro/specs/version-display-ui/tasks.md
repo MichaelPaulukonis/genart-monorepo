@@ -47,7 +47,7 @@
     - Test responsive behavior on different screen sizes
     - _Requirements: 1.4, 3.1, 4.3, 4.4_
 
-  - [ ]\* 3.3 Test duo-chrome version display functionality
+  - [x]\* 3.3 Test duo-chrome version display functionality
     - Verify version appears when help overlay is opened
     - Test version matches package.json content
     - Validate styling and positioning
@@ -69,7 +69,7 @@
     - Test responsive behavior and readability
     - _Requirements: 1.3, 1.4, 3.2_
 
-  - [ ]\* 4.3 Test crude-collage-painter version display
+  - [x]\* 4.3 Test crude-collage-painter version display
     - Verify version appears in help screen
     - Test version accuracy and formatting
     - Validate integration with existing help functionality
@@ -98,7 +98,7 @@
     - Add close button and interaction states
     - _Requirements: 1.3, 1.4, 5.3_
 
-  - [ ]\* 5.4 Test those-shape-things about dialog
+  - [x]\* 5.4 Test those-shape-things about dialog
     - Verify dialog opens with keyboard shortcut
     - Test version display and dialog functionality
     - Validate modal behavior and close mechanisms
@@ -127,7 +127,7 @@
     - Test responsive behavior and accessibility
     - _Requirements: 1.3, 1.4, 3.2_
 
-  - [ ]\* 6.4 Test computational-collage version display
+  - [x]\* 6.4 Test computational-collage version display
     - Verify dialog access and version display functionality
     - Test integration with existing UI components
     - Validate styling and user experience
@@ -149,22 +149,22 @@
     - Verify .gitignore patterns work correctly
     - _Requirements: 2.3_
 
-  - [ ]\* 7.3 Test build processes across all apps
+  - [x]\* 7.3 Test build processes across all apps
     - Run build process for each application
     - Verify version constants are generated correctly
     - Test with different version formats in package.json
     - _Requirements: 6.3, 6.5_
 
-- [ ] 8. Add shared CSS styles for version display
+- [x] 8. Add shared CSS styles for version display
 
-  - [ ] 8.1 Create consistent version display styles
+  - [x] 8.1 Create consistent version display styles
 
     - Define shared CSS classes for version information
     - Ensure consistent typography and spacing
     - Add responsive design considerations
     - _Requirements: 1.3, 3.1, 3.2_
 
-  - [ ] 8.2 Implement app-specific style customizations
+  - [x] 8.2 Implement app-specific style customizations
     - Add app-specific overrides while maintaining consistency
     - Ensure version display fits each app's visual design
     - Test color contrast and accessibility requirements
@@ -192,7 +192,43 @@
     - Check color contrast ratios
     - _Requirements: 1.5_
 
-- [ ]\* 10. Documentation updates
+- [x] 11. Integrate version display into dragline info box
+
+  - [x] 11.1 Create version utility for dragline
+
+    - Create src/utils/version.js with getAppVersion() and formatVersion() functions
+    - Import version constants and provide fallback mechanism
+    - Add proper error handling for missing constants file
+    - _Requirements: 1.1, 2.4_
+
+  - [x] 11.2 Update dragline info box with version display
+
+    - Modify existing info box HTML structure to include version information
+    - Import and use version utilities in dragline.js or infobox.js
+    - Position version info appropriately within info box layout
+    - _Requirements: 1.1, 1.2, 4.1, 4.2_
+
+  - [x] 11.3 Style version display within dragline info box
+
+    - Apply consistent styling for version information
+    - Ensure version display integrates well with existing info box design
+    - Test responsive behavior and readability
+    - _Requirements: 1.3, 1.4, 3.1, 3.2_
+
+  - [x] 11.4 Configure dragline build process for version generation
+
+    - Update vite.config.js to include version generation plugin
+    - Add src/utils/version-constants.js to .gitignore
+    - Test build process with version generation
+    - _Requirements: 2.1, 2.2, 2.5_
+
+  - [x]\* 11.5 Test dragline version display functionality
+    - Verify version appears in info box
+    - Test version accuracy and formatting
+    - Validate integration with existing info box functionality
+    - _Requirements: 6.4_
+
+- [x]\* 10. Documentation updates
   - Update README files to mention version display feature
   - Document keyboard shortcuts and access methods
   - Add troubleshooting information for build issues

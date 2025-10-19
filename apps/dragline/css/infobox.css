@@ -60,3 +60,22 @@
   /* position: relative; Ensure the button's position is relative to the parent */
   padding-bottom: 50px; /* Add padding to create space for the button */
 }
+
+/* App-specific version display styling for dragline */
+.version-info {
+  border-top: 1px solid teal; /* Match app's teal theme */
+  padding-top: 10px;
+  margin-top: 15px;
+  text-align: center;
+  font-size: 0.8em;
+  color: #666;
+}
+
+#version-display {
+  font-family: monospace;
+  font-weight: bold;
+  color: teal; /* Match app's teal accent color */
+  background-color: rgba(0, 128, 128, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}

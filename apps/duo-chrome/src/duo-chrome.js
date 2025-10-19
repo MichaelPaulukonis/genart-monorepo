@@ -3,6 +3,7 @@ import { RISOCOLORS, PALETTE, PALETTE_TWO } from './risocolors'
 import { imgs } from './imagelist'
 import { getFormattedVersion } from './utils/version.js'
 import '../css/style.css'
+import '../../../libs/version-display/version-display.css'
 
 // inspired by https://bsky.app/profile/leedoughty.bsky.social/post/3ldh2esstd22h
 // https://leedoughty.com/

@@ -109,6 +109,7 @@ canvas {
   line-height: 1.3;
 }
 
+/* App-specific version display customizations for duo-chrome */
 .version-info {
   text-align: center;
   margin-top: 15px;
@@ -118,6 +119,10 @@ canvas {
   font-size: 0.8em;
   color: #666;
   opacity: 0.8;
+  /* Duo-chrome specific: match Times New Roman theme */
+  font-family: 'Times New Roman', Times, serif;
+  font-variant: small-caps;
+  letter-spacing: 0.5px;
 }
 
 .help-footer {

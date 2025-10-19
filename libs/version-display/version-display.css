@@ -1,0 +1,118 @@
+/* 
+ * Shared Version Display Styles
+ * Consistent styling for version information across all GenArt applications
+ */
+
+/* Base version display styles */
+.version-info,
+.version-display {
+  font-family: monospace;
+  font-size: 0.8em;
+  color: #666;
+  opacity: 0.8;
+  text-align: center;
+}
+
+/* Version info in help overlays and info boxes */
+.version-info {
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+/* Version display in about dialogs */
+.version-display {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* Container for version display in about dialogs */
+.about-dialog-version {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+  text-align: center;
+}
+
+/* Responsive design considerations */
+@media (max-width: 600px) {
+  .version-info,
+  .version-display {
+    font-size: 0.75em;
+  }
+  
+  .version-info {
+    margin-top: 12px;
+    padding-top: 8px;
+  }
+  
+  .version-display {
+    padding: 3px 6px;
+    font-size: 0.8em;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .version-info,
+  .version-display {
+    color: #000;
+    opacity: 1;
+  }
+  
+  .version-display {
+    background-color: rgba(0, 0, 0, 0.1);
+    border: 1px solid #000;
+  }
+}
+
+/* Focus styles for accessibility */
+.version-info:focus,
+.version-display:focus {
+  outline: 2px solid #007acc;
+  outline-offset: 2px;
+}
+
+/* Ensure minimum color contrast ratios */
+.version-info,
+.version-display {
+  /* Ensure text meets WCAG AA contrast requirements */
+  min-height: 1.2em;
+  line-height: 1.2;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .version-info,
+  .version-display {
+    color: #ccc;
+  }
+  
+  .version-display {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .version-info {
+    border-top-color: #444;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .version-info,
+  .version-display {
+    transition: none;
+  }
+}
+
+/* Print styles - hide version info in print */
+@media print {
+  .version-info,
+  .version-display,
+  .about-dialog-version {
+    display: none;
+  }
+}

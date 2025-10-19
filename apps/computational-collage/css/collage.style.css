@@ -192,6 +192,7 @@ bout Dialog Styles */
   margin-top: 16px;
 }
 
+/* App-specific version display styling for computational-collage */
 .about-dialog-version {
   margin-top: 20px;
   padding-top: 16px;
@@ -204,9 +205,10 @@ bout Dialog Styles */
   padding: 4px 8px;
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 4px;
-  font-family: monospace;
+  font-family: Arial, sans-serif; /* Match app's modern Arial theme */
   font-size: 0.9em;
   color: #666;
+  font-weight: 500;
 }
 
 .about-dialog-footer {

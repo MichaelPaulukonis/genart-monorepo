@@ -33,6 +33,17 @@ An advanced collage creation tool with multiple composition modes, image manipul
 - **b**: Toggle blend mode
 - **u**: Upload new images
 - **i**: Toggle parameter panel
+- **q**: Show about dialog
+
+### About Dialog
+
+Press `Q` to open the about dialog, which displays:
+- Application description and advanced features
+- Complete keyboard shortcuts reference
+- Collage modes overview
+- Current application version
+
+The dialog can be closed with `ESC`, clicking the backdrop, or the close button.
 
 ### Composition Modes
 

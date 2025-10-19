@@ -61,6 +61,16 @@ Visit <http://localhost:5173> to view the app.
 | `p` or Space | Pause/resume auto-generation          |
 | `S`          | Toggle auto-save mode                 |
 | `Cmd+S`      | Save current composition              |
+| `H` or `I`   | Toggle help overlay                   |
+
+### Help Overlay
+
+Press `H` or `I` to open the help overlay, which displays:
+- Complete keyboard shortcuts reference  
+- Current application version
+- Usage instructions
+
+The help overlay can be closed by pressing `H`, `I`, or `ESC`.
 
 ## Development
 

@@ -1,6 +1,8 @@
 import '../css/style.css'
 import '../css/infobox.css'
+import '../../../libs/version-display/version-display.css'
 import { p5 } from 'p5js-wrapper' // Import p5 from wrapper
+import { formatVersion } from './utils/version.js'
 import gridify from './text-grid'
 import {
   createCharGrid,
@@ -38,7 +40,7 @@ const initializeBlocks = async () => {
       'Failed to fetch or process data from tumblrRandomPost. Falling back to JSON import.',
       error
     )
-    blocks = fallbackBlocks.default
+    blocks = fallbackBlocks
   }
 }
 
@@ -71,6 +73,12 @@ new p5(p => {
   // DOM elements for the info box
   const infoBox = document.getElementById('info-box')
   const closeButton = document.getElementById('close-info-box')
+  const versionDisplay = document.getElementById('version-display')
+
+  // Initialize version display
+  if (versionDisplay) {
+    versionDisplay.textContent = formatVersion()
+  }
 
   // Toggle the visibility of the info box
   const toggleInfoBox = () => {
