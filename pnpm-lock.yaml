@@ -103,10 +103,6 @@ importers:
       tweakpane:
         specifier: ^4.0.3
         version: 4.0.5
-    devDependencies:
-      gh-pages:
-        specifier: ^6.1.1
-        version: 6.3.0
 
   apps/dragline:
     dependencies:
@@ -119,10 +115,6 @@ importers:
       p5js-wrapper:
         specifier: ^1.2.3
         version: 1.2.3
-    devDependencies:
-      gh-pages:
-        specifier: ^6.3.0
-        version: 6.3.0
 
   apps/duo-chrome:
     dependencies:
@@ -171,6 +163,10 @@ importers:
   libs/color-palettes: {}
 
   libs/p5-utils: {}
+
+  libs/version-display: {}
+
+  libs/version-utils: {}
 
 packages:
 
