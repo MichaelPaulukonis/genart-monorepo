@@ -1,5 +1,7 @@
 // Info box drag functionality for crude-collage-painter
 
+import { getFormattedVersion } from './utils/version.js'
+
 const infoBox = document.getElementById('info-box')
 const closeButton = document.getElementById('close-info-box')
 
@@ -120,3 +122,27 @@ document.addEventListener('keydown', (e) => {
     hideInfoBox()
   }
 })
+
+// Initialize version display
+async function initializeVersionDisplay () {
+  try {
+    const version = await getFormattedVersion()
+    const versionElement = document.getElementById('version-info')
+    if (versionElement) {
+      versionElement.textContent = version
+    }
+  } catch (error) {
+    console.warn('Could not initialize version display:', error)
+    const versionElement = document.getElementById('version-info')
+    if (versionElement) {
+      versionElement.textContent = 'v1.0.0'
+    }
+  }
+}
+
+// Initialize version display when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeVersionDisplay)
+} else {
+  initializeVersionDisplay()
+}

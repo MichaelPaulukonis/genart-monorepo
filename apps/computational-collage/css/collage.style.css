@@ -75,4 +75,162 @@ aside.active {
 
 img {
   width: 100%;
+}/* A
+bout Dialog Styles */
+.about-dialog-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Higher than gallery overlay */
+}
+
+.about-dialog {
+  background-color: #f1f1f1;
+  border: 2px solid #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: aboutDialogFadeIn 0.3s ease-out;
+}
+
+@keyframes aboutDialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.about-dialog-content {
+  padding: 24px;
+}
+
+.about-dialog h2 {
+  margin: 0 0 16px 0;
+  font-family: Arial, sans-serif;
+  font-size: 24px;
+  color: #333;
+  text-align: center;
+  font-weight: bold;
+}
+
+.about-dialog-body {
+  margin-bottom: 20px;
+}
+
+.about-dialog-body p {
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+  color: #444;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+.about-dialog-controls h3,
+.about-dialog-modes h3 {
+  margin: 16px 0 8px 0;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+}
+
+.about-dialog-controls ul,
+.about-dialog-modes ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+
+.about-dialog-controls li,
+.about-dialog-modes li {
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  border-left: 3px solid #333;
+  text-align: left;
+}
+
+.about-dialog-controls strong,
+.about-dialog-modes strong {
+  display: block;
+  color: #000;
+  font-weight: bold;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  font-family: monospace;
+}
+
+.about-dialog-controls li span,
+.about-dialog-modes li span {
+  color: #555;
+  font-size: 12px;
+  line-height: 1.3;
+  font-family: Arial, sans-serif;
+}
+
+.about-dialog-modes {
+  margin-top: 16px;
+}
+
+.about-dialog-version {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #ccc;
+  text-align: center;
+}
+
+.about-dialog-version span {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.about-dialog-footer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.about-dialog-close-btn {
+  padding: 10px 24px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.about-dialog-close-btn:hover {
+  background-color: #555;
+}
+
+.about-dialog-close-btn:focus {
+  outline: 2px solid #007acc;
+  outline-offset: 2px;
 }

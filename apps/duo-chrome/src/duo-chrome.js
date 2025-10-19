@@ -1,6 +1,7 @@
 import { p5 } from 'p5js-wrapper'
 import { RISOCOLORS, PALETTE, PALETTE_TWO } from './risocolors'
 import { imgs } from './imagelist'
+import { getFormattedVersion } from './utils/version.js'
 import '../css/style.css'
 
 // inspired by https://bsky.app/profile/leedoughty.bsky.social/post/3ldh2esstd22h
@@ -147,9 +148,22 @@ const sketch = function (p) {
     }.${d.getDate()}.${d.getHours()}${d.getMinutes()}${d.getSeconds()}.png`
   }
 
-  function toggleHelpOverlay () {
+  async function toggleHelpOverlay () {
     const helpOverlay = document.getElementById('help-overlay')
     if (helpOverlay) {
+      // If showing the overlay, populate version info
+      if (helpOverlay.classList.contains('hidden')) {
+        const versionInfo = document.getElementById('version-info')
+        if (versionInfo) {
+          try {
+            const version = await getFormattedVersion()
+            versionInfo.textContent = version
+          } catch (error) {
+            console.warn('Failed to load version info:', error)
+            versionInfo.textContent = 'v1.0.0'
+          }
+        }
+      }
       helpOverlay.classList.toggle('hidden')
     }
   }

@@ -8,6 +8,7 @@ import 'p5js-wrapper/sound'
 // import { PTN } from './p5.pattern.js'
 import { datestring, filenamer } from './filelib'
 import { CroppableImage, OutlineableImage, Images } from './images'
+import { AboutDialog } from './AboutDialog.js'
 
 const imagesContainer = document.getElementById('images')
 const overlay = document.getElementById('overlay')
@@ -409,6 +410,9 @@ sketch.setup = () => {
   buildGallery(cimages)
   toggleGallery()
   playSound(random(sounds))
+
+  // Initialize AboutDialog
+  window.aboutDialog = new AboutDialog()
 }
 
 const playSound = (sound) => {
@@ -686,6 +690,8 @@ sketch.keyTyped = () => {
     } else if (key === 'z') {
       config.mondrianTileSize = ((config.mondrianTileSize + 25) % 1000) + 25
       console.log(config.mondrianTileSize)
+    } else if (key === 'q') {
+      window.aboutDialog.toggle()
     } else if (key === '`') {
       if (config.currentMode === null) return false
       frameRate(5)

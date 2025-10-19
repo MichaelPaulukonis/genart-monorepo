@@ -116,3 +116,22 @@
 .close-button:hover {
   background-color: #a0522d;
 }
+
+/* Version display styling */
+.version-info {
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #d2691e;
+  text-align: center;
+  font-family: monospace;
+  font-size: 0.8em;
+  color: #8b4513;
+  opacity: 0.8;
+}
+
+.version-info span {
+  display: inline-block;
+  padding: 2px 6px;
+  background-color: rgba(210, 105, 30, 0.1);
+  border-radius: 3px;
+}

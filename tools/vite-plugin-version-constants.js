@@ -1,16 +1,19 @@
-// vite.config.js
-const { resolve } = require('path')
-const { defineConfig } = require('vite')
-const { readFileSync, writeFileSync, mkdirSync } = require('fs')
+/**
+ * Vite plugin to generate version constants from package.json
+ * This plugin reads the version from package.json and creates a version-constants.js file
+ * that can be imported by the application at runtime.
+ */
 
-// Vite plugin to generate version constants from package.json
-function generateVersionConstants () {
+import { readFileSync, writeFileSync, mkdirSync } from 'fs'
+import { resolve, dirname } from 'path'
+
+export function generateVersionConstants() {
   return {
     name: 'generate-version-constants',
-    configResolved () {
+    buildStart() {
       try {
         // Get the directory where vite.config.js is located (app root)
-        const appRoot = __dirname
+        const appRoot = process.cwd()
         const packagePath = resolve(appRoot, 'package.json')
         
         // Read and parse package.json
@@ -41,7 +44,7 @@ export const BUILD_TIME = '${buildTime}';
         
         // Create fallback file to prevent import errors
         try {
-          const appRoot = __dirname
+          const appRoot = process.cwd()
           const utilsDir = resolve(appRoot, 'src/utils')
           mkdirSync(utilsDir, { recursive: true })
           
@@ -60,33 +63,3 @@ export const BUILD_TIME = '${new Date().toISOString()}';
     }
   }
 }
-
-module.exports = defineConfig({
-  root: __dirname,
-  base: process.env.DEPLOY_ENV === 'GH_PAGES' ? '/duo-chrome/' : '',
-  server: {
-    port: 5173,
-    open: true,
-    fs: {
-      allow: [
-        // Allow serving files from the project root and parent directories
-        resolve(__dirname, '../..'),
-        // Allow serving from node_modules
-        resolve(__dirname, '../../node_modules')
-      ]
-    }
-  },
-  build: {
-    target: 'esnext',
-    outDir: '../../dist/apps/duo-chrome',
-    emptyOutDir: true,
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html')
-      }
-    }
-  },
-  plugins: [
-    generateVersionConstants()
-  ]
-})

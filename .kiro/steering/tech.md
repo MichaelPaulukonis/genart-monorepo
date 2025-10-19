@@ -77,6 +77,8 @@ nx --version
 
 ## Development Commands
 
+**CRITICAL: Always use `nx` commands instead of `npm run` or `pnpm` scripts for individual apps**
+
 ```bash
 # Install dependencies
 pnpm install
@@ -85,16 +87,20 @@ pnpm install
 nx run-many --target=dev --all
 pnpm dev                       # fallback
 
-# Development (specific project) - prefer nx
+# Development (specific project) - ALWAYS use nx
 nx dev duo-chrome              # Port 5173
 nx dev crude-collage-painter   # Port 5174
 nx dev those-shape-things      # Port 5175
 nx dev computational-collage   # Port 5176
 
-# Building - prefer nx
-nx build <project-name>        # Build specific
+# Building - ALWAYS use nx for individual apps
+nx build <project-name>        # Build specific ✅ CORRECT
 nx run-many --target=build --all  # Build all
-pnpm build                     # fallback
+pnpm build                     # fallback for all apps
+
+# ❌ NEVER USE: npm run build or pnpm build inside app directories
+# ❌ NEVER USE: cd apps/app-name && npm run build
+# ❌ These will cause "Exit prior to config file resolving" errors
 
 # Code quality - prefer nx
 nx lint <project-name>         # Lint specific
@@ -114,6 +120,13 @@ nx affected:test               # Test only affected projects
 nx show projects               # List all projects
 nx show project <name>         # Show project details
 ```
+
+### Build Command Guidelines
+
+- **For AI agents**: Always use `nx build <app-name>` when building individual applications
+- **Never use**: `npm run build` or `pnpm build` inside app directories - this causes Vite configuration errors
+- **Root level**: `pnpm build` is acceptable for building all apps at once
+- **Reason**: Nx properly sets up the workspace context and resolves dependencies correctly
 
 ## Development Server Management
 
