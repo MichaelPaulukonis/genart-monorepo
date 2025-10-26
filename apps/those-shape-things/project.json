@@ -44,7 +44,8 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release --projects=those-shape-things",
+          "nx release version --projects=those-shape-things",
+          "nx release changelog --projects=those-shape-things",
           "npx gh-pages -d dist/apps/those-shape-things --repo https://github.com/michaelpaulukonis/those-shape-things.git"
         ],
         "parallel": false

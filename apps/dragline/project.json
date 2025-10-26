@@ -43,7 +43,8 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release --projects=dragline",
+          "nx release version --projects=dragline",
+          "nx release changelog --projects=dragline",
           "npx gh-pages -d dist/apps/dragline --repo https://github.com/MichaelPaulukonis/dragline.git --nojekyll"
         ],
         "parallel": false

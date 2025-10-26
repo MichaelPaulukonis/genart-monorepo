@@ -17,13 +17,17 @@
     "projects": ["apps/*"],
     "releaseTagPattern": "{projectName}@{version}",
     "version": {
-      "conventionalCommits": true
+      "conventionalCommits": true,
+      "git": {
+        "commit": true,
+        "tag": true
+      }
     },
     "changelog": {
       "projectChangelogs": true,
       "git": {
-        "commit": true,
-        "tag": true
+        "commit": false,
+        "tag": false
       }
     }
   }

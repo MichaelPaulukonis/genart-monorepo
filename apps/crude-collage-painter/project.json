@@ -44,7 +44,8 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release --projects=crude-collage-painter",
+          "nx release version --projects=crude-collage-painter",
+          "nx release changelog --projects=crude-collage-painter",
           "npx gh-pages -d dist/apps/crude-collage-painter --repo https://github.com/michaelpaulukonis/crude-collage-painter.git"
         ],
         "parallel": false

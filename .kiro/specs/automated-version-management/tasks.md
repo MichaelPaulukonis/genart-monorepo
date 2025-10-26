@@ -1,175 +1,112 @@
 # Implementation Plan
 
-**Note**: During implementation, we pivoted to use Nx Release with independent versioning instead of manual npm scripts. See [IMPLEMENTATION_NOTES.md](./IMPLEMENTATION_NOTES.md) for details.
+- [x] 1. Fix nx.json configuration to resolve git conflicts
 
-## Final Implementation (Nx Release Approach)
-
-- [x] 1. Configure Nx Release with independent versioning
-  - Configure nx.json with independent project relationship
-  - Enable conventional commits for automatic version detection
-  - Set up project changelogs and custom git tag patterns
-  - _Replaces original tasks 1.x and 2.x with superior solution_
-
-- [x] 2. Create release-deploy targets for integrated workflow
-  - Add release-deploy targets to all project.json files
-  - Integrate Nx Release with existing GitHub Pages deployment
-  - Use npx gh-pages for shared dependency management
-  - _Provides better integration than original manual approach_
-
-- [x] 3. Optimize shared dependencies
-  - Move gh-pages to root level as shared dependency
-  - Update all deployment commands to use npx gh-pages
-  - Remove duplicate dependencies from individual apps
-  - _Improves monorepo dependency management_
-
-- [x] 4. Create comprehensive documentation
-  - Complete version management guide with Nx Release
-  - Quick reference for common workflows
-  - Real-world workflow examples and scenarios
-  - Update README with new version management system
-  - _Exceeds original documentation requirements_
-
-## Original Plan (Superseded)
-
-- [x] 1.1 Update duo-chrome package.json with version scripts
-
-  - Add "bump": "npm version patch" script
-  - Add "prepublish": "npm run bump" script
-  - Add "version-publish": "npm run prepublish && npm publish" script (avoid conflict with existing publish)
-  - _Requirements: 1.1, 1.2, 1.5, 3.1, 3.2, 3.5_
-
-- [x] 1.2 Update crude-collage-painter package.json with version scripts
-
-  - Add "bump": "npm version patch" script
-  - Add "prepublish": "npm run bump" script
-  - Rename existing "publish" to "deploy" to avoid conflicts
-  - Add "version-publish": "npm run prepublish && npm publish" script
-  - _Requirements: 1.1, 1.2, 1.5, 3.1, 3.2, 3.5_
-
-- [x] 1.3 Update those-shape-things package.json with version scripts
-
-  - Add "bump": "npm version patch" script
-  - Add "prepublish": "npm run bump" script
-  - Add "version-publish": "npm run prepublish && npm publish" script
-  - _Requirements: 1.1, 1.2, 1.5, 3.1, 3.2, 3.5_
-
-- [x] 1.4 Update computational-collage package.json with version scripts
-
-  - Add "bump": "npm version patch" script
-  - Add "prepublish": "npm run bump" script
-  - Add "version-publish": "npm run prepublish && npm publish" script
-  - _Requirements: 1.1, 1.2, 1.5, 3.1, 3.2, 3.5_
-
-- [x] 1.5 Update dragline package.json with version scripts
-
-  - Add "bump": "npm version patch" script
-  - Add "prepublish": "npm run bump" script
-  - Add "version-publish": "npm run prepublish && npm publish" script
-  - _Requirements: 1.1, 1.2, 1.5, 3.1, 3.2, 3.5_
-
-- [ ] 2. Add Nx publish targets to project.json files
-
-  - Create publish targets using nx:run-commands executor for all apps
-  - Set appropriate working directories and commands
+  - Update nx.json to move git configuration from changelog section to top-level release.git
+  - Remove granular git configuration that conflicts with top-level release commands
+  - Preserve existing independent project relationships and conventional commits settings
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 2.1 Add publish target to duo-chrome project.json
+- [x] 2. Update duo-chrome project configuration
 
-  - Create publish target using nx:run-commands executor
-  - Set command to "npm version patch && npm publish"
-  - Set cwd to "apps/duo-chrome"
-  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+  - [x] 2.1 Modify duo-chrome project.json release-deploy target to use nx release subcommands
 
-- [ ] 2.2 Add publish target to crude-collage-painter project.json
+    - Replace single `nx release --projects=duo-chrome` with separate version and changelog commands
+    - Maintain proper command sequencing with parallel: false
+    - Preserve existing build dependency and GitHub Pages deployment
+    - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-  - Create publish target using nx:run-commands executor
-  - Set command to "npm version patch && npm publish"
-  - Set cwd to "apps/crude-collage-painter"
-  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+  - [x] 2.2 Test duo-chrome release-deploy target functionality
+    - Execute dry-run to verify configuration changes work correctly
+    - Validate that version bumping and changelog generation function properly
+    - Confirm GitHub Pages deployment still works with updated commands
+    - _Requirements: 1.1, 1.5, 3.3_
 
-- [ ] 2.3 Add publish target to those-shape-things project.json
+- [x] 3. Update remaining app configurations
 
-  - Create publish target using nx:run-commands executor
-  - Set command to "npm version patch && npm publish"
-  - Set cwd to "apps/those-shape-things"
-  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+  - [x] 3.1 Update crude-collage-painter project.json with corrected release-deploy target
 
-- [ ] 2.4 Create project.json for computational-collage and add publish target
+    - Replace `nx release --projects=crude-collage-painter` with separate version and changelog commands
+    - Apply same subcommand structure as duo-chrome
+    - Maintain build dependencies and deployment configuration
+    - _Requirements: 3.1, 3.2, 3.4_
 
-  - Create missing project.json file following the pattern of other apps
-  - Add standard Nx targets (dev, build, preview, lint, deploy)
-  - Add publish target using nx:run-commands executor
-  - Set command to "npm version patch && npm publish"
-  - Set cwd to "apps/computational-collage"
-  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+  - [x] 3.2 Update those-shape-things project.json with corrected release-deploy target
 
-- [ ] 2.5 Add publish target to dragline project.json
+    - Replace `nx release --projects=those-shape-things` with separate version and changelog commands
+    - Apply same subcommand structure as other apps
+    - Ensure consistent target configuration across all apps
+    - _Requirements: 3.1, 3.2, 3.4_
 
-  - Create publish target using nx:run-commands executor
-  - Set command to "npm version patch && npm publish"
-  - Set cwd to "apps/dragline"
-  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+  - [x] 3.3 Update computational-collage project.json with corrected release-deploy target
 
-- [ ] 3. Test version management implementation
+    - Replace `nx release --projects=computational-collage` with separate version and changelog commands
+    - Apply same subcommand structure as other apps
+    - Verify all apps have consistent release-deploy target structure
+    - _Requirements: 3.1, 3.2, 3.4_
 
-  - Test both npm scripts and Nx targets approaches
-  - Verify version increments and git tag creation
-  - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4_
+  - [x] 3.4 Update dragline project.json with corrected release-deploy target
+    - Replace `nx release --projects=dragline` with separate version and changelog commands
+    - Apply same subcommand structure as other apps
+    - Complete consistent configuration across all monorepo apps
+    - _Requirements: 3.1, 3.2, 3.4_
 
-- [ ] 3.1 Test npm scripts approach with one app
+- [x] 4. Update documentation and validation
 
-  - Navigate to app directory and run npm run version-publish
-  - Verify version increments in package.json
-  - Verify git tag is created
-  - Verify package publishes successfully (or dry-run if not publishing to registry)
-  - _Requirements: 1.1, 1.2, 1.3, 1.4_
+  - [x] 4.1 Update version-and-deploy.md with corrected commands and troubleshooting
 
-- [ ] 3.2 Test Nx targets approach with one app
+    - Replace incorrect `nx release --projects=app-name` examples with working subcommand syntax
+    - Add troubleshooting section for the specific git configuration conflict error
+    - Include validation steps to verify successful releases and deployments
+    - Update quick reference commands to reflect corrected implementation
+    - _Requirements: 4.1, 4.2, 4.3, 4.5_
 
-  - Run nx run appname:publish from monorepo root
-  - Verify version increments in package.json
-  - Verify git tag is created
-  - Verify package publishes successfully (or dry-run if not publishing to registry)
-  - _Requirements: 2.1, 2.2, 2.3, 2.4_
+  - [x] 4.2 Add comprehensive examples for single and multi-app workflows
+    - Document corrected single-app release process using subcommands
+    - Provide examples for releasing multiple apps with updated configuration
+    - Include dry-run examples for testing changes before execution
+    - Document relationship between conventional commits and version increments
+    - _Requirements: 4.2, 4.3, 4.4_
 
-- [ ]\* 3.3 Test error scenarios
+- [ ] 5. Validation and testing
 
-  - Test with dirty git working directory
-  - Test with existing version tag
-  - Test with network issues during publish
-  - Verify appropriate error messages are shown
-  - _Requirements: 1.1, 2.1_
+  - [ ] 5.1 Perform end-to-end testing of corrected release system
 
-- [ ] 4. Create documentation and usage examples
+    - Test single-app release workflow with one application
+    - Verify git tagging and changelog generation work correctly
+    - Confirm GitHub Pages deployment functions with updated commands
+    - Validate that conventional commits trigger appropriate version bumps
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 3.3_
 
-  - Document both approaches with clear examples
-  - Add troubleshooting and version referencing guidance
-  - _Requirements: 1.4, 2.5, 3.4_
+  - [ ] 5.2 Create integration tests for release-deploy targets
+    - Write automated tests to verify release-deploy target functionality
+    - Test error handling for common failure scenarios
+    - Validate configuration changes don't break existing functionality
+    - _Requirements: 1.5, 3.3_
 
-- [ ] 4.1 Update README with version management instructions
+- [x] 6. Document new app setup process
 
-  - Document npm scripts approach with examples
-  - Document Nx targets approach with examples
-  - Add section on changing version types (patch/minor/major)
-  - Include troubleshooting section for common issues
-  - _Requirements: 1.4, 2.5, 3.4_
+  - [x] 6.1 Create comprehensive new app setup guide
 
-- [ ] 4.2 Add code examples for version referencing
+    - Document step-by-step process for adding automated versioning to new apps
+    - Include project.json configuration template with release-deploy target
+    - Provide GitHub repository setup requirements and naming conventions
+    - Document first release process using --first-release flag
+    - Include troubleshooting section for common new app setup issues
+    - _Requirements: 4.1, 4.2, 4.5_
 
-  - Show how to import version from package.json in app code
-  - Add example of displaying version in app UI
-  - Document best practices for version usage
-  - _Requirements: 1.4_
+  - [x] 6.2 Create project.json template for new apps
 
-- [ ]\* 5.1 Add version type configuration options
+    - Design reusable project.json template with automated version management
+    - Include parameterized release-deploy target configuration
+    - Document required customizations (app name, port, repository URL)
+    - Provide validation checklist for new app configuration
+    - _Requirements: 3.1, 3.2, 4.1_
 
-  - Create helper scripts for minor and major version bumps
-  - Add npm scripts for different version types
-  - Document when to use each version type
-  - _Requirements: 1.2, 3.4_
+  - [x] 6.3 Document integration with existing monorepo workflow
 
-- [ ]\* 5.2 Add CI/CD integration examples
-  - Create example GitHub Actions workflow
-  - Document automated publishing strategies
-  - Add examples for different deployment scenarios
-  - _Requirements: 2.5_
+    - Explain how new apps inherit nx.json release configuration
+    - Document conventional commit requirements for version bumping
+    - Provide examples of adding new apps to existing release workflows
+    - Include best practices for maintaining consistent versioning across apps
+    - _Requirements: 2.1, 2.2, 4.2, 4.3_

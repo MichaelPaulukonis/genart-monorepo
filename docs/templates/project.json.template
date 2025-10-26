@@ -1,42 +1,42 @@
 {
-  "name": "duo-chrome",
-  "sourceRoot": "apps/duo-chrome/src",
+  "name": "{{APP_NAME}}",
+  "sourceRoot": "apps/{{APP_NAME}}/src",
   "projectType": "application",
   "targets": {
     "dev": {
       "executor": "@nx/vite:dev-server",
       "options": {
-        "buildTarget": "duo-chrome:build",
-        "port": 5173
+        "buildTarget": "{{APP_NAME}}:build",
+        "port": {{DEV_PORT}}
       }
     },
     "build": {
       "executor": "@nx/vite:build",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/duo-chrome",
-        "configFile": "apps/duo-chrome/vite.config.js"
+        "outputPath": "dist/apps/{{APP_NAME}}",
+        "configFile": "apps/{{APP_NAME}}/vite.config.js"
       }
     },
     "preview": {
       "executor": "@nx/vite:preview-server",
       "options": {
-        "buildTarget": "duo-chrome:build",
-        "port": 4173
+        "buildTarget": "{{APP_NAME}}:build",
+        "port": {{PREVIEW_PORT}}
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/duo-chrome/**/*.{js,jsx}"]
+        "lintFilePatterns": ["apps/{{APP_NAME}}/**/*.{js,jsx}"]
       }
     },
     "deploy": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx gh-pages -d dist/apps/duo-chrome --repo https://github.com/michaelpaulukonis/duo-chrome.git"
+        "command": "npx gh-pages -d dist/apps/{{APP_NAME}} --repo {{REPO_URL}}"
       }
     },
     "release-deploy": {
@@ -44,9 +44,9 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release version --projects=duo-chrome",
-          "nx release changelog --projects=duo-chrome",
-          "npx gh-pages -d dist/apps/duo-chrome --repo https://github.com/michaelpaulukonis/duo-chrome.git"
+          "nx release version --projects={{APP_NAME}}",
+          "nx release changelog --projects={{APP_NAME}}",
+          "npx gh-pages -d dist/apps/{{APP_NAME}} --repo {{REPO_URL}}"
         ],
         "parallel": false
       }

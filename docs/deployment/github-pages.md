@@ -25,17 +25,15 @@ The following apps are configured for GitHub Pages deployment:
 
 ### Manual Deployment
 
-Deploy individual apps using npm scripts:
+Deploy individual apps using Nx:
 
 ```bash
 # Deploy specific app
-npm run deploy:computational-collage
-npm run deploy:duo-chrome
-npm run deploy:crude-collage-painter
-npm run deploy:those-shape-things
-
-# Or using Nx directly
 nx deploy computational-collage
+nx deploy duo-chrome
+nx deploy crude-collage-painter
+nx deploy those-shape-things
+nx deploy dragline
 ```
 
 ### Automated Deployment
