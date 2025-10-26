@@ -54,120 +54,295 @@ canvas {
 
 .help-content {
   background-color: rgba(255, 255, 255, 0.97);
-  padding: 32px;
-  border-radius: 16px;
-  max-width: 520px;
+  padding: 24px;
+  padding-bottom: 60px; /* Space for close button */
+  border-radius: 12px;
+  width: 650px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
   color: #333;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: left;
+  position: relative;
 }
 
 .help-content h2 {
   margin-top: 0;
-  margin-bottom: 20px;
-  font-size: 28px;
+  margin-bottom: 5px;
+  font-size: 24px;
   text-align: center;
   color: #222;
   font-variant: small-caps;
   letter-spacing: 1px;
 }
 
-.help-content ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.help-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 16px;
+  text-align: center;
+  color: #666;
+  font-weight: normal;
+  font-style: italic;
+}
+
+/* Grid layout for shortcut sections */
+.shortcuts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px 24px;
-  text-align: left;
+  gap: 15px 20px;
+  margin-bottom: 15px;
 }
 
-.help-content li {
-  padding: 12px 16px;
-  font-size: 15px;
-  line-height: 1.5;
-  background-color: rgba(0, 0, 0, 0.03);
-  border-radius: 6px;
-  border-left: 3px solid rgba(0, 0, 0, 0.1);
+.shortcut-section {
+  margin-bottom: 0;
 }
 
-.help-content strong {
-  display: block;
-  color: #000;
-  font-weight: bold;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 4px;
-  font-family: monospace;
-}
-
-.help-content li span {
-  color: #444;
+.shortcut-section h4 {
+  margin: 5px 0;
+  color: #222;
   font-size: 14px;
-  line-height: 1.3;
+  font-weight: bold;
+  font-variant: small-caps;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 3px;
 }
 
-/* App-specific version display customizations for duo-chrome */
+.shortcut-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+
+.shortcut-section li {
+  margin: 4px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #444;
+}
+
+/* Full-width sections */
+.shortcut-section.full-width {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+/* Keyboard key styling */
+.help-content kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: bold;
+  color: #333;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Close button */
+.close-button {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  padding: 8px 16px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: 'Times New Roman', Times, serif;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: #555;
+}
+
+/* Version info styling */
 .version-info {
   text-align: center;
   margin-top: 15px;
   padding-top: 10px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #ddd;
   font-family: monospace;
   font-size: 0.8em;
   color: #666;
   opacity: 0.8;
-  /* Duo-chrome specific: match Times New Roman theme */
-  font-family: 'Times New Roman', Times, serif;
-  font-variant: small-caps;
-  letter-spacing: 0.5px;
-}
-
-.help-footer {
-  text-align: center;
-  margin-top: 20px;
-  margin-bottom: 0;
-  font-style: italic;
-  color: #666;
-  font-size: 14px;
 }
 
 .hidden {
   display: none;
 }
 
+/* Status Overlay Styles */
+.status-overlay {
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  font-family: 'Times New Roman', Times, serif;
+  border-radius: 12px;
+  padding: 16px;
+  z-index: 500;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  width: 280px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  user-select: none; /* Prevent text selection during drag */
+}
+
+.status-overlay.fade-out {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.status-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status-header {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+  font-variant: small-caps;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 8px;
+  cursor: grab;
+  transition: background-color 0.2s ease;
+  margin: -8px -8px 8px -8px;
+  padding: 8px;
+  border-radius: 8px 8px 0 0;
+}
+
+.status-header:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.status-header:active {
+  cursor: grabbing;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.status-images {
+  display: flex;
+  gap: 16px;
+}
+
+.status-image {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.status-image.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+}
+
+.status-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #ccc;
+  text-align: center;
+  font-variant: small-caps;
+  letter-spacing: 0.5px;
+}
+
+.status-filename {
+  font-size: 11px;
+  color: #fff;
+  text-align: center;
+  font-family: monospace;
+  line-height: 1.3;
+  width: 100px;
+  height: 2.6em; /* Fixed height for 2 lines */
+  overflow: hidden;
+  word-wrap: break-word;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.status-color {
+  font-size: 10px;
+  color: #aaa;
+  text-align: center;
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 2px 0;
+}
+
+.status-scale {
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+  font-family: monospace;
+}
+
+.status-scale span {
+  color: #fff;
+  font-weight: bold;
+}
+
 /* Responsive design for smaller screens */
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .help-content {
-    margin: 20px;
-    padding: 24px;
-    max-width: none;
+    width: 90vw;
+    padding: 20px;
+    padding-bottom: 50px;
   }
   
   .help-content h2 {
-    font-size: 22px;
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  
+  .help-content h3 {
+    font-size: 14px;
     margin-bottom: 16px;
   }
   
-  .help-content ul {
+  .shortcuts-grid {
     grid-template-columns: 1fr;
     gap: 12px;
   }
   
-  .help-content li {
-    padding: 10px 14px;
-    font-size: 14px;
-  }
-  
-  .help-content strong {
-    font-size: 12px;
-    margin-bottom: 3px;
-  }
-  
-  .help-content li span {
+  .shortcut-section h4 {
     font-size: 13px;
+  }
+  
+  .shortcut-section li {
+    font-size: 12px;
+  }
+  
+  .help-content kbd {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+  
+  .close-button {
+    font-size: 11px;
+    padding: 6px 12px;
   }
   
   .version-info {

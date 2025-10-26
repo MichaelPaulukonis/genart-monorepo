@@ -1,3 +1,37 @@
+/**
+ * Duo-Chrome Interactive Controls System
+ * 
+ * An interactive duotone image composition tool with comprehensive user controls.
+ * Allows independent control of two images (A and B) including size, color, and navigation.
+ * 
+ * Key Features:
+ * - Active image selection (A/B) with visual feedback
+ * - Individual size control with bounds enforcement (0.05x to 5.0x)
+ * - Image navigation through collection with uniqueness enforcement
+ * - Color cycling within current palette with conflict resolution
+ * - Image exchange (swap A and B completely)
+ * - Draggable status display with session persistence
+ * - Comprehensive keyboard shortcuts and visual indicators
+ * 
+ * Keyboard Controls:
+ * - A/B: Select active image
+ * - Arrow keys: Size (↑↓) and navigation (←→)
+ * - Cmd+Arrow keys: Color cycling
+ * - X: Exchange images A and B
+ * - I: Toggle status display
+ * - V: Toggle visual indicators
+ * - H/?: Toggle help
+ * 
+ * Architecture:
+ * - Control state management with centralized state object
+ * - Modular function groups for different control systems
+ * - Event-driven updates with visual feedback
+ * - Session persistence for UI preferences
+ * 
+ * Inspired by: https://bsky.app/profile/leedoughty.bsky.social/post/3ldh2esstd22h
+ * Original concept: https://leedoughty.com/
+ */
+
 import { p5 } from 'p5js-wrapper'
 import { RISOCOLORS, PALETTE, PALETTE_TWO } from './risocolors'
 import { imgs } from './imagelist'
@@ -5,16 +39,7 @@ import { getFormattedVersion } from './utils/version.js'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
 
-// inspired by https://bsky.app/profile/leedoughty.bsky.social/post/3ldh2esstd22h
-// https://leedoughty.com/
-
-/** TODO:
-  size an element down from max size by maybe 20% at random
-  play with larger, too?
-  square image plus square image are max v max and a kinda boring
-**/
-
-function getRandomUniqueItem (arr, excludeItems) {
+function getRandomUniqueItem(arr, excludeItems) {
   const filteredArr = arr.filter(item => !excludeItems.includes(item))
   if (filteredArr.length === 0) {
     throw new RangeError('getRandomUniqueItem: no available items to select')
@@ -50,6 +75,504 @@ const sketch = function (p) {
     { img: null, color: null, layer: null, scale: 1 }
   ]
 
+  /**
+   * Control State Management System
+   * 
+   * Centralized state management for the interactive control system.
+   * Tracks active image selection, manual adjustments, visual feedback,
+   * and UI component states across the application.
+   */
+  const controlState = {
+    activeImageIndex: 0, // 0 for Image A, 1 for Image B - determines which image responds to controls
+    manualSizeControl: [false, false], // Track if each image has manual size adjustments
+    imageIndices: [0, 1], // Current position in imgs array for each image (for navigation)
+    isManualMode: false, // has user taken manual control (affects automatic cycling)
+    showIndicators: false, // Whether to show visual indicators (active image highlighting)
+    indicatorTimeout: null, // Timeout for auto-hiding visual indicators
+    statusTimeout: null, // Timeout for auto-hiding status display
+    statusPosition: { x: 20, y: 20 }, // Position of draggable status display (session persistent)
+    statusIsPermanent: false, // was status display manually toggled (permanent vs temporary)
+    isDraggingStatus: false, // is status display currently being dragged (prevents canvas clicks)
+    needsRedraw: true, // Flag to control when screen updates are necessary
+    lastFrameTime: 0, // Track frame timing for performance monitoring
+    frameCount: 0 // Count frames for performance analysis
+  }
+
+  /**
+   * State Management Functions
+   * 
+   * Functions for managing the active image selection and control state.
+   * These functions handle switching between Image A and B, showing visual
+   * feedback, and maintaining the control state consistency.
+   */
+
+  /**
+   * Sets the active image (A or B) that will respond to user controls.
+   * Shows visual indicators and status display when changed.
+   * 
+   * @param {number} imageIndex - 0 for Image A, 1 for Image B
+   */
+  function setActiveImage(imageIndex) {
+    if (imageIndex === 0 || imageIndex === 1) {
+      controlState.activeImageIndex = imageIndex
+      console.log(`Active image set to: ${imageIndex === 0 ? 'A' : 'B'}`)
+      // Show indicators temporarily
+      showIndicatorsTemporarily()
+      // Show status display temporarily
+      showStatusDisplay()
+    }
+  }
+
+  function showIndicatorsTemporarily(duration = 2000) {
+    controlState.showIndicators = true
+
+    // Clear existing timeout
+    if (controlState.indicatorTimeout) {
+      clearTimeout(controlState.indicatorTimeout)
+    }
+
+    // Set new timeout to hide indicators
+    controlState.indicatorTimeout = setTimeout(() => {
+      controlState.showIndicators = false
+      requestScreenUpdate()
+    }, duration)
+
+    requestScreenUpdate()
+  }
+
+  function toggleIndicators() {
+    controlState.showIndicators = !controlState.showIndicators
+
+    // Clear timeout if manually toggling
+    if (controlState.indicatorTimeout) {
+      clearTimeout(controlState.indicatorTimeout)
+      controlState.indicatorTimeout = null
+    }
+
+    updateScreen()
+  }
+
+  function setManualSizeControl(imageIndex, isManual) {
+    if (imageIndex === 0 || imageIndex === 1) {
+      controlState.manualSizeControl[imageIndex] = isManual
+      if (isManual) {
+        controlState.isManualMode = true
+      }
+    }
+  }
+
+  function setImageIndex(imageIndex, arrayIndex) {
+    if (imageIndex === 0 || imageIndex === 1) {
+      controlState.imageIndices[imageIndex] = arrayIndex
+      console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} array index set to: ${arrayIndex}`)
+    }
+  }
+
+  function resetManualControls() {
+    controlState.manualSizeControl = [false, false]
+    controlState.isManualMode = false
+    console.log('Manual controls reset to automatic mode')
+  }
+
+  function getActiveImageIndex() {
+    return controlState.activeImageIndex
+  }
+
+  function isManualControlActive(imageIndex) {
+    return controlState.manualSizeControl[imageIndex]
+  }
+
+  /**
+   * Size Control System
+   * 
+   * Functions for adjusting image scale with bounds enforcement and visual feedback.
+   * Supports manual size control with scale limits (0.05 to 5.0) and provides
+   * audio/visual feedback when bounds are reached.
+   */
+
+  /**
+   * Adjusts the scale of a specific image by a delta amount.
+   * Enforces minimum (0.05) and maximum (5.0) scale limits with feedback.
+   * Activates manual size control mode and updates status display.
+   * 
+   * @param {number} imageIndex - 0 for Image A, 1 for Image B
+   * @param {number} delta - Amount to change scale (positive = larger, negative = smaller)
+   * @returns {boolean} - true if adjustment succeeded, false if bounds reached
+   */
+  function adjustImageSize(imageIndex, delta) {
+    if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
+      console.warn('Invalid image index:', imageIndex)
+      return false
+    }
+
+    const currentScale = parseFloat(imageColorPairs[imageIndex].scale)
+    const newScale = currentScale + delta
+    const minScale = 0.05
+    const maxScale = 5.0
+
+    // Bounds checking with feedback
+    if (newScale < minScale) {
+      imageColorPairs[imageIndex].scale = minScale
+      console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} reached minimum size (${minScale})`)
+      provideBoundsFeedback('minimum')
+      return false
+    } else if (newScale > maxScale) {
+      imageColorPairs[imageIndex].scale = maxScale
+      console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} reached maximum size (${maxScale})`)
+      provideBoundsFeedback('maximum')
+      return false
+    } else {
+      imageColorPairs[imageIndex].scale = newScale.toFixed(2)
+      setManualSizeControl(imageIndex, true)
+      console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} scale adjusted to: ${imageColorPairs[imageIndex].scale}`)
+      // Update status display when size changes
+      showStatusDisplay()
+      return true
+    }
+  }
+
+  function provideBoundsFeedback(boundType) {
+    // Visual feedback - briefly flash the canvas border
+    const canvas = p.canvas
+    const originalStyle = canvas.style.border
+
+    if (boundType === 'minimum') {
+      canvas.style.border = '3px solid #ff4444'
+    } else if (boundType === 'maximum') {
+      canvas.style.border = '3px solid #4444ff'
+    }
+
+    // Reset border after brief flash
+    setTimeout(() => {
+      canvas.style.border = originalStyle
+    }, 200)
+
+    // Audio feedback (if available)
+    try {
+      // Create a brief audio beep for bounds feedback
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      oscillator.frequency.setValueAtTime(boundType === 'minimum' ? 200 : 400, audioContext.currentTime)
+      oscillator.type = 'sine'
+
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.1)
+    } catch (error) {
+      // Audio feedback not available, continue silently
+      console.log('Audio feedback not available:', error.message)
+    }
+  }
+
+  function resetImageSize(imageIndex) {
+    if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
+      console.warn('Invalid image index:', imageIndex)
+      return
+    }
+
+    imageColorPairs[imageIndex].scale = 1.0
+    setManualSizeControl(imageIndex, false)
+    console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} size reset to default (1.0)`)
+    requestScreenUpdate()
+  }
+
+  /**
+   * Image Exchange System
+   * 
+   * Provides functionality to swap the complete state between Image A and B.
+   * This includes filename, color, layer, scale, array position, and manual control state.
+   * Useful for experimenting with different layering arrangements and blend mode effects.
+   */
+
+  /**
+   * Exchanges all properties between Image A and Image B.
+   * Swaps: filename, color, rendered layer, scale, array index, and manual control state.
+   * Updates display and status immediately after exchange.
+   */
+  function exchangeImages() {
+    // Swap all properties between image A and B
+    const tempImg = imageColorPairs[0].img
+    const tempColor = imageColorPairs[0].color
+    const tempLayer = imageColorPairs[0].layer
+    const tempScale = imageColorPairs[0].scale
+    const tempIndex = controlState.imageIndices[0]
+    const tempManualControl = controlState.manualSizeControl[0]
+
+    // Move B to A
+    imageColorPairs[0].img = imageColorPairs[1].img
+    imageColorPairs[0].color = imageColorPairs[1].color
+    imageColorPairs[0].layer = imageColorPairs[1].layer
+    imageColorPairs[0].scale = imageColorPairs[1].scale
+    controlState.imageIndices[0] = controlState.imageIndices[1]
+    controlState.manualSizeControl[0] = controlState.manualSizeControl[1]
+
+    // Move A to B
+    imageColorPairs[1].img = tempImg
+    imageColorPairs[1].color = tempColor
+    imageColorPairs[1].layer = tempLayer
+    imageColorPairs[1].scale = tempScale
+    controlState.imageIndices[1] = tempIndex
+    controlState.manualSizeControl[1] = tempManualControl
+
+    console.log('Images A and B exchanged')
+
+    // Update the display
+    requestScreenUpdate()
+
+    // Update status display to reflect the exchange
+    updateStatusDisplay()
+    showStatusDisplay()
+  }
+
+  /**
+   * Color Navigation System
+   * 
+   * Allows cycling through colors in the current palette for individual images.
+   * Maintains uniqueness between images and provides wraparound navigation.
+   * Regenerates image layers with new colors and updates visual feedback.
+   */
+
+  /**
+   * Cycles through colors in the current palette for a specific image.
+   * Ensures uniqueness (prevents both images from having the same color).
+   * Supports wraparound navigation and conflict resolution.
+   * 
+   * @param {number} imageIndex - 0 for Image A, 1 for Image B
+   * @param {string|number} direction - 'next'/'previous' or 1/-1
+   * @returns {boolean} - true if navigation succeeded, false if failed
+   */
+  function navigateImageColor(imageIndex, direction) {
+    if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
+      console.warn('Invalid image index:', imageIndex)
+      return false
+    }
+
+    const currentColorArray = COLORS[colorIndex]
+    const currentColor = imageColorPairs[imageIndex].color
+    let currentColorIndex = currentColorArray.findIndex(color => color.name === currentColor.name)
+
+    // If current color not found in array (shouldn't happen), start from 0
+    if (currentColorIndex === -1) {
+      currentColorIndex = 0
+    }
+
+    let newColorIndex
+
+    // Calculate new index with wraparound logic
+    if (direction === 'next' || direction === 1) {
+      newColorIndex = (currentColorIndex + 1) % currentColorArray.length
+    } else if (direction === 'previous' || direction === -1) {
+      newColorIndex = (currentColorIndex - 1 + currentColorArray.length) % currentColorArray.length
+    } else {
+      console.warn('Invalid direction:', direction)
+      return false
+    }
+
+    // Ensure uniqueness - prevent both images from having the same color
+    const otherImageIndex = imageIndex === 0 ? 1 : 0
+    const otherColor = imageColorPairs[otherImageIndex].color
+
+    // If the new color would conflict with the other image, skip to the next available
+    let newColor = currentColorArray[newColorIndex]
+    if (newColor.name === otherColor.name) {
+      // Continue in the same direction to find the next unique color
+      if (direction === 'next' || direction === 1) {
+        newColorIndex = (newColorIndex + 1) % currentColorArray.length
+      } else {
+        newColorIndex = (newColorIndex - 1 + currentColorArray.length) % currentColorArray.length
+      }
+
+      // Safety check to prevent infinite loop
+      let attempts = 0
+      while (currentColorArray[newColorIndex].name === otherColor.name && attempts < currentColorArray.length) {
+        if (direction === 'next' || direction === 1) {
+          newColorIndex = (newColorIndex + 1) % currentColorArray.length
+        } else {
+          newColorIndex = (newColorIndex - 1 + currentColorArray.length) % currentColorArray.length
+        }
+        attempts++
+      }
+
+      if (attempts >= currentColorArray.length) {
+        console.warn('Could not find unique color - all colors may be in use')
+        return false
+      }
+
+      newColor = currentColorArray[newColorIndex]
+    }
+
+    // Update the color
+    imageColorPairs[imageIndex].color = newColor
+
+    console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} color changed ${direction} to: ${newColor.name}`)
+
+    // Regenerate the layer with the new color
+    if (imageColorPairs[imageIndex].img && imageColorPairs[imageIndex].layer) {
+      p.loadImage('./images.bak/' + imageColorPairs[imageIndex].img, img => {
+        // Remove old layer if it exists
+        if (imageColorPairs[imageIndex].layer && imageColorPairs[imageIndex].layer.remove) {
+          imageColorPairs[imageIndex].layer.remove()
+        }
+
+        // Generate new monochrome layer with new color
+        imageColorPairs[imageIndex].layer = createMonochromeImage(
+          img,
+          p.color(newColor.color)
+        )
+
+        // Update the display
+        requestScreenUpdate()
+
+        // Update status display when color changes
+        updateStatusDisplay()
+      })
+    }
+
+    // Update status display immediately for color name change
+    showStatusDisplay()
+
+    return true
+  }
+
+  /**
+   * Image Navigation System
+   * 
+   * Provides navigation through the image array for individual images.
+   * Maintains uniqueness between images and supports wraparound navigation.
+   * Preserves manual size adjustments when switching to new images.
+   */
+
+  /**
+   * Navigates through the image array for a specific image.
+   * Ensures uniqueness (prevents both images from showing the same content).
+   * Supports wraparound navigation and preserves manual size adjustments.
+   * 
+   * @param {number} imageIndex - 0 for Image A, 1 for Image B
+   * @param {string|number} direction - 'next'/'previous' or 1/-1
+   * @returns {boolean} - true if navigation succeeded, false if failed
+   */
+  function navigateImage(imageIndex, direction) {
+    if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
+      console.warn('Invalid image index:', imageIndex)
+      return false
+    }
+
+    const currentArrayIndex = controlState.imageIndices[imageIndex]
+    let newArrayIndex
+
+    // Calculate new index with wraparound logic
+    if (direction === 'next' || direction === 1) {
+      newArrayIndex = (currentArrayIndex + 1) % imgs.length
+    } else if (direction === 'previous' || direction === -1) {
+      newArrayIndex = (currentArrayIndex - 1 + imgs.length) % imgs.length
+    } else {
+      console.warn('Invalid direction:', direction)
+      return false
+    }
+
+    // Ensure uniqueness - prevent both images from showing the same content
+    const otherImageIndex = imageIndex === 0 ? 1 : 0
+    const otherArrayIndex = controlState.imageIndices[otherImageIndex]
+
+    // If the new index would conflict with the other image, skip to the next available
+    if (newArrayIndex === otherArrayIndex) {
+      // Continue in the same direction to find the next unique image
+      if (direction === 'next' || direction === 1) {
+        newArrayIndex = (newArrayIndex + 1) % imgs.length
+      } else {
+        newArrayIndex = (newArrayIndex - 1 + imgs.length) % imgs.length
+      }
+
+      // Safety check to prevent infinite loop (though unlikely with current image count)
+      let attempts = 0
+      while (newArrayIndex === otherArrayIndex && attempts < imgs.length) {
+        if (direction === 'next' || direction === 1) {
+          newArrayIndex = (newArrayIndex + 1) % imgs.length
+        } else {
+          newArrayIndex = (newArrayIndex - 1 + imgs.length) % imgs.length
+        }
+        attempts++
+      }
+
+      if (attempts >= imgs.length) {
+        console.warn('Could not find unique image - all images may be in use')
+        return false
+      }
+    }
+
+    // Update the control state with new array index
+    setImageIndex(imageIndex, newArrayIndex)
+
+    // Get the new image filename
+    const newImageFilename = imgs[newArrayIndex]
+
+    console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} navigated ${direction} to: ${newImageFilename} (index ${newArrayIndex})`)
+
+    // Load and update the image
+    setImageByIndex(imageIndex, newArrayIndex)
+
+    // Update status display when image changes
+    showStatusDisplay()
+
+    return true
+  }
+
+  function setImageByIndex(imageIndex, arrayIndex) {
+    if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
+      console.warn('Invalid image index:', imageIndex)
+      return
+    }
+
+    if (arrayIndex < 0 || arrayIndex >= imgs.length) {
+      console.warn('Invalid array index:', arrayIndex)
+      return
+    }
+
+    const newImageFilename = imgs[arrayIndex]
+    const currentColor = imageColorPairs[imageIndex].color
+
+    // Update the image filename in the pair
+    imageColorPairs[imageIndex].img = newImageFilename
+
+    // Update control state
+    setImageIndex(imageIndex, arrayIndex)
+
+    // Preserve manual size adjustments when navigating to new images
+    const currentScale = imageColorPairs[imageIndex].scale
+    const wasManuallyAdjusted = controlState.manualSizeControl[imageIndex]
+
+    // Load the new image and regenerate the layer
+    p.loadImage('./images/' + newImageFilename, img => {
+      // Remove old layer if it exists
+      if (imageColorPairs[imageIndex].layer && imageColorPairs[imageIndex].layer.remove) {
+        imageColorPairs[imageIndex].layer.remove()
+      }
+
+      // Generate new monochrome layer with existing color
+      imageColorPairs[imageIndex].layer = createMonochromeImage(
+        img,
+        p.color(currentColor.color)
+      )
+
+      // Preserve the scale and manual control state
+      imageColorPairs[imageIndex].scale = currentScale
+      controlState.manualSizeControl[imageIndex] = wasManuallyAdjusted
+
+      // Update the display
+      requestScreenUpdate()
+
+      // Update status display when image loads
+      updateStatusDisplay()
+    })
+  }
+
   p.setup = function () {
     p.pixelDensity(2)
     // display mode
@@ -60,12 +583,27 @@ const sketch = function (p) {
     p.imageMode(p.CENTER)
     colorLayer1 = p.createGraphics(100, 100)
     setBlendModeAndBackground()
+
+    // Initialize control state
+    initializeControlState()
+
+    // Initialize status display dragging
+    initializeStatusDragging()
+
+    // Initialize help system
+    initializeHelpSystem()
+
     initializeImageColorPairs() // Initialize both pairs initially
     updateImageColorPair(0)
     updateImageColorPair(1)
   }
 
   p.mousePressed = function () {
+    // Don't update images if currently dragging status display
+    if (controlState.isDraggingStatus) {
+      return
+    }
+
     loadNewImagesAndColors() // Update one pair at a time
   }
 
@@ -73,9 +611,50 @@ const sketch = function (p) {
     if ((p.keyIsDown(p.CONTROL) || p.keyIsDown(91)) && p.key === 's') {
       p.saveCanvas(generateFilename())
       return false // Prevent default browser behavior
+    } else if (p.key === 'a') {
+      // Select Image A as active
+      setActiveImage(0)
     } else if (p.key === 'b') {
+      // Select Image B as active
+      setActiveImage(1)
+    } else if (p.key === 'B') {
+      // Toggle background color (capital B)
       toggleBackgroundColor()
       regenerateLayers()
+    } else if (p.keyCode === p.UP_ARROW) {
+      // Increase active image size
+      const activeIndex = getActiveImageIndex()
+      adjustImageSize(activeIndex, 0.1)
+      showIndicatorsTemporarily()
+      return false // Prevent default browser behavior
+    } else if (p.keyCode === p.DOWN_ARROW) {
+      // Decrease active image size
+      const activeIndex = getActiveImageIndex()
+      adjustImageSize(activeIndex, -0.1)
+      showIndicatorsTemporarily()
+      return false // Prevent default browser behavior
+    } else if (p.keyCode === p.LEFT_ARROW) {
+      const activeIndex = getActiveImageIndex()
+      if (p.keyIsDown(p.CONTROL) || p.keyIsDown(91)) { // Cmd/Ctrl key
+        // Navigate to previous color for active image
+        navigateImageColor(activeIndex, 'previous')
+      } else {
+        // Navigate to previous image for active image
+        navigateImage(activeIndex, 'previous')
+      }
+      showIndicatorsTemporarily()
+      return false // Prevent default browser behavior
+    } else if (p.keyCode === p.RIGHT_ARROW) {
+      const activeIndex = getActiveImageIndex()
+      if (p.keyIsDown(p.CONTROL) || p.keyIsDown(91)) { // Cmd/Ctrl key
+        // Navigate to next color for active image
+        navigateImageColor(activeIndex, 'next')
+      } else {
+        // Navigate to next image for active image
+        navigateImage(activeIndex, 'next')
+      }
+      showIndicatorsTemporarily()
+      return false // Prevent default browser behavior
     } else if (p.key === 'c') {
       colorIndex = (colorIndex + 1) % COLORS.length
     } else if (p.key === 'm') {
@@ -86,8 +665,14 @@ const sketch = function (p) {
     } else if (p.key === 'S') {
       autoSave = !autoSave
       console.log(`autoSave: ${autoSave}`)
-    } else if (p.key === 'h' || p.key === 'i') {
+    } else if (p.key === 'h' || p.key === '?') {
       toggleHelpOverlay()
+    } else if (p.key === 'i') {
+      toggleStatusDisplay()
+    } else if (p.key === 'v') {
+      toggleIndicators()
+    } else if (p.key === 'x') {
+      exchangeImages()
     }
   }
 
@@ -100,21 +685,21 @@ const sketch = function (p) {
     }
   }
 
-  function setBlendModeAndBackground () {
+  function setBlendModeAndBackground() {
     const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
     p.background(p.color(...currentBackgroundMode.color))
   }
 
-  function toggleBackgroundColor () {
+  function toggleBackgroundColor() {
     currentBackgroundModeIndex =
       (currentBackgroundModeIndex + 1) % backgroundModes.length
     currentBlendModeIndex = 0 // Reset to the first blend mode for the new background
     setBlendModeAndBackground()
-    updateScreen()
+    requestScreenUpdate()
   }
 
-  function regenerateLayers () {
+  function regenerateLayers() {
     imageColorPairs.forEach((pair, index) => {
       if (pair.img && pair.color) {
         p.loadImage('./images/' + pair.img, function (img) {
@@ -128,28 +713,27 @@ const sketch = function (p) {
             img,
             p.color(pair.color.color)
           )
-          updateScreen()
+          requestScreenUpdate()
         })
       }
     })
   }
 
-  function cycleBlendMode () {
+  function cycleBlendMode() {
     const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
     currentBlendModeIndex =
       (currentBlendModeIndex + 1) % currentBackgroundMode.blendModes.length
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
-    updateScreen()
+    requestScreenUpdate()
   }
 
-  function generateFilename () {
+  function generateFilename() {
     const d = new Date()
-    return `duo_chrome_image.${d.getFullYear()}.${
-      d.getMonth() + 1
-    }.${d.getDate()}.${d.getHours()}${d.getMinutes()}${d.getSeconds()}.png`
+    return `duo_chrome_image.${d.getFullYear()}.${d.getMonth() + 1
+      }.${d.getDate()}.${d.getHours()}${d.getMinutes()}${d.getSeconds()}.png`
   }
 
-  async function toggleHelpOverlay () {
+  async function toggleHelpOverlay() {
     const helpOverlay = document.getElementById('help-overlay')
     if (helpOverlay) {
       // If showing the overlay, populate version info
@@ -169,26 +753,93 @@ const sketch = function (p) {
     }
   }
 
-  function initializeImageColorPairs () {
+  function initializeHelpSystem() {
+    // Add close button functionality
+    const closeButton = document.getElementById('close-help')
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        const helpOverlay = document.getElementById('help-overlay')
+        if (helpOverlay) {
+          helpOverlay.classList.add('hidden')
+        }
+      })
+    }
+
+    // Add ESC key to close help
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const helpOverlay = document.getElementById('help-overlay')
+        if (helpOverlay && !helpOverlay.classList.contains('hidden')) {
+          helpOverlay.classList.add('hidden')
+          e.preventDefault()
+        }
+      }
+    })
+  }
+
+  function initializeControlState() {
+    // Set default active image to Image A (index 0)
+    controlState.activeImageIndex = 0
+
+    // Initialize manual control flags to false (automatic mode)
+    controlState.manualSizeControl = [false, false]
+
+    // Initialize image indices to track position in imgs array
+    // Find the current images in the imgs array and set their indices
+    controlState.imageIndices = [0, 1] // Start with first two images
+
+    // Start in automatic mode
+    controlState.isManualMode = false
+
+    console.log('Control state initialized:', controlState)
+  }
+
+  function initializeImageColorPairs() {
     imageColorPairs[0].img = getRandomUniqueItem(imgs, [])
     imageColorPairs[0].color = getRandomUniqueItem(COLORS[colorIndex], [])
     imageColorPairs[1].img = getRandomUniqueItem(imgs, [imageColorPairs[0].img])
     imageColorPairs[1].color = getRandomUniqueItem(COLORS[colorIndex], [
       imageColorPairs[0].color
     ])
+
+    // Update control state with the selected image indices
+    controlState.imageIndices[0] = imgs.indexOf(imageColorPairs[0].img)
+    controlState.imageIndices[1] = imgs.indexOf(imageColorPairs[1].img)
   }
 
-  function loadNewImagesAndColors () {
+  function loadNewImagesAndColors() {
     updateImageColorPair(currentPair)
     currentPair = (currentPair + 1) % 2 // Toggle between 0 and 1
   }
 
-  function updateImageColorPair (pairIndex) {
-    // NOTE: this gets a filename, not an image
-    const selectedImage = getRandomUniqueItem(
-      imgs,
-      imageColorPairs.map(pair => pair.img)
-    )
+  function updateImageColorPair(pairIndex, specificArrayIndex = null) {
+    let selectedImage
+
+    if (specificArrayIndex !== null) {
+      // Use specific array index for manual navigation
+      if (specificArrayIndex < 0 || specificArrayIndex >= imgs.length) {
+        console.warn('Invalid array index:', specificArrayIndex)
+        return
+      }
+      selectedImage = imgs[specificArrayIndex]
+
+      // Ensure the selected image is different from the other image in the pair
+      const otherPairIndex = pairIndex === 0 ? 1 : 0
+      const otherImage = imageColorPairs[otherPairIndex].img
+
+      if (selectedImage === otherImage) {
+        console.warn('Selected image conflicts with other image, skipping update')
+        return
+      }
+    } else {
+      // Use random selection for automatic cycling (existing behavior)
+      selectedImage = getRandomUniqueItem(
+        imgs,
+        imageColorPairs.map(pair => pair.img)
+      )
+    }
+
+    // Always get a new random color (unless preserving existing color for navigation)
     const selectedColor = getRandomUniqueItem(
       COLORS[colorIndex],
       imageColorPairs.map(pair => pair.color)
@@ -196,7 +847,19 @@ const sketch = function (p) {
 
     imageColorPairs[pairIndex].img = selectedImage
     imageColorPairs[pairIndex].color = selectedColor
-    imageColorPairs[pairIndex].scale = p.random(0.8, 1.2).toFixed(2)
+
+    // Reset manual size control when automatic cycling occurs
+    if (!controlState.isManualMode && specificArrayIndex === null) {
+      imageColorPairs[pairIndex].scale = p.random(0.8, 1.2).toFixed(2)
+      controlState.manualSizeControl[pairIndex] = false
+    }
+
+    // Update control state with new image index
+    if (specificArrayIndex !== null) {
+      controlState.imageIndices[pairIndex] = specificArrayIndex
+    } else {
+      controlState.imageIndices[pairIndex] = imgs.indexOf(selectedImage)
+    }
 
     p.loadImage('./images/' + selectedImage, img => {
       if (
@@ -209,26 +872,509 @@ const sketch = function (p) {
         img,
         p.color(selectedColor.color)
       )
-      updateScreen()
+      requestScreenUpdate()
     })
   }
 
-  function updateScreen () {
+  // Visual Feedback System
+  function drawActiveImageIndicator() {
+    const activeIndex = controlState.activeImageIndex
+    const activePair = imageColorPairs[activeIndex]
+
+    if (!activePair.layer) return
+
+    // Calculate the position and size of the active image
+    const imageWidth = activePair.layer.width * activePair.scale
+    const imageHeight = activePair.layer.height * activePair.scale
+    const imageX = p.width / 2
+    const imageY = p.height / 2
+
+    // Save current drawing state
+    p.push()
+
+    // Use normal blend mode for better control
+    p.blendMode(p.NORMAL)
+
+    // Use contrasting color based on background
+    const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
+    const isLightBackground = currentBackgroundMode.color[0] > 127
+
+    // Use high-contrast colors that work on both backgrounds
+    const borderColor = isLightBackground ? p.color(0, 0, 0, 255) : p.color(255, 255, 255, 255)
+    const shadowColor = isLightBackground ? p.color(255, 255, 255, 200) : p.color(0, 0, 0, 200)
+
+    // Draw border around active image with shadow for visibility
+    p.rectMode(p.CENTER)
+    p.noFill()
+
+    // Draw shadow/outline first
+    p.stroke(shadowColor)
+    p.strokeWeight(6)
+    p.rect(imageX, imageY, imageWidth + 8, imageHeight + 8)
+
+    // Draw main border
+    p.stroke(borderColor)
+    p.strokeWeight(3)
+    p.rect(imageX, imageY, imageWidth + 8, imageHeight + 8)
+
+    // Draw corner indicators for extra visibility
+    const cornerSize = 20
+    const halfWidth = (imageWidth + 8) / 2
+    const halfHeight = (imageHeight + 8) / 2
+
+    // Draw corner shadows first
+    p.stroke(shadowColor)
+    p.strokeWeight(4)
+
+    // Top-left corner
+    p.line(imageX - halfWidth, imageY - halfHeight, imageX - halfWidth + cornerSize, imageY - halfHeight)
+    p.line(imageX - halfWidth, imageY - halfHeight, imageX - halfWidth, imageY - halfHeight + cornerSize)
+
+    // Top-right corner
+    p.line(imageX + halfWidth, imageY - halfHeight, imageX + halfWidth - cornerSize, imageY - halfHeight)
+    p.line(imageX + halfWidth, imageY - halfHeight, imageX + halfWidth, imageY - halfHeight + cornerSize)
+
+    // Bottom-left corner
+    p.line(imageX - halfWidth, imageY + halfHeight, imageX - halfWidth + cornerSize, imageY + halfHeight)
+    p.line(imageX - halfWidth, imageY + halfHeight, imageX - halfWidth, imageY + halfHeight - cornerSize)
+
+    // Bottom-right corner
+    p.line(imageX + halfWidth, imageY + halfHeight, imageX + halfWidth - cornerSize, imageY + halfHeight)
+    p.line(imageX + halfWidth, imageY + halfHeight, imageX + halfWidth, imageY + halfHeight - cornerSize)
+
+    // Draw main corner indicators
+    p.stroke(borderColor)
+    p.strokeWeight(2)
+
+    // Top-left corner
+    p.line(imageX - halfWidth, imageY - halfHeight, imageX - halfWidth + cornerSize, imageY - halfHeight)
+    p.line(imageX - halfWidth, imageY - halfHeight, imageX - halfWidth, imageY - halfHeight + cornerSize)
+
+    // Top-right corner
+    p.line(imageX + halfWidth, imageY - halfHeight, imageX + halfWidth - cornerSize, imageY - halfHeight)
+    p.line(imageX + halfWidth, imageY - halfHeight, imageX + halfWidth, imageY - halfHeight + cornerSize)
+
+    // Bottom-left corner
+    p.line(imageX - halfWidth, imageY + halfHeight, imageX - halfWidth + cornerSize, imageY + halfHeight)
+    p.line(imageX - halfWidth, imageY + halfHeight, imageX - halfWidth, imageY + halfHeight - cornerSize)
+
+    // Bottom-right corner
+    p.line(imageX + halfWidth, imageY + halfHeight, imageX + halfWidth - cornerSize, imageY + halfHeight)
+    p.line(imageX + halfWidth, imageY + halfHeight, imageX + halfWidth, imageY + halfHeight - cornerSize)
+
+    // Draw label indicating which image is active
+    p.noStroke()
+    p.textAlign(p.CENTER, p.CENTER)
+    p.textSize(16)
+    p.textStyle(p.BOLD)
+
+    // Position label at top of the indicator
+    const labelY = imageY - halfHeight - 25
+    const labelText = activeIndex === 0 ? 'IMAGE A' : 'IMAGE B'
+    const textWidth = p.textWidth(labelText)
+
+    // Draw background shadow for label
+    p.fill(shadowColor)
+    p.rect(imageX + 1, labelY + 1, textWidth + 12, 22, 5)
+
+    // Draw background for label
+    p.fill(isLightBackground ? p.color(255, 255, 255, 220) : p.color(0, 0, 0, 220))
+    p.rect(imageX, labelY, textWidth + 10, 20, 5)
+
+    // Draw label text shadow
+    p.fill(shadowColor)
+    p.text(labelText, imageX + 1, labelY + 1)
+
+    // Draw label text
+    p.fill(borderColor)
+    p.text(labelText, imageX, labelY)
+
+    // Restore drawing state
+    p.pop()
+  }
+
+  /**
+   * Status Display System
+   * 
+   * Manages the draggable status overlay that shows current image information.
+   * Displays image filenames, colors, scale factors, and active image highlighting.
+   * Supports temporary and permanent display modes with session-persistent positioning.
+   */
+
+  /**
+   * Updates the status display with current image information.
+   * Shows filenames, color names, scale factors, and active image highlighting.
+   * Called automatically when image properties change.
+   */
+  function updateStatusDisplay() {
+    const statusOverlay = document.getElementById('status-overlay')
+    if (!statusOverlay) return
+
+    // Update filenames
+    const filenameA = document.getElementById('status-filename-a')
+    const filenameB = document.getElementById('status-filename-b')
+
+    if (filenameA && imageColorPairs[0].img) {
+      // Extract just the filename without extension for cleaner display
+      const cleanName = imageColorPairs[0].img.replace(/\.[^/.]+$/, '')
+      filenameA.textContent = cleanName
+    }
+
+    if (filenameB && imageColorPairs[1].img) {
+      // Extract just the filename without extension for cleaner display
+      const cleanName = imageColorPairs[1].img.replace(/\.[^/.]+$/, '')
+      filenameB.textContent = cleanName
+    }
+
+    // Update color names
+    const colorA = document.getElementById('status-color-a')
+    const colorB = document.getElementById('status-color-b')
+
+    if (colorA && imageColorPairs[0].color) {
+      colorA.textContent = imageColorPairs[0].color.name
+    }
+
+    if (colorB && imageColorPairs[1].color) {
+      colorB.textContent = imageColorPairs[1].color.name
+    }
+
+    // Update scale factors
+    const scaleA = document.getElementById('status-scale-a')
+    const scaleB = document.getElementById('status-scale-b')
+
+    if (scaleA) {
+      scaleA.textContent = parseFloat(imageColorPairs[0].scale).toFixed(2)
+    }
+
+    if (scaleB) {
+      scaleB.textContent = parseFloat(imageColorPairs[1].scale).toFixed(2)
+    }
+
+    // Update active image highlighting
+    const statusImageA = document.getElementById('status-image-a')
+    const statusImageB = document.getElementById('status-image-b')
+
+    if (statusImageA && statusImageB) {
+      statusImageA.classList.toggle('active', controlState.activeImageIndex === 0)
+      statusImageB.classList.toggle('active', controlState.activeImageIndex === 1)
+    }
+  }
+
+  function showStatusDisplay(duration = 3000) {
+    const statusOverlay = document.getElementById('status-overlay')
+    if (!statusOverlay) return
+
+    // Update the display with current information
+    updateStatusDisplay()
+
+    // Show the overlay
+    statusOverlay.classList.remove('hidden', 'fade-out')
+
+    // Clear any existing timeout
+    if (controlState.statusTimeout) {
+      clearTimeout(controlState.statusTimeout)
+      controlState.statusTimeout = null
+    }
+
+    // Set timeout to hide the overlay (only if duration > 0)
+    if (duration > 0) {
+      controlState.statusIsPermanent = false
+      controlState.statusTimeout = setTimeout(() => {
+        hideStatusDisplay()
+      }, duration)
+    } else {
+      controlState.statusIsPermanent = true
+    }
+  }
+
+  function hideStatusDisplay() {
+    const statusOverlay = document.getElementById('status-overlay')
+    if (!statusOverlay) return
+
+    // Reset permanent flag and clear timeout
+    controlState.statusIsPermanent = false
+    if (controlState.statusTimeout) {
+      clearTimeout(controlState.statusTimeout)
+      controlState.statusTimeout = null
+    }
+
+    // Add fade-out class for smooth transition
+    statusOverlay.classList.add('fade-out')
+
+    // Hide after transition completes
+    setTimeout(() => {
+      statusOverlay.classList.add('hidden')
+      statusOverlay.classList.remove('fade-out')
+    }, 300)
+  }
+
+  function toggleStatusDisplay() {
+    const statusOverlay = document.getElementById('status-overlay')
+    if (!statusOverlay) return
+
+    if (statusOverlay.classList.contains('hidden')) {
+      showStatusDisplay(0) // Show permanently when manually toggled
+    } else {
+      hideStatusDisplay()
+    }
+  }
+
+  // Status Display Dragging System
+  function initializeStatusDragging() {
+    const statusOverlay = document.getElementById('status-overlay')
+    if (!statusOverlay) return
+
+    let isDragging = false
+    let dragOffset = { x: 0, y: 0 }
+
+    // Load saved position from session storage
+    const savedPosition = sessionStorage.getItem('duo-chrome-status-position')
+    if (savedPosition) {
+      try {
+        const position = JSON.parse(savedPosition)
+        controlState.statusPosition = position
+        updateStatusPosition()
+      } catch (error) {
+        console.warn('Failed to load status position:', error)
+      }
+    } else {
+      // Set initial position
+      updateStatusPosition()
+    }
+
+    // Prevent clicks on status overlay from reaching canvas
+    statusOverlay.addEventListener('click', (e) => {
+      e.stopPropagation()
+      e.preventDefault()
+    })
+
+    statusOverlay.addEventListener('mousedown', (e) => {
+      e.stopPropagation()
+    })
+
+    // Make the status header draggable
+    const statusHeader = statusOverlay.querySelector('.status-header')
+    if (!statusHeader) return
+
+    statusHeader.style.cursor = 'grab'
+
+    statusHeader.addEventListener('mousedown', (e) => {
+      isDragging = true
+      controlState.isDraggingStatus = true
+      statusHeader.style.cursor = 'grabbing'
+
+      const rect = statusOverlay.getBoundingClientRect()
+      dragOffset.x = e.clientX - rect.left
+      dragOffset.y = e.clientY - rect.top
+
+      // Pause timeout during drag
+      if (controlState.statusTimeout) {
+        clearTimeout(controlState.statusTimeout)
+        controlState.statusTimeout = null
+      }
+
+      e.preventDefault()
+      e.stopPropagation() // Prevent event bubbling
+    })
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return
+
+      const newX = e.clientX - dragOffset.x
+      const newY = e.clientY - dragOffset.y
+
+      // Constrain to viewport bounds
+      const maxX = window.innerWidth - statusOverlay.offsetWidth
+      const maxY = window.innerHeight - statusOverlay.offsetHeight
+
+      controlState.statusPosition.x = Math.max(0, Math.min(newX, maxX))
+      controlState.statusPosition.y = Math.max(0, Math.min(newY, maxY))
+
+      updateStatusPosition()
+
+      e.preventDefault()
+    })
+
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false
+        controlState.isDraggingStatus = false
+        statusHeader.style.cursor = 'grab'
+
+        // Save position to session storage
+        sessionStorage.setItem('duo-chrome-status-position', JSON.stringify(controlState.statusPosition))
+
+        // Resume timeout only if status display was temporary (not manually toggled)
+        if (!statusOverlay.classList.contains('hidden') && !controlState.statusIsPermanent) {
+          showStatusDisplay(3000) // Resume with 3 second timeout
+        }
+      }
+    })
+
+    // Touch support for mobile devices
+    statusHeader.addEventListener('touchstart', (e) => {
+      isDragging = true
+      controlState.isDraggingStatus = true
+
+      const touch = e.touches[0]
+      const rect = statusOverlay.getBoundingClientRect()
+      dragOffset.x = touch.clientX - rect.left
+      dragOffset.y = touch.clientY - rect.top
+
+      // Pause timeout during drag
+      if (controlState.statusTimeout) {
+        clearTimeout(controlState.statusTimeout)
+        controlState.statusTimeout = null
+      }
+
+      e.preventDefault()
+      e.stopPropagation() // Prevent event bubbling
+    })
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isDragging) return
+
+      const touch = e.touches[0]
+      const newX = touch.clientX - dragOffset.x
+      const newY = touch.clientY - dragOffset.y
+
+      // Constrain to viewport bounds
+      const maxX = window.innerWidth - statusOverlay.offsetWidth
+      const maxY = window.innerHeight - statusOverlay.offsetHeight
+
+      controlState.statusPosition.x = Math.max(0, Math.min(newX, maxX))
+      controlState.statusPosition.y = Math.max(0, Math.min(newY, maxY))
+
+      updateStatusPosition()
+
+      e.preventDefault()
+    })
+
+    document.addEventListener('touchend', () => {
+      if (isDragging) {
+        isDragging = false
+        controlState.isDraggingStatus = false
+
+        // Save position to session storage
+        sessionStorage.setItem('duo-chrome-status-position', JSON.stringify(controlState.statusPosition))
+
+        // Resume timeout only if status display was temporary (not manually toggled)
+        const statusOverlay = document.getElementById('status-overlay')
+        if (statusOverlay && !statusOverlay.classList.contains('hidden') && !controlState.statusIsPermanent) {
+          showStatusDisplay(3000) // Resume with 3 second timeout
+        }
+      }
+    })
+  }
+
+  function updateStatusPosition() {
+    const statusOverlay = document.getElementById('status-overlay')
+    if (!statusOverlay) return
+
+    statusOverlay.style.left = `${controlState.statusPosition.x}px`
+    statusOverlay.style.top = `${controlState.statusPosition.y}px`
+  }
+
+  /**
+   * Performance-optimized screen update function.
+   * Only redraws when necessary and uses cached scaled images when possible.
+   */
+  function updateScreen() {
+    // Skip unnecessary redraws for performance
+    if (!controlState.needsRedraw) {
+      return
+    }
+
+    // Performance monitoring
+    const startTime = performance.now()
+
     p.clear()
     const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
     p.background(currentBackgroundMode.color)
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
-    imageColorPairs.forEach(pair => {
+    
+    // Render images with optimized scaling
+    imageColorPairs.forEach((pair, index) => {
       if (pair.layer) {
+        const scaledWidth = pair.layer.width * pair.scale
+        const scaledHeight = pair.layer.height * pair.scale
+        
         p.image(
           pair.layer,
           p.width / 2,
           p.height / 2,
-          pair.layer.width * pair.scale,
-          pair.layer.height * pair.scale
+          scaledWidth,
+          scaledHeight
         )
       }
     })
+
+    // Draw active image indicator only if enabled
+    if (controlState.showIndicators) {
+      drawActiveImageIndicator()
+    }
+
+    // Mark redraw as complete
+    controlState.needsRedraw = false
+
+    // Performance monitoring
+    const endTime = performance.now()
+    const frameTime = endTime - startTime
+    
+    // Log performance warnings for slow frames (> 16.67ms = 60fps)
+    if (frameTime > 16.67) {
+      console.warn(`Slow frame detected: ${frameTime.toFixed(2)}ms (target: 16.67ms for 60fps)`)
+    }
+
+    // Update performance tracking
+    controlState.lastFrameTime = frameTime
+    controlState.frameCount++
+  }
+
+  /**
+   * Marks the screen as needing a redraw.
+   * Call this instead of updateScreen() directly to enable performance optimizations.
+   */
+  function requestScreenUpdate() {
+    controlState.needsRedraw = true
+    
+    // Use requestAnimationFrame for smooth 60fps updates
+    if (!controlState.animationFrameRequested) {
+      controlState.animationFrameRequested = true
+      requestAnimationFrame(() => {
+        updateScreen()
+        controlState.animationFrameRequested = false
+      })
+    }
+  }
+
+  /**
+   * Performance monitoring and optimization utilities
+   */
+  function getPerformanceStats() {
+    return {
+      lastFrameTime: controlState.lastFrameTime,
+      frameCount: controlState.frameCount,
+      averageFrameTime: controlState.frameCount > 0 ? 
+        (controlState.totalFrameTime || controlState.lastFrameTime) / controlState.frameCount : 0
+    }
+  }
+
+  /**
+   * Optimized layer creation with caching considerations
+   */
+  function createOptimizedMonochromeImage(img, monoColor, cacheKey = null) {
+    // Use existing createMonochromeImage but with performance monitoring
+    const startTime = performance.now()
+    const layer = createMonochromeImage(img, monoColor)
+    const endTime = performance.now()
+    
+    const creationTime = endTime - startTime
+    if (creationTime > 50) { // Log slow layer creation (> 50ms)
+      console.warn(`Slow layer creation: ${creationTime.toFixed(2)}ms for image`)
+    }
+    
+    return layer
   }
 
   const createMonochromeImage = (img, monoColor) => {

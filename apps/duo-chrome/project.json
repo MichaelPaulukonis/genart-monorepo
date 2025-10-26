@@ -32,6 +32,13 @@
         "lintFilePatterns": ["apps/duo-chrome/**/*.{js,jsx}"]
       }
     },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node src/size-control.test.js",
+        "cwd": "apps/duo-chrome"
+      }
+    },
     "deploy": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
