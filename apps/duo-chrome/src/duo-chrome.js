@@ -69,6 +69,7 @@ const sketch = function (p) {
   let currentBackgroundModeIndex = 0 // Start with the first background mode
   const COLORS = [RISOCOLORS, PALETTE, PALETTE_TWO]
   let colorIndex = 0
+  const imgSource = './images/'
 
   const imageColorPairs = [
     { img: null, color: null, layer: null, scale: 1 },
@@ -115,7 +116,6 @@ const sketch = function (p) {
   function setActiveImage(imageIndex) {
     if (imageIndex === 0 || imageIndex === 1) {
       controlState.activeImageIndex = imageIndex
-      console.log(`Active image set to: ${imageIndex === 0 ? 'A' : 'B'}`)
       // Show indicators temporarily
       showIndicatorsTemporarily()
       // Show status display temporarily
@@ -164,7 +164,6 @@ const sketch = function (p) {
   function setImageIndex(imageIndex, arrayIndex) {
     if (imageIndex === 0 || imageIndex === 1) {
       controlState.imageIndices[imageIndex] = arrayIndex
-      console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} array index set to: ${arrayIndex}`)
     }
   }
 
@@ -224,7 +223,6 @@ const sketch = function (p) {
     } else {
       imageColorPairs[imageIndex].scale = newScale.toFixed(2)
       setManualSizeControl(imageIndex, true)
-      console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} scale adjusted to: ${imageColorPairs[imageIndex].scale}`)
       // Update status display when size changes
       showStatusDisplay()
       return true
@@ -279,7 +277,6 @@ const sketch = function (p) {
 
     imageColorPairs[imageIndex].scale = 1.0
     setManualSizeControl(imageIndex, false)
-    console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} size reset to default (1.0)`)
     requestScreenUpdate()
   }
 
@@ -321,12 +318,7 @@ const sketch = function (p) {
     controlState.imageIndices[1] = tempIndex
     controlState.manualSizeControl[1] = tempManualControl
 
-    console.log('Images A and B exchanged')
-
-    // Update the display
     requestScreenUpdate()
-
-    // Update status display to reflect the exchange
     updateStatusDisplay()
     showStatusDisplay()
   }
@@ -408,14 +400,11 @@ const sketch = function (p) {
       newColor = currentColorArray[newColorIndex]
     }
 
-    // Update the color
     imageColorPairs[imageIndex].color = newColor
-
-    console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} color changed ${direction} to: ${newColor.name}`)
 
     // Regenerate the layer with the new color
     if (imageColorPairs[imageIndex].img && imageColorPairs[imageIndex].layer) {
-      p.loadImage('./images.bak/' + imageColorPairs[imageIndex].img, img => {
+      p.loadImage(imgSource + imageColorPairs[imageIndex].img, img => {
         // Remove old layer if it exists
         if (imageColorPairs[imageIndex].layer && imageColorPairs[imageIndex].layer.remove) {
           imageColorPairs[imageIndex].layer.remove()
@@ -549,7 +538,7 @@ const sketch = function (p) {
     const wasManuallyAdjusted = controlState.manualSizeControl[imageIndex]
 
     // Load the new image and regenerate the layer
-    p.loadImage('./images/' + newImageFilename, img => {
+    p.loadImage(imgSource + newImageFilename, img => {
       // Remove old layer if it exists
       if (imageColorPairs[imageIndex].layer && imageColorPairs[imageIndex].layer.remove) {
         imageColorPairs[imageIndex].layer.remove()
@@ -702,7 +691,7 @@ const sketch = function (p) {
   function regenerateLayers() {
     imageColorPairs.forEach((pair, index) => {
       if (pair.img && pair.color) {
-        p.loadImage('./images/' + pair.img, function (img) {
+        p.loadImage(imgSource + pair.img, function (img) {
           if (
             imageColorPairs[index].layer &&
             imageColorPairs[index].layer.remove
@@ -861,7 +850,7 @@ const sketch = function (p) {
       controlState.imageIndices[pairIndex] = imgs.indexOf(selectedImage)
     }
 
-    p.loadImage('./images/' + selectedImage, img => {
+    p.loadImage(imgSource + selectedImage, img => {
       if (
         imageColorPairs[pairIndex].layer &&
         imageColorPairs[pairIndex].layer.remove
@@ -893,7 +882,7 @@ const sketch = function (p) {
     p.push()
 
     // Use normal blend mode for better control
-    p.blendMode(p.NORMAL)
+    p.blendMode(p.BLEND)
 
     // Use contrasting color based on background
     const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
@@ -1292,13 +1281,13 @@ const sketch = function (p) {
     const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
     p.background(currentBackgroundMode.color)
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
-    
+
     // Render images with optimized scaling
     imageColorPairs.forEach((pair, index) => {
       if (pair.layer) {
         const scaledWidth = pair.layer.width * pair.scale
         const scaledHeight = pair.layer.height * pair.scale
-        
+
         p.image(
           pair.layer,
           p.width / 2,
@@ -1320,7 +1309,7 @@ const sketch = function (p) {
     // Performance monitoring
     const endTime = performance.now()
     const frameTime = endTime - startTime
-    
+
     // Log performance warnings for slow frames (> 16.67ms = 60fps)
     if (frameTime > 16.67) {
       console.warn(`Slow frame detected: ${frameTime.toFixed(2)}ms (target: 16.67ms for 60fps)`)
@@ -1337,7 +1326,7 @@ const sketch = function (p) {
    */
   function requestScreenUpdate() {
     controlState.needsRedraw = true
-    
+
     // Use requestAnimationFrame for smooth 60fps updates
     if (!controlState.animationFrameRequested) {
       controlState.animationFrameRequested = true
@@ -1355,7 +1344,7 @@ const sketch = function (p) {
     return {
       lastFrameTime: controlState.lastFrameTime,
       frameCount: controlState.frameCount,
-      averageFrameTime: controlState.frameCount > 0 ? 
+      averageFrameTime: controlState.frameCount > 0 ?
         (controlState.totalFrameTime || controlState.lastFrameTime) / controlState.frameCount : 0
     }
   }
@@ -1368,12 +1357,12 @@ const sketch = function (p) {
     const startTime = performance.now()
     const layer = createMonochromeImage(img, monoColor)
     const endTime = performance.now()
-    
+
     const creationTime = endTime - startTime
     if (creationTime > 50) { // Log slow layer creation (> 50ms)
       console.warn(`Slow layer creation: ${creationTime.toFixed(2)}ms for image`)
     }
-    
+
     return layer
   }
 
