@@ -326,6 +326,23 @@ nx build my-new-project
 - Ensure dependencies are installed at workspace level
 - Verify vite.config.js paths are correct
 
+### Nx Vite Executor Issues
+
+If you encounter `TypeError: Cannot read properties of undefined (reading 'startsWith')` when building, this is a known issue with the `@nx/vite:build` executor. Use this alternative build configuration:
+
+```json
+"build": {
+  "executor": "nx:run-commands",
+  "outputs": ["{workspaceRoot}/dist/apps/your-project-name"],
+  "options": {
+    "command": "npx vite build",
+    "cwd": "apps/your-project-name"
+  }
+}
+```
+
+This bypasses the problematic Nx executor while maintaining the same functionality.
+
 ### Port Conflicts
 
 - Each project needs a unique port

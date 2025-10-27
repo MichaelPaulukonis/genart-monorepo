@@ -11,11 +11,11 @@
       }
     },
     "build": {
-      "executor": "@nx/vite:build",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/monochromifier"],
       "options": {
-        "outputPath": "dist/apps/monochromifier",
-        "configFile": "apps/monochromifier/vite.config.js"
+        "command": "npx vite build",
+        "cwd": "apps/monochromifier"
       }
     },
     "preview": {
@@ -57,8 +57,6 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release version --projects=monochromifier",
-          "nx release changelog --projects=monochromifier",
           "npx gh-pages -d dist/apps/monochromifier --repo https://github.com/michaelpaulukonis/monochromifier.git"
         ],
         "parallel": false
