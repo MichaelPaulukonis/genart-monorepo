@@ -138,6 +138,28 @@ importers:
         specifier: ^1.8.1
         version: 1.8.1(eslint@8.57.1)(vite@2.9.18)
 
+  apps/monochromifier:
+    dependencies:
+      p5js-wrapper:
+        specifier: ^1.2.3
+        version: 1.2.3
+    devDependencies:
+      eslint:
+        specifier: ^8.57.1
+        version: 8.57.1
+      eslint-plugin-p5js:
+        specifier: ^1.0.0
+        version: 1.0.0(eslint@8.57.1)
+      standard:
+        specifier: ^17.1.2
+        version: 17.1.2
+      vite:
+        specifier: ^2.7.2
+        version: 2.9.18
+      vite-plugin-eslint:
+        specifier: ^1.8.1
+        version: 1.8.1(eslint@8.57.1)(vite@2.9.18)
+
   apps/those-shape-things:
     dependencies:
       p5:
