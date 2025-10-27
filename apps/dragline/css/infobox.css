@@ -62,16 +62,13 @@
 }
 
 /* App-specific version display styling for dragline */
+/* Using shared library with custom teal theme */
 .version-info {
-  border-top: 1px solid teal; /* Match app's teal theme */
-  padding-top: 10px;
-  margin-top: 15px;
-  text-align: center;
-  font-size: 0.8em;
-  color: #666;
+  --version-border-color: teal; /* Match app's teal theme */
 }
 
 #version-display {
+  /* Custom styling for dragline's version display element */
   font-family: monospace;
   font-weight: bold;
   color: teal; /* Match app's teal accent color */

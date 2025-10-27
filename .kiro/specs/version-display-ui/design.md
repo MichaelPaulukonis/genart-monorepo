@@ -2,462 +2,353 @@
 
 ## Overview
 
-The Version Display UI Components feature will provide a consistent way for users to view version information across all GenArt applications. Each app will display its own independent version number extracted from its individual package.json file through a build-time process that injects version information as environment variables.
+This design establishes a unified version display system that consolidates styling into a single shared library while providing modular customization capabilities. The solution addresses immediate visibility issues in duo-chrome and creates a scalable architecture for consistent version display across all GenArt applications.
 
 ## Architecture
 
-### High-Level Architecture
+### Current State Analysis
+
+**Problems Identified:**
+- Multiple CSS sources: `libs/version-display/version-display.css` and local duplicates (e.g., `apps/duo-chrome/css/style.css`)
+- Poor visibility: Light gray (#666) text on whitish backgrounds fails accessibility standards
+- Inconsistent styling across applications
+- Unclear which CSS file takes precedence
+- No systematic approach to customization
+
+**Impact Assessment:**
+- duo-chrome: Version text barely visible due to low contrast
+- Maintenance overhead: Changes require updates in multiple files
+- Accessibility violations: Contrast ratios below WCAG AA standards
+- Developer confusion: Unclear which styles are active
+
+### Solution Architecture
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Build Process │    │  Version Utility │    │   UI Component  │
-│                 │    │                  │    │                 │
-│ package.json ──→│───→│ getAppVersion()  │───→│ Display Version │
-│ (per app)       │    │                  │    │                 │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    Shared CSS Library                      │
+│              libs/version-display/                         │
+├─────────────────────────────────────────────────────────────┤
+│  version-display.css (Base Styles)                        │
+│  ├── Core layout and typography                           │
+│  ├── Accessibility-compliant colors                       │
+│  ├── Responsive design breakpoints                        │
+│  ├── Dark/light theme support                            │
+│  └── High contrast mode support                          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Application Layer                         │
+├─────────────────┬─────────────────┬─────────────────────────┤
+│   duo-chrome    │ crude-collage   │   other-apps           │
+│                 │   -painter      │                        │
+│ Custom overrides│ Custom overrides│ Custom overrides       │
+│ (if needed)     │ (if needed)     │ (if needed)            │
+└─────────────────┴─────────────────┴─────────────────────────┘
 ```
 
-### Component Interaction Flow
+### CSS Architecture Strategy
 
-1. **Build Time**: Vite build process reads each app's package.json and generates a version constants file or inlines version into the bundle
-2. **Runtime**: Version utility function imports the build-generated version constant
-3. **UI Rendering**: Components call the utility to display version information
-4. **User Interaction**: Users access version through help overlays, about dialogs, or keyboard shortcuts
+**Three-Layer Approach:**
+
+1. **Base Layer (Shared)**: Core functionality, accessibility, responsive design
+2. **Theme Layer (Shared)**: Color schemes, dark/light mode support
+3. **Customization Layer (App-specific)**: Optional overrides for unique requirements
 
 ## Components and Interfaces
 
-### 1. Version Utility Module
+### 1. Enhanced Shared CSS Library
 
-**File**: `src/utils/version.js` (per app)
+**File:** `libs/version-display/version-display.css`
 
-```javascript
-// Import the build-generated version constant
-import { APP_VERSION } from './version-constants.js';
-
-/**
- * Gets the current application version
- * @returns {string} The application version or fallback
- */
-export function getAppVersion() {
-  return APP_VERSION || '1.0.0';
+**Core Improvements:**
+```css
+/* Enhanced base styles with improved visibility */
+.version-info,
+.version-display {
+  font-family: monospace;
+  font-size: 0.8em;
+  color: #333; /* Improved from #666 for better contrast */
+  opacity: 1; /* Improved from 0.8 */
+  text-align: center;
+  /* Ensure minimum contrast ratio of 4.5:1 */
 }
 
-/**
- * Formats version for display
- * @param {string} version - Raw version string
- * @returns {string} Formatted version string
- */
-export function formatVersion(version) {
-  return `v${version}`;
+/* Context-specific styling */
+.version-info {
+  /* Help overlay and info box styling */
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd; /* Improved from #eee */
+}
+
+.version-display {
+  /* About dialog styling */
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: rgba(0, 0, 0, 0.08); /* Improved from 0.05 */
+  border-radius: 4px;
+  font-size: 0.9em;
+  border: 1px solid rgba(0, 0, 0, 0.1); /* Added for definition */
 }
 ```
 
-**File**: `src/utils/version-constants.js` (generated at build time)
+**Accessibility Features:**
+- WCAG AA compliant contrast ratios (minimum 4.5:1)
+- High contrast mode support
+- Focus indicators for keyboard navigation
+- Reduced motion support
+- Screen reader friendly markup
 
-```javascript
-// This file is auto-generated during build - do not edit manually
-export const APP_VERSION = '0.1.0';
-export const BUILD_TIME = '2024-01-15T10:30:00Z';
+### 2. Application Integration System
+
+**Import Strategy:**
+```html
+<!-- In application HTML files -->
+<link rel="stylesheet" href="../../libs/version-display/version-display.css">
 ```
 
-### 2. Build Configuration Integration
-
-**File**: `vite.config.js` (per app)
-
+**Build System Integration:**
 ```javascript
-import { defineConfig } from 'vite';
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
-
-// Plugin to generate version constants file
-function generateVersionConstants() {
-  return {
-    name: 'generate-version-constants',
-    buildStart() {
-      try {
-        const packagePath = resolve(__dirname, 'package.json');
-        const packageContent = readFileSync(packagePath, 'utf8');
-        const packageJson = JSON.parse(packageContent);
-        
-        const versionConstantsContent = `// This file is auto-generated during build - do not edit manually
-export const APP_VERSION = '${packageJson.version || '1.0.0'}';
-export const BUILD_TIME = '${new Date().toISOString()}';
-`;
-        
-        const constantsPath = resolve(__dirname, 'src/utils/version-constants.js');
-        writeFileSync(constantsPath, versionConstantsContent);
-        
-        console.log(`Generated version constants: ${packageJson.version}`);
-      } catch (error) {
-        console.warn('Could not generate version constants:', error.message);
-        // Create fallback file
-        const fallbackContent = `// Fallback version constants
-export const APP_VERSION = '1.0.0';
-export const BUILD_TIME = '${new Date().toISOString()}';
-`;
-        writeFileSync(resolve(__dirname, 'src/utils/version-constants.js'), fallbackContent);
-      }
-    }
-  };
-}
-
+// In vite.config.js
 export default defineConfig({
-  // ... existing config
-  plugins: [
-    generateVersionConstants(),
-    // ... other plugins
-  ]
+  // Ensure shared CSS is properly resolved
+  resolve: {
+    alias: {
+      '@genart/version-display': path.resolve(__dirname, '../../libs/version-display')
+    }
+  }
 });
 ```
 
-### 3. UI Component Implementations
+### 3. Customization Interface
 
-#### A. Help Overlay Integration (duo-chrome)
+**Override Pattern:**
+```css
+/* App-specific customizations (optional) */
+/* Load after shared CSS */
+.version-display {
+  /* App-specific color scheme */
+  color: var(--app-text-color, #333);
+  background-color: var(--app-version-bg, rgba(0, 0, 0, 0.08));
+}
 
-**File**: `src/duo-chrome.js` (modification)
-
-```javascript
-import { getAppVersion, formatVersion } from './utils/version.js';
-
-function showHelp() {
-  // ... existing help content
-  const helpContent = `
-    <div class="help-overlay">
-      <div class="help-content">
-        <h2>Duo-Chrome Controls</h2>
-        <!-- existing controls -->
-        <div class="version-info">
-          ${formatVersion(getAppVersion())}
-        </div>
-      </div>
-    </div>
-  `;
-  // ... rest of help display logic
+/* Context-specific overrides */
+.help-overlay .version-info {
+  /* Custom styling for help overlays in this app */
+  border-top-color: var(--app-border-color, #ddd);
 }
 ```
 
-#### B. About Dialog Component (those-shape-things, computational-collage)
+### 4. Validation and Linting System
 
-**File**: `src/components/AboutDialog.js` (new)
-
+**CSS Duplication Detection:**
 ```javascript
-import { getAppVersion, formatVersion } from '../utils/version.js';
-
-export class AboutDialog {
-  constructor(p5Instance, appName) {
-    this.p5 = p5Instance;
-    this.appName = appName;
-    this.isVisible = false;
-    this.dialogElement = null;
+// Build-time validation
+const validateVersionCSS = {
+  checkForDuplicates: () => {
+    // Scan all app CSS files for version-related selectors
+    // Report duplicates and suggest shared library usage
+  },
+  validateContrast: () => {
+    // Check color combinations meet accessibility standards
+    // Report violations with specific fix suggestions
   }
-
-  show() {
-    if (this.isVisible) return;
-    
-    this.dialogElement = this.p5.createDiv();
-    this.dialogElement.class('about-dialog');
-    this.dialogElement.html(`
-      <div class="about-content">
-        <h3>About ${this.appName}</h3>
-        <p>Interactive generative art application</p>
-        <div class="version-display">${formatVersion(getAppVersion())}</div>
-        <button class="close-btn">×</button>
-      </div>
-    `);
-    
-    // Position dialog
-    this.dialogElement.position(
-      this.p5.windowWidth / 2 - 150,
-      this.p5.windowHeight / 2 - 100
-    );
-    
-    // Add close functionality
-    this.dialogElement.child()[0].querySelector('.close-btn')
-      .addEventListener('click', () => this.hide());
-    
-    this.isVisible = true;
-  }
-
-  hide() {
-    if (this.dialogElement) {
-      this.dialogElement.remove();
-      this.dialogElement = null;
-    }
-    this.isVisible = false;
-  }
-
-  toggle() {
-    this.isVisible ? this.hide() : this.show();
-  }
-}
-```
-
-#### C. Help Screen Integration (crude-collage-painter)
-
-**File**: `src/infobox.js` (modification)
-
-```javascript
-import { getAppVersion, formatVersion } from './utils/version.js';
-
-// Modify existing help screen content to include version
-function createHelpContent() {
-  return `
-    <div class="help-content">
-      <h2>Crude Collage Painter</h2>
-      <!-- existing help content -->
-      <div class="controls-section">
-        <!-- existing controls info -->
-      </div>
-      <div class="version-info">
-        ${formatVersion(getAppVersion())}
-      </div>
-    </div>
-  `;
-}
-```
-
-### 4. Keyboard Shortcut Integration
-
-**File**: `src/utils/keyboardShortcuts.js` (per app, as needed)
-
-```javascript
-export class KeyboardShortcuts {
-  constructor(aboutDialog) {
-    this.aboutDialog = aboutDialog;
-    this.setupEventListeners();
-  }
-
-  setupEventListeners() {
-    document.addEventListener('keydown', (event) => {
-      // Ctrl/Cmd + I for "Info"
-      if ((event.ctrlKey || event.metaKey) && event.key === 'i') {
-        event.preventDefault();
-        this.aboutDialog.toggle();
-      }
-    });
-  }
-}
+};
 ```
 
 ## Data Models
 
-### Version Information Structure
+### Version Display Configuration
+```typescript
+interface VersionDisplayConfig {
+  // Base configuration
+  baseStyles: {
+    fontFamily: string;
+    fontSize: string;
+    textAlign: 'left' | 'center' | 'right';
+  };
+  
+  // Color scheme
+  colors: {
+    text: string;
+    background: string;
+    border: string;
+    contrastRatio: number; // Must be >= 4.5
+  };
+  
+  // Responsive breakpoints
+  breakpoints: {
+    mobile: string;
+    tablet: string;
+    desktop: string;
+  };
+  
+  // Accessibility features
+  accessibility: {
+    highContrast: boolean;
+    reducedMotion: boolean;
+    focusIndicators: boolean;
+  };
+}
+```
 
-```javascript
-// Build-generated constants file structure
-const versionConstants = {
-  APP_VERSION: "0.1.0",                    // From package.json
-  BUILD_TIME: "2024-01-15T10:30:00Z"      // Build timestamp
-};
-
-// Runtime version object
-const appVersion = {
-  raw: "0.1.0",
-  formatted: "v0.1.0",
-  display: "Version 0.1.0"
-};
+### Application Override Schema
+```typescript
+interface AppVersionOverrides {
+  appName: string;
+  customStyles?: {
+    colors?: Partial<VersionDisplayConfig['colors']>;
+    spacing?: {
+      margin?: string;
+      padding?: string;
+    };
+    typography?: {
+      fontSize?: string;
+      fontWeight?: string;
+    };
+  };
+  contexts?: {
+    helpOverlay?: CSSProperties;
+    aboutDialog?: CSSProperties;
+    infoBox?: CSSProperties;
+  };
+}
 ```
 
 ## Error Handling
 
-### Version Extraction Failures
+### CSS Conflict Resolution
+1. **Detection**: Build-time scanning for duplicate selectors
+2. **Reporting**: Clear warnings with file locations and suggested fixes
+3. **Resolution**: Automated removal of duplicates with backup creation
 
-```javascript
-export function getAppVersion() {
-  try {
-    // Import will fail if version-constants.js doesn't exist
-    const version = APP_VERSION;
-    if (!version || typeof version !== 'string') {
-      console.warn('App version not found in constants, using fallback');
-      return '1.0.0';
-    }
-    return version;
-  } catch (error) {
-    console.error('Error accessing app version:', error);
-    return '1.0.0';
-  }
-}
-```
+### Accessibility Validation
+1. **Contrast Checking**: Automated validation of color combinations
+2. **Error Messages**: Specific guidance for fixing contrast issues
+3. **Fallback Colors**: Safe defaults when custom colors fail validation
 
-### UI Component Error Handling
-
-```javascript
-export class AboutDialog {
-  show() {
-    try {
-      // ... dialog creation logic
-    } catch (error) {
-      console.error('Failed to show about dialog:', error);
-      // Fallback: show simple alert
-      alert(`${this.appName} ${formatVersion(getAppVersion())}`);
-    }
-  }
-}
-```
-
-### Build Process Error Handling
-
-The build process error handling is integrated into the Vite plugin shown above. If package.json cannot be read or parsed, the plugin will:
-
-1. Log a warning about the failure
-2. Generate a fallback version-constants.js file with version '1.0.0'
-3. Continue the build process without failing
-
-This ensures that builds never fail due to version extraction issues, and the application always has a valid version to display.
+### Browser Compatibility
+1. **Fallback Styles**: CSS custom properties with fallbacks
+2. **Progressive Enhancement**: Core functionality works without advanced features
+3. **Testing Matrix**: Validation across supported browsers
 
 ## Testing Strategy
 
-### Unit Testing
+### Visual Regression Testing
+- Screenshot comparison across applications
+- Multiple theme testing (light/dark)
+- Responsive design validation
+- Accessibility tool integration
 
+### Contrast Ratio Testing
 ```javascript
-// tests/version.test.js
-import { describe, it, expect, vi } from 'vitest';
-import { formatVersion } from '../src/utils/version.js';
-
-// Mock the version constants
-vi.mock('../src/utils/version-constants.js', () => ({
-  APP_VERSION: '2.1.0'
-}));
-
-describe('Version Utilities', () => {
-  it('should return version from constants', async () => {
-    const { getAppVersion } = await import('../src/utils/version.js');
-    expect(getAppVersion()).toBe('2.1.0');
-  });
-
-  it('should format version correctly', () => {
-    expect(formatVersion('1.2.3')).toBe('v1.2.3');
-  });
-});
-
-// Test with missing constants file
-describe('Version Utilities - Missing Constants', () => {
-  it('should return fallback when constants unavailable', async () => {
-    vi.doMock('../src/utils/version-constants.js', () => {
-      throw new Error('Module not found');
-    });
-    
-    const { getAppVersion } = await import('../src/utils/version.js');
-    expect(getAppVersion()).toBe('1.0.0');
-  });
-});
+// Automated accessibility testing
+const contrastTests = {
+  testVersionDisplay: () => {
+    // Calculate actual contrast ratios
+    // Validate against WCAG standards
+    // Report specific failures with color values
+  }
+};
 ```
 
 ### Integration Testing
+- CSS loading order validation
+- Override precedence testing
+- Build system integration verification
+- Cross-application consistency checks
 
-```javascript
-// tests/integration/version-display.test.js
-import { describe, it, expect } from 'vitest';
-import { JSDOM } from 'jsdom';
-import { AboutDialog } from '../src/components/AboutDialog.js';
+## Implementation Phases
 
-describe('Version Display Integration', () => {
-  it('should display version in about dialog', () => {
-    const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
-    global.document = dom.window.document;
-    global.window = dom.window;
+### Phase 1: Shared Library Enhancement
+1. **Improve Base Styles**
+   - Update colors for better contrast
+   - Add accessibility features
+   - Implement responsive design improvements
+   - Add comprehensive browser support
 
-    const mockP5 = {
-      createDiv: () => ({ 
-        class: () => {}, 
-        html: () => {}, 
-        position: () => {},
-        child: () => [{ querySelector: () => ({ addEventListener: () => {} }) }]
-      }),
-      windowWidth: 800,
-      windowHeight: 600
-    };
+2. **Create Documentation**
+   - Usage guidelines
+   - Customization examples
+   - Accessibility requirements
+   - Integration instructions
 
-    const dialog = new AboutDialog(mockP5, 'Test App');
-    dialog.show();
-    
-    expect(dialog.isVisible).toBe(true);
-  });
-});
-```
+### Phase 2: Application Migration
+1. **duo-chrome Priority Fix**
+   - Remove local version display CSS
+   - Import shared library
+   - Test visibility improvements
+   - Validate accessibility compliance
 
-### End-to-End Testing
+2. **Other Applications**
+   - Audit existing version display implementations
+   - Remove duplicate CSS
+   - Implement shared library imports
+   - Test for regressions
 
-```javascript
-// tests/e2e/version-display.spec.js
-import { test, expect } from '@playwright/test';
+### Phase 3: Validation System
+1. **Build Integration**
+   - Add CSS duplication detection
+   - Implement contrast ratio validation
+   - Create automated testing
+   - Set up continuous monitoring
 
-test.describe('Version Display', () => {
-  test('should show version in duo-chrome help overlay', async ({ page }) => {
-    await page.goto('/duo-chrome');
-    await page.keyboard.press('h');
-    
-    const versionElement = page.locator('.version-info');
-    await expect(versionElement).toBeVisible();
-    await expect(versionElement).toContainText(/v\d+\.\d+\.\d+/);
-  });
+2. **Developer Tools**
+   - Create linting rules
+   - Add IDE integration
+   - Provide debugging utilities
+   - Document troubleshooting procedures
 
-  test('should show version in about dialog', async ({ page }) => {
-    await page.goto('/those-shape-things');
-    await page.keyboard.press('Control+i');
-    
-    const aboutDialog = page.locator('.about-dialog');
-    await expect(aboutDialog).toBeVisible();
-    
-    const versionDisplay = aboutDialog.locator('.version-display');
-    await expect(versionDisplay).toContainText(/v\d+\.\d+\.\d+/);
-  });
-});
-```
+### Phase 4: Advanced Features
+1. **Theme System Integration**
+   - CSS custom properties support
+   - Dynamic theme switching
+   - User preference detection
+   - System theme synchronization
 
-## Implementation Notes
+2. **Performance Optimization**
+   - CSS minification
+   - Critical path optimization
+   - Lazy loading for non-critical styles
+   - Bundle size monitoring
 
-### Generated File Management
+## Migration Strategy
 
-The `src/utils/version-constants.js` file is generated at build time and should be:
-- Added to `.gitignore` to prevent committing generated content
-- Generated fresh on each build to ensure version accuracy
-- Created with fallback values if package.json is unavailable
+### Immediate Actions (duo-chrome)
+1. Update shared CSS with improved contrast
+2. Remove duplicate styles from `apps/duo-chrome/css/style.css`
+3. Ensure proper import order in HTML
+4. Test visibility improvements
 
-### Per-App Customization
+### Gradual Rollout
+1. **Week 1**: duo-chrome migration and testing
+2. **Week 2**: crude-collage-painter migration
+3. **Week 3**: Remaining applications
+4. **Week 4**: Validation system implementation
 
-Each app will implement version display according to its existing UI patterns:
+### Rollback Plan
+- Git branches for each migration step
+- Automated backup of original CSS files
+- Quick revert procedures documented
+- Monitoring for visual regressions
 
-- **duo-chrome**: Integration with existing help overlay
-- **crude-collage-painter**: Integration with existing help screen
-- **those-shape-things**: New about dialog with Ctrl+I shortcut
-- **computational-collage**: About dialog integrated with existing UI controls
-- **crude-collage-painter**: Footer display with minimal visual impact
+## Performance Considerations
 
-### Styling Consistency
+### CSS Loading Optimization
+- Single shared CSS file reduces HTTP requests
+- Proper caching headers for shared library
+- Critical CSS inlining for above-the-fold content
+- Non-blocking CSS loading for enhancements
 
-Shared CSS classes will ensure visual consistency while allowing per-app customization:
+### Bundle Size Impact
+- Shared library reduces overall CSS duplication
+- Modular loading prevents unused style inclusion
+- Compression and minification in production
+- Performance budget monitoring
 
-```css
-/* Shared version display styles */
-.version-info, .version-display {
-  font-family: monospace;
-  font-size: 0.8em;
-  color: #666;
-  opacity: 0.8;
-}
-
-.about-dialog {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-}
-
-/* App-specific version integration styles */
-.help-content .version-info {
-  margin-top: 15px;
-  padding-top: 10px;
-  border-top: 1px solid #eee;
-  text-align: center;
-}
-```
-
-### Accessibility Considerations
-
-- Version information will be accessible to screen readers
-- Keyboard shortcuts will be documented and consistent
-- Color contrast will meet WCAG guidelines
-- Focus management for modal dialogs will be implemented properly
+### Runtime Performance
+- CSS custom properties for dynamic theming
+- Minimal JavaScript for theme switching
+- Hardware acceleration for animations
+- Efficient selector specificity

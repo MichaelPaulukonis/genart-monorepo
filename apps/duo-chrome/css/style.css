@@ -165,17 +165,8 @@ canvas {
   background-color: #555;
 }
 
-/* Version info styling */
-.version-info {
-  text-align: center;
-  margin-top: 15px;
-  padding-top: 10px;
-  border-top: 1px solid #ddd;
-  font-family: monospace;
-  font-size: 0.8em;
-  color: #333;
-  opacity: 0.8;
-}
+/* Version info styling - now handled by shared library */
+/* Removed duplicate styles - using libs/version-display/version-display.css */
 
 .hidden {
   display: none;
@@ -345,9 +336,22 @@ canvas {
     padding: 6px 12px;
   }
   
-  .version-info {
-    margin-top: 12px;
-    padding-top: 8px;
-    font-size: 0.75em;
-  }
+  /* version-info responsive styles now handled by shared library */
 }
+
+/* Version Display Customization Test */
+/* Testing the shared library's customization system */
+.help-overlay {
+  /* Apply duo-chrome specific version styling within help overlay */
+  --version-font-family: 'Times New Roman', Times, serif;
+  --version-font-size: 0.85em;
+  --version-text-color: #2c3e50;
+  --version-border-color: #34495e;
+}
+
+/* Alternative: using predefined theme classes */
+/* Uncomment to test theme variants:
+.version-info {
+  @apply version-theme-prominent version-color-primary;
+}
+*/

@@ -2,85 +2,69 @@
 
 ## Introduction
 
-This specification defines the requirements for implementing version display functionality across all applications in the GenArt Monorepo. The feature will provide users with easy access to version information through consistent UI components that dynamically read from each app's package.json file.
+Consolidate version display styling across all GenArt applications to establish a single point of truth for version UI components. Currently, version display CSS exists in multiple locations with inconsistent styling and poor visibility, particularly in duo-chrome where light gray text on a whitish background creates accessibility issues.
 
 ## Glossary
 
-- **Version Display Component**: A UI element that shows the current application version to users
-- **App Version**: The independent semantic version number defined in each application's individual package.json file (each app maintains its own version independently)
-- **Help Overlay**: An existing UI component in some apps that displays usage instructions
-- **About Dialog**: A modal or popup component that displays application information including version
-- **Build Process**: The compilation and bundling process that transforms source code into deployable applications
-- **Environment Variable**: A build-time variable that makes package.json version available to the application runtime
+- **Version Display Component**: UI elements that show application version information in help overlays, info boxes, and about dialogs
+- **Shared CSS Library**: The centralized `libs/version-display/version-display.css` file that should serve as the single source of truth
+- **Local CSS Duplication**: Application-specific CSS files that duplicate version display styles
+- **Visibility Contrast**: The visual distinction between version text and background that ensures readability
+- **Modular Styling**: CSS architecture that allows shared base styles with application-specific customizations
 
 ## Requirements
 
 ### Requirement 1
 
-**User Story:** As a user of any GenArt application, I want to easily view the current version number, so that I can report issues accurately and know if I'm using the latest version.
+**User Story:** As a user, I want version information to be clearly visible and readable so that I can easily identify the application version
 
 #### Acceptance Criteria
 
-1. WHEN a user accesses the version display feature in any app, THE Version Display Component SHALL show the current version number from the app's package.json file
-2. THE Version Display Component SHALL be accessible through a consistent interaction pattern across all applications
-3. THE Version Display Component SHALL display version information in a readable format with appropriate styling
-4. THE Version Display Component SHALL be responsive and work correctly on different screen sizes
-5. THE Version Display Component SHALL maintain accessibility standards for screen readers and keyboard navigation
+1. WHEN version information is displayed, THE text SHALL have sufficient contrast against the background to meet WCAG AA accessibility standards
+2. THE version display SHALL be easily readable in both light and dark themes
+3. WHEN version text is displayed in duo-chrome, THE contrast ratio SHALL be at least 4.5:1 for normal text
+4. THE version display SHALL maintain readability across all supported screen sizes and devices
 
 ### Requirement 2
 
-**User Story:** As a developer maintaining the GenArt applications, I want version information to be automatically synchronized with package.json, so that displayed versions always match the actual application version without manual updates.
+**User Story:** As a developer, I want a single source of truth for version display styling so that I can maintain consistent appearance across all applications
 
 #### Acceptance Criteria
 
-1. THE Build Process SHALL automatically extract version information from each app's individual package.json file
-2. THE Build Process SHALL inject each app's specific version as an environment variable accessible to that application's runtime
-3. WHEN an individual app's version in its package.json changes, THE Version Display Component SHALL reflect that app's new version after rebuilding without code changes
-4. THE Version Display Component SHALL provide a fallback version when the actual version is unavailable for that specific app
-5. THE Build Process SHALL work consistently across all applications in the monorepo while respecting each app's independent versioning
+1. THE shared CSS library SHALL be the authoritative source for all base version display styles
+2. WHEN applications need version display styling, THE System SHALL import from the shared library
+3. THE shared library SHALL be located at `libs/version-display/version-display.css`
+4. WHEN local CSS files contain version display styles, THE System SHALL remove the duplicate styles and reference the shared library
 
 ### Requirement 3
 
-**User Story:** As a user familiar with different GenArt applications, I want version information to be presented consistently across all apps, so that I can quickly find version details regardless of which application I'm using.
+**User Story:** As a developer, I want modular version display styling so that I can customize appearance for specific applications while maintaining consistency
 
 #### Acceptance Criteria
 
-1. THE Version Display Component SHALL use consistent visual styling across all applications
-2. THE Version Display Component SHALL be accessible through similar interaction patterns in each app
-3. WHERE an app has an existing help overlay, THE Version Display Component SHALL be integrated into that overlay
-4. WHERE an app lacks a help system, THE Version Display Component SHALL be accessible through a dedicated about dialog or footer display
-5. THE Version Display Component SHALL follow the established design patterns of each individual application while maintaining cross-app consistency
+1. THE shared CSS library SHALL provide base styles that work across all applications
+2. WHEN applications need custom styling, THE System SHALL support application-specific CSS overrides
+3. THE modular system SHALL allow customization of colors, spacing, and typography while preserving layout structure
+4. WHEN custom styles are applied, THE base accessibility and responsive design features SHALL remain intact
 
 ### Requirement 4
 
-**User Story:** As a user of the duo-chrome application, I want to see version information in the help overlay, so that I can access it alongside other application information.
+**User Story:** As a developer, I want clear documentation on how to use and customize version display components so that I can implement them correctly
 
 #### Acceptance Criteria
 
-1. WHEN a user opens the help overlay in duo-chrome, THE Version Display Component SHALL be visible within the overlay
-2. THE Version Display Component SHALL be positioned appropriately within the existing help content layout
-3. THE Version Display Component SHALL not interfere with existing help overlay functionality
-4. THE Version Display Component SHALL use styling consistent with the help overlay design
+1. THE documentation SHALL explain how to import and use the shared version display CSS
+2. THE documentation SHALL provide examples of proper HTML structure for version displays
+3. WHEN customization is needed, THE documentation SHALL show how to override specific styles safely
+4. THE documentation SHALL include accessibility guidelines for version display implementations
 
 ### Requirement 5
 
-**User Story:** As a user of applications without existing help systems, I want to access version information through an intuitive interface, so that I can find version details when needed.
+**User Story:** As a developer, I want automated validation to ensure version display styling remains consistent so that regressions are prevented
 
 #### Acceptance Criteria
 
-1. WHERE an app lacks an existing help system, THE Version Display Component SHALL be accessible through a keyboard shortcut
-2. THE Version Display Component SHALL display in a modal dialog or dedicated UI area
-3. THE Version Display Component SHALL include a clear method to close or dismiss the version information
-4. THE Version Display Component SHALL not obstruct the main application functionality when displayed
-
-### Requirement 6
-
-**User Story:** As a developer testing version display functionality, I want comprehensive validation of version extraction and display, so that I can ensure the feature works correctly across different scenarios.
-
-#### Acceptance Criteria
-
-1. THE Version Display Component SHALL correctly handle standard semantic version formats for each individual app
-2. THE Version Display Component SHALL correctly handle pre-release version formats with suffixes for each individual app
-3. THE Version Display Component SHALL display the fallback version when an individual app's package.json version is unavailable
-4. THE Version Display Component SHALL update correctly when an individual app's package.json version changes and that specific app is rebuilt
-5. THE Version Display Component SHALL work correctly across different browsers and devices for all apps regardless of their individual version numbers
+1. THE build process SHALL detect duplicate version display CSS across applications
+2. WHEN duplicate styles are found, THE System SHALL warn developers and suggest using the shared library
+3. THE validation SHALL check that all applications properly import the shared version display CSS
+4. WHEN accessibility standards are not met, THE System SHALL provide specific guidance for fixes

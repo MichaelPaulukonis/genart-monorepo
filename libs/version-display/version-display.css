@@ -1,43 +1,146 @@
 /* 
  * Shared Version Display Styles
  * Consistent styling for version information across all GenArt applications
+ * 
+ * CSS Custom Properties for Theming:
+ * 
+ * Color Properties:
+ * --version-text-color: Text color for version information (default: #333)
+ * --version-bg-color: Background color for version display elements (default: rgba(0, 0, 0, 0.08))
+ * --version-border-color: Border color for version containers (default: #ddd)
+ * --version-focus-color: Focus outline color for accessibility (default: #007acc)
+ * 
+ * Typography Properties:
+ * --version-font-family: Font family for version text (default: monospace)
+ * --version-font-size: Base font size for version text (default: 0.8em)
+ * --version-font-weight: Font weight for version text (default: normal)
+ * --version-line-height: Line height for version text (default: 1.2)
+ * 
+ * Spacing Properties:
+ * --version-margin-top: Top margin for version info sections (default: 15px)
+ * --version-padding-top: Top padding for version info sections (default: 10px)
+ * --version-padding-inline: Inline padding for version display elements (default: 4px 8px)
+ * --version-border-radius: Border radius for version display elements (default: 4px)
+ * --version-border-width: Border width for version containers (default: 1px)
+ * 
+ * Usage Examples:
+ * 
+ * Basic color customization:
+ * :root {
+ *   --version-text-color: #2c3e50;
+ *   --version-bg-color: rgba(52, 152, 219, 0.1);
+ *   --version-border-color: #3498db;
+ * }
+ * 
+ * Application-specific overrides:
+ * .my-app {
+ *   --version-font-family: 'Courier New', monospace;
+ *   --version-font-size: 0.9em;
+ *   --version-border-radius: 8px;
+ * }
+ * 
+ * Dark theme support:
+ * [data-theme="dark"] {
+ *   --version-text-color: #e0e0e0;
+ *   --version-bg-color: rgba(255, 255, 255, 0.12);
+ *   --version-border-color: #555;
+ * }
+ * 
+ * Predefined Override Classes:
+ * 
+ * Theme Variants:
+ * .version-theme-minimal - Transparent background, no borders
+ * .version-theme-prominent - Bold text, stronger background
+ * .version-theme-subtle - Lighter text, minimal background
+ * 
+ * Size Variants:
+ * .version-size-small - Smaller text and spacing
+ * .version-size-large - Larger text and spacing
+ * 
+ * Color Variants:
+ * .version-color-primary - Blue theme
+ * .version-color-success - Green theme
+ * .version-color-warning - Yellow theme
+ * 
+ * Application Scopes:
+ * .app-duo-chrome - Duo-chrome specific styles
+ * .app-crude-collage - Crude collage painter specific styles
+ * .app-those-shapes - Those shape things specific styles
+ * .app-computational-collage - Computational collage specific styles
+ * 
+ * Context Variants:
+ * .version-context-help - Optimized for help overlays
+ * .version-context-about - Optimized for about dialogs
+ * .version-context-footer - Optimized for page footers
+ * 
+ * Usage with Classes:
+ * <div class="version-info version-theme-minimal">v1.0.0</div>
+ * <div class="version-display version-size-large version-color-primary">v1.0.0</div>
+ * <div class="app-duo-chrome version-context-help">
+ *   <div class="version-info">v1.0.0</div>
+ * </div>
  */
+
+/* Root-level custom properties with fallback values */
+:root {
+  /* Color theming */
+  --version-text-color: #333;
+  --version-bg-color: rgba(0, 0, 0, 0.08);
+  --version-border-color: #ddd;
+  --version-focus-color: #007acc;
+  
+  /* Typography theming */
+  --version-font-family: monospace;
+  --version-font-size: 0.8em;
+  --version-font-weight: normal;
+  --version-line-height: 1.2;
+  
+  /* Spacing theming */
+  --version-margin-top: 15px;
+  --version-padding-top: 10px;
+  --version-padding-inline: 4px 8px;
+  --version-border-radius: 4px;
+  --version-border-width: 1px;
+}
 
 /* Base version display styles */
 .version-info,
 .version-display {
-  font-family: monospace;
-  font-size: 0.8em;
-  color: #666;
-  opacity: 0.8;
+  font-family: var(--version-font-family, monospace);
+  font-size: var(--version-font-size, 0.8em);
+  font-weight: var(--version-font-weight, normal);
+  line-height: var(--version-line-height, 1.2);
+  color: var(--version-text-color, #333); /* Improved from #666 for better contrast */
+  opacity: 1; /* Improved from 0.8 for better visibility */
   text-align: center;
 }
 
 /* Version info in help overlays and info boxes */
 .version-info {
-  margin-top: 15px;
-  padding-top: 10px;
-  border-top: 1px solid #eee;
+  margin-top: var(--version-margin-top, 15px);
+  padding-top: var(--version-padding-top, 10px);
+  border-top: var(--version-border-width, 1px) solid var(--version-border-color, #ddd);
 }
 
 /* Version display in about dialogs */
 .version-display {
   display: inline-block;
-  padding: 4px 8px;
-  background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
-  font-size: 0.9em;
+  padding: var(--version-padding-inline, 4px 8px);
+  background-color: var(--version-bg-color, rgba(0, 0, 0, 0.08));
+  border-radius: var(--version-border-radius, 4px);
+  font-size: 0.9em; /* Slightly larger than base for about dialogs */
+  border: var(--version-border-width, 1px) solid var(--version-border-color, rgba(0, 0, 0, 0.1));
 }
 
 /* Container for version display in about dialogs */
 .about-dialog-version {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #eee;
+  margin-top: 20px; /* Larger margin for about dialog context */
+  padding-top: 16px; /* Larger padding for about dialog context */
+  border-top: var(--version-border-width, 1px) solid var(--version-border-color, #ddd);
   text-align: center;
 }
 
-/* Responsive design considerations */
+/* Enhanced responsive design considerations */
 @media (max-width: 600px) {
   .version-info,
   .version-display {
@@ -55,48 +158,239 @@
   }
 }
 
-/* High contrast mode support */
+/* Tablet breakpoint */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .version-info,
+  .version-display {
+    font-size: 0.8em;
+  }
+}
+
+/* Large screen optimizations */
+@media (min-width: 1025px) {
+  .version-info,
+  .version-display {
+    font-size: 0.85em;
+  }
+}
+
+/* Enhanced high contrast mode support */
 @media (prefers-contrast: high) {
   .version-info,
   .version-display {
     color: #000;
+    --version-text-color: #000;
     opacity: 1;
+    font-weight: 600; /* Bolder text for better visibility */
   }
   
   .version-display {
-    background-color: rgba(0, 0, 0, 0.1);
-    border: 1px solid #000;
+    background-color: rgba(0, 0, 0, 0.15); /* Stronger background */
+    --version-bg-color: rgba(0, 0, 0, 0.15);
+    border: 2px solid #000; /* Thicker border */
+    --version-border-color: #000;
+  }
+  
+  .version-info,
+  .about-dialog-version {
+    border-top: 2px solid #000; /* Thicker borders */
+    --version-border-color: #000;
+  }
+  
+  /* High contrast dark mode */
+  @media (prefers-color-scheme: dark) {
+    .version-info,
+    .version-display {
+      color: #fff;
+      --version-text-color: #fff;
+    }
+    
+    .version-display {
+      background-color: rgba(255, 255, 255, 0.2);
+      --version-bg-color: rgba(255, 255, 255, 0.2);
+      border-color: #fff;
+      --version-border-color: #fff;
+    }
+    
+    .version-info,
+    .about-dialog-version {
+      border-top-color: #fff;
+      --version-border-color: #fff;
+    }
   }
 }
 
-/* Focus styles for accessibility */
+/* Enhanced focus styles for accessibility */
 .version-info:focus,
-.version-display:focus {
+.version-display:focus,
+.version-info:focus-visible,
+.version-display:focus-visible {
   outline: 2px solid #007acc;
+  outline-color: var(--version-focus-color, #007acc);
   outline-offset: 2px;
+  /* Ensure focus is visible in high contrast mode */
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.2);
 }
 
-/* Ensure minimum color contrast ratios */
+/* Remove focus outline for mouse users, keep for keyboard users */
+.version-info:focus:not(:focus-visible),
+.version-display:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Ensure minimum color contrast ratios and accessibility */
 .version-info,
 .version-display {
-  /* Ensure text meets WCAG AA contrast requirements */
+  /* Ensure text meets WCAG AA contrast requirements (minimum 4.5:1) */
   min-height: 1.2em;
-  line-height: 1.2;
+  /* Improve text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Ensure text is selectable for screen readers */
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
 }
 
-/* Dark mode support */
+/* Application Override Patterns */
+/* These classes provide safe ways for applications to customize version displays */
+
+/* Predefined theme variants */
+.version-theme-minimal {
+  --version-bg-color: transparent;
+  --version-border-color: transparent;
+  --version-padding-inline: 0;
+  --version-border-width: 0;
+}
+
+.version-theme-prominent {
+  --version-font-weight: bold;
+  --version-font-size: 0.9em;
+  --version-bg-color: rgba(0, 0, 0, 0.12);
+  --version-border-width: 2px;
+  --version-padding-inline: 8px 12px;
+}
+
+.version-theme-subtle {
+  --version-text-color: #666;
+  --version-font-size: 0.75em;
+  --version-bg-color: rgba(0, 0, 0, 0.04);
+  --version-border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Size variants */
+.version-size-small {
+  --version-font-size: 0.7em;
+  --version-padding-inline: 3px 6px;
+  --version-margin-top: 10px;
+  --version-padding-top: 8px;
+}
+
+.version-size-large {
+  --version-font-size: 1em;
+  --version-padding-inline: 6px 12px;
+  --version-margin-top: 20px;
+  --version-padding-top: 15px;
+}
+
+/* Color scheme variants */
+.version-color-primary {
+  --version-text-color: #007acc;
+  --version-border-color: #007acc;
+  --version-bg-color: rgba(0, 122, 204, 0.1);
+}
+
+.version-color-success {
+  --version-text-color: #28a745;
+  --version-border-color: #28a745;
+  --version-bg-color: rgba(40, 167, 69, 0.1);
+}
+
+.version-color-warning {
+  --version-text-color: #ffc107;
+  --version-border-color: #ffc107;
+  --version-bg-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Application-specific override containers */
+/* Applications can use these classes to scope their customizations */
+.app-duo-chrome {
+  /* Duo-chrome specific customizations */
+  --version-font-family: 'Times New Roman', Times, serif;
+}
+
+.app-crude-collage {
+  /* Crude collage painter specific customizations - placeholder for future use */
+  --version-font-family: var(--version-font-family, monospace);
+}
+
+.app-those-shapes {
+  /* Those shape things specific customizations - placeholder for future use */
+  --version-font-family: var(--version-font-family, monospace);
+}
+
+.app-computational-collage {
+  /* Computational collage specific customizations - placeholder for future use */
+  --version-font-family: var(--version-font-family, monospace);
+}
+
+/* Context-specific overrides */
+.version-context-help {
+  /* Specific styling for help overlays */
+  --version-margin-top: 15px;
+  --version-padding-top: 10px;
+}
+
+.version-context-about {
+  /* Specific styling for about dialogs */
+  --version-margin-top: 20px;
+  --version-padding-top: 16px;
+  --version-font-size: 0.9em;
+}
+
+.version-context-footer {
+  /* Specific styling for page footers */
+  --version-margin-top: 10px;
+  --version-padding-top: 5px;
+  --version-font-size: 0.75em;
+}
+
+/* Context-aware dark mode support */
+/* Apply light text only when version display is actually on a dark background */
+.dark-background .version-info,
+.dark-background .version-display,
+[data-theme="dark"] .version-info,
+[data-theme="dark"] .version-display {
+  color: #e0e0e0; /* Light text for dark backgrounds */
+  --version-text-color: #e0e0e0;
+}
+
+.dark-background .version-display,
+[data-theme="dark"] .version-display {
+  background-color: rgba(255, 255, 255, 0.12);
+  --version-bg-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  --version-border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-background .version-info,
+.dark-background .about-dialog-version,
+[data-theme="dark"] .version-info,
+[data-theme="dark"] .about-dialog-version {
+  border-top-color: #555;
+  --version-border-color: #555;
+}
+
+/* Enhanced dark mode support for system preference */
 @media (prefers-color-scheme: dark) {
-  .version-info,
-  .version-display {
-    color: #ccc;
-  }
-  
-  .version-display {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  .version-info {
-    border-top-color: #444;
+  /* Only apply to elements that are explicitly in dark contexts */
+  .dark-background .version-info,
+  .dark-background .version-display,
+  [data-theme="dark"] .version-info,
+  [data-theme="dark"] .version-display {
+    color: #e0e0e0;
+    --version-text-color: #e0e0e0;
   }
 }
 
@@ -108,11 +402,40 @@
   }
 }
 
+/* Browser compatibility and performance optimizations */
+.version-info,
+.version-display {
+  /* Improve rendering performance */
+  will-change: auto;
+  /* Ensure consistent box model */
+  box-sizing: border-box;
+  /* Prevent layout shifts */
+  contain: layout style;
+}
+
+/* Fallbacks for older browsers that don't support CSS custom properties */
+@supports not (color: var(--version-text-color)) {
+  .version-info,
+  .version-display {
+    color: #333;
+  }
+  
+  .version-display {
+    background-color: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  .version-info,
+  .about-dialog-version {
+    border-top-color: #ddd;
+  }
+}
+
 /* Print styles - hide version info in print */
 @media print {
   .version-info,
   .version-display,
   .about-dialog-version {
-    display: none;
+    display: none !important;
   }
 }

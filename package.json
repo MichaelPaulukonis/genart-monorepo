@@ -16,7 +16,10 @@
     "test:verify": "node test/scripts/verify-utilities.js",
     "test:verify:basic": "node test/scripts/verify-utilities.js --basic",
     "test:verify:light": "node --max-old-space-size=2048 test/scripts/verify-utilities.js --basic",
-    "test:debug": "node test/scripts/debug-test.js"
+    "test:debug": "node test/scripts/debug-test.js",
+    "validate:version-display": "node scripts/validate-version-display-accessibility.js",
+    "validate:app": "node scripts/validate-app-version-display.js",
+    "validate:all": "npm run validate:version-display"
   },
   "devDependencies": {
     "@nx/eslint": "^21.6.4",

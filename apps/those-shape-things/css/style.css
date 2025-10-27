@@ -166,19 +166,18 @@ Dialog Styles */
 
 
 /* App-specific version display styling for those-shape-things */
+/* Using shared library with custom Times New Roman theme */
 .about-dialog-version {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #eee;
-  text-align: center;
+  --version-font-family: 'Times New Roman', Times, serif; /* Match app theme */
+  --version-border-color: #eee;
 }
 
 .about-dialog-version span {
+  /* Custom styling for version display elements */
   display: inline-block;
   padding: 4px 8px;
   background-color: rgba(0, 0, 0, 0.05);
   border-radius: 4px;
-  font-family: 'Times New Roman', Times, serif; /* Match app theme */
   font-size: 0.9em;
   color: #666;
   font-variant: small-caps;

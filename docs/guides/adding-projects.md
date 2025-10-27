@@ -5,12 +5,14 @@ This guide walks you through adding new creative coding projects to the monorepo
 ## Quick Start
 
 1. **Create project directory**
+
    ```bash
    mkdir apps/my-new-project
    cd apps/my-new-project
    ```
 
 2. **Set up basic structure**
+
    ```bash
    # Create basic files
    touch index.html package.json vite.config.js project.json
@@ -96,6 +98,7 @@ apps/my-new-project/
 ```
 
 **Important**: Use a unique port number for each project:
+
 - duo-chrome: 5173
 - crude-collage-painter: 5174
 - your-project: 5175+ (increment for each new project)
@@ -104,8 +107,8 @@ apps/my-new-project/
 
 ```javascript
 // vite.config.js
-const { resolve } = require('path')
-const { defineConfig } = require('vite')
+const { resolve } = require("path");
+const { defineConfig } = require("vite");
 
 module.exports = defineConfig({
   root: __dirname,
@@ -115,22 +118,22 @@ module.exports = defineConfig({
     fs: {
       allow: [
         // Allow serving files from the project root and parent directories
-        resolve(__dirname, '../..'),
+        resolve(__dirname, "../.."),
         // Allow serving from node_modules
-        resolve(__dirname, '../../node_modules')
-      ]
-    }
+        resolve(__dirname, "../../node_modules"),
+      ],
+    },
   },
   build: {
-    outDir: '../../dist/apps/my-new-project',
+    outDir: "../../dist/apps/my-new-project",
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html')
-      }
-    }
-  }
-})
+        main: resolve(__dirname, "index.html"),
+      },
+    },
+  },
+});
 ```
 
 ### 5. Create index.html
@@ -154,28 +157,28 @@ module.exports = defineConfig({
 
 ```javascript
 // src/sketch.js
-import { p5 } from 'p5js-wrapper'
-import { getRandomColor, RISOCOLORS } from '@genart/color-palettes'
-import { getRandomItem } from '@genart/p5-utils'
-import '../css/style.css'
+import { p5 } from "p5js-wrapper";
+import { getRandomColor, RISOCOLORS } from "@genart/color-palettes";
+import { getRandomItem } from "@genart/p5-utils";
+import "../css/style.css";
 
 const sketch = function (p) {
   p.setup = function () {
-    p.createCanvas(800, 600)
-    p.background(240)
-    
+    p.createCanvas(800, 600);
+    p.background(240);
+
     // Use shared libraries
-    const randomColor = getRandomColor(RISOCOLORS)
-    p.fill(randomColor.color)
-    p.ellipse(p.width/2, p.height/2, 200, 200)
-  }
-  
+    const randomColor = getRandomColor(RISOCOLORS);
+    p.fill(randomColor.color);
+    p.ellipse(p.width / 2, p.height / 2, 200, 200);
+  };
+
   p.draw = function () {
     // Your drawing code here
-  }
-}
+  };
+};
 
-new p5(sketch)
+new p5(sketch);
 ```
 
 ### 7. Add Dependencies (if needed)
@@ -207,74 +210,76 @@ npm run dev
 ### @genart/p5-utils
 
 ```javascript
-import { 
-  getRandomUniqueItem, 
-  getRandomItem, 
-  datestring, 
+import {
+  getRandomUniqueItem,
+  getRandomItem,
+  datestring,
   createFilenamer,
   mapRange,
-  constrain 
-} from '@genart/p5-utils'
+  constrain,
+} from "@genart/p5-utils";
 
 // Example usage
-const items = ['a', 'b', 'c', 'd']
-const randomItem = getRandomItem(items)
-const uniqueItem = getRandomUniqueItem(items, ['a', 'b'])
+const items = ["a", "b", "c", "d"];
+const randomItem = getRandomItem(items);
+const uniqueItem = getRandomUniqueItem(items, ["a", "b"]);
 
-const namer = createFilenamer('my-sketch')
-const filename = namer() // 'my-sketch-000000'
+const namer = createFilenamer("my-sketch");
+const filename = namer(); // 'my-sketch-000000'
 ```
 
 ### @genart/color-palettes
 
 ```javascript
-import { 
-  RISOCOLORS, 
-  PALETTE, 
+import {
+  RISOCOLORS,
+  PALETTE,
   PALETTE_TWO,
   getRandomColor,
   hexToRgb,
   rgbToHex,
-  createCustomPalette 
-} from '@genart/color-palettes'
+  createCustomPalette,
+} from "@genart/color-palettes";
 
 // Example usage
-const randomRiso = getRandomColor(RISOCOLORS)
-p.fill(randomRiso.color) // [r, g, b] array
+const randomRiso = getRandomColor(RISOCOLORS);
+p.fill(randomRiso.color); // [r, g, b] array
 
-const customPalette = createCustomPalette('my-colors', [
-  { name: 'red', color: '#ff0000' },
-  { name: 'blue', color: '#0000ff' }
-])
+const customPalette = createCustomPalette("my-colors", [
+  { name: "red", color: "#ff0000" },
+  { name: "blue", color: "#0000ff" },
+]);
 ```
 
 ## Common Patterns
 
 ### File Saving
-```javascript
-import { saveAs } from 'file-saver'
-import { createFilenamer, datestring } from '@genart/p5-utils'
 
-const namer = createFilenamer(`my-project-${datestring()}`)
+```javascript
+import { saveAs } from "file-saver";
+import { createFilenamer, datestring } from "@genart/p5-utils";
+
+const namer = createFilenamer(`my-project-${datestring()}`);
 
 function saveImage() {
-  p.saveCanvas(namer(), 'png')
+  p.saveCanvas(namer(), "png");
 }
 ```
 
 ### Keyboard Controls
+
 ```javascript
-p.keyPressed = function() {
+p.keyPressed = function () {
   switch (p.key) {
-    case 's':
-    case 'S':
-      saveImage()
-      break
-    case ' ':
+    case "s":
+    case "S":
+      saveImage();
+      break;
+    case " ":
       // Regenerate or pause
-      break
+      break;
   }
-}
+};
 ```
 
 ## Deployment
@@ -299,16 +304,19 @@ nx build my-new-project
 ## Troubleshooting
 
 ### Build Errors
+
 - Check that all imports are correct
 - Ensure dependencies are installed at workspace level
 - Verify vite.config.js paths are correct
 
 ### Port Conflicts
+
 - Each project needs a unique port
 - Update both project.json and vite.config.js
 - Check that no other services are using the port
 
 ### Import Issues
+
 - Shared libraries use ES modules (`@genart/...`)
 - Make sure `type: "module"` is in package.json
 - Use relative imports for local files (`./utils.js`)

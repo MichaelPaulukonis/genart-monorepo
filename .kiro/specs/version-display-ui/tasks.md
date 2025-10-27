@@ -1,235 +1,188 @@
 # Implementation Plan
 
-- [x] 1. Set up build-time version generation infrastructure
+- [x] 1. Enhance shared CSS library with improved visibility and accessibility
 
-  - Create Vite plugin to generate version constants from package.json
-  - Configure plugin to run during build process for all apps
-  - Add version-constants.js to .gitignore files
-  - Test version extraction with different package.json formats
-  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+  - Update `libs/version-display/version-display.css` with improved contrast colors and accessibility features
+  - Change text color from #666 to #333 and opacity from 0.8 to 1.0 for better visibility
+  - Add WCAG AA compliant color combinations with minimum 4.5:1 contrast ratio
+  - Implement comprehensive dark mode, high contrast, and reduced motion support
+  - Add focus indicators and keyboard navigation support for accessibility
+  - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 2. Create shared version utility module
+- [x] 2. Fix duo-chrome version display visibility (Priority)
 
-  - [x] 2.1 Implement getAppVersion() function with error handling
+  - [x] 2.1 Audit current duo-chrome version display implementation
 
-    - Create version.js utility file in each app's src/utils directory
-    - Import version constants and provide fallback mechanism
-    - Add proper error handling for missing constants file
-    - _Requirements: 1.1, 2.4_
+    - Identify all locations where version display CSS is defined in duo-chrome
+    - Document which styles are currently active and taking precedence
+    - Test current visibility issues and measure contrast ratios
+    - _Requirements: 1.1, 1.3_
 
-  - [x] 2.2 Implement formatVersion() function for consistent display
+  - [x] 2.2 Remove duplicate version display styles from duo-chrome
 
-    - Create version formatting function with "v" prefix
-    - Handle edge cases for malformed version strings
-    - _Requirements: 1.3, 3.2_
+    - Remove version display CSS from `apps/duo-chrome/css/style.css`
+    - Ensure no other local CSS files contain version display styles
+    - Create backup of removed styles for rollback if needed
+    - _Requirements: 2.2, 2.4_
 
-  - [ ]\* 2.3 Write unit tests for version utilities
-    - Test version extraction with valid constants
-    - Test fallback behavior when constants unavailable
-    - Test version formatting with various input formats
-    - _Requirements: 6.1, 6.2, 6.3_
+  - [x] 2.3 Implement proper shared library import in duo-chrome
 
-- [x] 3. Integrate version display into duo-chrome help overlay
+    - Add correct import path for shared version display CSS in duo-chrome HTML
+    - Verify CSS loading order ensures shared library styles are applied
+    - Test that version display elements use correct CSS classes
+    - _Requirements: 2.1, 2.3_
 
-  - [x] 3.1 Modify existing help overlay HTML structure
+  - [x] 2.4 Validate duo-chrome version display improvements
+    - Test version display visibility in duo-chrome application
+    - Measure contrast ratios to confirm WCAG AA compliance
+    - Verify responsive design works across different screen sizes
+    - Test dark mode and high contrast mode functionality
+    - _Requirements: 1.1, 1.2, 1.3_
 
-        - Add version-info div to help overlay content
-        - Import and use version utilities in duo-chrome.js
-        - Position version info appropriately within help layout
-        - _Requirements: 1.1, 1.2, 4.1, 4.2_
+- [x] 3. Create modular customization system
 
-    Ther
+  - [x] 3.1 Implement CSS custom properties for theming
 
-  - [x] 3.2 Style version display within help overlay
+    - Add CSS custom properties (variables) to shared library for colors, spacing, and typography
+    - Create fallback values for browsers that don't support custom properties
+    - Document available custom properties and their usage
+    - _Requirements: 3.1, 3.2, 3.3_
 
-    - Apply consistent styling for version information
-    - Ensure version display doesn't interfere with existing help content
-    - Test responsive behavior on different screen sizes
-    - _Requirements: 1.4, 3.1, 4.3, 4.4_
+  - [x] 3.2 Design application override pattern
 
-  - [x]\* 3.3 Test duo-chrome version display functionality
-    - Verify version appears when help overlay is opened
-    - Test version matches package.json content
-    - Validate styling and positioning
-    - _Requirements: 6.4_
+    - Create standardized approach for applications to override shared styles safely
+    - Implement CSS specificity rules that allow customization without breaking base functionality
+    - Create examples of proper override techniques
+    - _Requirements: 3.2, 3.3, 3.4_
 
-- [x] 4. Integrate version display into crude-collage-painter help screen
+  - [x] 3.3 Test customization system with sample overrides
+    - Create test overrides for different color schemes and spacing
+    - Verify that base accessibility features remain intact with customizations
+    - Test that overrides don't conflict with responsive design breakpoints
+    - _Requirements: 3.3, 3.4_
 
-  - [x] 4.1 Modify existing infobox.js help content
+- [x] 4. Migrate remaining applications to shared library
 
-    - Add version information to existing help screen structure
-    - Import version utilities into infobox module
-    - Position version info at bottom of help content
-    - _Requirements: 1.1, 1.2, 3.1, 3.2_
+  - [x] 4.1 Audit all applications for version display CSS duplication
 
-  - [x] 4.2 Style version display within help screen
+    - Scan `apps/crude-collage-painter`, `apps/computational-collage`, `apps/those-shape-things`, and `apps/dragline` for version display styles
+    - Document current implementation patterns and any custom styling
+    - Identify applications that need custom overrides vs. standard implementation
+    - _Requirements: 2.2, 2.4_
 
-    - Apply consistent styling with separator border
-    - Ensure version integrates well with existing help design
-    - Test responsive behavior and readability
-    - _Requirements: 1.3, 1.4, 3.2_
+  - [x] 4.2 Remove duplicate styles from remaining applications
 
-  - [x]\* 4.3 Test crude-collage-painter version display
-    - Verify version appears in help screen
-    - Test version accuracy and formatting
-    - Validate integration with existing help functionality
-    - _Requirements: 6.4_
+    - Remove version display CSS from local application stylesheets
+    - Preserve any truly application-specific customizations as override patterns
+    - Create backups of removed styles for rollback procedures
+    - _Requirements: 2.2, 2.4_
 
-- [x] 5. Create about dialog component for those-shape-things
+  - [x] 4.3 Implement shared library imports across all applications
 
-  - [x] 5.1 Implement AboutDialog class
+    - Add proper import statements for shared version display CSS in all application HTML files
+    - Verify CSS loading order and precedence across all applications
+    - Test that all applications properly display version information
+    - _Requirements: 2.1, 2.3_
 
-    - Create new AboutDialog component with show/hide functionality
-    - Add version display within dialog content
-    - Implement proper positioning and modal behavior
-    - _Requirements: 1.1, 1.2, 5.1, 5.2, 5.3_
+  - [x] 4.4 Validate consistency across all applications
+    - Test version display appearance and functionality in all applications
+    - Verify responsive design works consistently across applications
+    - Check accessibility compliance in all contexts (help overlays, about dialogs, info boxes)
+    - _Requirements: 1.1, 1.2, 1.3, 2.1_
 
-  - [x] 5.2 Add keyboard shortcut integration
+- [x] 5. Create comprehensive documentation
 
-    - Implement Ctrl+I keyboard shortcut for about dialog
-    - Add event listeners and shortcut handling
-    - Ensure shortcut doesn't conflict with existing functionality
-    - _Requirements: 5.1, 5.4_
+  - [x] 5.1 Write developer usage guide
 
-  - [x] 5.3 Style about dialog component
+    - Create documentation explaining how to import and use shared version display CSS
+    - Provide HTML structure examples for different version display contexts
+    - Document proper CSS class usage and semantic markup
+    - _Requirements: 4.1, 4.2_
 
-    - Apply modal dialog styling with backdrop
-    - Ensure proper z-index and visual hierarchy
-    - Add close button and interaction states
-    - _Requirements: 1.3, 1.4, 5.3_
+  - [x] 5.2 Document customization guidelines
 
-  - [x]\* 5.4 Test those-shape-things about dialog
-    - Verify dialog opens with keyboard shortcut
-    - Test version display and dialog functionality
-    - Validate modal behavior and close mechanisms
-    - _Requirements: 6.4_
+    - Create guide for safely overriding shared styles when customization is needed
+    - Provide examples of common customization patterns (colors, spacing, typography)
+    - Document CSS custom property usage and available variables
+    - Include accessibility guidelines for custom implementations
+    - _Requirements: 4.3, 4.4_
 
-- [x] 6. Create about dialog component for computational-collage
+  - [x] 5.3 Create troubleshooting guide
+    - Document common issues and their solutions (CSS loading order, specificity conflicts)
+    - Provide debugging techniques for version display problems
+    - Include accessibility testing procedures and tools
+    - Create rollback procedures for migration issues
+    - _Requirements: 4.1, 4.4_
 
-  - [x] 6.1 Implement AboutDialog integration with existing UI
+- [x] 6. Implement validation and monitoring system
 
-    - Create about dialog component compatible with existing UI system
-    - Add version display within dialog content
-    - Integrate with existing control panel or menu system
-    - _Requirements: 1.1, 1.2, 3.1, 3.2_
+  - [ ]\* 6.1 Create CSS duplication detection script
 
-  - [x] 6.2 Add access method for about dialog
+    - Build script to scan all application CSS files for version display selectors
+    - Report duplicate styles with file locations and suggested fixes
+    - Integrate detection into build process to prevent future duplication
+    - _Requirements: 5.1, 5.2_
 
-    - Implement keyboard shortcut or UI button for dialog access
-    - Ensure access method fits with existing interaction patterns
-    - Add appropriate visual indicators for access method
-    - _Requirements: 5.1, 5.4_
+  - [x] 6.2 Implement accessibility validation
 
-  - [x] 6.3 Style about dialog for computational-collage
+    - Create automated contrast ratio checking for version display colors
+    - Validate that custom color combinations meet WCAG AA standards
+    - Provide specific error messages with suggested color corrections
+    - _Requirements: 5.4, 1.1, 1.3_
 
-    - Apply styling consistent with app's visual design
-    - Ensure dialog integrates well with existing UI elements
-    - Test responsive behavior and accessibility
-    - _Requirements: 1.3, 1.4, 3.2_
+  - [x] 6.3 Add build-time validation integration
+    - Integrate validation scripts into existing build processes
+    - Configure validation to run during development and CI/CD
+    - Set up warnings and errors for validation failures
+    - _Requirements: 5.1, 5.3_
 
-  - [x]\* 6.4 Test computational-collage version display
-    - Verify dialog access and version display functionality
-    - Test integration with existing UI components
-    - Validate styling and user experience
-    - _Requirements: 6.4_
+- [ ]\* 6.4 Create automated visual regression tests
 
-- [x] 7. Configure build processes for all applications
+  - Set up screenshot testing for version display components across applications
+  - Test multiple themes (light/dark) and responsive breakpoints
+  - Create baseline images and automated comparison workflows
+  - _Requirements: 1.1, 1.2_
 
-  - [x] 7.1 Update vite.config.js files for each app
+- [ ]\* 7. Performance optimization and monitoring
 
-    - Add version generation plugin to each app's Vite configuration
-    - Ensure plugin runs during both development and production builds
-    - Test build process with version generation
-    - _Requirements: 2.1, 2.2, 2.5_
+  - [ ]\* 7.1 Optimize shared CSS library for performance
 
-  - [x] 7.2 Update .gitignore files
+    - Minify CSS for production builds
+    - Implement proper caching headers for shared library
+    - Optimize CSS selector specificity for rendering performance
+    - _Requirements: 2.1_
 
-    - Add src/utils/version-constants.js to each app's .gitignore
-    - Ensure generated files are not committed to version control
-    - Verify .gitignore patterns work correctly
-    - _Requirements: 2.3_
+  - [ ]\* 7.2 Monitor bundle size impact
 
-  - [x]\* 7.3 Test build processes across all apps
-    - Run build process for each application
-    - Verify version constants are generated correctly
-    - Test with different version formats in package.json
-    - _Requirements: 6.3, 6.5_
+    - Measure CSS bundle size before and after consolidation
+    - Verify that shared library reduces overall CSS duplication
+    - Set up monitoring for future bundle size changes
+    - _Requirements: 2.1_
 
-- [x] 8. Add shared CSS styles for version display
+  - [ ]\* 7.3 Test loading performance across applications
+    - Measure CSS loading times and render performance
+    - Verify that shared library doesn't negatively impact page load times
+    - Test performance across different network conditions
+    - _Requirements: 2.1_
 
-  - [x] 8.1 Create consistent version display styles
+- [x] 8. Final validation and deployment
 
-    - Define shared CSS classes for version information
-    - Ensure consistent typography and spacing
-    - Add responsive design considerations
-    - _Requirements: 1.3, 3.1, 3.2_
+  - [x] 8.1 Comprehensive cross-application testing
 
-  - [x] 8.2 Implement app-specific style customizations
-    - Add app-specific overrides while maintaining consistency
-    - Ensure version display fits each app's visual design
-    - Test color contrast and accessibility requirements
-    - _Requirements: 1.5, 3.2_
+    - Test all applications for version display functionality and appearance
+    - Verify accessibility compliance across all contexts and applications
+    - Test responsive design and theme switching functionality
+    - _Requirements: 1.1, 1.2, 1.3, 2.1_
 
-- [ ]\* 9. Comprehensive testing and validation
+  - [x] 8.2 User acceptance testing
 
-  - [ ]\* 9.1 Cross-browser testing
+    - Verify that version information is clearly visible and readable
+    - Test with users who have visual impairments or use assistive technologies
+    - Confirm that version display meets usability requirements
+    - _Requirements: 1.1, 1.2_
 
-    - Test version display in Chrome, Firefox, and Safari
-    - Verify functionality across different screen sizes
-    - Test keyboard shortcuts and interaction patterns
-    - _Requirements: 6.4_
-
-  - [ ]\* 9.2 Version update testing
-
-    - Change version numbers in package.json files
-    - Rebuild applications and verify version updates
-    - Test with various semantic version formats
-    - _Requirements: 6.5_
-
-  - [ ]\* 9.3 Accessibility validation
-    - Test screen reader compatibility
-    - Verify keyboard navigation functionality
-    - Check color contrast ratios
-    - _Requirements: 1.5_
-
-- [x] 11. Integrate version display into dragline info box
-
-  - [x] 11.1 Create version utility for dragline
-
-    - Create src/utils/version.js with getAppVersion() and formatVersion() functions
-    - Import version constants and provide fallback mechanism
-    - Add proper error handling for missing constants file
-    - _Requirements: 1.1, 2.4_
-
-  - [x] 11.2 Update dragline info box with version display
-
-    - Modify existing info box HTML structure to include version information
-    - Import and use version utilities in dragline.js or infobox.js
-    - Position version info appropriately within info box layout
-    - _Requirements: 1.1, 1.2, 4.1, 4.2_
-
-  - [x] 11.3 Style version display within dragline info box
-
-    - Apply consistent styling for version information
-    - Ensure version display integrates well with existing info box design
-    - Test responsive behavior and readability
-    - _Requirements: 1.3, 1.4, 3.1, 3.2_
-
-  - [x] 11.4 Configure dragline build process for version generation
-
-    - Update vite.config.js to include version generation plugin
-    - Add src/utils/version-constants.js to .gitignore
-    - Test build process with version generation
-    - _Requirements: 2.1, 2.2, 2.5_
-
-  - [x]\* 11.5 Test dragline version display functionality
-    - Verify version appears in info box
-    - Test version accuracy and formatting
-    - Validate integration with existing info box functionality
-    - _Requirements: 6.4_
-
-- [x]\* 10. Documentation updates
-  - Update README files to mention version display feature
-  - Document keyboard shortcuts and access methods
-  - Add troubleshooting information for build issues
-  - _Requirements: 1.2, 5.1_
+  - [x] 8.3 Create deployment and rollback procedures
+    - Document step-by-step deployment process for shared library updates
+    - Create rollback procedures in case of issues
+    - Set up monitoring for post-deployment validation
+    - _Requirements: 2.1, 4.1_
