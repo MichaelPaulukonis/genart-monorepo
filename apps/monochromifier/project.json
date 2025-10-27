@@ -1,0 +1,68 @@
+{
+  "name": "monochromifier",
+  "sourceRoot": "apps/monochromifier/src",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "monochromifier:build",
+        "port": 5178
+      }
+    },
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/monochromifier",
+        "configFile": "apps/monochromifier/vite.config.js"
+      }
+    },
+    "preview": {
+      "executor": "@nx/vite:preview-server",
+      "options": {
+        "buildTarget": "monochromifier:build",
+        "port": 4178
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/monochromifier/**/*.{js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node src/size-control.test.js",
+        "cwd": "apps/monochromifier"
+      }
+    },
+    "deploy": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx gh-pages -d dist/apps/monochromifier --repo https://github.com/michaelpaulukonis/monochromifier.git"
+      }
+    },
+    "validate-version": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/validate-versions.js --project=monochromifier"
+      }
+    },
+    "release-deploy": {
+      "dependsOn": ["build", "validate-version"],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx release version --projects=monochromifier",
+          "nx release changelog --projects=monochromifier",
+          "npx gh-pages -d dist/apps/monochromifier --repo https://github.com/michaelpaulukonis/monochromifier.git"
+        ],
+        "parallel": false
+      }
+    }
+  }
+}

@@ -19,6 +19,23 @@ This guide walks you through adding new creative coding projects to the monorepo
    mkdir src css public
    ```
 
+   **OR** copy an existing project
+
+   ```bash
+   # Navigate to your monorepo root
+   cd /path/to/genart-monorepo
+
+   # Copy the external project, excluding common directories
+   rsync -av \
+    --exclude='node_modules' \
+    --exclude='.git' \
+    --exclude='dist' \
+    --exclude='build' \
+    --exclude='.DS_Store' \
+    --exclude='.specstory' \
+    /path/to/external-project/ apps/new-project-name/
+   ```
+
 3. **Configure as Nx project** (see detailed steps below)
 
 ## Detailed Steps
