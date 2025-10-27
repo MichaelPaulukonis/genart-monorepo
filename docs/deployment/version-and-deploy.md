@@ -283,6 +283,56 @@ git pull origin main
 nx run duo-chrome:release-deploy
 ```
 
+## Version Mismatch Prevention
+
+### Pre-Release Validation
+
+Always validate versions before releasing to prevent mismatches:
+
+```bash
+# Validate single project
+node scripts/validate-versions.js --project=duo-chrome
+
+# Validate all projects
+node scripts/validate-versions.js --all
+
+# Auto-fix simple mismatches
+node scripts/validate-versions.js --project=duo-chrome --fix
+```
+
+### Integrated Validation
+
+The release process now includes automatic validation. If you see this error:
+
+```
+❌ Version mismatches detected. Please resolve before releasing.
+```
+
+**Quick Fix:**
+```bash
+# For simple cases (package.json behind git tag)
+node scripts/validate-versions.js --project=duo-chrome --fix
+
+# For complex cases
+node scripts/fix-version.js --project=duo-chrome --sync-to-tag
+```
+
+### Version Correction
+
+If you need to fix version mismatches:
+
+```bash
+# Fix to specific version
+node scripts/fix-version.js --project=duo-chrome --target-version=0.4.0
+
+# Sync package.json to match git tag
+node scripts/fix-version.js --project=duo-chrome --sync-to-tag
+
+# Preview changes first
+node scripts/fix-version.js --project=duo-chrome --target-version=0.4.0 --dry-run
+```
+
 ## For More Details
 
-See the complete [Version Management Guide](../guides/version-management.md) for detailed information about the system, configuration, and advanced workflows.
+- **Troubleshooting:** See [Version Mismatch Troubleshooting Guide](../troubleshooting/version-mismatches.md) for detailed resolution steps
+- **Complete Guide:** See [Version Management Guide](../guides/version-management.md) for system details and advanced workflows

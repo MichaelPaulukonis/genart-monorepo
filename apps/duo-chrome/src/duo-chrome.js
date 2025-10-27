@@ -21,7 +21,7 @@
  * - I: Toggle status display
  * - V: Toggle visual indicators
  * - H/?: Toggle help
- * 
+ *
  * Architecture:
  * - Control state management with centralized state object
  * - Modular function groups for different control systems

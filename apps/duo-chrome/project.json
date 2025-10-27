@@ -46,8 +46,14 @@
         "command": "npx gh-pages -d dist/apps/duo-chrome --repo https://github.com/michaelpaulukonis/duo-chrome.git"
       }
     },
+    "validate-version": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/validate-versions.js --project=duo-chrome"
+      }
+    },
     "release-deploy": {
-      "dependsOn": ["build"],
+      "dependsOn": ["build", "validate-version"],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
