@@ -16,9 +16,12 @@ const sketch = function (p) {
   let invert = false
   let sizeRatio = 1.0
   let brushSize = 10
-  const density = 1
+  let transparencyModeEnabled = true // Default to enabled
+  const transparencyThreshold = 128 // Threshold for gray pixels in transparency mode
+  const density = 1 // need to use density in size calculations for both w+h
+  // but if we render offscreen, why worry about pixeldensity ?!?!?
   const displaySize = 600
-  const outputSize = 1000
+  const outputSize = 2000
   let previousMouse = { x: 0, y: 0 }
   const offset = {
     vertical: 0,
@@ -81,6 +84,7 @@ const sketch = function (p) {
     combinedLayer = p.createGraphics(width, height)
     combinedLayer.elt.id = `combined.${p.frameCount}`
     combinedLayer.pixelDensity(density)
+    // combinedLayer.imageMode(p.CENTER)
   }
 
   p.draw = function () {
@@ -201,6 +205,12 @@ const sketch = function (p) {
       buildCombinedLayer(img)
       dirty = true
     }
+    if (p.key === 't') {
+      transparencyModeEnabled = !transparencyModeEnabled
+      bwCachedImage = null // Clear cache to force regeneration
+      buildCombinedLayer(img)
+      dirty = true
+    }
     if (p.key === 'r') {
       threshold = 128
       sizeRatio = 1
@@ -259,7 +269,8 @@ const sketch = function (p) {
       !modal.paintMode &&
       (p.keyIsDown(p.CONTROL) || p.keyIsDown(91))
     ) {
-      p.save(displayLayer, generateFilename())
+      const saveImage = createSaveImage()
+      p.save(saveImage, generateFilename())
     } else if (p.key === '>') {
       if (scaleMethod === scaleMethods.fitToWidth) {
         offset.vertical = Math.min(offset.vertical + 100, offset.verticalMax)
@@ -288,6 +299,7 @@ const sketch = function (p) {
 
   function generateFilename() {
     const d = new Date()
+    const modeIndicator = transparencyModeEnabled ? '-transparent' : ''
     return (
       'monochrome_image.' +
       d.getFullYear() +
@@ -298,16 +310,75 @@ const sketch = function (p) {
       d.getHours() +
       d.getMinutes() +
       d.getSeconds() +
+      modeIndicator +
       '.png'
     )
   }
 
-  const getMonochromeImage = (img, threshold) => {
-    if (bwCachedImage && lastThreshold === threshold) {
+  const createSaveImage = () => {
+    if (transparencyModeEnabled) {
+      // For transparency mode, create a clean transparent image
+      const scaleRatio = calculateScaleRatio(img, outputSize)
+      const scaledWidth = Math.round(img.width * scaleRatio)
+      const scaledHeight = Math.round(img.height * scaleRatio)
+
+      // Get the processed monochrome image with transparency
+      const processedImg = getMonochromeImage(img, threshold, true)
+
+      // Create a graphics buffer for the final save image
+      const saveBuffer = p.createGraphics(scaledWidth, scaledHeight)
+      saveBuffer.pixelDensity(density)
+      saveBuffer.clear() // Start with transparent background
+
+      // Draw the processed image
+      saveBuffer.image(
+        processedImg,
+        0 + offset.horizontal,
+        0 + offset.vertical,
+        scaledWidth,
+        scaledHeight,
+        0,
+        0,
+        img.width,
+        img.height
+      )
+
+      // Add paint layer if it exists
+      if (paintLayer) {
+        saveBuffer.image(
+          paintLayer,
+          0 + offset.horizontal,
+          0 + offset.vertical,
+          scaledWidth,
+          scaledHeight
+        )
+      }
+
+      // Crop whitespace but preserve transparency
+      const croppedImg = cropTransparentWhitespace(saveBuffer)
+
+      // Apply final scaling
+      const finalScaleRatio = calculateScaleRatio(croppedImg, outputSize)
+      const finalWidth = Math.round(croppedImg.width * finalScaleRatio * sizeRatio)
+      const finalHeight = Math.round(croppedImg.height * finalScaleRatio * sizeRatio)
+
+      const finalBuffer = p.createGraphics(finalWidth, finalHeight)
+      finalBuffer.pixelDensity(density)
+      finalBuffer.clear()
+      finalBuffer.image(croppedImg, 0, 0, finalWidth, finalHeight)
+
+      return finalBuffer
+    } else {
+      // For standard mode, use the existing displayLayer
+      return displayLayer
+    }
+  }
+
+  const getMonochromeImage = (img, threshold, forSave = false) => {
+    if (bwCachedImage && lastThreshold === threshold && !forSave) {
       return bwCachedImage
     }
 
-    bwCachedImage = null
     const newImg = p.createImage(img.width, img.height)
     newImg.copy(img, 0, 0, img.width, img.height, 0, 0, img.width, img.height)
 
@@ -320,29 +391,72 @@ const sketch = function (p) {
         const b = newImg.pixels[index + 2]
         const a = newImg.pixels[index + 3]
         const avg = (r + g + b) / 3
-        let bw = avg > threshold ? 255 : 0
 
-        if (invert) {
-          bw = 255 - bw
-        }
+        if (forSave && transparencyModeEnabled) {
+          // Transparency mode logic for saving
+          if (a === 0) {
+            // Already transparent pixels stay transparent
+            newImg.pixels[index] = 0
+            newImg.pixels[index + 1] = 0
+            newImg.pixels[index + 2] = 0
+            newImg.pixels[index + 3] = 0
+          } else {
+            // Determine what should be transparent based on original pixel values
+            // and invert mode
+            let shouldBeTransparent
 
-        if (a === 0 || bw === (invert ? 0 : 255)) {
-          // Transparent pixel (a = 0) sets to background color
-          newImg.pixels[index] = p.red(backgroundColor)
-          newImg.pixels[index + 1] = p.green(backgroundColor)
-          newImg.pixels[index + 2] = p.blue(backgroundColor)
+            if (invert) {
+              // In inverted mode: original black pixels (now white) should be transparent
+              // original white pixels (now black) should remain black
+              shouldBeTransparent = avg <= transparencyThreshold
+            } else {
+              // In normal mode: original white pixels should be transparent
+              // original black pixels should remain black
+              shouldBeTransparent = avg >= 255 - transparencyThreshold
+            }
+
+            if (shouldBeTransparent) {
+              // Make transparent
+              newImg.pixels[index] = 0
+              newImg.pixels[index + 1] = 0
+              newImg.pixels[index + 2] = 0
+              newImg.pixels[index + 3] = 0
+            } else {
+              // Keep as black and opaque (always black in transparency mode)
+              newImg.pixels[index] = 0
+              newImg.pixels[index + 1] = 0
+              newImg.pixels[index + 2] = 0
+              newImg.pixels[index + 3] = 255
+            }
+          }
         } else {
-          newImg.pixels[index] = invert ? 255 : 0 // Invert black to white
-          newImg.pixels[index + 1] = invert ? 255 : 0 // Invert black to white
-          newImg.pixels[index + 2] = invert ? 255 : 0 // Invert black to white
+          // Standard mode (for display or non-transparent save)
+          let bw = avg > threshold ? 255 : 0
+
+          if (invert) {
+            bw = 255 - bw
+          }
+
+          if (a === 0 || bw === (invert ? 0 : 255)) {
+            // Transparent pixel (a = 0) sets to background color
+            newImg.pixels[index] = p.red(backgroundColor)
+            newImg.pixels[index + 1] = p.green(backgroundColor)
+            newImg.pixels[index + 2] = p.blue(backgroundColor)
+          } else {
+            newImg.pixels[index] = invert ? 255 : 0 // Invert black to white
+            newImg.pixels[index + 1] = invert ? 255 : 0 // Invert black to white
+            newImg.pixels[index + 2] = invert ? 255 : 0 // Invert black to white
+          }
+          newImg.pixels[index + 3] = 255 // Set alpha to fully opaque
         }
-        newImg.pixels[index + 3] = 255 // Set alpha to fully opaque
       }
     }
     newImg.updatePixels()
 
-    bwCachedImage = newImg
-    lastThreshold = threshold
+    if (!forSave) {
+      bwCachedImage = newImg
+      lastThreshold = threshold
+    }
 
     return newImg
   }
@@ -553,7 +667,7 @@ const sketch = function (p) {
 
     // Find right boundary
     outer: for (let x = buffer.width * density - 1; x >= 0; x--) {
-      for (let y = 0; y < buffer.height * density; y++) {
+      for (let y = 0; y < buffer.width * density; y++) {
         const index = (x + y * buffer.width * density) * 4
         if (
           buffer.pixels[index] !== p.red(backgroundColor) ||
@@ -583,6 +697,71 @@ const sketch = function (p) {
     return croppedImg
   }
 
+  const cropTransparentWhitespace = buffer => {
+    buffer.loadPixels()
+    let top = 0
+    let bottom = buffer.height - 1
+    let left = 0
+    let right = buffer.width - 1
+
+    // Find top boundary - look for non-transparent pixels
+    outer: for (let y = 0; y < buffer.height * density; y++) {
+      for (let x = 0; x < buffer.width * density; x++) {
+        const index = (x + y * buffer.width * density) * 4
+        const alpha = buffer.pixels[index + 3]
+        if (alpha > 0) { // Found non-transparent pixel
+          top = y
+          break outer
+        }
+      }
+    }
+
+    // Find bottom boundary
+    outer: for (let y = buffer.height * density - 1; y >= 0; y--) {
+      for (let x = 0; x < buffer.width * density; x++) {
+        const index = (x + y * buffer.width * density) * 4
+        const alpha = buffer.pixels[index + 3]
+        if (alpha > 0) {
+          bottom = y
+          break outer
+        }
+      }
+    }
+
+    // Find left boundary
+    outer: for (let x = 0; x < buffer.width * density; x++) {
+      for (let y = 0; y < buffer.height * density; y++) {
+        const index = (x + y * buffer.width * density) * 4
+        const alpha = buffer.pixels[index + 3]
+        if (alpha > 0) {
+          left = x
+          break outer
+        }
+      }
+    }
+
+    // Find right boundary
+    outer: for (let x = buffer.width * density - 1; x >= 0; x--) {
+      for (let y = 0; y < buffer.height * density; y++) {
+        const index = (x + y * buffer.width * density) * 4
+        const alpha = buffer.pixels[index + 3]
+        if (alpha > 0) {
+          right = x
+          break outer
+        }
+      }
+    }
+
+    const croppedWidth = right - left + 1
+    const croppedHeight = bottom - top + 1
+    const croppedBuffer = p.createGraphics(croppedWidth, croppedHeight)
+    croppedBuffer.pixelDensity(density)
+    croppedBuffer.clear()
+    croppedBuffer.image(buffer, -left, -top)
+
+    return croppedBuffer
+  }
+
   const displayUI = () => {
     const offsetAmount =
       scaleMethod === scaleMethods.fitToWidth
@@ -594,6 +773,8 @@ const sketch = function (p) {
       !modal.paintMode ? `offset: ${offsetAmount}` : '',
       !modal.paintMode ? `fit method: ${scaleMethod}` : '',
       !modal.paintMode ? `invert: ${invert ? 'inverted' : 'normal'}` : '',
+      `transparency: ${transparencyModeEnabled ? 'ON' : 'OFF'}`,
+      transparencyModeEnabled ? `transparency threshold: ${transparencyThreshold}` : '',
       `paint mode: ${modal.paintMode ? 'ON' : 'OFF'}`,
       modal.paintMode ? `brush size: ${brushSize}` : '',
       modal.paintMode ? `erase mode: ${modal.eraseMode ? 'ON' : 'OFF'}` : ''
@@ -629,6 +810,7 @@ const sketch = function (p) {
       h - Show/Hide UI
       r - Reset to default settings
       i - Invert image
+      t - Toggle transparency mode
       p - Paint
       x - Toggle erase mode
       → - increase zoom
