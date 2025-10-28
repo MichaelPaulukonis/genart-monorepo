@@ -8,6 +8,9 @@ A monorepo for creative coding and generative art projects using Nx.
 - **[crude-collage-painter](./apps/crude-collage-painter/)** (port 5174) - Interactive collage painting tool
 - **[those-shape-things](./apps/those-shape-things/)** (port 5175) - Geometric tile-based compositions with color palettes
 - **[computational-collage](./apps/computational-collage/)** (port 5176) - Advanced collage creation with multiple composition modes
+- **[dragline](./apps/dragline/)** (port 5177) -  A draggable text landscape
+- **[monochromifier](./apps/monochromifier/)** (port 5178) - Create square black-and-white imates from non-square color images (suitable for use with duo-chrom)
+
 
 All applications include version display functionality accessible through help screens or about dialogs.
 
@@ -40,6 +43,9 @@ nx dev duo-chrome              # http://localhost:5173
 nx dev crude-collage-painter   # http://localhost:5174
 nx dev those-shape-things      # http://localhost:5175
 nx dev computational-collage   # http://localhost:5176
+nx dev dragline                # http://localhost:5177
+nx dev monochromifier          # http://localhost:5178
+
 
 # Build specific project
 nx build duo-chrome
@@ -54,9 +60,10 @@ pnpm dev
 ```
 genart-monorepo/
 ├── apps/                      # Individual applications
-│   ├── duo-chrome/           # Duotone compositions
+│   ├── duo-chrome/            # Duotone compositions
+|   ├── [...]                  # [etc.]
 │   ├── crude-collage-painter/ # Collage painting tool
-│   ├── those-shape-things/   # Geometric tile compositions
+│   ├── those-shape-things/    # Geometric tile compositions
 │   └── computational-collage/ # Advanced collage creation
 ├── libs/                     # Shared libraries
 │   ├── p5-utils/            # Common utilities
@@ -85,8 +92,7 @@ This monorepo uses **Nx Release with independent versioning** - each app maintai
 # Release and deploy a specific app (one command)
 nx run duo-chrome:release-deploy
 nx run crude-collage-painter:release-deploy
-nx run those-shape-things:release-deploy
-nx run computational-collage:release-deploy
+nx run <app-name-here>:release-deploy
 
 # Release all changed apps
 nx release

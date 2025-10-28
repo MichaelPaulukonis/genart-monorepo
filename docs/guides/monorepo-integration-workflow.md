@@ -96,16 +96,16 @@ BREAKING CHANGE: The control panel layout has been completely redesigned"
 
 ### Version Bump Rules
 
-| Commit Type | Version Impact | Example |
-|-------------|----------------|---------|
-| `feat:` | Minor (0.1.0 → 0.2.0) | New features |
-| `fix:` | Patch (0.1.0 → 0.1.1) | Bug fixes |
-| `chore:` | Patch (0.1.0 → 0.1.1) | Maintenance |
-| `docs:` | No bump | Documentation only |
-| `style:` | No bump | Code formatting |
-| `refactor:` | No bump | Code restructuring |
-| `test:` | No bump | Adding tests |
-| `feat!:` or `BREAKING CHANGE:` | Major (0.1.0 → 1.0.0) | Breaking changes |
+| Commit Type                    | Version Impact        | Example            |
+| ------------------------------ | --------------------- | ------------------ |
+| `feat:`                        | Minor (0.1.0 → 0.2.0) | New features       |
+| `fix:`                         | Patch (0.1.0 → 0.1.1) | Bug fixes          |
+| `chore:`                       | Patch (0.1.0 → 0.1.1) | Maintenance        |
+| `docs:`                        | No bump               | Documentation only |
+| `style:`                       | No bump               | Code formatting    |
+| `refactor:`                    | No bump               | Code restructuring |
+| `test:`                        | No bump               | Adding tests       |
+| `feat!:` or `BREAKING CHANGE:` | Major (0.1.0 → 1.0.0) | Breaking changes   |
 
 ## Adding New Apps to Release Workflows
 
@@ -169,27 +169,27 @@ Import shared functionality in your new app:
 
 ```javascript
 // src/sketch.js
-import { p5 } from 'p5js-wrapper'
-import { getRandomColor, RISOCOLORS } from '@genart/color-palettes'
-import { createFilenamer, datestring } from '@genart/p5-utils'
+import { p5 } from "p5js-wrapper";
+import { getRandomColor, RISOCOLORS } from "@genart/color-palettes";
+import { createFilenamer, datestring } from "@genart/p5-utils";
 
 const sketch = function (p) {
-  const namer = createFilenamer(`my-app-${datestring()}`)
-  
-  p.setup = function () {
-    p.createCanvas(800, 600)
-    const bgColor = getRandomColor(RISOCOLORS)
-    p.background(bgColor.color)
-  }
-  
-  p.keyPressed = function() {
-    if (p.key === 's' || p.key === 'S') {
-      p.saveCanvas(namer(), 'png')
-    }
-  }
-}
+  const namer = createFilenamer(`my-app-${datestring()}`);
 
-new p5(sketch)
+  p.setup = function () {
+    p.createCanvas(800, 600);
+    const bgColor = getRandomColor(RISOCOLORS);
+    p.background(bgColor.color);
+  };
+
+  p.keyPressed = function () {
+    if (p.key === "s" || p.key === "S") {
+      p.saveCanvas(namer(), "png");
+    }
+  };
+};
+
+new p5(sketch);
 ```
 
 ### Dependency Management
@@ -304,10 +304,12 @@ Leverage existing shared code instead of duplicating:
 
 ```javascript
 // Good - use shared utilities
-import { getRandomItem } from '@genart/p5-utils'
+import { getRandomItem } from "@genart/p5-utils";
 
 // Avoid - duplicating functionality
-function getRandomItem(array) { /* ... */ }
+function getRandomItem(array) {
+  /* ... */
+}
 ```
 
 ### 4. Follow Port Conventions
@@ -319,8 +321,8 @@ Use the next available port and document it:
 module.exports = defineConfig({
   server: {
     port: 5178, // Next available port
-  }
-})
+  },
+});
 ```
 
 ### 5. Maintain Independent Versions
@@ -437,6 +439,7 @@ nx run-many --target=lint --all
 **Cause**: App not in `apps/` directory or missing `package.json`
 
 **Solution**:
+
 ```bash
 # Ensure proper structure
 apps/my-new-app/
@@ -449,6 +452,7 @@ apps/my-new-app/
 **Cause**: Commits don't follow conventional format
 
 **Solution**:
+
 ```bash
 # Check recent commits
 git log --oneline -5
@@ -462,6 +466,7 @@ git commit -m "feat(my-new-app): describe feature"
 **Cause**: Port conflicts or dependency issues
 
 **Solution**:
+
 ```bash
 # Check port usage
 lsof -i :5178

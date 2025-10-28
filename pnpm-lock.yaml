@@ -131,12 +131,28 @@ importers:
       standard:
         specifier: ^17.1.2
         version: 17.1.2
-      vite:
-        specifier: ^2.7.2
-        version: 2.9.18
       vite-plugin-eslint:
         specifier: ^1.8.1
-        version: 1.8.1(eslint@8.57.1)(vite@2.9.18)
+        version: 1.8.1(eslint@8.57.1)(vite@5.4.20)
+
+  apps/monochromifier:
+    dependencies:
+      p5js-wrapper:
+        specifier: ^1.2.3
+        version: 1.2.3
+    devDependencies:
+      eslint:
+        specifier: ^8.57.1
+        version: 8.57.1
+      eslint-plugin-p5js:
+        specifier: ^1.0.0
+        version: 1.0.0(eslint@8.57.1)
+      standard:
+        specifier: ^17.1.2
+        version: 17.1.2
+      vite-plugin-eslint:
+        specifier: ^1.8.1
+        version: 1.8.1(eslint@8.57.1)(vite@5.4.20)
 
   apps/those-shape-things:
     dependencies:
@@ -6657,6 +6673,14 @@ snapshots:
       eslint: 8.57.1
       rollup: 2.79.2
       vite: 2.9.18
+
+  vite-plugin-eslint@1.8.1(eslint@8.57.1)(vite@5.4.20):
+    dependencies:
+      '@rollup/pluginutils': 4.2.1
+      '@types/eslint': 8.56.12
+      eslint: 8.57.1
+      rollup: 2.79.2
+      vite: 5.4.20
 
   vite@2.9.18:
     dependencies:

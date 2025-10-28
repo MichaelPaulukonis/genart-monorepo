@@ -19,6 +19,23 @@ This guide walks you through adding new creative coding projects to the monorepo
    mkdir src css public
    ```
 
+   **OR** copy an existing project
+
+   ```bash
+   # Navigate to your monorepo root
+   cd /path/to/genart-monorepo
+
+   # Copy the external project, excluding common directories
+   rsync -av \
+    --exclude='node_modules' \
+    --exclude='.git' \
+    --exclude='dist' \
+    --exclude='build' \
+    --exclude='.DS_Store' \
+    --exclude='.specstory' \
+    /path/to/external-project/ apps/new-project-name/
+   ```
+
 3. **Configure as Nx project** (see detailed steps below)
 
 ## Detailed Steps
@@ -47,14 +64,22 @@ apps/my-new-project/
 {
   "name": "my-new-project",
   "version": "0.1.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "clean": "standard --fix"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-plugin-p5js": "^1.0.0",
+    "standard": "^17.1.2",
+    "vite-plugin-eslint": "^1.8.1"
+  },
+  "dependencies": {
+    "p5js-wrapper": "^1.2.3"
   }
 }
 ```
+
+**Note**: Common build tools like `vite`, `nx`, and `eslint` are managed at the workspace root. Only include app-specific dependencies here.
 
 ### 3. Create project.json (Nx Configuration)
 
@@ -308,6 +333,23 @@ nx build my-new-project
 - Check that all imports are correct
 - Ensure dependencies are installed at workspace level
 - Verify vite.config.js paths are correct
+
+### Nx Vite Executor Issues
+
+If you encounter `TypeError: Cannot read properties of undefined (reading 'startsWith')` when building, this is a known issue with the `@nx/vite:build` executor. Use this alternative build configuration:
+
+```json
+"build": {
+  "executor": "nx:run-commands",
+  "outputs": ["{workspaceRoot}/dist/apps/your-project-name"],
+  "options": {
+    "command": "npx vite build",
+    "cwd": "apps/your-project-name"
+  }
+}
+```
+
+This bypasses the problematic Nx executor while maintaining the same functionality.
 
 ### Port Conflicts
 

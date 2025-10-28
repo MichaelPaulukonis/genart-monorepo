@@ -1,9 +1,8 @@
 {
-  "name": "duo-chrome",
-  "version": "0.3.0",
+  "name": "monochromifier",
+  "version": "0.2.0",
   "scripts": {
-    "clean": "standard --fix",
-    "test:size-control": "node src/size-control.test.js"
+    "clean": "standard --fix"
   },
   "devDependencies": {
     "eslint": "^8.57.1",
