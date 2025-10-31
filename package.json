@@ -4,7 +4,10 @@
   "description": "Monorepo for creative coding and generative art projects",
   "scripts": {
     "dev": "nx run-many --target=dev --all",
-    "build": "nx run-many --target=build --all",
+    "build": "nx run-many --target=build",
+    "test:crude-collage": "cross-env TEST_APP=crude-collage-painter playwright test -c apps/crude-collage-painter/playwright.config.js",
+    "test:computational-collage": "cross-env TEST_APP=computational-collage playwright test -c apps/computational-collage/playwright.config.js",
+    "deploy": "nx run-many --target=deploy",
     "test": "nx run-many --target=test --all",
     "lint": "nx run-many --target=lint --all",
     "deploy:crude-collage-painter": "nx deploy crude-collage-painter",
@@ -15,7 +18,9 @@
     "test:e2e:report": "playwright show-report",
     "test:verify": "node test/scripts/verify-utilities.js",
     "test:verify:basic": "node test/scripts/verify-utilities.js --basic",
-    "test:verify:light": "node --max-old-space-size=2048 test/scripts/verify-utilities.js --basic",
+  "test:verify:light": "node --max-old-space-size=2048 test/scripts/verify-utilities.js --basic",
+  "gen:changelog": "node scripts/generate-workspace-changelog.js",
+  "gen:changelog:apply": "node scripts/generate-workspace-changelog.js --apply",
     "test:debug": "node test/scripts/debug-test.js",
     "validate:version-display": "node scripts/validate-version-display-accessibility.js",
     "validate:app": "node scripts/validate-app-version-display.js",
@@ -39,10 +44,12 @@
     "libs/*"
   ],
   "dependencies": {
+    "cross-env": "^10.1.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "p5": "^1.11.10",
     "p5js-wrapper": "^1.2.3",
+    "pngjs": "^7.0.0",
     "tweakpane": "^4.0.5"
   }
 }

@@ -24,7 +24,17 @@
       "conventionalCommits": true
     },
     "changelog": {
-      "projectChangelogs": true
+      "projectChangelogs": true,
+      "workspaceChangelog": {
+        "createRelease": false,
+        "file": "{workspaceRoot}/CHANGELOG.md",
+        "entryWhenNoChanges": "Version bump only",
+        "renderOptions": {
+          "authors": false,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      }
     }
   }
 }
