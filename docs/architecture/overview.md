@@ -1,5 +1,11 @@
 # Architecture Overview
 
+The GenArt monorepo is designed for scalable creative coding applications with shared infrastructure.
+
+## Recent Updates
+
+- **Hybrid Changelog System**: Implemented dual-level changelog management for better release tracking
+
 ## Monorepo Structure
 
 ```

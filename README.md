@@ -98,6 +98,19 @@ nx run <app-name-here>:release-deploy
 nx release
 ```
 
+### Changelog System
+The monorepo uses a **hybrid changelog approach**:
+- **App changelogs** (`apps/*/CHANGELOG.md`) - automatically generated for app-specific changes
+- **Workspace changelog** (`/CHANGELOG.md`) - manually aggregated for infrastructure changes
+
+```bash
+# Validate commit messages follow conventions
+node scripts/validate-changelog.js --staged
+
+# Update workspace changelog (after app releases)
+npm run gen:changelog:apply
+```
+
 ### Conventional Commits
 Use conventional commit messages for automatic version bumping:
 ```bash

@@ -6,11 +6,6 @@ This changelog aggregates infrastructure and shared-library changes across the w
 
 ### Infrastructure & Shared Libraries
 
-- **monorepo:** add hybrid changelog generation system with workspace-level aggregation
-  - Configure Nx workspace changelog support for independent projects
-  - Add automated aggregator script to merge app changelogs into root changelog
-  - Enable tracking of infrastructure, shared libraries, and new app additions
-
 - From **monochromifier**:
   - **monochromifier:** add save-as-transparent option with proper invert mode support ([#37](https://github.com/MichaelPaulukonis/genart-monorepo/issues/37))
   - resolve nx release configuration conflicts for proper versioning ([0dbd2db0](https://github.com/MichaelPaulukonis/genart-monorepo/commit/0dbd2db0))

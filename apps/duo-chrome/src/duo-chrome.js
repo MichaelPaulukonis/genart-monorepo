@@ -8,6 +8,7 @@
  * - Active image selection (A/B) with visual feedback
  * - Individual size control with bounds enforcement (0.05x to 5.0x)
  * - Image navigation through collection with uniqueness enforcement
+ * - Test feature: Enhanced blend mode support for improved color mixing
  * - Color cycling within current palette with conflict resolution
  * - Image exchange (swap A and B completely)
  * - Draggable status display with session persistence

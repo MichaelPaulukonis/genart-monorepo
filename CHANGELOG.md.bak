@@ -1,0 +1,7 @@
+# Monorepo Changelog
+
+This changelog documents changes to shared components, infrastructure, and cross-app features.
+
+## Unreleased
+
+- No entries yet. Run `node scripts/generate-workspace-changelog.js --apply` to aggregate app changelogs.
