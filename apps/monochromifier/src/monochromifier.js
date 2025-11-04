@@ -17,6 +17,10 @@ const sketch = function (p) {
   let sizeRatio = 1.0
   let brushSize = 10
   let transparencyModeEnabled = true // Default to enabled
+  let isDrawingLine = false;
+  let startPoint = { x: 0, y: 0 };
+  let endPoint = { x: 0, y: 0 };
+
   const transparencyThreshold = 128 // Threshold for gray pixels in transparency mode
   const density = 1 // need to use density in size calculations for both w+h
   // but if we render offscreen, why worry about pixeldensity ?!?!?
@@ -115,6 +119,14 @@ const sketch = function (p) {
         dirty = true
       }
 
+      if (isDrawingLine) {
+        p.push();
+        p.stroke('red');
+        p.strokeWeight(brushSize * paintScale);
+        p.line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+        p.pop();
+      }
+
       if (modal.showUI) displayUI()
     }
   }
@@ -137,26 +149,51 @@ const sketch = function (p) {
     dirty = true
   }
 
+  const drawLine = (start, end) => {
+    paintLayer.stroke(255);
+    paintLayer.strokeWeight(brushSize);
+    if (modal.eraseMode) {
+      paintLayer.erase();
+    }
+    paintLayer.line(
+      start.x / paintScale,
+      start.y / paintScale,
+      end.x / paintScale,
+      end.y / paintScale
+    );
+    paintLayer.noErase();
+    buildPaintLayer(img);
+    dirty = true;
+  }
+
   p.mouseDragged = function () {
-    if (
-      modal.paintMode &&
-      p.mouseX >= 0 &&
-      p.mouseX <= p.width &&
-      p.mouseY >= 0 &&
-      p.mouseY <= p.height
-    ) {
-      drawPaintLine()
+    if (isDrawingLine) {
+      endPoint = { x: p.mouseX, y: p.mouseY };
+      dirty = true;
+    } else if (modal.paintMode && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+      drawPaintLine();
     }
   }
 
   p.mouseReleased = function () {
+    if (isDrawingLine) {
+      drawLine(startPoint, endPoint);
+      isDrawingLine = false;
+    }
     previousMouse = { x: 0, y: 0 }
   }
 
   p.mousePressed = function () {
-    if (!modal.paintMode) return
-    previousMouse = { x: p.mouseX, y: p.mouseY }
-    drawPaintLine()
+    if (modal.paintMode && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+      if (p.keyIsDown(91)) {
+        isDrawingLine = true;
+        startPoint = { x: p.mouseX, y: p.mouseY };
+        endPoint = { x: p.mouseX, y: p.mouseY };
+      } else {
+        previousMouse = { x: p.mouseX, y: p.mouseY };
+        drawPaintLine();
+      }
+    }
   }
 
   const specialKeys = () => {
@@ -219,6 +256,7 @@ const sketch = function (p) {
       buildCombinedLayer(img)
       dirty = true
     }
+
     if (modal.paintMode && p.key === 'x') {
       modal.eraseMode = !modal.eraseMode
     } else if (p.key === 'p') {
@@ -297,6 +335,13 @@ const sketch = function (p) {
     return false // Prevent default browser behavior
   }
 
+  p.keyReleased = function () {
+    if (p.keyCode === 91 && isDrawingLine) {
+      drawLine(startPoint, endPoint);
+      isDrawingLine = false;
+    }
+  }
+
   function generateFilename() {
     const d = new Date()
     const modeIndicator = transparencyModeEnabled ? '-transparent' : ''
@@ -317,22 +362,18 @@ const sketch = function (p) {
 
   const createSaveImage = () => {
     if (transparencyModeEnabled) {
-      // For transparency mode, create a clean transparent image
       const scaleRatio = calculateScaleRatio(img, outputSize)
       const scaledWidth = Math.round(img.width * scaleRatio)
       const scaledHeight = Math.round(img.height * scaleRatio)
 
-      // Get the processed monochrome image with transparency
-      const processedImg = getMonochromeImage(img, threshold, true)
+      // 1. Create a black and white (non-transparent) version of the image
+      const bwImg = getMonochromeImage(img, threshold, false) 
 
-      // Create a graphics buffer for the final save image
-      const saveBuffer = p.createGraphics(scaledWidth, scaledHeight)
-      saveBuffer.pixelDensity(density)
-      saveBuffer.clear() // Start with transparent background
-
-      // Draw the processed image
-      saveBuffer.image(
-        processedImg,
+      // 2. Create a composite buffer and draw the b&w image and paint layer
+      const compositeBuffer = p.createGraphics(scaledWidth, scaledHeight)
+      compositeBuffer.pixelDensity(density)
+      compositeBuffer.image(
+        bwImg,
         0 + offset.horizontal,
         0 + offset.vertical,
         scaledWidth,
@@ -342,10 +383,8 @@ const sketch = function (p) {
         img.width,
         img.height
       )
-
-      // Add paint layer if it exists
       if (paintLayer) {
-        saveBuffer.image(
+        compositeBuffer.image(
           paintLayer,
           0 + offset.horizontal,
           0 + offset.vertical,
@@ -354,20 +393,45 @@ const sketch = function (p) {
         )
       }
 
-      // Crop whitespace but preserve transparency
-      const croppedImg = cropTransparentWhitespace(saveBuffer)
+      // 3. Process the composite buffer for transparency
+      compositeBuffer.loadPixels();
+      for (let i = 0; i < compositeBuffer.pixels.length; i += 4) {
+        const r = compositeBuffer.pixels[i];
+        const g = compositeBuffer.pixels[i+1];
+        const b = compositeBuffer.pixels[i+2];
+        const avg = (r + g + b) / 3;
 
-      // Apply final scaling
+        let shouldBeTransparent;
+        if (invert) {
+          shouldBeTransparent = avg <= transparencyThreshold;
+        } else {
+          shouldBeTransparent = avg >= 255 - transparencyThreshold;
+        }
+
+        if (shouldBeTransparent) {
+          compositeBuffer.pixels[i+3] = 0;
+        } else {
+          compositeBuffer.pixels[i] = 0;
+          compositeBuffer.pixels[i+1] = 0;
+          compositeBuffer.pixels[i+2] = 0;
+          compositeBuffer.pixels[i+3] = 255;
+        }
+      }
+      compositeBuffer.updatePixels();
+
+      // 4. Crop and export
+      const croppedImg = cropTransparentWhitespace(compositeBuffer)
+
       const finalScaleRatio = calculateScaleRatio(croppedImg, outputSize)
       const finalWidth = Math.round(croppedImg.width * finalScaleRatio * sizeRatio)
       const finalHeight = Math.round(croppedImg.height * finalScaleRatio * sizeRatio)
 
-      const finalBuffer = p.createGraphics(finalWidth, finalHeight)
-      finalBuffer.pixelDensity(density)
-      finalBuffer.clear()
-      finalBuffer.image(croppedImg, 0, 0, finalWidth, finalHeight)
+      const finalSaveBuffer = p.createGraphics(finalWidth, finalHeight)
+      finalSaveBuffer.pixelDensity(density)
+      finalSaveBuffer.clear()
+      finalSaveBuffer.image(croppedImg, 0, 0, finalWidth, finalHeight)
 
-      return finalBuffer
+      return finalSaveBuffer
     } else {
       // For standard mode, use the existing displayLayer
       return displayLayer
@@ -813,6 +877,7 @@ const sketch = function (p) {
       t - Toggle transparency mode
       p - Paint
       x - Toggle erase mode
+      CMD-click - Draw a line
       → - increase zoom
       ← - decrease zoom
       > - increase offset (h/v)
@@ -837,6 +902,8 @@ const sketch = function (p) {
     p.textAlign(p.CENTER, p.CENTER)
     p.text('Processing image, please wait...', p.width / 2, 100)
   }
+
+
 }
 
 new p5(sketch) // eslint-disable-line no-new, new-cap
