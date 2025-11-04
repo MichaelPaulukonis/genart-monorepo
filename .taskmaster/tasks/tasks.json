@@ -980,19 +980,340 @@
         ],
         "priority": "medium",
         "subtasks": []
+      },
+      {
+        "id": 38,
+        "title": "Import Standalone Collage-Fragment App into Monorepo",
+        "description": "Migrate the standalone collage-fragment app from the original programmatic-collage project into the monorepo as a new app, ensuring it works correctly within the monorepo architecture.",
+        "details": "This task involves importing the standalone collage-fragment app from the original programmatic-collage project and integrating it into the monorepo architecture:\n\n1. **Source Code Analysis and Migration**:\n   - Locate and analyze the original collage-fragment app source code\n   - Identify its key components, dependencies, and functionality\n   - Create a new directory in the monorepo apps folder: `apps/collage-fragment`\n   - Copy over essential source files, preserving the original structure where appropriate\n\n2. **Dependencies and Configuration Adaptation**:\n   - Analyze the package.json of the original app\n   - Create a new package.json that integrates with the workspace:\n     ```javascript\n     {\n       \"name\": \"@workspace/collage-fragment\",\n       \"version\": \"0.1.0\",\n       \"private\": true,\n       // Add appropriate scripts and dependencies\n     }\n     ```\n   - Update references to dependencies to leverage workspace-level packages where possible\n   - Adapt build configuration (e.g., Webpack, Vite, etc.) to align with monorepo standards\n\n3. **Integration with Monorepo Tooling**:\n   - Update tsconfig.json or other configuration files to ensure proper integration\n   - Ensure the app can be built using the monorepo's build system\n   - Add the app to any workspace-level scripts or configurations\n   - Configure any environment variables or settings needed\n\n4. **Asset Management**:\n   - Transfer and update paths for any assets (images, fonts, etc.)\n   - Ensure assets are properly referenced in the codebase\n   - Update any hard-coded paths to conform to monorepo structure\n\n5. **Testing Infrastructure**:\n   - Migrate existing tests, if any\n   - Adapt tests to work with the monorepo's testing framework\n   - Ensure tests can be run individually and as part of the workspace test suite\n   \n6. **Documentation Updates**:\n   - Add documentation for the new app in the monorepo's README\n   - Update any relevant documentation about available apps\n   - Document any app-specific configuration or usage instructions",
+        "testStrategy": "1. **Build Verification**:\n   - Verify the app can be built successfully within the monorepo\n   - Check for any build warnings or errors\n   - Ensure all assets are correctly bundled\n\n2. **Functionality Testing**:\n   - Launch the imported app and verify all core functionality works as expected\n   - Compare behavior against the original standalone app\n   - Test all user interactions and features\n   - Verify that any API calls or external dependencies work correctly\n\n3. **Integration Testing**:\n   - Test any interactions with shared monorepo components or utilities\n   - Verify that the app can access shared resources and dependencies\n   - Check for any conflicts with other apps in the monorepo\n\n4. **Performance Comparison**:\n   - Compare load times and performance metrics with the original app\n   - Identify any performance regressions and address them\n   - Verify resource utilization is optimized\n\n5. **Cross-browser Testing**:\n   - Test the app in multiple browsers to ensure compatibility\n   - Verify responsive design works across different screen sizes\n\n6. **Dependency Verification**:\n   - Verify that all required dependencies are correctly installed and accessible\n   - Check for any duplicate dependencies that should be hoisted to workspace level\n   - Ensure optimal sharing of dependencies with other apps",
+        "status": "pending",
+        "dependencies": [
+          17,
+          36
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 39,
+        "title": "Add Paintbrush Visual Indicator During Active Painting",
+        "description": "Implement a thin black outline around the paintbrush cursor when the user is actively painting in the crude-collage-painter app to provide visual feedback during painting operations.",
+        "details": "This task involves implementing a visual indicator for the paintbrush cursor in the crude-collage-painter app:\n\n1. **Track Painting State**:\n   - Create or modify the existing mouse event handlers to track when the user is actively painting\n   - Set a boolean flag `isActivePainting` that's true when mousePressed/mouseDragged and false on mouseReleased\n   \n2. **Implement Cursor Outline**:\n   - In the draw function, check if `isActivePainting` is true\n   - If true, draw a thin black outline around the current paintbrush cursor\n   - Ensure the outline is properly sized relative to the current brush size\n   ```javascript\n   function drawCursorOutline() {\n     if (isActivePainting) {\n       push();\n       noFill();\n       stroke(0);\n       strokeWeight(1);\n       ellipse(mouseX, mouseY, brushSize + 2); // Slightly larger than brush size\n       pop();\n     }\n   }\n   ```\n\n3. **Optimize Performance**:\n   - Ensure the cursor outline doesn't interfere with the actual painting operation\n   - Draw the outline after all other painting operations\n   - Use p5.js's built-in noCursor() and cursor() functions to hide/show the default cursor as appropriate\n\n4. **Handle Edge Cases**:\n   - Consider touch interfaces where there's no cursor\n   - Handle cases when the brush is very small (ensure outline is still visible)\n   - Ensure outline stays visible at canvas edges",
+        "testStrategy": "1. **Basic Functionality**:\n   - Start the crude-collage-painter app\n   - Move the cursor around without clicking and verify no outline appears\n   - Click and drag to paint, confirming the black outline appears around the paintbrush\n   - Release the mouse button and verify the outline disappears\n\n2. **Different Brush Sizes**:\n   - Test with different brush sizes (very small to very large)\n   - Verify the outline scales appropriately with the brush size\n   - Ensure the outline remains visible even with very small brush sizes\n\n3. **Edge Cases**:\n   - Paint near and at the edges of the canvas\n   - Verify the outline remains visible and doesn't get clipped\n   - Test rapid clicking/painting to ensure the outline toggles correctly\n\n4. **Performance Testing**:\n   - Test on lower-end devices to ensure the outline rendering doesn't cause performance issues\n   - Create a complex painting and verify the outline rendering doesn't slow down the painting experience",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 40,
+        "title": "Fix Zoom Synchronization Between OSD Controls and Paintbrush",
+        "description": "Implement synchronization between Tweakpane OSD zoom controls and paintbrush size in the crude-collage-painter app to ensure consistent behavior with keyboard zoom controls.",
+        "details": "This task involves fixing the synchronization issue between Tweakpane OSD controls and paintbrush size in the crude-collage-painter app:\n\n1. **Analyze Current Implementation**:\n   - Identify where keyboard zoom controls update paintbrush size\n   - Examine the Tweakpane OSD control implementation for zoom\n   - Understand the current data flow and event handling for zoom changes\n\n2. **Implement Synchronization**:\n   - Locate the event handler or callback for Tweakpane zoom control changes\n   - Add code to update paintbrush size when Tweakpane zoom value changes:\n   ```javascript\n   // Example implementation\n   tweakpane.on('change', (event) => {\n     if (event.presetKey === 'zoom') {\n       updatePaintbrushSize(event.value);\n     }\n   });\n   \n   function updatePaintbrushSize(zoomLevel) {\n     // Calculate appropriate brush size based on zoom level\n     brushSize = baseBrushSize * (1 / zoomLevel);\n     // Update brush visual indicator\n     updateBrushIndicator();\n   }\n   ```\n\n3. **Refactor Shared Functionality**:\n   - Extract common zoom-related functionality into shared methods\n   - Ensure both keyboard and OSD control paths use the same functions\n   - Implement proper state management to maintain consistency\n\n4. **Add Visual Feedback**:\n   - Update any UI indicators to reflect zoom changes\n   - Ensure brush size indicator updates properly regardless of zoom change method",
+        "testStrategy": "1. **Functional Testing**:\n   - Start the crude-collage-painter app\n   - Change zoom using keyboard controls (typically +/- keys) and verify paintbrush size updates accordingly\n   - Change zoom using Tweakpane OSD controls and verify paintbrush size updates in the same manner\n   - Alternate between both control methods and confirm consistent behavior\n\n2. **Edge Case Testing**:\n   - Test with minimum and maximum zoom values from both control methods\n   - Test rapid consecutive zoom changes\n   - Test changing zoom while actively painting\n   \n3. **Visual Verification**:\n   - Confirm the paintbrush visual indicator correctly reflects the new size after zoom changes\n   - Verify the zoom level display in the UI is consistent with actual zoom\n   \n4. **Regression Testing**:\n   - Verify that fixing this issue doesn't break other functionality\n   - Ensure the paintbrush visual indicator during active painting (Task 39) still works correctly",
+        "status": "pending",
+        "dependencies": [
+          39
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 41,
+        "title": "Implement Circular Cursor for Crude-Collage-Painter",
+        "description": "Replace the default cursor with a circular cursor that visually represents the brush size and provides immediate visual feedback during painting operations in the crude-collage-painter app.",
+        "details": "This task involves implementing a custom circular cursor to replace the default system cursor in the crude-collage-painter app:\n\n1. **Hide Default Cursor**:\n   - Set cursor to 'none' on the canvas element:\n   ```javascript\n   function setup() {\n     // existing setup code\n     canvas.style('cursor', 'none');\n   }\n   ```\n\n2. **Implement Circular Cursor**:\n   - Add cursor drawing logic to the draw function:\n   ```javascript\n   function draw() {\n     // existing drawing code\n     \n     // Draw cursor at current mouse position\n     drawBrushCursor(mouseX, mouseY, currentBrushSize);\n   }\n   \n   function drawBrushCursor(x, y, size) {\n     push();\n     noFill();\n     stroke(0);\n     strokeWeight(1);\n     circle(x, y, size);\n     \n     // Add inner circle or crosshair for precision\n     stroke(255);\n     strokeWeight(0.5);\n     line(x-3, y, x+3, y);\n     line(x, y-3, x, y+3);\n     pop();\n   }\n   ```\n\n3. **Add Visual States**:\n   - Modify cursor appearance based on painting state:\n   ```javascript\n   function drawBrushCursor(x, y, size) {\n     push();\n     if (isActivePainting) {\n       // Active painting state\n       stroke(255, 0, 0); // Red outline when painting\n       strokeWeight(2);\n     } else {\n       // Idle state\n       stroke(0);\n       strokeWeight(1);\n     }\n     circle(x, y, size);\n     pop();\n   }\n   ```\n\n4. **Handle Canvas Boundaries**:\n   - Only show the cursor when within canvas bounds:\n   ```javascript\n   function draw() {\n     // existing drawing code\n     \n     if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {\n       drawBrushCursor(mouseX, mouseY, currentBrushSize);\n     }\n   }\n   ```\n\n5. **Brush Size Reflection**:\n   - Ensure the cursor size updates immediately when brush size changes:\n   ```javascript\n   function updateBrushSize(newSize) {\n     currentBrushSize = newSize;\n     // No need to wait for redraw, cursor will update in next draw cycle\n   }\n   ```\n\n6. **Performance Considerations**:\n   - Use requestAnimationFrame or p5.js draw loop for efficient cursor updates\n   - Consider adding a small amount of smoothing for better visual experience on lower-end devices",
+        "testStrategy": "1. **Basic Functionality Tests**:\n   - Verify the default cursor disappears when hovering over the canvas\n   - Confirm the circular cursor appears and follows the mouse position accurately\n   - Check that the cursor properly shows/hides when entering/leaving the canvas area\n\n2. **Visual Feedback Tests**:\n   - Verify the cursor appearance changes when actively painting (mousePressed)\n   - Confirm the cursor returns to idle state when painting stops (mouseReleased)\n   - Test the cursor visibility against different background colors/patterns\n\n3. **Brush Size Tests**:\n   - Change the brush size using app controls and verify cursor size updates accordingly\n   - Test extreme brush sizes (very small and very large) to ensure cursor remains usable\n   - Verify the cursor size matches the actual paint area when drawing\n\n4. **Edge Cases**:\n   - Test cursor behavior when the mouse moves very quickly\n   - Verify cursor works correctly when the window loses/regains focus\n   - Test cursor appearance when partially off-canvas\n   - Check cursor behavior during window resize events\n\n5. **Browser Compatibility**:\n   - Test in multiple browsers to ensure consistent cursor behavior\n   - Verify performance on different devices including touch devices",
+        "status": "pending",
+        "dependencies": [
+          39
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 42,
+        "title": "Improve Brush Selection and Mode Switching UX",
+        "description": "Enhance the initial user experience in the crude-collage-painter by implementing clearer mode indicators, automatic default brush selection, and visual feedback for mode switching between brush select and paint modes.",
+        "details": "This task involves improving the mode switching and brush selection user experience:\n\n1. **Default Paint Mode Implementation**:\n   - Modify app initialization to start in paint mode with a default brush selected\n   - Select an appropriate default brush based on common use cases\n   - Add a configuration option to customize the default brush\n\n2. **Mode Status Indicators**:\n   - Design and implement a persistent on-screen indicator showing the current mode (\"Brush Select\" or \"Paint\")\n   - Position the indicator in a non-intrusive but clearly visible area\n   - Use contrasting colors/styling to ensure visibility against various backgrounds\n   - Include an icon alongside text for better visual recognition\n\n3. **Mode Transition Feedback**:\n   - Add visual animation or transition effect when switching between modes\n   - Implement a brief flash or highlight effect on the cursor when mode changes\n   - Add subtle audio feedback (optional, with mute control)\n\n4. **Cursor Enhancements**:\n   - Modify the circular cursor implementation to visually indicate the current mode\n   - For brush select mode: add a distinctive border style or color\n   - For paint mode: show the selected brush style within the cursor\n\n5. **Brush Selection Interface Improvements**:\n   - Redesign the brush selection interface for better clarity\n   - Add visual highlight for currently selected brush\n   - Implement hover states for available brushes\n   - Consider a mini-preview of brush effect on hover",
+        "testStrategy": "1. **Default Mode Testing**:\n   - Launch the application and verify it starts in paint mode with default brush selected\n   - Check that the default brush is immediately usable without requiring additional user actions\n   - Verify the configuration option correctly changes the default brush selection\n\n2. **Mode Indicator Testing**:\n   - Verify the mode indicator is visible in all app states\n   - Test the indicator against different background colors/patterns to ensure readability\n   - Confirm the indicator accurately reflects the current app mode\n   - Test the indicator position doesn't interfere with painting operations\n\n3. **Mode Switching Testing**:\n   - Test switching between brush select and paint modes using all available methods\n   - Verify visual feedback appears when mode changes\n   - Check that the cursor style updates appropriately for each mode\n   - Time the transition to ensure it's not too lengthy or distracting\n\n4. **Cursor Enhancement Testing**:\n   - Verify the cursor clearly indicates the current mode\n   - Test the cursor against various background colors/patterns\n   - Check that cursor modifications don't negatively impact painting precision\n   - Test cursor behavior at canvas edges\n\n5. **Usability Testing**:\n   - Conduct user tests with both novice and experienced users\n   - Gather feedback on clarity of mode indicators and brush selection\n   - Measure time/clicks required to select brushes compared to previous implementation\n   - Collect subjective ratings on intuitiveness and ease of use",
+        "status": "pending",
+        "dependencies": [
+          39,
+          41
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 43,
+        "title": "Add Fit-to-Canvas Tiling Mode for Crude-Collage-Painter",
+        "description": "Extend the existing 'm' key tiling functionality to include an option that scales the brush to fit an even number of tiles across the canvas dimensions, creating uniform tiling that perfectly fits the canvas.",
+        "details": "This task involves implementing a fit-to-canvas tiling mode that creates uniform tiles across the entire canvas:\n\n1. **Analyze Existing Tiling Implementation**:\n   - Review the current 'm' key tiling functionality\n   - Identify where brush size is used in the tiling calculations\n\n2. **Implement Fit-to-Canvas Calculation**:\n   ```javascript\n   function calculateFitToCanvasBrushSize() {\n     // Calculate brush sizes that would evenly divide the canvas\n     const evenDivisorsWidth = findEvenDivisors(canvasWidth);\n     const evenDivisorsHeight = findEvenDivisors(canvasHeight);\n     \n     // Find optimal divisor that works well for both dimensions\n     const optimalDivisor = findOptimalDivisor(evenDivisorsWidth, evenDivisorsHeight);\n     \n     // Calculate new brush size\n     return { \n       width: canvasWidth / optimalDivisor,\n       height: canvasHeight / optimalDivisor\n     };\n   }\n   \n   function findEvenDivisors(dimension) {\n     // Find divisors that result in even number of tiles\n     // Limit to reasonable brush sizes (not too small or large)\n     const divisors = [];\n     const minTiles = 2;  // At least 2 tiles\n     const maxTiles = 40; // Not more than 40 tiles\n     \n     for(let i = minTiles; i <= maxTiles; i++) {\n       const size = dimension / i;\n       if (Math.abs(size - Math.round(size)) < 0.001) { // Allow tiny rounding errors\n         divisors.push(i);\n       }\n     }\n     return divisors;\n   }\n   \n   function findOptimalDivisor(widthDivisors, heightDivisors) {\n     // Logic to find divisor that works well for both dimensions\n     // Prefer divisors that are common to both dimensions or close\n     // Could use aspect ratio considerations\n     // Default to a reasonable value if no good match\n     // ...\n   }\n   ```\n\n3. **Implement Keyboard Control**:\n   ```javascript\n   function keyPressed() {\n     // Existing key handlers...\n     \n     // Option 1: Use 't' key for fit-to-canvas tiling\n     if (key === 't') {\n       enableFitToCanvasTiling();\n       return false;\n     }\n     \n     // Option 2: Use modifier with 'm' key\n     if (key === 'm' && keyIsDown(SHIFT)) {\n       enableFitToCanvasTiling();\n       return false;\n     }\n   }\n   \n   function enableFitToCanvasTiling() {\n     const newBrushSize = calculateFitToCanvasBrushSize();\n     brushWidth = newBrushSize.width;\n     brushHeight = newBrushSize.height;\n     \n     // Set tiling mode active\n     tilingMode = 'fit-to-canvas';\n     \n     // Update UI indicators\n     updateModeIndicator();\n   }\n   ```\n\n4. **Add Visual Feedback**:\n   - Update the circular cursor to reflect the new calculated brush size\n   - Add a temporary on-screen notification when fit-to-canvas tiling is activated\n   - Update any mode indicators to show the new tiling mode\n\n5. **Handle Window/Canvas Resize**:\n   - Recalculate brush size if the canvas is resized while in fit-to-canvas tiling mode\n   - Add resize event listener if not already present\n\n6. **Documentation**:\n   - Update help text/overlay to include the new tiling mode\n   - Add comments explaining the calculation logic",
+        "testStrategy": "1. **Basic Functionality Testing**:\n   - Launch the crude-collage-painter app\n   - Press 'm' to verify existing tiling functionality works\n   - Press 't' (or alternate key combination) to activate fit-to-canvas tiling\n   - Verify brush size changes to fit canvas dimensions evenly\n   - Paint across the canvas and confirm tiles align perfectly with canvas edges\n\n2. **Edge Case Testing**:\n   - Test with different canvas sizes (resize window if responsive)\n   - Test with extreme aspect ratios (very wide or tall canvases)\n   - Test switching between normal tiling and fit-to-canvas tiling\n   - Test when canvas dimensions are prime numbers (should handle gracefully)\n\n3. **Visual Feedback Testing**:\n   - Verify the circular cursor updates to show the new brush size\n   - Check that mode indicators correctly show the fit-to-canvas tiling mode\n   - Confirm any on-screen notifications appear and are legible\n\n4. **Integration Testing**:\n   - Test interaction with zoom functionality (if applicable)\n   - Verify brush selection still works with fit-to-canvas tiling\n   - Ensure other keyboard shortcuts still function correctly\n   - Test toggling tiling on/off and switching between tiling modes\n\n5. **User Experience Testing**:\n   - Verify the feature is discoverable (through help text or UI)\n   - Ensure visual feedback is clear and immediate\n   - Check that calculated brush sizes are usable (not too small or large)",
+        "status": "pending",
+        "dependencies": [
+          41,
+          42
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 44,
+        "title": "Implement Multiple Canvas Size Options for Crude-Collage-Painter",
+        "description": "Add functionality to switch between different canvas dimensions (square, landscape, portrait formats) through UI controls and keyboard shortcuts while preserving the current painting and allowing users to work with different aspect ratios.",
+        "details": "This task involves implementing multiple canvas size options for the crude-collage-painter app:\n\n1. **Define Canvas Presets**:\n   - Create a set of predefined canvas dimensions:\n   ```javascript\n   const canvasSizePresets = {\n     square: { width: 800, height: 800, label: \"Square (1:1)\" },\n     landscape: { width: 1200, height: 800, label: \"Landscape (3:2)\" },\n     portrait: { width: 800, height: 1200, label: \"Portrait (2:3)\" },\n     widescreen: { width: 1600, height: 900, label: \"Widescreen (16:9)\" },\n     custom: { width: null, height: null, label: \"Custom...\" }\n   };\n   ```\n\n2. **Implement Canvas Resizing Logic**:\n   - Create a function to handle canvas resizing while preserving content:\n   ```javascript\n   function resizeCanvas(newWidth, newHeight) {\n     // Create temporary buffer to store current canvas content\n     const tempBuffer = createGraphics(canvas.width, canvas.height);\n     tempBuffer.image(canvas, 0, 0);\n     \n     // Resize the main canvas\n     resizeCanvas(newWidth, newHeight);\n     \n     // Center the previous content on new canvas\n     const xOffset = (width - tempBuffer.width) / 2;\n     const yOffset = (height - tempBuffer.height) / 2;\n     image(tempBuffer, xOffset, yOffset);\n     \n     // Clean up\n     tempBuffer.remove();\n     \n     // Update any size-dependent variables\n     updateBrushScalingFactors();\n   }\n   ```\n\n3. **Add UI Controls**:\n   - Create a dropdown or button set for canvas size selection\n   - Position controls within the existing UI framework\n   - Style to match the app's aesthetic\n\n4. **Implement Keyboard Shortcuts**:\n   - Add shortcut keys to quickly switch between canvas presets\n   - Document shortcuts in UI tooltip or help section\n\n5. **Add Custom Size Dialog**:\n   - Create a modal dialog for entering custom dimensions\n   - Include validation for minimum/maximum dimensions\n   - Provide clear feedback on valid input ranges\n\n6. **Persist Size Preference**:\n   - Save the user's canvas size preference to localStorage\n   - Restore preferred size when app is reopened\n\n7. **Handle Window Resizing**:\n   - Update any window resize handlers to maintain the selected canvas size\n   - Ensure the canvas remains properly positioned within the window",
+        "testStrategy": "1. **Basic Functionality Testing**:\n   - Verify each preset canvas size (square, landscape, portrait, widescreen) can be selected from the UI\n   - Test that keyboard shortcuts correctly switch between canvas size presets\n   - Confirm that the custom size dialog appears when selected and accepts valid dimensions\n\n2. **Content Preservation Testing**:\n   - Create a painting with elements distributed across the canvas\n   - Change the canvas size using different presets and verify the existing content is preserved\n   - Test transitions between significantly different aspect ratios (e.g., landscape to portrait)\n   - Verify that brush size and other painting parameters adjust appropriately to the new canvas size\n\n3. **UI Controls Testing**:\n   - Confirm that the canvas size selector correctly reflects the current canvas size\n   - Verify that the custom size dialog properly validates input (rejects invalid values)\n   - Test that the cancel button in the custom size dialog properly dismisses without changes\n\n4. **Persistence Testing**:\n   - Select various canvas sizes and refresh the page to verify preferences are saved\n   - Test across different browser sessions to confirm the persistence of canvas size preferences\n\n5. **Window Resizing Testing**:\n   - Resize the browser window and confirm the canvas maintains its dimensions\n   - Verify the canvas is repositioned appropriately within the window when the window size changes\n   - Test that UI controls remain accessible and properly positioned after window resizing",
+        "status": "pending",
+        "dependencies": [
+          41
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 45,
+        "title": "Add Source Image Display Feature for Crude-Collage-Painter",
+        "description": "Implement functionality to show the source image on-screen in the crude-collage-painter app, either as a small overlay/thumbnail, side panel, or toggle view, to help users reference the original image while painting.",
+        "details": "Implement a source image display feature for crude-collage-painter with the following components:\n\n1. **Display Options Analysis & Implementation**:\n   - Implement a toggleable image display with multiple view options:\n     - Thumbnail overlay in corner (non-intrusive)\n     - Side-by-side panel view (split screen)\n     - Toggle view (switch between source and canvas)\n   - Make the view mode configurable via keyboard shortcut\n   ```javascript\n   function keyPressed() {\n     if (key === 'v') {\n       // Cycle through view modes: overlay → side panel → toggle → overlay\n       currentViewMode = (currentViewMode + 1) % 3;\n       updateSourceImageDisplay();\n     } else if (key === 'h') {\n       // Toggle visibility\n       sourceImageVisible = !sourceImageVisible;\n       updateSourceImageDisplay();\n     }\n   }\n   ```\n\n2. **Image Loading & Handling**:\n   - Ensure source image is loaded efficiently and cached\n   - Handle proper scaling while preserving aspect ratio\n   - Add opacity controls for overlay mode\n   ```javascript\n   function displaySourceImage() {\n     if (!sourceImageVisible) return;\n     \n     switch(currentViewMode) {\n       case 0: // Overlay\n         push();\n         tint(255, overlayOpacity);\n         image(sourceImg, width-thumbnailWidth-10, 10, thumbnailWidth, thumbnailHeight);\n         pop();\n         break;\n       case 1: // Side panel\n         // Resize canvas layout to accommodate side panel\n         image(sourceImg, canvasWidth, 0, panelWidth, height);\n         break;\n       case 2: // Toggle\n         if (showingSourceImage) {\n           image(sourceImg, 0, 0, width, height);\n         }\n         break;\n     }\n   }\n   ```\n\n3. **UI Controls & Indicators**:\n   - Add small UI indicators showing current view mode\n   - Implement slider for opacity control in overlay mode\n   - Add visual border/frame around source image for clarity\n\n4. **Performance Optimization**:\n   - Ensure the feature doesn't impact painting performance\n   - Implement efficient image scaling for thumbnails\n   - Consider lower resolution preview for performance if needed",
+        "testStrategy": "1. **Functional Testing**:\n   - Verify each display mode (overlay, side panel, toggle) renders the source image correctly\n   - Test keyboard shortcuts for toggling and cycling through display modes\n   - Confirm the source image maintains proper aspect ratio in all modes\n   - Verify opacity controls function in overlay mode\n\n2. **Performance Testing**:\n   - Measure performance impact of displaying source image while painting\n   - Test with various sizes of source images (small to very large)\n   - Verify there's no noticeable lag when toggling between modes\n\n3. **Usability Testing**:\n   - Have users test the feature during actual collage creation\n   - Gather feedback on which display mode is most useful\n   - Verify the feature doesn't obstruct important canvas areas\n   - Ensure the source image is visible enough to be useful as reference\n\n4. **Cross-browser Testing**:\n   - Test on Chrome, Firefox, Safari, and Edge\n   - Verify display works correctly on various screen sizes and resolutions\n   - Test on mobile devices to ensure responsive design works",
+        "status": "pending",
+        "dependencies": [
+          30
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 46,
+        "title": "Audit current test targets across applications",
+        "description": "Document which apps have test targets and which don't. Identify configuration patterns from existing targets (duo-chrome, monochromifier) and map current root package.json scripts to target apps.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "1. Review project.json files for all 6 apps to identify which have test targets\n2. Analyze duo-chrome and monochromifier test target configurations as reference models\n3. Document the testing approach used in each app\n4. Map root package.json scripts (test:crude-collage, test:computational-collage, etc.) to corresponding apps\n5. Identify shared patterns and app-specific customizations\n6. Document TEST_APP environment variable usage across apps\n7. Create a mapping document with columns for: App Name, Has Test Target (Y/N), Current Test Command, Target Configuration (if exists)\n8. Identify any app-specific testing requirements",
+        "testStrategy": "Validation will be a documentation review:\n1. Ensure all 6 apps are accounted for in the audit\n2. Verify accuracy of current state documentation by running existing test commands\n3. Review with team members familiar with the testing infrastructure to confirm findings",
+        "subtasks": []
+      },
+      {
+        "id": 47,
+        "title": "Create test target for crude-collage-painter",
+        "description": "Add a proper test target to the crude-collage-painter application's project.json file that can be executed via nx test crude-collage-painter.",
+        "status": "pending",
+        "dependencies": [
+          46
+        ],
+        "priority": "high",
+        "details": "1. Locate the project.json file for crude-collage-painter in the apps/crude-collage-painter directory\n2. Add a test target using @nx/playwright:playwright executor:\n```json\n{\n  \"test\": {\n    \"executor\": \"@nx/playwright:playwright\",\n    \"options\": {\n      \"config\": \"apps/crude-collage-painter/playwright.config.js\"\n    }\n  }\n}\n```\n3. Ensure the configuration aligns with patterns identified in the audit\n4. Map the existing root-level test script functionality to this new target\n5. If the app has special testing requirements, account for them in the configuration",
+        "testStrategy": "1. Run `nx test crude-collage-painter` and verify it executes successfully\n2. Compare test output and behavior with the previous `npm run test:crude-collage` command\n3. Verify that all existing test files are detected and run\n4. Check that any app-specific test requirements continue to function",
+        "subtasks": []
+      },
+      {
+        "id": 48,
+        "title": "Create test target for computational-collage",
+        "description": "Add a proper test target to the computational-collage application's project.json file that can be executed via nx test computational-collage.",
+        "status": "pending",
+        "dependencies": [
+          46
+        ],
+        "priority": "high",
+        "details": "1. Locate the project.json file for computational-collage in the apps/computational-collage directory\n2. Add a test target using @nx/playwright:playwright executor:\n```json\n{\n  \"test\": {\n    \"executor\": \"@nx/playwright:playwright\",\n    \"options\": {\n      \"config\": \"apps/computational-collage/playwright.config.js\"\n    }\n  }\n}\n```\n3. Ensure the configuration aligns with patterns identified in the audit\n4. Map the existing root-level test script functionality to this new target\n5. If the app has special testing requirements, account for them in the configuration",
+        "testStrategy": "1. Run `nx test computational-collage` and verify it executes successfully\n2. Compare test output and behavior with the previous `npm run test:computational-collage` command\n3. Verify that all existing test files are detected and run\n4. Check that any app-specific test requirements continue to function",
+        "subtasks": []
+      },
+      {
+        "id": 49,
+        "title": "Create test target for those-shape-things",
+        "description": "Add a proper test target to the those-shape-things application's project.json file that can be executed via nx test those-shape-things.",
+        "status": "pending",
+        "dependencies": [
+          46
+        ],
+        "priority": "high",
+        "details": "1. Locate the project.json file for those-shape-things in the apps/those-shape-things directory\n2. Add a test target using @nx/playwright:playwright executor:\n```json\n{\n  \"test\": {\n    \"executor\": \"@nx/playwright:playwright\",\n    \"options\": {\n      \"config\": \"apps/those-shape-things/playwright.config.js\"\n    }\n  }\n}\n```\n3. Ensure the configuration aligns with patterns identified in the audit\n4. Map any existing root-level test script functionality to this new target\n5. If the app has special testing requirements, account for them in the configuration",
+        "testStrategy": "1. Run `nx test those-shape-things` and verify it executes successfully\n2. Compare test output and behavior with any previous test commands for this app\n3. Verify that all existing test files are detected and run\n4. Check that any app-specific test requirements continue to function",
+        "subtasks": []
+      },
+      {
+        "id": 50,
+        "title": "Create test target for dragline",
+        "description": "Add a proper test target to the dragline application's project.json file that can be executed via nx test dragline.",
+        "status": "pending",
+        "dependencies": [
+          46
+        ],
+        "priority": "high",
+        "details": "1. Locate the project.json file for dragline in the apps/dragline directory\n2. Add a test target using @nx/playwright:playwright executor:\n```json\n{\n  \"test\": {\n    \"executor\": \"@nx/playwright:playwright\",\n    \"options\": {\n      \"config\": \"apps/dragline/playwright.config.js\"\n    }\n  }\n}\n```\n3. Ensure the configuration aligns with patterns identified in the audit\n4. Map any existing root-level test script functionality to this new target\n5. If the app has special testing requirements, account for them in the configuration",
+        "testStrategy": "1. Run `nx test dragline` and verify it executes successfully\n2. Compare test output and behavior with any previous test commands for this app\n3. Verify that all existing test files are detected and run\n4. Check that any app-specific test requirements continue to function",
+        "subtasks": []
+      },
+      {
+        "id": 51,
+        "title": "Create app-specific Playwright configurations",
+        "description": "Create app-specific playwright.config.js files for each application that needs one, based on existing root configuration with app-specific overrides.",
+        "status": "pending",
+        "dependencies": [
+          47,
+          48,
+          49,
+          50
+        ],
+        "priority": "high",
+        "details": "For each application missing a playwright.config.js file:\n\n1. Create a new playwright.config.js in the app directory\n2. Base the configuration on the existing root config with app-specific overrides\n3. Ensure TEST_APP environment variable compatibility\n4. Include appropriate configuration for test directories and patterns\n\nExample configuration structure:\n```javascript\nconst { mergeConfig } = require('@playwright/test');\nconst baseConfig = require('../../playwright.config');\n\nmodule.exports = mergeConfig(baseConfig, {\n  // App-specific overrides\n  testDir: './tests',\n  use: {\n    // App-specific browser settings if needed\n  },\n  // Any other app-specific configuration\n});\n```\n\n5. Ensure configuration is appropriate for the app's specific testing needs\n6. Configure test file discovery patterns to match existing tests",
+        "testStrategy": "For each app-specific configuration:\n1. Verify the configuration loads without errors\n2. Run tests using the new configuration and compare with previous results\n3. Test the TEST_APP environment variable integration\n4. Verify test discovery works as expected\n5. Confirm that app-specific test requirements are properly handled",
+        "subtasks": []
+      },
+      {
+        "id": 52,
+        "title": "Perform validation testing for Phase 1",
+        "description": "Test each app's test target individually and verify all existing test functionality works, including global test execution.",
+        "status": "pending",
+        "dependencies": [
+          51
+        ],
+        "priority": "high",
+        "details": "1. Test each application individually using nx commands:\n   - `nx test duo-chrome`\n   - `nx test monochromifier`\n   - `nx test crude-collage-painter`\n   - `nx test computational-collage`\n   - `nx test those-shape-things`\n   - `nx test dragline`\n\n2. Test global command execution:\n   - `nx run-many --target=test --all`\n\n3. Compare test results with pre-migration results\n\n4. Measure performance metrics:\n   - Individual test execution time\n   - Global test suite execution time\n   - Compare with baseline metrics\n\n5. Check test reporting and output formatting\n\n6. Verify that tests still work with the TEST_APP environment variable where applicable",
+        "testStrategy": "1. Create a validation matrix documenting each test execution and its result\n2. For each application, compare test output and execution with pre-migration results\n3. Document any discrepancies or performance differences\n4. Track test success rates before and after migration\n5. Verify all existing test files run successfully\n6. Test with various browser configurations to ensure compatibility",
+        "subtasks": []
+      },
+      {
+        "id": 53,
+        "title": "Remove legacy scripts from root package.json",
+        "description": "Remove app-specific test scripts from root package.json and update any documentation referencing the removed scripts.",
+        "status": "pending",
+        "dependencies": [
+          52
+        ],
+        "priority": "high",
+        "details": "1. Take a backup of the current root package.json file\n2. Remove app-specific test scripts including but not limited to:\n   - `test:crude-collage`\n   - `test:computational-collage`\n   - Any other app-specific test scripts identified in the audit\n\n3. Search the codebase for references to the removed scripts:\n   - Search in documentation files\n   - Check for references in CI/CD pipelines\n   - Look for usage in developer guides\n\n4. Update any references to use the new Nx commands instead\n   - Replace `npm run test:crude-collage` with `nx test crude-collage-painter`\n   - Update other command references accordingly\n\n5. Create a mapping document for developers showing old commands and their new equivalents",
+        "testStrategy": "1. Verify that removed scripts no longer exist in package.json\n2. Attempt to run the removed commands and confirm they fail as expected\n3. Run the alternative Nx commands and verify they work correctly\n4. If CI/CD pipelines existed using the old scripts, test them with the new commands\n5. Verify documentation is consistent with the new command structure",
+        "subtasks": []
+      },
+      {
+        "id": 54,
+        "title": "Standardize workspace scripts in root package.json",
+        "description": "Keep only workspace-level scripts in the root package.json and ensure they use Nx commands for test execution.",
+        "status": "pending",
+        "dependencies": [
+          53
+        ],
+        "priority": "high",
+        "details": "1. Review remaining scripts in root package.json\n2. Standardize global test scripts to use Nx commands:\n   - Update `test` script to `nx run-many --target=test --all`\n   - Keep workspace-level scripts for e2e testing\n   - Ensure any other global test commands use Nx syntax\n\n3. Document the final script structure:\n```json\n{\n  \"scripts\": {\n    \"test\": \"nx run-many --target=test --all\",\n    \"test:e2e\": \"nx run-many --target=e2e --all\",\n    \"test:e2e:ui\": \"nx run-many --target=e2e --all -- --ui\"\n    // Other workspace-level scripts\n  }\n}\n```\n\n4. Consider adding helper scripts for common test scenarios if needed\n5. Ensure scripts have consistent naming and usage patterns",
+        "testStrategy": "1. Test each standardized script to verify it works as expected\n2. Compare behavior with previous versions of the scripts\n3. Verify that all testing functionality remains accessible\n4. Document the final script structure for team reference\n5. Get feedback from team members on script usability",
+        "subtasks": []
+      },
+      {
+        "id": 55,
+        "title": "Create standard test templates for apps",
+        "description": "Develop smoke test templates for apps without comprehensive tests and ensure all apps have basic Playwright integration tests.",
+        "status": "pending",
+        "dependencies": [
+          54
+        ],
+        "priority": "medium",
+        "details": "1. Create a standard smoke test template that can be adapted for each application\n\nExample smoke test template:\n```javascript\nconst { test, expect } = require('@playwright/test');\nconst { loadApp, getCanvas } = require('../../test/utils/p5-canvas-helpers');\n\ntest.describe('App Smoke Test', () => {\n  test('should load and render canvas', async ({ page }) => {\n    await loadApp(page, '/app-path');\n    const canvas = await getCanvas(page);\n    expect(canvas).toBeTruthy();\n    // Add app-specific verification\n  });\n\n  test('should respond to basic interactions', async ({ page }) => {\n    await loadApp(page, '/app-path');\n    // Test basic app interaction\n    // E.g., click, hover, or other app-specific action\n  });\n});\n```\n\n2. For each app without comprehensive tests:\n   - Create a basic smoke test using the template\n   - Adapt the template to app-specific requirements\n   - Place tests in the app's test directory\n\n3. Validate test utilities work across all app types\n   - Test p5-canvas-helpers with each app\n   - Adapt utilities if needed for specific app requirements\n\n4. Document any app-specific test patterns that deviate from the standard",
+        "testStrategy": "1. Run each new smoke test to verify it detects basic application functionality\n2. Test template with different app types to ensure adaptability\n3. Verify that shared test utilities work across all applications\n4. Document any app-specific adaptations required\n5. Ensure tests are consistent with existing Playwright patterns",
+        "subtasks": []
+      },
+      {
+        "id": 56,
+        "title": "Update testing documentation",
+        "description": "Update docs/testing/ to reflect the Nx-first approach and update docs/guides/adding-projects.md with test target requirements.",
+        "status": "pending",
+        "dependencies": [
+          55
+        ],
+        "priority": "medium",
+        "details": "1. Update docs/testing/ directory with Nx-first approach:\n   - Update testing overview to reflect Nx integration\n   - Update command examples to use `nx test app-name` instead of legacy scripts\n   - Document the standardized test configuration pattern\n   - Include information about app-specific playwright.config.js files\n\n2. Update docs/guides/adding-projects.md:\n   - Add section on required test target configuration\n   - Include example test target JSON for project.json files\n   - Explain the relationship between test targets and playwright configs\n\n3. Create migration guide for existing developers:\n   - Document the transition from legacy to Nx testing\n   - Provide command mapping (old scripts → new Nx commands)\n   - Explain benefits of the new approach\n\n4. Update any other documentation referring to testing:\n   - README files\n   - Developer onboarding materials\n   - CI/CD documentation",
+        "testStrategy": "1. Review documentation for completeness and accuracy\n2. Verify all command examples work as documented\n3. Have a team member unfamiliar with the changes attempt to follow the documentation\n4. Check that all apps and test patterns are covered\n5. Verify that adding a new project following the updated guide results in proper test configuration",
+        "subtasks": []
+      },
+      {
+        "id": 57,
+        "title": "Perform cross-app validation testing",
+        "description": "Test the multi-app TEST_APP approach across all applications and verify shared test utilities work with all p5.js instance mode implementations.",
+        "status": "pending",
+        "dependencies": [
+          56
+        ],
+        "priority": "medium",
+        "details": "1. Test the TEST_APP environment variable across all applications:\n   - Set TEST_APP for each application and run tests\n   - Verify correct app is tested based on environment variable\n   - Test with various combinations of apps\n\n2. Verify shared test utilities compatibility:\n   - Test p5-canvas-helpers.js with each application\n   - Verify canvas detection works across different p5.js implementations\n   - Test interaction helpers with each app's unique UI\n\n3. Performance test the global test suite:\n   - Measure execution time for the complete test suite\n   - Compare with baseline metrics from before migration\n   - Identify any performance bottlenecks\n\n4. Test across different environment configurations:\n   - Test on different developer machines if possible\n   - Test in CI environment\n   - Test with different browser configurations",
+        "testStrategy": "1. Create a cross-app test matrix documenting each test scenario\n2. For each application, verify TEST_APP variable correctly selects the app\n3. Test shared utilities with each application and document results\n4. Measure and record performance metrics for global test execution\n5. Compare results with pre-migration baseline\n6. Document any compatibility issues discovered",
+        "subtasks": []
+      },
+      {
+        "id": 58,
+        "title": "Implement test performance optimization",
+        "description": "Implement parallel testing where beneficial, optimize test execution for CI environments, and add caching strategies for test results.",
+        "status": "pending",
+        "dependencies": [
+          57
+        ],
+        "priority": "low",
+        "details": "1. Implement parallel testing:\n   - Configure playwright to use workers for parallel test execution\n   - Adjust test isolation to prevent conflicts in parallel execution\n   - Measure performance improvement from parallel testing\n\n2. Optimize test execution for CI:\n   - Configure CI-specific settings in playwright configs\n   - Adjust timeouts and retry logic for CI environment\n   - Implement CI-specific reporting formats if needed\n\n3. Add caching strategies:\n   - Integrate with Nx's computational caching for test results\n   - Configure cache invalidation rules based on code changes\n   - Document cache usage and maintenance\n\nExample parallel testing configuration:\n```javascript\n// In playwright.config.js\nmodule.exports = {\n  // Other configuration...\n  workers: process.env.CI ? 2 : undefined, // Use 2 workers in CI, auto locally\n  fullyParallel: true,\n  // Add cache configuration\n  // Add CI-specific settings\n};\n```",
+        "testStrategy": "1. Benchmark test execution with and without parallel testing\n2. Compare CI execution time before and after optimization\n3. Verify cache hits and misses are working as expected\n4. Test different worker configurations to find optimal settings\n5. Verify that tests remain stable with parallel execution\n6. Document performance improvements achieved",
+        "subtasks": []
+      },
+      {
+        "id": 59,
+        "title": "Enhance test coverage across applications",
+        "description": "Expand test suites for apps with minimal coverage, add visual regression testing for all apps, and implement cross-browser testing where needed.",
+        "status": "pending",
+        "dependencies": [
+          58
+        ],
+        "priority": "low",
+        "details": "1. Identify applications with minimal test coverage:\n   - Review existing tests for each application\n   - Identify critical functionality that lacks tests\n   - Create prioritized list of test gaps\n\n2. Implement visual regression testing:\n   - Add screenshot comparison capabilities to tests\n   - Create baseline screenshots for key application states\n   - Configure visual comparison thresholds\n\n3. Implement cross-browser testing:\n   - Configure tests to run on multiple browsers (Chrome, Firefox, Safari)\n   - Identify browser-specific issues\n   - Implement browser-specific handling where needed\n\nExample visual regression test:\n```javascript\ntest('visual appearance matches baseline', async ({ page }) => {\n  await loadApp(page, '/app-path');\n  // Perform actions to reach the desired state\n  await expect(page).toHaveScreenshot('expected-state.png', {\n    maxDiffPixelRatio: 0.01\n  });\n});\n```\n\nExample multi-browser configuration:\n```javascript\n// In playwright.config.js\nmodule.exports = {\n  // Other config...\n  projects: [\n    { name: 'Chrome', use: { browserName: 'chromium' } },\n    { name: 'Firefox', use: { browserName: 'firefox' } },\n    { name: 'Safari', use: { browserName: 'webkit' } },\n  ],\n};\n```",
+        "testStrategy": "1. Measure test coverage before and after enhancements\n2. Review visual regression tests for accuracy and appropriate thresholds\n3. Test across all configured browsers and document any differences\n4. Verify new tests detect actual issues by introducing mock failures\n5. Review performance impact of enhanced test suite\n6. Document browser compatibility findings",
+        "subtasks": []
+      },
+      {
+        "id": 60,
+        "title": "Perform final verification and project close",
+        "description": "Verify all success criteria are met, including test targets for all apps, working global test execution, and preserved functionality.",
+        "status": "pending",
+        "dependencies": [
+          57
+        ],
+        "priority": "medium",
+        "details": "1. Verify immediate success criteria:\n   - Confirm all 6 apps have working `nx test app-name` commands\n   - Verify `nx run-many --target=test --all` executes successfully\n   - Confirm root package.json contains only workspace-level test scripts\n   - Verify all existing test functionality is preserved\n   - Confirm no CI/CD pipeline disruption\n\n2. Check long-term success criteria readiness:\n   - Test adding a new app with self-contained test configuration\n   - Verify test execution consistency across applications\n   - Review developer documentation for testing patterns\n   - Assess scalability of testing infrastructure\n\n3. Measure quality metrics:\n   - Compare test execution time before and after migration\n   - Review test coverage levels\n   - Gather developer feedback on command consistency\n   - Assess maintainability improvements in root package.json\n\n4. Document lessons learned and improvement opportunities\n\n5. Create final project report documenting:\n   - Migration summary\n   - Benefits achieved\n   - Outstanding items or future enhancements\n   - Performance metrics",
+        "testStrategy": "1. Create a final verification checklist covering all success criteria\n2. Perform end-to-end testing of the complete test infrastructure\n3. Review all documentation for completeness and accuracy\n4. Collect metrics on test performance and maintainability\n5. Get feedback from team members on the new testing approach\n6. Document any remaining issues or improvement opportunities",
+        "subtasks": []
+      },
+      {
+        "id": 61,
+        "title": "Fix Monochromifier Save-Image Export to Match On-Screen Display",
+        "description": "Resolve the inconsistency between the on-screen display and exported images in the monochromifier app, ensuring exported images maintain the same format (square, visible area, etc.) as what users see on screen.",
+        "details": "1. Architectural clarification (completed):\n   - `displayLayer` is the high-resolution (2000x2000) export layer, not the display layer as previously thought\n   - The main p5 canvas (600x600) shows a scaled-down version of displayLayer\n   - The issue was that transparency mode was recreating image processing instead of using the already-processed displayLayer\n\n2. Solution implemented:\n   ```javascript\n   function saveCurrentImage() {\n     // Always use displayLayer as the base for export (maintains 2000x2000 resolution)\n     let exportLayer;\n     \n     if (!transparencyMode) {\n       // For standard mode: return displayLayer directly\n       exportLayer = displayLayer;\n     } else {\n       // For transparency mode: create a copy and apply transparency processing\n       exportLayer = createGraphics(outputSize, outputSize);\n       // Apply necessary transparency processing to the copy\n       exportLayer.copy(displayLayer, 0, 0, outputSize, outputSize, 0, 0, outputSize, outputSize);\n       // Apply any additional transparency-specific processing\n     }\n     \n     saveCanvas(exportLayer, 'monochrome-creation', 'png');\n   }\n   ```\n\n3. Key improvements:\n   - Exports are now 2000x2000 pixels (outputSize x outputSize) as intended\n   - Exported images match the on-screen display exactly in content and formatting\n   - All transformations, zoom, paint strokes, etc. are preserved\n   - Both transparency and standard modes work consistently\n\n4. Final verification:\n   - Confirm exports match screen display in all modes and states\n   - Test various transformations and view configurations\n   - Verify file naming and format options",
+        "testStrategy": "1. Verify export functionality with new implementation:\n   - Test exporting images in standard mode and verify dimensions are 2000x2000\n   - Test exporting images in transparency mode and verify correct transparency rendering\n   - Compare exported content with on-screen display for pixel-perfect match\n\n2. Test specific use cases and transformations:\n   - Test with various zoom levels to ensure the correct content is exported\n   - Verify that any paint strokes, effects, or transformations are preserved\n   - Confirm that the full 2000x2000 output size is maintained regardless of view settings\n\n3. Test mode-specific behavior:\n   - Verify standard mode directly exports displayLayer without modifications\n   - Verify transparency mode correctly applies transparency effects to exports\n   - Test switching between modes and confirm export behavior is consistent\n\n4. Cross-browser compatibility:\n   - Verify export works consistently in Chrome, Firefox, Safari, and Edge\n   - Test with different device types and screen resolutions\n\n5. Performance testing:\n   - Measure export time for large/complex images in both standard and transparency modes\n   - Verify memory usage during export of high-resolution outputs",
+        "status": "done",
+        "dependencies": [
+          30
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 62,
+        "title": "Implement Click-and-Drag Source Image Repositioning for Monochromifier",
+        "description": "Develop functionality that allows users to reposition the source image within the canvas/frame using click-and-drag interaction, with an on-screen display (OSD) showing the original image and a highlighted viewport representing the visible canvas area.",
+        "details": "1. **Event Handler Implementation**:\n   - Add mouse event listeners (mousePressed, mouseDragged, mouseReleased)\n   - Implement touch event support for mobile devices\n   - Track drag state and calculate position offsets\n   ```javascript\n   let isDragging = false;\n   let dragStartX, dragStartY;\n   let imageOffsetX = 0, imageOffsetY = 0;\n   \n   function mousePressed() {\n     isDragging = true;\n     dragStartX = mouseX;\n     dragStartY = mouseY;\n     // Store initial offsets\n   }\n   \n   function mouseDragged() {\n     if (isDragging) {\n       imageOffsetX += mouseX - dragStartX;\n       imageOffsetY += mouseY - dragStartY;\n       dragStartX = mouseX;\n       dragStartY = mouseY;\n       redraw();\n     }\n   }\n   ```\n\n2. **OSD Implementation**:\n   - Create a thumbnail view of the original image in a corner of the screen\n   - Draw a rectangular highlight showing the current viewport position\n   - Update highlight in real-time as the image is repositioned\n   ```javascript\n   function drawOSD() {\n     // Draw thumbnail in corner\n     const osdSize = 150;\n     const thumbScale = Math.min(osdSize / sourceImg.width, osdSize / sourceImg.height);\n     \n     // Draw original image thumbnail\n     image(sourceImg, width-osdSize-10, 10, sourceImg.width * thumbScale, sourceImg.height * thumbScale);\n     \n     // Calculate and draw viewport rectangle\n     noFill();\n     stroke(255, 0, 0);\n     strokeWeight(2);\n     rect(\n       width-osdSize-10 + (-imageOffsetX * thumbScale),\n       10 + (-imageOffsetY * thumbScale),\n       canvas.width * thumbScale,\n       canvas.height * thumbScale\n     );\n   }\n   ```\n\n3. **Boundary Constraints**:\n   - Implement limits to prevent the image from being dragged completely out of view\n   - Calculate constraints based on image and canvas dimensions\n   ```javascript\n   function applyBoundaryConstraints() {\n     // Ensure at least 25% of the image remains visible\n     const minVisible = 0.25;\n     imageOffsetX = constrain(imageOffsetX, -(sourceImg.width * (1-minVisible)), canvas.width * minVisible);\n     imageOffsetY = constrain(imageOffsetY, -(sourceImg.height * (1-minVisible)), canvas.height * minVisible);\n   }\n   ```\n\n4. **UI Enhancements**:\n   - Change cursor to 'move' when over draggable areas\n   - Add a toggle button to show/hide OSD\n   - Implement a reset position button\n   - Add visual feedback during dragging operations\n\n5. **Integration with Rendering Pipeline**:\n   - Modify the image rendering code to apply offsets\n   - Ensure repositioning affects monochromifier output\n   - Update the position calculation when canvas is resized",
+        "testStrategy": "1. **Basic Functionality Tests**:\n   - Verify mouse dragging correctly repositions the source image\n   - Test touch-based dragging on mobile devices\n   - Confirm the image position updates in real-time during dragging\n   - Verify the position offsets are maintained after releasing the mouse\n\n2. **OSD Verification**:\n   - Confirm the OSD displays an accurate representation of the original image\n   - Verify the viewport rectangle correctly represents the current view\n   - Test that the viewport highlight updates in real-time during dragging\n   - Check that the OSD scale and positioning are correct for different image sizes\n\n3. **Boundary Testing**:\n   - Test dragging the image to all edges of the canvas\n   - Verify the image cannot be dragged completely out of view\n   - Test behavior when rapidly dragging or flinging the image\n   - Confirm constraints work with images of varying dimensions and aspect ratios\n\n4. **Integration Tests**:\n   - Verify the repositioned view is correctly reflected in the monochrome output\n   - Confirm the image position affects the exported/saved images correctly\n   - Test interaction with other monochromifier features and filters\n   - Verify the image position is preserved when toggling between app modes\n\n5. **Cross-device Testing**:\n   - Test on desktop browsers with mouse input\n   - Verify touch functionality on tablets and smartphones\n   - Check performance on low-end devices to ensure smooth dragging\n   - Test with different image sizes and screen resolutions",
+        "status": "pending",
+        "dependencies": [
+          30,
+          61
+        ],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
-      "version": "1.0.0",
-      "lastModified": "2025-10-27T02:30:34.778Z",
-      "taskCount": 34,
-      "completedCount": 15,
-      "tags": [
-        "master"
-      ],
       "created": "2025-10-27T13:48:05.544Z",
-      "description": "Tasks for master context",
-      "updated": "2025-10-28T19:05:26.091Z"
+      "updated": "2025-11-04T03:21:51.900Z",
+      "description": "Tasks for master context"
     }
   }
 }

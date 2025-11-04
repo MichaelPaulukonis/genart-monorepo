@@ -198,38 +198,46 @@ const sketch = function (p) {
 
   const specialKeys = () => {
     const change = p.keyIsDown(p.SHIFT) ? 1 : 10
+    let handledKey = false
 
     if (modal.paintMode) {
       if (p.keyIsDown(p.RIGHT_ARROW)) {
         brushSize = p.constrain(brushSize + change, 1, 300)
         buildPaintLayer(img)
+        handledKey = true
       } else if (p.keyIsDown(p.LEFT_ARROW)) {
         brushSize = p.constrain(brushSize - change, 1, 300)
         buildPaintLayer(img)
+        handledKey = true
       } else if (p.keyIsDown(p.BACKSPACE) || p.keyIsDown(p.DELETE)) {
         paintLayer.clear()
         buildPaintLayer(img)
         dirty = true
+        handledKey = true
       }
     } else {
       if (p.keyIsDown(p.RIGHT_ARROW)) {
         sizeRatio = p.constrain(sizeRatio + change / 100, 0.01, 10)
         buildCombinedLayer(img)
+        handledKey = true
       } else if (p.keyIsDown(p.LEFT_ARROW)) {
         sizeRatio = p.constrain(sizeRatio - change / 100, 0.01, 10)
         buildCombinedLayer(img)
+        handledKey = true
       }
     }
 
     if (p.keyIsDown(p.UP_ARROW)) {
       threshold = p.constrain(threshold + change, 0, 255)
       buildCombinedLayer(img)
+      handledKey = true
     } else if (p.keyIsDown(p.DOWN_ARROW)) {
       threshold = p.constrain(threshold - change, 0, 255)
       buildCombinedLayer(img)
+      handledKey = true
     }
 
-    return false
+    return handledKey ? false : undefined
   }
 
   p.keyPressed = () => handleKeys()
@@ -241,24 +249,29 @@ const sketch = function (p) {
       bwCachedImage = null
       buildCombinedLayer(img)
       dirty = true
+      return false
     }
     if (p.key === 't') {
       transparencyModeEnabled = !transparencyModeEnabled
       bwCachedImage = null // Clear cache to force regeneration
       buildCombinedLayer(img)
       dirty = true
+      return false
     }
-    if (p.key === 'r') {
+    if (p.key === 'r' && !p.keyIsDown(p.CONTROL) && !p.keyIsDown(91)) {
+      // Only reset if 'r' is pressed alone (not CMD+R or Ctrl+R)
       threshold = 128
       sizeRatio = 1
       offset.horizontal = 0
       offset.vertical = 0
       buildCombinedLayer(img)
       dirty = true
+      return false
     }
 
     if (modal.paintMode && p.key === 'x') {
       modal.eraseMode = !modal.eraseMode
+      return false
     } else if (p.key === 'p') {
       modal.showHelp = false
       modal.paintMode = !modal.paintMode
@@ -285,13 +298,16 @@ const sketch = function (p) {
         displayLayer = tempBuff
         buildCombinedLayer(img)
       }
+      return false
     }
     if (p.key === '?') {
       modal.showHelp = !modal.showHelp
       dirty = true
+      return false
     } else if (p.key === 'h' || p.key === 'H') {
       modal.showUI = !modal.showUI
       dirty = true
+      return false
     } else if (p.key === 'f' || p.key === 'F') {
       // toggle fit method
       scaleMethod =
@@ -302,6 +318,7 @@ const sketch = function (p) {
             : scaleMethods.fitToWidth
       modal.refit = true
       dirty = true
+      return false
     } else if (
       p.key === 's' &&
       !modal.paintMode &&
@@ -309,6 +326,7 @@ const sketch = function (p) {
     ) {
       const saveImage = createSaveImage()
       p.save(saveImage, generateFilename())
+      return false
     } else if (p.key === '>') {
       if (scaleMethod === scaleMethods.fitToWidth) {
         offset.vertical = Math.min(offset.vertical + 100, offset.verticalMax)
@@ -320,6 +338,7 @@ const sketch = function (p) {
       }
       dirty = true
       buildCombinedLayer(img)
+      return false
     } else if (p.key === '<') {
       if (scaleMethod === scaleMethods.fitToWidth) {
         offset.vertical = Math.max(offset.vertical - 100, -offset.verticalMax)
@@ -331,8 +350,9 @@ const sketch = function (p) {
       }
       dirty = true
       buildCombinedLayer(img)
+      return false
     }
-    return false // Prevent default browser behavior
+    // Allow browser default behavior for unhandled keys
   }
 
   p.keyReleased = function () {
@@ -360,80 +380,44 @@ const sketch = function (p) {
     )
   }
 
+  // Create save image that matches exactly what user sees on screen
   const createSaveImage = () => {
     if (transparencyModeEnabled) {
-      const scaleRatio = calculateScaleRatio(img, outputSize)
-      const scaledWidth = Math.round(img.width * scaleRatio)
-      const scaledHeight = Math.round(img.height * scaleRatio)
+      // Create a copy of displayLayer and apply transparency processing
+      const exportCanvas = p.createGraphics(displayLayer.width, displayLayer.height)
+      exportCanvas.pixelDensity(density)
+      exportCanvas.image(displayLayer, 0, 0)
+      
+      // Process for transparency mode
+      exportCanvas.loadPixels()
+      for (let i = 0; i < exportCanvas.pixels.length; i += 4) {
+        const r = exportCanvas.pixels[i]
+        const g = exportCanvas.pixels[i + 1]
+        const b = exportCanvas.pixels[i + 2]
+        const avg = (r + g + b) / 3
 
-      // 1. Create a black and white (non-transparent) version of the image
-      const bwImg = getMonochromeImage(img, threshold, false) 
-
-      // 2. Create a composite buffer and draw the b&w image and paint layer
-      const compositeBuffer = p.createGraphics(scaledWidth, scaledHeight)
-      compositeBuffer.pixelDensity(density)
-      compositeBuffer.image(
-        bwImg,
-        0 + offset.horizontal,
-        0 + offset.vertical,
-        scaledWidth,
-        scaledHeight,
-        0,
-        0,
-        img.width,
-        img.height
-      )
-      if (paintLayer) {
-        compositeBuffer.image(
-          paintLayer,
-          0 + offset.horizontal,
-          0 + offset.vertical,
-          scaledWidth,
-          scaledHeight
-        )
-      }
-
-      // 3. Process the composite buffer for transparency
-      compositeBuffer.loadPixels();
-      for (let i = 0; i < compositeBuffer.pixels.length; i += 4) {
-        const r = compositeBuffer.pixels[i];
-        const g = compositeBuffer.pixels[i+1];
-        const b = compositeBuffer.pixels[i+2];
-        const avg = (r + g + b) / 3;
-
-        let shouldBeTransparent;
+        let shouldBeTransparent
         if (invert) {
-          shouldBeTransparent = avg <= transparencyThreshold;
+          shouldBeTransparent = avg <= transparencyThreshold
         } else {
-          shouldBeTransparent = avg >= 255 - transparencyThreshold;
+          shouldBeTransparent = avg >= 255 - transparencyThreshold
         }
 
         if (shouldBeTransparent) {
-          compositeBuffer.pixels[i+3] = 0;
+          exportCanvas.pixels[i + 3] = 0 // Make transparent
         } else {
-          compositeBuffer.pixels[i] = 0;
-          compositeBuffer.pixels[i+1] = 0;
-          compositeBuffer.pixels[i+2] = 0;
-          compositeBuffer.pixels[i+3] = 255;
+          // Keep as black and opaque
+          exportCanvas.pixels[i] = 0
+          exportCanvas.pixels[i + 1] = 0
+          exportCanvas.pixels[i + 2] = 0
+          exportCanvas.pixels[i + 3] = 255
         }
       }
-      compositeBuffer.updatePixels();
-
-      // 4. Crop and export
-      const croppedImg = cropTransparentWhitespace(compositeBuffer)
-
-      const finalScaleRatio = calculateScaleRatio(croppedImg, outputSize)
-      const finalWidth = Math.round(croppedImg.width * finalScaleRatio * sizeRatio)
-      const finalHeight = Math.round(croppedImg.height * finalScaleRatio * sizeRatio)
-
-      const finalSaveBuffer = p.createGraphics(finalWidth, finalHeight)
-      finalSaveBuffer.pixelDensity(density)
-      finalSaveBuffer.clear()
-      finalSaveBuffer.image(croppedImg, 0, 0, finalWidth, finalHeight)
-
-      return finalSaveBuffer
+      exportCanvas.updatePixels()
+      return exportCanvas
     } else {
-      // For standard mode, use the existing displayLayer
+      // For standard mode, use the displayLayer directly
+      // displayLayer already contains the correctly processed image at full resolution
       return displayLayer
     }
   }
@@ -761,71 +745,6 @@ const sketch = function (p) {
     return croppedImg
   }
 
-  const cropTransparentWhitespace = buffer => {
-    buffer.loadPixels()
-    let top = 0
-    let bottom = buffer.height - 1
-    let left = 0
-    let right = buffer.width - 1
-
-    // Find top boundary - look for non-transparent pixels
-    outer: for (let y = 0; y < buffer.height * density; y++) {
-      for (let x = 0; x < buffer.width * density; x++) {
-        const index = (x + y * buffer.width * density) * 4
-        const alpha = buffer.pixels[index + 3]
-        if (alpha > 0) { // Found non-transparent pixel
-          top = y
-          break outer
-        }
-      }
-    }
-
-    // Find bottom boundary
-    outer: for (let y = buffer.height * density - 1; y >= 0; y--) {
-      for (let x = 0; x < buffer.width * density; x++) {
-        const index = (x + y * buffer.width * density) * 4
-        const alpha = buffer.pixels[index + 3]
-        if (alpha > 0) {
-          bottom = y
-          break outer
-        }
-      }
-    }
-
-    // Find left boundary
-    outer: for (let x = 0; x < buffer.width * density; x++) {
-      for (let y = 0; y < buffer.height * density; y++) {
-        const index = (x + y * buffer.width * density) * 4
-        const alpha = buffer.pixels[index + 3]
-        if (alpha > 0) {
-          left = x
-          break outer
-        }
-      }
-    }
-
-    // Find right boundary
-    outer: for (let x = buffer.width * density - 1; x >= 0; x--) {
-      for (let y = 0; y < buffer.height * density; y++) {
-        const index = (x + y * buffer.width * density) * 4
-        const alpha = buffer.pixels[index + 3]
-        if (alpha > 0) {
-          right = x
-          break outer
-        }
-      }
-    }
-
-    const croppedWidth = right - left + 1
-    const croppedHeight = bottom - top + 1
-    const croppedBuffer = p.createGraphics(croppedWidth, croppedHeight)
-    croppedBuffer.pixelDensity(density)
-    croppedBuffer.clear()
-    croppedBuffer.image(buffer, -left, -top)
-
-    return croppedBuffer
-  }
-
   const displayUI = () => {
     const offsetAmount =
       scaleMethod === scaleMethods.fitToWidth
@@ -902,8 +821,6 @@ const sketch = function (p) {
     p.textAlign(p.CENTER, p.CENTER)
     p.text('Processing image, please wait...', p.width / 2, 100)
   }
-
-
 }
 
 new p5(sketch) // eslint-disable-line no-new, new-cap
