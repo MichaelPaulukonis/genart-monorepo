@@ -1,3 +1,15 @@
+## 0.3.0 (2025-11-04)
+
+### 🚀 Features
+
+- **monochromifier:** add version display in help screen accessible via '?' key
+- **monochromifier:** complete monorepo-wide version display implementation across all apps
+
+### 🧹 Code Quality
+
+- **monochromifier:** fix StandardJS linting issues (semicolons, function spacing)
+- **monochromifier:** integrate shared version display CSS library for consistency
+
 ## 0.2.0 (2025-10-28)
 
 ### 🚀 Features

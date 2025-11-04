@@ -1,6 +1,8 @@
 /* eslint no-labels: 0 */
 import { p5 } from 'p5js-wrapper'
 import '../css/style.css'
+import '../../../libs/version-display/version-display.css'
+import { formatVersion } from './utils/version.js'
 
 const sketch = function (p) {
   let img
@@ -17,9 +19,9 @@ const sketch = function (p) {
   let sizeRatio = 1.0
   let brushSize = 10
   let transparencyModeEnabled = true // Default to enabled
-  let isDrawingLine = false;
-  let startPoint = { x: 0, y: 0 };
-  let endPoint = { x: 0, y: 0 };
+  let isDrawingLine = false
+  let startPoint = { x: 0, y: 0 }
+  let endPoint = { x: 0, y: 0 }
 
   const transparencyThreshold = 128 // Threshold for gray pixels in transparency mode
   const density = 1 // need to use density in size calculations for both w+h
@@ -120,11 +122,11 @@ const sketch = function (p) {
       }
 
       if (isDrawingLine) {
-        p.push();
-        p.stroke('red');
-        p.strokeWeight(brushSize * paintScale);
-        p.line(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-        p.pop();
+        p.push()
+        p.stroke('red')
+        p.strokeWeight(brushSize * paintScale)
+        p.line(startPoint.x, startPoint.y, endPoint.x, endPoint.y)
+        p.pop()
       }
 
       if (modal.showUI) displayUI()
@@ -150,35 +152,35 @@ const sketch = function (p) {
   }
 
   const drawLine = (start, end) => {
-    paintLayer.stroke(255);
-    paintLayer.strokeWeight(brushSize);
+    paintLayer.stroke(255)
+    paintLayer.strokeWeight(brushSize)
     if (modal.eraseMode) {
-      paintLayer.erase();
+      paintLayer.erase()
     }
     paintLayer.line(
       start.x / paintScale,
       start.y / paintScale,
       end.x / paintScale,
       end.y / paintScale
-    );
-    paintLayer.noErase();
-    buildPaintLayer(img);
-    dirty = true;
+    )
+    paintLayer.noErase()
+    buildPaintLayer(img)
+    dirty = true
   }
 
   p.mouseDragged = function () {
     if (isDrawingLine) {
-      endPoint = { x: p.mouseX, y: p.mouseY };
-      dirty = true;
+      endPoint = { x: p.mouseX, y: p.mouseY }
+      dirty = true
     } else if (modal.paintMode && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-      drawPaintLine();
+      drawPaintLine()
     }
   }
 
   p.mouseReleased = function () {
     if (isDrawingLine) {
-      drawLine(startPoint, endPoint);
-      isDrawingLine = false;
+      drawLine(startPoint, endPoint)
+      isDrawingLine = false
     }
     previousMouse = { x: 0, y: 0 }
   }
@@ -186,12 +188,12 @@ const sketch = function (p) {
   p.mousePressed = function () {
     if (modal.paintMode && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
       if (p.keyIsDown(91)) {
-        isDrawingLine = true;
-        startPoint = { x: p.mouseX, y: p.mouseY };
-        endPoint = { x: p.mouseX, y: p.mouseY };
+        isDrawingLine = true
+        startPoint = { x: p.mouseX, y: p.mouseY }
+        endPoint = { x: p.mouseX, y: p.mouseY }
       } else {
-        previousMouse = { x: p.mouseX, y: p.mouseY };
-        drawPaintLine();
+        previousMouse = { x: p.mouseX, y: p.mouseY }
+        drawPaintLine()
       }
     }
   }
@@ -357,12 +359,12 @@ const sketch = function (p) {
 
   p.keyReleased = function () {
     if (p.keyCode === 91 && isDrawingLine) {
-      drawLine(startPoint, endPoint);
-      isDrawingLine = false;
+      drawLine(startPoint, endPoint)
+      isDrawingLine = false
     }
   }
 
-  function generateFilename() {
+  function generateFilename () {
     const d = new Date()
     const modeIndicator = transparencyModeEnabled ? '-transparent' : ''
     return (
@@ -387,7 +389,7 @@ const sketch = function (p) {
       const exportCanvas = p.createGraphics(displayLayer.width, displayLayer.height)
       exportCanvas.pixelDensity(density)
       exportCanvas.image(displayLayer, 0, 0)
-      
+
       // Process for transparency mode
       exportCanvas.loadPixels()
       for (let i = 0; i < exportCanvas.pixels.length; i += 4) {
@@ -624,7 +626,7 @@ const sketch = function (p) {
     }
   }
 
-  function processImage(img) {
+  function processImage (img) {
     if (!modal.refit) {
       bwCachedImage = null // this is not required for refit
       setupPaintBuffer(img)
@@ -650,7 +652,7 @@ const sketch = function (p) {
     dirty = true
   }
 
-  function handleFile(file) {
+  function handleFile (file) {
     if (file.type === 'image') {
       modal.processing = true
       img = null
@@ -778,7 +780,7 @@ const sketch = function (p) {
     })
   }
 
-  function displayHelpScreen() {
+  function displayHelpScreen () {
     p.fill(50, 150)
     p.rect(50, 50, p.width - 100, p.height - 100, 10)
 
@@ -810,9 +812,30 @@ const sketch = function (p) {
       70,
       70
     )
+
+    // Display version information at the bottom of the help screen
+    p.textSize(12)
+    p.textAlign(p.CENTER, p.BOTTOM)
+    p.fill(200)
+    try {
+      formatVersion().then(version => {
+        // Store version for display
+        if (!p._versionText) {
+          p._versionText = version
+        }
+      }).catch(() => {
+        p._versionText = 'v0.2.0'
+      })
+    } catch (error) {
+      p._versionText = 'v0.2.0'
+    }
+
+    if (p._versionText) {
+      p.text(p._versionText, p.width / 2, p.height - 70)
+    }
   }
 
-  function displayProcessingText() {
+  function displayProcessingText () {
     p.fill(p.color('#e75397'), 150)
     p.rect(50, 50, p.width - 100, 100, 10)
 
