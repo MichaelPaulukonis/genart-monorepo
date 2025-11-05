@@ -1,3 +1,15 @@
+## 0.4.0 (2025-11-04)
+
+### 🚀 Features
+
+- **monochromifier:** implement click-and-drag source image repositioning with OSD (On-Screen Display)
+  - Add interactive image dragging outside of paint mode
+  - Implement OSD showing original image thumbnail with highlighted viewport rectangle
+  - Add boundary constraints ensuring minimum 25% image visibility
+  - Include keyboard controls: 'o' to toggle OSD, 'd' to reset drag position
+  - Support zoom-aware viewport calculations and drag offset tracking
+  - Add visual feedback with red border during drag operations
+
 ## 0.3.0 (2025-11-04)
 
 ### 🚀 Features

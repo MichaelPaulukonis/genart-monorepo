@@ -35,7 +35,14 @@ const sketch = function (p) {
     verticalMax: 0,
     horizontalMax: 0
   }
-  // let offsetMax = 0
+  
+  // Image dragging state
+  let isDragging = false
+  let dragStartX = 0
+  let dragStartY = 0
+  let imageOffsetX = 0
+  let imageOffsetY = 0
+  let showOSD = true // On-Screen Display for image positioning
 
   const scaleMethods = {
     fitToWidth: 'fitToWidth',
@@ -130,6 +137,24 @@ const sketch = function (p) {
       }
 
       if (modal.showUI) displayUI()
+      if (showOSD && !modal.paintMode) drawOSD()
+      
+      // Visual feedback when dragging
+      if (isDragging && !modal.paintMode) {
+        p.push()
+        p.stroke(255, 100, 100, 150)
+        p.strokeWeight(2)
+        p.noFill()
+        p.rect(0, 0, p.width, p.height)
+        p.pop()
+      }
+      
+      // Set cursor based on mode
+      if (!modal.paintMode && !modal.showHelp) {
+        p.cursor(isDragging ? 'grabbing' : 'grab')
+      } else if (modal.paintMode) {
+        p.cursor(p.CROSS)
+      }
     }
   }
 
@@ -174,6 +199,15 @@ const sketch = function (p) {
       dirty = true
     } else if (modal.paintMode && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
       drawPaintLine()
+    } else if (isDragging && !modal.paintMode) {
+      // Image dragging when not in paint mode
+      imageOffsetX += p.mouseX - dragStartX
+      imageOffsetY += p.mouseY - dragStartY
+      dragStartX = p.mouseX
+      dragStartY = p.mouseY
+      applyBoundaryConstraints()
+      buildCombinedLayer(img)
+      dirty = true
     }
   }
 
@@ -181,6 +215,8 @@ const sketch = function (p) {
     if (isDrawingLine) {
       drawLine(startPoint, endPoint)
       isDrawingLine = false
+    } else if (isDragging) {
+      isDragging = false
     }
     previousMouse = { x: 0, y: 0 }
   }
@@ -195,6 +231,11 @@ const sketch = function (p) {
         previousMouse = { x: p.mouseX, y: p.mouseY }
         drawPaintLine()
       }
+    } else if (!modal.paintMode && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+      // Start dragging the image when not in paint mode
+      isDragging = true
+      dragStartX = p.mouseX
+      dragStartY = p.mouseY
     }
   }
 
@@ -260,12 +301,28 @@ const sketch = function (p) {
       dirty = true
       return false
     }
+    if (p.key === 'o') {
+      // Toggle OSD (On-Screen Display)
+      showOSD = !showOSD
+      dirty = true
+      return false
+    }
+    if (p.key === 'd' && !modal.paintMode) {
+      // Reset drag position when not in paint mode
+      imageOffsetX = 0
+      imageOffsetY = 0
+      buildCombinedLayer(img)
+      dirty = true
+      return false
+    }
     if (p.key === 'r' && !p.keyIsDown(p.CONTROL) && !p.keyIsDown(91)) {
       // Only reset if 'r' is pressed alone (not CMD+R or Ctrl+R)
       threshold = 128
       sizeRatio = 1
       offset.horizontal = 0
       offset.vertical = 0
+      imageOffsetX = 0
+      imageOffsetY = 0
       buildCombinedLayer(img)
       dirty = true
       return false
@@ -524,6 +581,31 @@ const sketch = function (p) {
     dirty = true
   }
 
+  const applyBoundaryConstraints = () => {
+    if (!img) return
+    
+    const scaleRatio = calculateScaleRatio(img, outputSize)
+    const scaledWidth = Math.round(img.width * scaleRatio)
+    const scaledHeight = Math.round(img.height * scaleRatio)
+    
+    // Ensure at least 25% of the image remains visible within the output canvas
+    const minVisible = 0.25
+    
+    // Calculate the maximum allowed offsets
+    // The image can be moved so that 75% is hidden, but 25% must remain visible
+    const maxOffsetX = scaledWidth * (1 - minVisible)
+    const maxOffsetY = scaledHeight * (1 - minVisible)
+    
+    // Calculate the minimum allowed offsets
+    // The image can be moved so that it's mostly off-screen on the opposite side
+    const minOffsetX = -(outputSize - scaledWidth * minVisible)
+    const minOffsetY = -(outputSize - scaledHeight * minVisible)
+    
+    // Apply constraints
+    imageOffsetX = p.constrain(imageOffsetX, minOffsetX, maxOffsetX)
+    imageOffsetY = p.constrain(imageOffsetY, minOffsetY, maxOffsetY)
+  }
+
   const buildCombinedLayer = img => {
     const scaleRatio = calculateScaleRatio(img, outputSize)
     const scaledWidth = Math.round(img.width * scaleRatio)
@@ -537,10 +619,16 @@ const sketch = function (p) {
       setupCombinedBuffer({ width: scaledWidth, height: scaledHeight })
     }
 
+    // Clear the combined layer only if it exists and we're dragging
+    // to prevent artifacts from previous positions
+    if (isDragging || imageOffsetX !== 0 || imageOffsetY !== 0) {
+      combinedLayer.clear()
+    }
+
     combinedLayer.image(
       newImg,
-      0 + offset.horizontal,
-      0 + offset.vertical,
+      0 + offset.horizontal + imageOffsetX,
+      0 + offset.vertical + imageOffsetY,
       scaledWidth,
       scaledHeight,
       0,
@@ -550,8 +638,8 @@ const sketch = function (p) {
     )
     combinedLayer.image(
       paintLayer,
-      0 + offset.horizontal,
-      0 + offset.vertical,
+      0 + offset.horizontal + imageOffsetX,
+      0 + offset.vertical + imageOffsetY,
       scaledWidth,
       scaledHeight
     )
@@ -638,6 +726,8 @@ const sketch = function (p) {
     offset.horizontal = 0
     offset.verticalMax = 0
     offset.horizontalMax = 0
+    imageOffsetX = 0
+    imageOffsetY = 0
 
     const offsetMax = calculateOffsetMax(img, outputSize)
 
@@ -756,10 +846,12 @@ const sketch = function (p) {
       `threshold: ${threshold}`,
       !modal.paintMode ? `zoom: ${(sizeRatio * 100).toFixed(0)}%` : '',
       !modal.paintMode ? `offset: ${offsetAmount}` : '',
+      !modal.paintMode ? `drag offset: (${Math.round(imageOffsetX)}, ${Math.round(imageOffsetY)})` : '',
       !modal.paintMode ? `fit method: ${scaleMethod}` : '',
       !modal.paintMode ? `invert: ${invert ? 'inverted' : 'normal'}` : '',
       `transparency: ${transparencyModeEnabled ? 'ON' : 'OFF'}`,
       transparencyModeEnabled ? `transparency threshold: ${transparencyThreshold}` : '',
+      !modal.paintMode ? `OSD: ${showOSD ? 'ON' : 'OFF'}` : '',
       `paint mode: ${modal.paintMode ? 'ON' : 'OFF'}`,
       modal.paintMode ? `brush size: ${brushSize}` : '',
       modal.paintMode ? `erase mode: ${modal.eraseMode ? 'ON' : 'OFF'}` : ''
@@ -780,6 +872,97 @@ const sketch = function (p) {
     })
   }
 
+  const drawOSD = () => {
+    if (!img) return
+    
+    const osdSize = 150
+    const osdPadding = 10
+    const osdX = p.width - osdSize - osdPadding
+    const osdY = osdPadding
+    
+    // Calculate thumbnail scale to fit within OSD
+    const thumbScale = Math.min(osdSize / img.width, osdSize / img.height)
+    const thumbWidth = img.width * thumbScale
+    const thumbHeight = img.height * thumbScale
+    
+    // Center thumbnail within OSD area
+    const thumbX = osdX + (osdSize - thumbWidth) / 2
+    const thumbY = osdY + (osdSize - thumbHeight) / 2
+    
+    // Draw OSD background
+    p.fill(0, 150)
+    p.noStroke()
+    p.rect(osdX - 5, osdY - 5, osdSize + 10, osdSize + 10, 5)
+    
+    // Draw original image thumbnail (temporarily use CORNER mode for precise positioning)
+    p.push()
+    p.imageMode(p.CORNER)
+    p.tint(255, 200) // Slight transparency for contrast
+    p.image(img, thumbX, thumbY, thumbWidth, thumbHeight)
+    p.noTint()
+    p.pop()
+    
+    // Calculate viewport rectangle based on current offsets and scale
+    const scaleRatio = calculateScaleRatio(img, outputSize)
+    
+    // Calculate visible area in image coordinates
+    // Account for center-based zoom and drag offsets
+    
+    // Key insight: When you drag the image, you're changing what part of the original
+    // image is visible. Dragging the image right means you see the left part of the image.
+    
+    // Start with the display canvas size (what we can see)
+    const displayWidth = displayLayer.width
+    const displayHeight = displayLayer.height
+    
+    // Calculate what portion of the image is visible due to zoom
+    // When zoomed in, we see a smaller portion of the image
+    const viewportWidthInDisplay = displayWidth / sizeRatio
+    const viewportHeightInDisplay = displayHeight / sizeRatio
+    
+    // Convert drag offsets to original image coordinates
+    // Note: drag offsets work in the opposite direction - dragging image right
+    // means we're seeing the left portion of the image
+    const dragOffsetInImageCoords = {
+      x: -(imageOffsetX + offset.horizontal) / scaleRatio,
+      y: -(imageOffsetY + offset.vertical) / scaleRatio
+    }
+    
+    // Calculate the center of what we're viewing in original image coordinates
+    const imageCenterX = img.width / 2
+    const imageCenterY = img.height / 2
+    const viewCenterX = imageCenterX + dragOffsetInImageCoords.x
+    const viewCenterY = imageCenterY + dragOffsetInImageCoords.y
+    
+    // Calculate the viewport dimensions in original image coordinates
+    const viewportWidthInImage = viewportWidthInDisplay / scaleRatio
+    const viewportHeightInImage = viewportHeightInDisplay / scaleRatio
+    
+    // Calculate viewport bounds (don't clamp to image bounds - allow showing outside)
+    const visibleX = viewCenterX - viewportWidthInImage / 2
+    const visibleY = viewCenterY - viewportHeightInImage / 2
+    const visibleWidth = viewportWidthInImage
+    const visibleHeight = viewportHeightInImage
+    
+    // Convert to thumbnail coordinates
+    const rectX = thumbX + (visibleX * thumbScale)
+    const rectY = thumbY + (visibleY * thumbScale)
+    const rectWidth = visibleWidth * thumbScale
+    const rectHeight = visibleHeight * thumbScale
+    
+    // Draw viewport rectangle
+    p.noFill()
+    p.stroke(255, 100, 100)
+    p.strokeWeight(2)
+    p.rect(rectX, rectY, rectWidth, rectHeight)
+    
+    // Draw OSD border
+    p.noFill()
+    p.stroke(255, 150)
+    p.strokeWeight(1)
+    p.rect(osdX, osdY, osdSize, osdSize)
+  }
+
   function displayHelpScreen () {
     p.fill(50, 150)
     p.rect(50, 50, p.width - 100, p.height - 100, 10)
@@ -796,6 +979,8 @@ const sketch = function (p) {
       r - Reset to default settings
       i - Invert image
       t - Toggle transparency mode
+      o - Toggle OSD (position overlay)
+      d - Reset drag position
       p - Paint
       x - Toggle erase mode
       CMD-click - Draw a line
@@ -808,6 +993,9 @@ const sketch = function (p) {
       → - increase brush size
       ← - decrease brush size
       CMD-s - Save image
+      
+      Drag image (non-paint mode):
+      Click + Drag - Move source image position
       `,
       70,
       70
