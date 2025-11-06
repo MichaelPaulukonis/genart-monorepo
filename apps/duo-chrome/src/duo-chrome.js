@@ -35,7 +35,7 @@
 
 import { p5 } from 'p5js-wrapper'
 import { RISOCOLORS, PALETTE, PALETTE_TWO } from './risocolors'
-import { imgs } from './imagelist'
+import { imgs } from './generated/images.js'
 import { getFormattedVersion } from './utils/version.js'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'

@@ -2,6 +2,7 @@
 const { resolve } = require('path')
 const { defineConfig } = require('vite')
 const { readFileSync, writeFileSync, mkdirSync } = require('fs')
+const { imageListPlugin } = require('../../tools/vite-plugin-image-list.js')
 
 // Vite plugin to generate version constants from package.json
 function generateVersionConstants () {
@@ -87,6 +88,12 @@ module.exports = defineConfig({
     }
   },
   plugins: [
-    generateVersionConstants()
+    generateVersionConstants(),
+    imageListPlugin({
+      scanDir: 'public/images',
+      outputFile: 'src/generated/images.js',
+      extensions: ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+      exportName: 'imgs'
+    })
   ]
 })

@@ -4,5 +4,6 @@ dist
 dist-ssr
 *.local
 
-# Auto-generated version constants
+# Auto-generated files
 src/utils/version-constants.js
+src/generated/
