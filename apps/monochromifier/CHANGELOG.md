@@ -10,6 +10,13 @@
   - Support zoom-aware viewport calculations and drag offset tracking
   - Add visual feedback with red border during drag operations
 
+### 🩹 Fixes
+
+- **monochromifier:** fix transparency export regression where inverted images saved as normal
+  - Remove double-inversion logic in createSaveImage function
+  - Ensure transparency mode correctly exports inverted images
+  - Fix white/black pixel transparency mapping for inverted mode
+
 ## 0.3.0 (2025-11-04)
 
 ### 🚀 Features
