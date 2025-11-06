@@ -32,6 +32,18 @@
         "lintFilePatterns": ["apps/computational-collage/**/*.{js,jsx}"]
       }
     },
+    "test": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/computational-collage/playwright.config.js"
+      },
+      "configurations": {
+        "ci": {
+          "forbidOnly": true,
+          "workers": 1
+        }
+      }
+    },
     "deploy": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
@@ -44,8 +56,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release version --projects=computational-collage",
-          "nx release changelog --projects=computational-collage",
+          "nx release --projects=computational-collage",
           "npx gh-pages -d dist/apps/computational-collage --repo https://github.com/michaelpaulukonis/computational-collage.git"
         ],
         "parallel": false

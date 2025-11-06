@@ -32,6 +32,18 @@
         "lintFilePatterns": ["apps/those-shape-things/**/*.{js,jsx}"]
       }
     },
+    "test": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/those-shape-things/playwright.config.js"
+      },
+      "configurations": {
+        "ci": {
+          "forbidOnly": true,
+          "workers": 1
+        }
+      }
+    },
     "deploy": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
@@ -44,8 +56,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release version --projects=those-shape-things",
-          "nx release changelog --projects=those-shape-things",
+          "nx release --projects=those-shape-things",
           "npx gh-pages -d dist/apps/those-shape-things --repo https://github.com/michaelpaulukonis/those-shape-things.git"
         ],
         "parallel": false

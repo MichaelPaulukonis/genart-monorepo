@@ -32,6 +32,21 @@
         "lintFilePatterns": ["apps/crude-collage-painter/**/*.{js,jsx}"]
       }
     },
+    "test": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/crude-collage-painter/playwright.config.js"
+      },
+      "configurations": {
+        "ci": {
+          "forbidOnly": true,
+          "workers": 1
+        }
+      },
+      "env": {
+        "TEST_APP": "crude-collage-painter"
+      }
+    },
     "deploy": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",
@@ -40,12 +55,11 @@
       }
     },
     "release-deploy": {
-      "dependsOn": ["build"],
+      "dependsOn": ["build", "validate-version"],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release version --projects=crude-collage-painter",
-          "nx release changelog --projects=crude-collage-painter",
+          "nx release --projects=crude-collage-painter",
           "npx gh-pages -d dist/apps/crude-collage-painter --repo https://github.com/michaelpaulukonis/crude-collage-painter.git"
         ],
         "parallel": false

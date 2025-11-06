@@ -32,6 +32,18 @@
         "lintFilePatterns": ["apps/dragline/**/*.js"]
       }
     },
+    "test": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/dragline/playwright.config.js"
+      },
+      "configurations": {
+        "ci": {
+          "forbidOnly": true,
+          "workers": 1
+        }
+      }
+    },
     "deploy": {
       "executor": "nx:run-commands",
       "options": {
@@ -43,9 +55,8 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release version --projects=dragline",
-          "nx release changelog --projects=dragline",
-          "npx gh-pages -d dist/apps/dragline --repo https://github.com/MichaelPaulukonis/dragline.git --nojekyll"
+          "nx release --projects=dragline",
+          "npx gh-pages -d dist/apps/dragline --repo https://github.com/michaelpaulukonis/dragline.git"
         ],
         "parallel": false
       }

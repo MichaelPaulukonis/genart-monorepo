@@ -57,8 +57,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release version --projects=duo-chrome",
-          "nx release changelog --projects=duo-chrome",
+          "nx release --projects=duo-chrome",
           "npx gh-pages -d dist/apps/duo-chrome --repo https://github.com/michaelpaulukonis/duo-chrome.git"
         ],
         "parallel": false

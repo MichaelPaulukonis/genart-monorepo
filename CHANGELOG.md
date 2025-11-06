@@ -6,6 +6,12 @@ This changelog aggregates infrastructure and shared-library changes across the w
 
 ### Infrastructure & Shared Libraries
 
+- **nx:** fix release configuration to resolve granular git configuration conflicts
+  - Consolidate git options to top-level `release.git` property in nx.json
+  - Update all apps to use combined `nx release` command instead of separate version/changelog commands
+  - Fix release-deploy targets across computational-collage, crude-collage-painter, dragline, duo-chrome, those-shape-things, and monochromifier
+  - Ensure proper version bumping and changelog generation for all apps
+
 - From **monochromifier**:
   - **monochromifier:** add save-as-transparent option with proper invert mode support ([#37](https://github.com/MichaelPaulukonis/genart-monorepo/issues/37))
   - resolve nx release configuration conflicts for proper versioning ([0dbd2db0](https://github.com/MichaelPaulukonis/genart-monorepo/commit/0dbd2db0))

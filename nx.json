@@ -16,19 +16,15 @@
     "projectsRelationship": "independent",
     "projects": ["apps/*"],
     "releaseTagPattern": "{projectName}@{version}",
+    "git": {
+      "commit": true,
+      "tag": true
+    },
     "version": {
-      "conventionalCommits": true,
-      "git": {
-        "commit": true,
-        "tag": true
-      }
+      "conventionalCommits": true
     },
     "changelog": {
       "projectChangelogs": true,
-      "git": {
-        "commit": true,
-        "tag": true
-      },
       "workspaceChangelog": {
         "createRelease": false,
         "file": "{workspaceRoot}/CHANGELOG.md",

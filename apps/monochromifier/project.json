@@ -57,7 +57,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release --projects=monochromifier",
+          "nx release --projects=monochromifier --first-release",
           "npx gh-pages -d dist/apps/monochromifier --repo https://github.com/michaelpaulukonis/monochromifier.git"
         ],
         "parallel": false
