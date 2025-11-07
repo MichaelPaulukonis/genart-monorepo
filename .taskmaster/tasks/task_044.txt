@@ -1,0 +1,92 @@
+# Task ID: 44
+# Title: Implement Multiple Canvas Size Options for Crude-Collage-Painter
+# Status: pending
+# Dependencies: 41
+# Priority: medium
+# Description: Add functionality to switch between different canvas dimensions (square, landscape, portrait formats) through UI controls and keyboard shortcuts while preserving the current painting and allowing users to work with different aspect ratios.
+# Details:
+This task involves implementing multiple canvas size options for the crude-collage-painter app:
+
+1. **Define Canvas Presets**:
+   - Create a set of predefined canvas dimensions:
+   ```javascript
+   const canvasSizePresets = {
+     square: { width: 800, height: 800, label: "Square (1:1)" },
+     landscape: { width: 1200, height: 800, label: "Landscape (3:2)" },
+     portrait: { width: 800, height: 1200, label: "Portrait (2:3)" },
+     widescreen: { width: 1600, height: 900, label: "Widescreen (16:9)" },
+     custom: { width: null, height: null, label: "Custom..." }
+   };
+   ```
+
+2. **Implement Canvas Resizing Logic**:
+   - Create a function to handle canvas resizing while preserving content:
+   ```javascript
+   function resizeCanvas(newWidth, newHeight) {
+     // Create temporary buffer to store current canvas content
+     const tempBuffer = createGraphics(canvas.width, canvas.height);
+     tempBuffer.image(canvas, 0, 0);
+     
+     // Resize the main canvas
+     resizeCanvas(newWidth, newHeight);
+     
+     // Center the previous content on new canvas
+     const xOffset = (width - tempBuffer.width) / 2;
+     const yOffset = (height - tempBuffer.height) / 2;
+     image(tempBuffer, xOffset, yOffset);
+     
+     // Clean up
+     tempBuffer.remove();
+     
+     // Update any size-dependent variables
+     updateBrushScalingFactors();
+   }
+   ```
+
+3. **Add UI Controls**:
+   - Create a dropdown or button set for canvas size selection
+   - Position controls within the existing UI framework
+   - Style to match the app's aesthetic
+
+4. **Implement Keyboard Shortcuts**:
+   - Add shortcut keys to quickly switch between canvas presets
+   - Document shortcuts in UI tooltip or help section
+
+5. **Add Custom Size Dialog**:
+   - Create a modal dialog for entering custom dimensions
+   - Include validation for minimum/maximum dimensions
+   - Provide clear feedback on valid input ranges
+
+6. **Persist Size Preference**:
+   - Save the user's canvas size preference to localStorage
+   - Restore preferred size when app is reopened
+
+7. **Handle Window Resizing**:
+   - Update any window resize handlers to maintain the selected canvas size
+   - Ensure the canvas remains properly positioned within the window
+
+# Test Strategy:
+1. **Basic Functionality Testing**:
+   - Verify each preset canvas size (square, landscape, portrait, widescreen) can be selected from the UI
+   - Test that keyboard shortcuts correctly switch between canvas size presets
+   - Confirm that the custom size dialog appears when selected and accepts valid dimensions
+
+2. **Content Preservation Testing**:
+   - Create a painting with elements distributed across the canvas
+   - Change the canvas size using different presets and verify the existing content is preserved
+   - Test transitions between significantly different aspect ratios (e.g., landscape to portrait)
+   - Verify that brush size and other painting parameters adjust appropriately to the new canvas size
+
+3. **UI Controls Testing**:
+   - Confirm that the canvas size selector correctly reflects the current canvas size
+   - Verify that the custom size dialog properly validates input (rejects invalid values)
+   - Test that the cancel button in the custom size dialog properly dismisses without changes
+
+4. **Persistence Testing**:
+   - Select various canvas sizes and refresh the page to verify preferences are saved
+   - Test across different browser sessions to confirm the persistence of canvas size preferences
+
+5. **Window Resizing Testing**:
+   - Resize the browser window and confirm the canvas maintains its dimensions
+   - Verify the canvas is repositioned appropriately within the window when the window size changes
+   - Test that UI controls remain accessible and properly positioned after window resizing

@@ -1,0 +1,127 @@
+# Task ID: 28
+# Title: Implement Tagged Layer System with Off-Screen Rendering for Duo-Chrome
+# Status: pending
+# Dependencies: 11, 15
+# Priority: high
+# Description: Implement a layer system for the duo-chrome app that uses off-screen rendering to create high-resolution compositions that can be scaled down for on-screen display, with a focus on the core rendering functionality first.
+# Details:
+This task involves implementing a layer system for the duo-chrome app with a primary focus on high-resolution off-screen rendering that fits-to-window for on-screen display:
+
+1. **Core Off-Screen Rendering**:
+   - Implement high-resolution off-screen rendering using p5.Graphics buffers
+   - Create a system that renders compositions at high resolution (e.g., 2400x1600)
+   - Develop automatic scaling to fit the browser window for on-screen display
+   - Ensure the scaling maintains visual quality and performance
+
+2. **Basic Layer System Foundation**:
+   - Implement a simple but extensible layer architecture
+   - Create a minimal layer management system that supports future expansion
+   - Design the system to eventually support tagged layers (e.g., "background", "shapes", "effects")
+   - Each layer should render to its own off-screen p5.Graphics buffer
+
+3. **Memory and Performance Management**:
+   - Implement efficient buffer management to avoid memory issues
+   - Optimize rendering pipeline for smooth performance
+   - Add support for different export resolutions
+   - Create a system for managing memory with multiple high-resolution buffers
+
+4. **Essential Layer Controls**:
+   - Implement basic layer visibility toggling
+   - Add simple layer creation and deletion functionality
+   - Design the system to support future expansion of layer controls
+
+5. **High-Resolution Export**:
+   - Implement export functionality at the native high resolution
+   - Support basic export options (PNG format)
+   - Design the export system to be extensible for future enhancements
+
+6. **Future-Proof Architecture**:
+   - Design the system with clear extension points for "day two" features
+   - Document how future layer tagging, blending modes, and advanced management will integrate
+   - Create a roadmap for implementing advanced layer features in future tasks
+
+This implementation will prioritize the core high-resolution rendering functionality while establishing a foundation that can be expanded with more sophisticated layer management features in the future.
+
+# Test Strategy:
+1. **Core Off-Screen Rendering Testing**:
+   - Verify high-resolution rendering (2400x1600) functions correctly
+   - Test scaling to fit browser window at various sizes
+   - Confirm visual quality is maintained when scaling down
+   - Test performance across different device capabilities
+
+2. **Basic Layer System Testing**:
+   - Verify the foundation layer system works as expected
+   - Test basic layer creation and management
+   - Confirm the architecture can support future expansion
+   - Validate the buffer management for individual layers
+
+3. **Performance Testing**:
+   - Measure rendering performance with high-resolution buffers
+   - Test memory usage during extended use
+   - Verify the system performs well on target devices
+   - Monitor for memory leaks or performance degradation
+
+4. **Essential Controls Testing**:
+   - Test layer visibility toggling functionality
+   - Verify basic layer creation and deletion
+   - Confirm the controls are intuitive and responsive
+
+5. **Export Functionality Testing**:
+   - Test high-resolution export functionality
+   - Verify exported images maintain the correct resolution
+   - Confirm PNG format exports work correctly
+   - Test export process on different browsers and devices
+
+6. **Architecture Extensibility Testing**:
+   - Review code architecture for clear extension points
+   - Validate that the design will support future layer features
+   - Confirm documentation adequately explains the extension strategy
+
+7. **Integration Testing**:
+   - Verify layer system integrates well with existing duo-chrome functionality
+   - Test compatibility with existing keyboard shortcuts and features
+   - Confirm the system doesn't break existing functionality
+
+# Subtasks:
+## 1. Implement high-resolution off-screen rendering with p5.Graphics [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 2. Create fits-to-window scaling system for on-screen display [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 3. Implement basic layer architecture with extensibility for future features [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 4. Develop efficient buffer management system [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 5. Implement high-resolution export functionality [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 6. Document extension points for future layer features [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 7. Create performance optimization for multiple buffers [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+

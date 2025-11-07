@@ -1,0 +1,47 @@
+# Task ID: 55
+# Title: Create standard test templates for apps
+# Status: pending
+# Dependencies: 54
+# Priority: medium
+# Description: Develop smoke test templates for apps without comprehensive tests and ensure all apps have basic Playwright integration tests.
+# Details:
+1. Create a standard smoke test template that can be adapted for each application
+
+Example smoke test template:
+```javascript
+const { test, expect } = require('@playwright/test');
+const { loadApp, getCanvas } = require('../../test/utils/p5-canvas-helpers');
+
+test.describe('App Smoke Test', () => {
+  test('should load and render canvas', async ({ page }) => {
+    await loadApp(page, '/app-path');
+    const canvas = await getCanvas(page);
+    expect(canvas).toBeTruthy();
+    // Add app-specific verification
+  });
+
+  test('should respond to basic interactions', async ({ page }) => {
+    await loadApp(page, '/app-path');
+    // Test basic app interaction
+    // E.g., click, hover, or other app-specific action
+  });
+});
+```
+
+2. For each app without comprehensive tests:
+   - Create a basic smoke test using the template
+   - Adapt the template to app-specific requirements
+   - Place tests in the app's test directory
+
+3. Validate test utilities work across all app types
+   - Test p5-canvas-helpers with each app
+   - Adapt utilities if needed for specific app requirements
+
+4. Document any app-specific test patterns that deviate from the standard
+
+# Test Strategy:
+1. Run each new smoke test to verify it detects basic application functionality
+2. Test template with different app types to ensure adaptability
+3. Verify that shared test utilities work across all applications
+4. Document any app-specific adaptations required
+5. Ensure tests are consistent with existing Playwright patterns

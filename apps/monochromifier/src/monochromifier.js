@@ -24,6 +24,12 @@ const sketch = function (p) {
   let startPoint = { x: 0, y: 0 }
   let endPoint = { x: 0, y: 0 }
 
+  let isCropping = false
+  let cropStart = { x: 0, y: 0 }
+  let cropEnd = { x: 0, y: 0 }
+
+  const undoStack = []
+
   const transparencyThreshold = 128 // Threshold for gray pixels in transparency mode
   const density = 1 // need to use density in size calculations for both w+h
   // but if we render offscreen, why worry about pixeldensity ?!?!?
@@ -53,11 +59,21 @@ const sketch = function (p) {
 
   let scaleMethod = scaleMethods.fitToWidth
 
+  const modes = {
+    ADJUST: 'ADJUST',
+    EDIT: 'EDIT'
+  }
+  const editTools = {
+    PAINT: 'PAINT',
+    CROP: 'CROP'
+  }
+  let appMode = modes.ADJUST
+  let editTool = editTools.PAINT
+
   const modal = {
     showHelp: false,
     showUI: true,
     processing: false,
-    paintMode: false,
     eraseMode: false,
     refit: false
   }
@@ -120,7 +136,7 @@ const sketch = function (p) {
       p.image(displayLayer, p.width / 2, p.height / 2, p.width, p.height)
       dirty = false
 
-      if (modal.paintMode) {
+      if (appMode === modes.EDIT && editTool === editTools.PAINT) {
         // draw brush
         p.stroke(0)
         p.strokeWeight(1)
@@ -137,11 +153,21 @@ const sketch = function (p) {
         p.pop()
       }
 
+      if (isCropping) {
+        p.push()
+        p.noFill()
+        p.stroke('red')
+        p.strokeWeight(1)
+        p.rect(cropStart.x, cropStart.y, cropEnd.x - cropStart.x, cropEnd.y - cropStart.y)
+        p.pop()
+        dirty = true
+      }
+
       if (modal.showUI) displayUI()
-      if (showOSD && !modal.paintMode) drawOSD()
+      if (showOSD && appMode === modes.ADJUST) drawOSD()
 
       // Visual feedback when dragging
-      if (isDragging && !modal.paintMode) {
+      if (isDragging && appMode === modes.ADJUST) {
         p.push()
         p.stroke(255, 100, 100, 150)
         p.strokeWeight(2)
@@ -151,10 +177,15 @@ const sketch = function (p) {
       }
 
       // Set cursor based on mode
-      if (!modal.paintMode && !modal.showHelp) {
+      if (appMode === modes.ADJUST && !modal.showHelp) {
         p.cursor(isDragging ? 'grabbing' : 'grab')
-      } else if (modal.paintMode) {
-        p.cursor(p.CROSS)
+      } else if (appMode === modes.EDIT) {
+        if (editTool === editTools.PAINT) {
+          // The brush ellipse is drawn, so a simple cursor is fine.
+          p.cursor(p.CROSS)
+        } else if (editTool === editTools.CROP) {
+          p.cursor(p.CROSS)
+        }
       }
     }
   }
@@ -198,10 +229,13 @@ const sketch = function (p) {
     if (isDrawingLine) {
       endPoint = { x: p.mouseX, y: p.mouseY }
       dirty = true
-    } else if (modal.paintMode && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+    } else if (isCropping) {
+      cropEnd = { x: p.mouseX, y: p.mouseY }
+      dirty = true
+    } else if (appMode === modes.EDIT && editTool === editTools.PAINT && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
       drawPaintLine()
-    } else if (isDragging && !modal.paintMode) {
-      // Image dragging when not in paint mode
+    } else if (appMode === modes.ADJUST && isDragging) {
+      // Image dragging when in adjust mode
       imageOffsetX += p.mouseX - dragStartX
       imageOffsetY += p.mouseY - dragStartY
       dragStartX = p.mouseX
@@ -216,6 +250,10 @@ const sketch = function (p) {
     if (isDrawingLine) {
       drawLine(startPoint, endPoint)
       isDrawingLine = false
+    } else if (isCropping) {
+      isCropping = false
+      performCrop()
+      dirty = true
     } else if (isDragging) {
       isDragging = false
     }
@@ -223,28 +261,110 @@ const sketch = function (p) {
   }
 
   p.mousePressed = function () {
-    if (modal.paintMode && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-      if (p.keyIsDown(91)) {
-        isDrawingLine = true
-        startPoint = { x: p.mouseX, y: p.mouseY }
-        endPoint = { x: p.mouseX, y: p.mouseY }
-      } else {
-        previousMouse = { x: p.mouseX, y: p.mouseY }
-        drawPaintLine()
+    if (appMode === modes.EDIT && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+      if (editTool === editTools.PAINT) {
+        if (p.keyIsDown(91)) {
+          isDrawingLine = true
+          startPoint = { x: p.mouseX, y: p.mouseY }
+          endPoint = { x: p.mouseX, y: p.mouseY }
+        } else {
+          previousMouse = { x: p.mouseX, y: p.mouseY }
+          drawPaintLine()
+        }
+      } else if (editTool === editTools.CROP) {
+        isCropping = true
+        cropStart = { x: p.mouseX, y: p.mouseY }
+        cropEnd = { x: p.mouseX, y: p.mouseY }
+        dirty = true
       }
-    } else if (!modal.paintMode && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-      // Start dragging the image when not in paint mode
+    } else if (appMode === modes.ADJUST && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+      // Start dragging the image when in adjust mode
       isDragging = true
       dragStartX = p.mouseX
       dragStartY = p.mouseY
     }
   }
 
+  const performCrop = () => {
+    // 1. Save state for undo
+    const currentState = {
+      img: img.get(),
+      paintLayer: p.createGraphics(paintLayer.width, paintLayer.height)
+    }
+    currentState.paintLayer.image(paintLayer, 0, 0, paintLayer.width, paintLayer.height)
+    undoStack.push(currentState)
+
+    // 2. Calculate crop dimensions in image space
+    const x = Math.min(cropStart.x, cropEnd.x) / paintScale
+    const y = Math.min(cropStart.y, cropEnd.y) / paintScale
+    const w = Math.abs(cropEnd.x - cropStart.x) / paintScale
+    const h = Math.abs(cropEnd.y - cropStart.y) / paintScale
+
+    if (w < 1 || h < 1) return // Ignore tiny crops
+
+    // 3. Crop the main image
+    const newImg = img.get(x, y, w, h)
+
+    // 4. Crop the paint layer
+    const newPaintLayer = p.createGraphics(w, h)
+    newPaintLayer.image(paintLayer, 0, 0, w, h, x, y, w, h)
+    paintLayer.remove()
+    paintLayer = newPaintLayer
+
+    img = newImg
+
+    // 5. Reset state and switch to ADJUST mode
+    switchToAdjustMode(true)
+  }
+
+  const undoCrop = () => {
+    if (undoStack.length === 0) return
+    const lastState = undoStack.pop()
+
+    img = lastState.img
+    paintLayer.remove()
+    paintLayer = lastState.paintLayer
+
+    switchToAdjustMode(true)
+  }
+
+  const switchToAdjustMode = (fromCrop = false) => {
+    appMode = modes.ADJUST
+    p.resizeCanvas(displaySize, displaySize)
+    const tempBuff = p.createGraphics(outputSize, outputSize)
+    tempBuff.elt.id = `temp_adjust_on.${p.frameCount}`
+    tempBuff.pixelDensity(density)
+    tempBuff.imageMode(p.CENTER)
+    displayLayer.remove()
+    displayLayer = tempBuff
+
+    if (fromCrop) {
+      // Reset view parameters after a crop/undo
+      bwCachedImage = null
+      combinedLayer?.remove()
+      combinedLayer = null
+      offset.vertical = 0
+      offset.horizontal = 0
+      offset.verticalMax = 0
+      offset.horizontalMax = 0
+      imageOffsetX = 0
+      imageOffsetY = 0
+      const offsetMax = calculateOffsetMax(img, outputSize)
+      if (scaleMethod === scaleMethods.fitToWidth) {
+        offset.verticalMax = offsetMax
+      } else if (scaleMethod === scaleMethods.fitToHeight) {
+        offset.horizontalMax = offsetMax
+      }
+    }
+
+    buildCombinedLayer(img)
+  }
+
   const specialKeys = () => {
     const change = p.keyIsDown(p.SHIFT) ? 1 : 10
     let handledKey = false
 
-    if (modal.paintMode) {
+    if (appMode === modes.EDIT && editTool === editTools.PAINT) {
       if (p.keyIsDown(p.RIGHT_ARROW)) {
         brushSize = p.constrain(brushSize + change, 1, 300)
         buildPaintLayer(img)
@@ -259,7 +379,7 @@ const sketch = function (p) {
         dirty = true
         handledKey = true
       }
-    } else {
+    } else if (appMode === modes.ADJUST) {
       if (p.keyIsDown(p.RIGHT_ARROW)) {
         sizeRatio = p.constrain(sizeRatio + change / 100, 0.01, 10)
         buildCombinedLayer(img)
@@ -287,6 +407,10 @@ const sketch = function (p) {
   p.keyPressed = () => handleKeys()
 
   const handleKeys = () => {
+    if (p.key === 'z' && (p.keyIsDown(p.CONTROL) || p.keyIsDown(91))) {
+      undoCrop()
+      return false
+    }
     if (p.key === 'i') {
       invert = !invert
       backgroundColor = invert ? p.color(0, 0, 0) : p.color(255, 255, 255)
@@ -308,8 +432,8 @@ const sketch = function (p) {
       dirty = true
       return false
     }
-    if (p.key === 'd' && !modal.paintMode) {
-      // Reset drag position when not in paint mode
+    if (p.key === 'd' && appMode === modes.ADJUST) {
+      // Reset drag position when in adjust mode
       imageOffsetX = 0
       imageOffsetY = 0
       buildCombinedLayer(img)
@@ -329,41 +453,52 @@ const sketch = function (p) {
       return false
     }
 
-    if (modal.paintMode && p.key === 'x') {
-      modal.eraseMode = !modal.eraseMode
-      return false
-    } else if (p.key === 'c') {
-      autoCrop = !autoCrop
-      dirty = true // Update UI to show the change
-      console.log('AutoCrop toggled:', autoCrop)
-    } else if (p.key === 'p') {
+    if (appMode === modes.EDIT) {
+      if (p.key === 'p') {
+        editTool = editTools.PAINT
+        dirty = true
+        return false
+      }
+      if (p.key === 'c') {
+        editTool = editTools.CROP
+        dirty = true
+        return false
+      }
+      if (editTool === editTools.PAINT && p.key === 'x') {
+        modal.eraseMode = !modal.eraseMode
+        dirty = true
+        return false
+      }
+    }
+
+    if (p.key === 'e') {
       modal.showHelp = false
-      modal.paintMode = !modal.paintMode
-      dirty = true // just for the UI
-      if (modal.paintMode) {
-        p.cursor(p.CROSS)
+      if (appMode === modes.ADJUST) {
+        appMode = modes.EDIT
+        editTool = editTools.PAINT // Default to paint
         p.resizeCanvas(img.width * paintScale, img.height * paintScale)
         const tempBuff = p.createGraphics(img.width, img.height)
-        tempBuff.elt.id = `temp_paint_on.${p.frameCount}`
+        tempBuff.elt.id = `temp_edit_on.${p.frameCount}`
         tempBuff.pixelDensity(density)
         tempBuff.imageMode(p.CENTER)
         displayLayer.remove()
         displayLayer = tempBuff
         buildPaintLayer(img)
-        previousMouse = { x: p.mouseX, y: p.mouse }
+        previousMouse = { x: p.mouseX, y: p.mouseY }
       } else {
-        p.cursor()
-        p.resizeCanvas(displaySize, displaySize)
-        const tempBuff = p.createGraphics(outputSize, outputSize)
-        tempBuff.elt.id = `temp_paint_off.${p.frameCount}`
-        tempBuff.pixelDensity(density)
-        tempBuff.imageMode(p.CENTER)
-        displayLayer.remove()
-        displayLayer = tempBuff
-        buildCombinedLayer(img)
+        switchToAdjustMode()
       }
+      dirty = true
       return false
     }
+
+    if (p.key === 'c' && (p.keyIsDown(p.CONTROL) || p.keyIsDown(91))) {
+      autoCrop = !autoCrop
+      dirty = true // Update UI to show the change
+      console.log('AutoCrop toggled:', autoCrop)
+      return false
+    }
+
     if (p.key === '?') {
       modal.showHelp = !modal.showHelp
       dirty = true
@@ -385,7 +520,7 @@ const sketch = function (p) {
       return false
     } else if (
       p.key === 's' &&
-      !modal.paintMode &&
+      appMode === modes.ADJUST &&
       (p.keyIsDown(p.CONTROL) || p.keyIsDown(91))
     ) {
       const saveImage = createSaveImage()
@@ -460,7 +595,7 @@ const sketch = function (p) {
         const g = exportCanvas.pixels[i + 1]
         const b = exportCanvas.pixels[i + 2]
         const a = exportCanvas.pixels[i + 3]
-        
+
         if (a > 0) { // Only process non-transparent pixels
           const avg = (r + g + b) / 3
 
@@ -928,20 +1063,41 @@ const sketch = function (p) {
       scaleMethod === scaleMethods.fitToWidth
         ? offset.vertical
         : offset.horizontal
+
+    const adjustModeText = [
+      `zoom: ${(sizeRatio * 100).toFixed(0)}%`,
+      `offset: ${offsetAmount}`,
+      `drag offset: (${Math.round(imageOffsetX)}, ${Math.round(imageOffsetY)})`,
+      `fit method: ${scaleMethod}`,
+      `invert: ${invert ? 'inverted' : 'normal'}`,
+      `autocrop: ${autoCrop ? 'ON' : 'OFF'}`,
+      `OSD: ${showOSD ? 'ON' : 'OFF'}`
+    ]
+
+    const editModeText = [
+      `tool: ${editTool}`,
+      `erase mode: ${modal.eraseMode ? 'ON' : 'OFF'}`
+    ]
+    const paintToolText = [
+      `brush size: ${brushSize}`
+    ]
+
+    let modeText = []
+    if (appMode === modes.ADJUST) {
+      modeText = adjustModeText
+    } else if (appMode === modes.EDIT) {
+      modeText = editModeText
+      if (editTool === editTools.PAINT) {
+        modeText = [...modeText, ...paintToolText]
+      }
+    }
+
     const uiText = [
       `threshold: ${threshold}`,
-      !modal.paintMode ? `zoom: ${(sizeRatio * 100).toFixed(0)}%` : '',
-      !modal.paintMode ? `offset: ${offsetAmount}` : '',
-      !modal.paintMode ? `drag offset: (${Math.round(imageOffsetX)}, ${Math.round(imageOffsetY)})` : '',
-      !modal.paintMode ? `fit method: ${scaleMethod}` : '',
-      !modal.paintMode ? `invert: ${invert ? 'inverted' : 'normal'}` : '',
+      `mode: ${appMode}`,
+      ...modeText,
       `transparency: ${transparencyModeEnabled ? 'ON' : 'OFF'}`,
-      transparencyModeEnabled ? `transparency threshold: ${transparencyThreshold}` : '',
-      !modal.paintMode ? `autocrop: ${autoCrop ? 'ON' : 'OFF'}` : '',
-      !modal.paintMode ? `OSD: ${showOSD ? 'ON' : 'OFF'}` : '',
-      `paint mode: ${modal.paintMode ? 'ON' : 'OFF'}`,
-      modal.paintMode ? `brush size: ${brushSize}` : '',
-      modal.paintMode ? `erase mode: ${modal.eraseMode ? 'ON' : 'OFF'}` : ''
+      transparencyModeEnabled ? `transparency threshold: ${transparencyThreshold}` : ''
     ].filter(Boolean)
 
     const boxWidth = 200
@@ -1066,24 +1222,26 @@ const sketch = function (p) {
       r - Reset to default settings
       i - Invert image
       t - Toggle transparency mode
-      c - Toggle autocrop
       o - Toggle OSD (position overlay)
+      e - Toggle Edit Mode
+
+      ADJUST Mode:
       d - Reset drag position
-      p - Paint
-      x - Toggle erase mode
-      CMD-click - Draw a line
-      → - increase zoom
-      ← - decrease zoom
-      > - increase offset (h/v)
-      < - decrease offset (h/v)
-      ↑ - increase threshold
-      ↓ - decrease threshold
-      → - increase brush size
-      ← - decrease brush size
+      → / ← - increase/decrease zoom
+      > / < - increase/decrease offset (h/v)
       CMD-s - Save image
-      
-      Drag image (non-paint mode):
       Click + Drag - Move source image position
+
+      EDIT Mode:
+      p - Activate PAINT tool
+      c - Activate CROP tool
+      x - Toggle erase mode (in PAINT tool)
+      → / ← - increase/decrease brush size (in PAINT tool)
+      CMD-click - Draw a line (in PAINT tool)
+
+      Global:
+      ↑ / ↓ - increase/decrease threshold
+      CMD-c - Toggle autocrop
       `,
       70,
       70

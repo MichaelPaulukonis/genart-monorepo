@@ -10,23 +10,20 @@ test('pressing "c" key clears the canvas', async ({ page }) => {
   await page.mouse.down();
   await page.mouse.move(200, 200);
   await page.mouse.up();
-
-  // Take a screenshot of the drawn composition
-  const initialScreenshot = await page.screenshot({
-    fullPage: false,
-    clip: { x: 0, y: 0, width: 800, height: 600 }
-  });
+  await page.waitForTimeout(100); // allow drawing to register
 
   // Clear the canvas
   await page.keyboard.press('c');
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(100); // allow canvas to clear
 
-  // Take a screenshot of the cleared canvas
-  const newScreenshot = await page.screenshot({
-    fullPage: false,
-    clip: { x: 0, y: 0, width: 800, height: 600 }
+  // Get the color of a pixel in the center of the canvas
+  const pixelColor = await page.evaluate(() => {
+    const canvas = document.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    const pixelData = ctx.getImageData(canvas.width / 2, canvas.height / 2, 1, 1).data;
+    return [pixelData[0], pixelData[1], pixelData[2], pixelData[3]];
   });
 
-  // Compare the screenshots to verify the canvas was cleared
-  expect(newScreenshot).not.toEqual(initialScreenshot);
+  // Assert that the pixel is white
+  expect(pixelColor).toEqual([255, 255, 255, 255]);
 });

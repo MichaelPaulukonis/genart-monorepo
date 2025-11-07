@@ -1,0 +1,164 @@
+# Task ID: 22
+# Title: Set Up Git Branches for Instance Mode Conversion Work
+# Status: pending
+# Dependencies: 15, 17, 19
+# Priority: medium
+# Description: Create dedicated feature branches for the p5.js instance mode conversion work and Playwright testing infrastructure, with proper documentation and branch protection.
+# Details:
+Set up a structured branching strategy for the p5.js instance mode conversion work:
+
+1. **Create Feature Branches for Conversions**:
+   ```bash
+   # Ensure you're on the main branch and it's up to date
+   git checkout main
+   git pull origin main
+   
+   # Create branches for each conversion
+   git checkout -b feature/crude-collage-instance-mode
+   git push -u origin feature/crude-collage-instance-mode
+   
+   git checkout main
+   git checkout -b feature/computational-collage-instance-mode
+   git push -u origin feature/computational-collage-instance-mode
+   ```
+
+2. **Create Additional Feature Branches**:
+   ```bash
+   # Create branch for Playwright infrastructure
+   git checkout main
+   git checkout -b feature/playwright-setup
+   git push -u origin feature/playwright-setup
+   
+   # Create branch for PolychromeText import
+   git checkout main
+   git checkout -b feature/polychrome-import
+   git push -u origin feature/polychrome-import
+   ```
+
+3. **Document Branch Purposes**:
+   For each branch, create an initial commit with a detailed message explaining the branch purpose:
+   ```bash
+   # Example for crude-collage branch
+   git checkout feature/crude-collage-instance-mode
+   echo "# Crude Collage Instance Mode Conversion\n\nThis branch is dedicated to converting the crude-collage-painter app from p5.js global mode to instance mode." > BRANCH-README.md
+   git add BRANCH-README.md
+   git commit -m "Initialize branch for crude-collage-painter conversion to p5.js instance mode"
+   git push
+   ```
+
+4. **Set Up Branch Protection**:
+   Configure branch protection rules in GitHub repository settings:
+   - Navigate to Settings > Branches > Branch protection rules
+   - Add a new rule for each feature branch
+   - Enable "Require pull request reviews before merging"
+   - Enable "Require status checks to pass before merging"
+   - Consider enabling "Require branches to be up to date before merging"
+
+5. **Document Branching Strategy**:
+   Create a comprehensive document in the docs/ directory:
+   ```bash
+   git checkout main
+   mkdir -p docs/development
+   touch docs/development/branching-strategy.md
+   ```
+
+   Add the following content to `docs/development/branching-strategy.md`:
+   ```markdown
+   # Branching Strategy for p5.js Instance Mode Conversion
+   
+   ## Overview
+   This document outlines our branching strategy for converting p5.js applications from global mode to instance mode.
+   
+   ## Branch Structure
+   
+   ### Main Branch
+   - `main` - The production-ready codebase
+   
+   ### Feature Branches
+   - `feature/crude-collage-instance-mode` - For crude-collage-painter conversion
+   - `feature/computational-collage-instance-mode` - For computational-collage conversion
+   - `feature/playwright-setup` - For Playwright testing infrastructure
+   - `feature/polychrome-import` - For importing PolychromeText
+   
+   ## Workflow Guidelines
+   
+   1. **Branch Creation**
+      - All feature branches are created from the main branch
+      - Branch names should follow the pattern: `feature/[app-name]-instance-mode`
+   
+   2. **Development Work**
+      - Commit frequently with clear, descriptive messages
+      - Keep commits focused on single logical changes
+   
+   3. **Merge Strategy**
+      - Use squash merges for cleaner history
+      - Ensure all tests pass before merging
+      - Require code review before merging
+   
+   4. **Conflict Resolution**
+      - Regularly pull from main to minimize conflicts
+      - Resolve conflicts locally before pushing
+   
+   ## Benefits
+   - Safe experimentation without affecting main codebase
+   - Easy rollback if needed
+   - Clear separation of conversion work
+   - Ability to work on multiple conversions in parallel
+   - Clean git history
+   ```
+
+6. **Commit and Push the Branching Strategy Document**:
+   ```bash
+   git add docs/development/branching-strategy.md
+   git commit -m "Add documentation for p5.js instance mode conversion branching strategy"
+   git push origin main
+   ```
+
+7. **Plan Merge Strategy**:
+   Document the preferred merge strategy (squash merging) in the branching strategy document and communicate to the team that:
+   - Squash merges will be used to maintain a clean, linear history
+   - Each PR should represent a complete, testable unit of work
+   - Commit messages should be clear and descriptive
+
+# Test Strategy:
+To verify the git branches have been set up correctly:
+
+1. **Verify Branch Creation**:
+   ```bash
+   # List all branches to confirm they exist
+   git branch -a
+   ```
+   Confirm the following branches exist:
+   - feature/crude-collage-instance-mode
+   - feature/computational-collage-instance-mode
+   - feature/playwright-setup
+   - feature/polychrome-import
+
+2. **Verify Branch Protection**:
+   - Go to GitHub repository settings
+   - Navigate to Branches > Branch protection rules
+   - Confirm protection rules exist for each feature branch
+   - Attempt to push directly to a protected branch and verify it's rejected
+
+3. **Verify Documentation**:
+   - Confirm `docs/development/branching-strategy.md` exists
+   - Review the content to ensure it matches the requirements
+   - Verify the document is accessible to all team members
+   - Check that the document renders correctly on GitHub
+
+4. **Test Branch Workflow**:
+   - Make a small change on one feature branch
+   - Create a pull request
+   - Verify the PR workflow enforces the configured protection rules
+   - Complete the PR process to confirm the merge strategy works as expected
+
+5. **Validate Branch Independence**:
+   - Make changes on multiple feature branches
+   - Verify changes on one branch don't affect other branches
+   - Confirm each branch can be worked on independently
+
+6. **Team Communication**:
+   - Share the branching strategy document with the team
+   - Confirm team members understand the workflow
+   - Verify team members can access all branches
+   - Ensure everyone knows how to create PRs following the established process

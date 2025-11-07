@@ -1,0 +1,44 @@
+# Task ID: 7
+# Title: Copy screenshots to remaining repositories
+# Status: done
+# Dependencies: 3, 5
+# Priority: medium
+# Description: Copy screenshots from the monorepo to the remaining 4 original repositories
+# Details:
+Copy the screenshots from the monorepo to each of the original repositories:
+
+1. For each of the remaining 4 apps (crude-collage-painter, those-shape-things, computational-collage, dragline):
+   a. Locate the screenshot in the monorepo at `docs/screenshots/[app-name]-main.png`
+   b. Copy the file to the corresponding repository root directory
+   c. Rename the file to `screenshot.png` in the destination repository
+   d. Verify the screenshot is correctly referenced in the README.md
+
+Consider creating a script to automate this process:
+
+```javascript
+const fs = require('fs');
+const { execSync } = require('child_process');
+
+const apps = [
+  'crude-collage-painter',
+  'those-shape-things',
+  'computational-collage',
+  'dragline'
+];
+
+apps.forEach(app => {
+  const source = `../genart-monorepo/docs/screenshots/${app}-main.png`;
+  const destination = `../${app}/screenshot.png`;
+  
+  console.log(`Copying ${source} to ${destination}`);
+  fs.copyFileSync(source, destination);
+});
+```
+
+# Test Strategy:
+1. Verify each screenshot file exists in its respective repository
+2. Check that each file is named 'screenshot.png'
+3. Confirm each file is identical to the one in the monorepo
+4. Validate that each image displays correctly when referenced in its README
+5. Ensure all file sizes are under 500KB
+6. Test that all 4 screenshots have been successfully copied

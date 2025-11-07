@@ -1,0 +1,28 @@
+# Task ID: 48
+# Title: Create test target for computational-collage
+# Status: pending
+# Dependencies: 46
+# Priority: high
+# Description: Add a proper test target to the computational-collage application's project.json file that can be executed via nx test computational-collage.
+# Details:
+1. Locate the project.json file for computational-collage in the apps/computational-collage directory
+2. Add a test target using @nx/playwright:playwright executor:
+```json
+{
+  "test": {
+    "executor": "@nx/playwright:playwright",
+    "options": {
+      "config": "apps/computational-collage/playwright.config.js"
+    }
+  }
+}
+```
+3. Ensure the configuration aligns with patterns identified in the audit
+4. Map the existing root-level test script functionality to this new target
+5. If the app has special testing requirements, account for them in the configuration
+
+# Test Strategy:
+1. Run `nx test computational-collage` and verify it executes successfully
+2. Compare test output and behavior with the previous `npm run test:computational-collage` command
+3. Verify that all existing test files are detected and run
+4. Check that any app-specific test requirements continue to function

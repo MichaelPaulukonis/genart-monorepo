@@ -1,0 +1,113 @@
+# Task ID: 16
+# Title: Create p5.js Instance Mode Conversion Post-Mortem Document
+# Status: pending
+# Dependencies: 15
+# Priority: medium
+# Description: Create a comprehensive post-mortem document reviewing the p5.js global-to-instance mode conversion process across all four apps, capturing insights, challenges, and best practices.
+# Details:
+Create a detailed post-mortem document that analyzes the conversion process from p5.js global mode to instance mode across all four applications. The document should be structured as follows:
+
+1. **Introduction**
+   - Brief overview of the conversion project
+   - Goals and objectives of the conversion
+   - Scope (all four apps: duo-chrome, crude-collage-painter, those-shape-things, computational-collage)
+
+2. **Conversion Process Review**
+   - Methodology used for conversion
+   - Timeline and effort required
+   - What worked well in the conversion process
+   - What was challenging or problematic
+
+3. **Common Patterns**
+   - Recurring code patterns that needed conversion
+   - Similarities across applications
+   - Standardized approaches that emerged
+
+4. **Pain Points**
+   - Specific difficulties encountered during conversion
+   - Unexpected challenges
+   - Areas that required significant rework
+
+5. **Testing Insights**
+   - Testing approach used
+   - Issues discovered during testing
+   - Edge cases and corner cases identified
+   - Regression testing results
+
+6. **Code Changes**
+   - Analysis of changes beyond simple p5 prefixing
+   - Required refactoring patterns
+   - Before/after code examples for significant changes
+
+7. **Performance Notes**
+   - Observed performance differences
+   - Memory usage comparisons
+   - Rendering performance changes
+   - Any optimizations made during conversion
+
+8. **Best Practices**
+   - Recommended approaches for future conversions
+   - Patterns that worked particularly well
+   - Code organization improvements
+
+9. **Gotchas**
+   - Tricky issues not obvious from documentation
+   - Subtle bugs encountered
+   - Unexpected behavior differences
+
+10. **Documentation Gaps**
+    - Areas where official p5.js migration documentation was insufficient
+    - Suggestions for improving p5.js documentation
+
+11. **Lessons Learned**
+    - Key takeaways for future p5.js instance mode work
+    - Process improvements for similar conversions
+    - Knowledge gained about p5.js architecture
+
+12. **Conclusion**
+    - Summary of the conversion experience
+    - Overall assessment of instance mode benefits
+    - Recommendations for future projects
+
+Save the document to: `docs/libs/p5js.instance_mode.conversion_postmortem.md`
+
+Use Markdown formatting for better readability, including:
+- Headers for sections
+- Code blocks for examples
+- Tables for comparisons
+- Lists for enumerated points
+- Blockquotes for important notes
+
+Include specific examples from each application to illustrate points, with code snippets showing before/after conversion where relevant.
+
+# Test Strategy:
+1. **Document Completeness**
+   - Verify all 10 required sections are included and thoroughly addressed
+   - Ensure each application (duo-chrome, crude-collage-painter, those-shape-things, computational-collage) is covered
+   - Check that the document provides concrete examples and not just general observations
+
+2. **Technical Accuracy**
+   - Review code examples to ensure they accurately represent the conversion process
+   - Validate that technical explanations are correct and align with p5.js documentation
+   - Confirm that performance observations are backed by evidence
+
+3. **Document Structure and Formatting**
+   - Verify proper Markdown formatting throughout the document
+   - Check that code blocks are properly formatted and syntax-highlighted
+   - Ensure headings follow a logical hierarchy
+   - Confirm that tables and lists render correctly
+
+4. **Practical Value**
+   - Assess whether the document provides actionable insights for future conversions
+   - Verify that "gotchas" and "lessons learned" sections contain valuable information
+   - Ensure best practices are specific and implementable
+
+5. **File Location and Accessibility**
+   - Confirm the document is saved at the correct path: `docs/libs/p5js.instance_mode.conversion_postmortem.md`
+   - Verify the document is referenced appropriately in relevant documentation
+   - Check that the file is committed to the repository
+
+6. **Peer Review**
+   - Have at least one team member who worked on the conversion review the document
+   - Incorporate feedback and additional insights from the review
+   - Ensure technical accuracy of all observations

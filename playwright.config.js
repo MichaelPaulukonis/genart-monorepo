@@ -55,7 +55,7 @@ module.exports = defineConfig({
     baseURL: `http://localhost:${PORT}`,
 
     /* Collect trace when retrying the failed test */
-    trace: 'on-first-retry',
+    trace: 'on',
 
     /* Take screenshot on failure */
     screenshot: 'only-on-failure',
@@ -69,7 +69,7 @@ module.exports = defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] }
-    }
+    },
 
     // Uncomment to test on additional browsers:
     // {

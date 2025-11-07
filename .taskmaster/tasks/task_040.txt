@@ -1,0 +1,61 @@
+# Task ID: 40
+# Title: Fix Zoom Synchronization Between OSD Controls and Paintbrush
+# Status: pending
+# Dependencies: 39
+# Priority: medium
+# Description: Implement synchronization between Tweakpane OSD zoom controls and paintbrush size in the crude-collage-painter app to ensure consistent behavior with keyboard zoom controls.
+# Details:
+This task involves fixing the synchronization issue between Tweakpane OSD controls and paintbrush size in the crude-collage-painter app:
+
+1. **Analyze Current Implementation**:
+   - Identify where keyboard zoom controls update paintbrush size
+   - Examine the Tweakpane OSD control implementation for zoom
+   - Understand the current data flow and event handling for zoom changes
+
+2. **Implement Synchronization**:
+   - Locate the event handler or callback for Tweakpane zoom control changes
+   - Add code to update paintbrush size when Tweakpane zoom value changes:
+   ```javascript
+   // Example implementation
+   tweakpane.on('change', (event) => {
+     if (event.presetKey === 'zoom') {
+       updatePaintbrushSize(event.value);
+     }
+   });
+   
+   function updatePaintbrushSize(zoomLevel) {
+     // Calculate appropriate brush size based on zoom level
+     brushSize = baseBrushSize * (1 / zoomLevel);
+     // Update brush visual indicator
+     updateBrushIndicator();
+   }
+   ```
+
+3. **Refactor Shared Functionality**:
+   - Extract common zoom-related functionality into shared methods
+   - Ensure both keyboard and OSD control paths use the same functions
+   - Implement proper state management to maintain consistency
+
+4. **Add Visual Feedback**:
+   - Update any UI indicators to reflect zoom changes
+   - Ensure brush size indicator updates properly regardless of zoom change method
+
+# Test Strategy:
+1. **Functional Testing**:
+   - Start the crude-collage-painter app
+   - Change zoom using keyboard controls (typically +/- keys) and verify paintbrush size updates accordingly
+   - Change zoom using Tweakpane OSD controls and verify paintbrush size updates in the same manner
+   - Alternate between both control methods and confirm consistent behavior
+
+2. **Edge Case Testing**:
+   - Test with minimum and maximum zoom values from both control methods
+   - Test rapid consecutive zoom changes
+   - Test changing zoom while actively painting
+   
+3. **Visual Verification**:
+   - Confirm the paintbrush visual indicator correctly reflects the new size after zoom changes
+   - Verify the zoom level display in the UI is consistent with actual zoom
+   
+4. **Regression Testing**:
+   - Verify that fixing this issue doesn't break other functionality
+   - Ensure the paintbrush visual indicator during active painting (Task 39) still works correctly

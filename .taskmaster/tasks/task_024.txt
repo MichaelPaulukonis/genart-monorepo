@@ -1,0 +1,85 @@
+# Task ID: 24
+# Title: Resolve MCP Configuration Conflicts Between User and Workspace Settings
+# Status: deferred
+# Dependencies: 19, 22
+# Priority: medium
+# Description: Investigate and resolve conflicts between user-level (~/.kiro/settings/mcp.json) and workspace-level (.kiro/settings/mcp.json) MCP configurations for the taskmaster-ai server, focusing on eliminating hardcoded project paths.
+# Details:
+This task involves diagnosing and resolving configuration conflicts in the MCP (Multi-Context Protocol) system that are causing issues with the taskmaster-ai server:
+
+1. **Analyze Current Configuration Structure**:
+   - Examine the structure and content of both configuration files:
+     ```bash
+     cat ~/.kiro/settings/mcp.json
+     cat .kiro/settings/mcp.json
+     ```
+   - Document the overlapping settings and conflicting values
+   - Identify which settings are causing operational issues
+
+2. **Test Steering Config Removal**:
+   - Create a backup of the current configurations:
+     ```bash
+     cp ~/.kiro/settings/mcp.json ~/.kiro/settings/mcp.json.bak
+     cp .kiro/settings/mcp.json .kiro/settings/mcp.json.bak
+     ```
+   - Remove or comment out the steering config (project-config.md) references in both files
+   - Test if MCP tools function properly without the hardcoded project paths
+   - Document the results of this test
+
+3. **Implement Configuration Hierarchy**:
+   - Design a clear precedence model for configuration settings:
+     - Determine which settings should be workspace-specific vs. user-specific
+     - Establish rules for when workspace settings should override user settings
+     - Create a merged configuration approach that respects this hierarchy
+
+4. **Refactor Configuration Files**:
+   - Update both configuration files based on the hierarchy model:
+     - Move project-agnostic settings to user config
+     - Keep project-specific settings in workspace config
+     - Remove redundant or conflicting entries
+   - Implement relative path resolution instead of hardcoded paths where possible
+
+5. **Create Configuration Documentation**:
+   - Write clear documentation explaining:
+     - The purpose of each configuration file
+     - The precedence rules between user and workspace settings
+     - Best practices for managing MCP configurations
+     - How to troubleshoot common configuration issues
+   - Add this documentation to the project wiki or README
+
+6. **Implement Configuration Validation**:
+   - Create a simple validation script that can:
+     - Check for conflicts between user and workspace configs
+     - Verify that paths are properly specified (relative vs. absolute)
+     - Alert users to potential issues before they cause problems
+
+# Test Strategy:
+1. **Verify Configuration Resolution**:
+   - Start the taskmaster-ai server with the updated configurations
+   - Confirm that no configuration-related errors appear in logs
+   - Verify that MCP tools initialize and operate correctly
+
+2. **Test Path Resolution**:
+   - Run MCP tools from different working directories to ensure paths resolve correctly
+   - Verify that project resources are found regardless of where commands are executed
+   - Confirm that no hardcoded paths are being used in the system
+
+3. **Cross-User Testing**:
+   - Have multiple team members test the configuration on their systems
+   - Verify that the same workspace configuration works across different user environments
+   - Document any system-specific issues that arise
+
+4. **Configuration Modification Tests**:
+   - Make changes to both user and workspace configurations
+   - Verify that the system correctly applies the changes according to the precedence rules
+   - Confirm that configuration changes take effect without requiring system restarts
+
+5. **Documentation Review**:
+   - Have team members review the configuration documentation
+   - Verify that the documentation accurately reflects the implemented behavior
+   - Confirm that the documentation provides clear guidance for managing configurations
+
+6. **Regression Testing**:
+   - Verify that all MCP functionality continues to work after configuration changes
+   - Test integration with other system components that rely on MCP
+   - Ensure no new issues have been introduced by the configuration changes

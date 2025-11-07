@@ -1,0 +1,148 @@
+# Task ID: 25
+# Title: Implement Random Seed URL Parameters for Deterministic Art Generation
+# Status: deferred
+# Dependencies: 15, 18
+# Priority: medium
+# Description: Add URL parameter support for random seeds in generative art apps to enable deterministic output, allowing users to bookmark specific compositions and enabling reliable visual regression testing.
+# Details:
+This task involves implementing a random seed mechanism across the p5.js applications, starting with duo-chrome:
+
+1. **Add URL Parameter Support**:
+   ```javascript
+   // In setup() function
+   function setup() {
+     // Get seed from URL if present
+     const params = new URLSearchParams(window.location.search);
+     let seed = params.get('seed');
+     
+     // If no seed provided, generate a random one
+     if (!seed) {
+       seed = Math.floor(Math.random() * 1000000);
+       // Update URL without reloading page
+       const newUrl = new URL(window.location);
+       newUrl.searchParams.set('seed', seed);
+       window.history.pushState({}, '', newUrl);
+     }
+     
+     // Apply the seed to p5.js random functions
+     randomSeed(parseInt(seed));
+     noiseSeed(parseInt(seed));
+     
+     // Rest of setup code...
+   }
+   ```
+
+2. **Display Current Seed in UI**:
+   ```javascript
+   function draw() {
+     // Existing draw code...
+     
+     // Display seed in bottom corner
+     fill(255);
+     noStroke();
+     textSize(12);
+     textAlign(LEFT, BOTTOM);
+     text(`Seed: ${currentSeed}`, 10, height - 10);
+   }
+   ```
+
+3. **Add "Copy Seed URL" Button**:
+   ```html
+   <!-- Add to HTML -->
+   <button id="copy-seed" class="control-button">Copy Seed URL</button>
+   ```
+   
+   ```javascript
+   // Add to JavaScript
+   document.getElementById('copy-seed').addEventListener('click', function() {
+     const url = window.location.href;
+     navigator.clipboard.writeText(url)
+       .then(() => {
+         // Show temporary success message
+         const button = this;
+         const originalText = button.textContent;
+         button.textContent = 'Copied!';
+         setTimeout(() => {
+           button.textContent = originalText;
+         }, 2000);
+       })
+       .catch(err => {
+         console.error('Failed to copy: ', err);
+       });
+   });
+   ```
+
+4. **Implementation Order**:
+   - First implement in duo-chrome app
+   - Test thoroughly with visual regression tests
+   - Document the implementation pattern
+   - Extend to other apps (crude-collage-painter, those-shape-things, computational-collage)
+
+5. **Ensure Backward Compatibility**:
+   - When no seed parameter is provided, generate a random seed
+   - Update the URL with the generated seed without reloading the page
+   - This preserves the original random behavior while enabling reproducibility
+
+6. **Enable Visual Regression Testing**:
+   - Update the skipped test in duo-chrome-verification.spec.js to use a fixed seed:
+   ```javascript
+   test('duo-chrome renders consistently with fixed seed', async ({ page }) => {
+     // Navigate to the app with a fixed seed
+     await page.goto('http://localhost:3000/?seed=12345');
+     
+     // Wait for canvas to be fully rendered
+     await page.waitForSelector('canvas');
+     await page.waitForTimeout(500); // Allow time for drawing to complete
+     
+     // Take screenshot and compare with baseline
+     await expect(page).toHaveScreenshot('duo-chrome-seed-12345.png');
+   });
+   ```
+
+7. **Documentation**:
+   - Add documentation about the seed parameter to each app's README
+   - Include examples of how to use seeds for reproducible art
+   - Document how the feature enables visual regression testing
+
+# Test Strategy:
+1. **Test URL Parameter Parsing**:
+   - Navigate to app with URL parameter `?seed=12345`
+   - Verify the app uses this seed value
+   - Check that the displayed seed matches the URL parameter
+
+2. **Test Random Seed Generation**:
+   - Load the app without a seed parameter
+   - Verify a random seed is generated
+   - Confirm the URL is updated with the generated seed
+   - Reload the page with the updated URL and verify the same composition appears
+
+3. **Test Deterministic Output**:
+   - Load the app with seed=42
+   - Take a screenshot
+   - Reload the app with the same seed
+   - Take another screenshot and verify it's identical to the first
+
+4. **Test "Copy Seed URL" Functionality**:
+   - Click the "Copy Seed URL" button
+   - Paste the copied URL into a new browser tab
+   - Verify the same composition appears
+   - Check that the button shows a "Copied!" message temporarily
+
+5. **Test Visual Regression**:
+   - Run the previously skipped test in duo-chrome-verification.spec.js
+   - Verify it passes consistently with the fixed seed
+   - Run the test multiple times to ensure reliability
+
+6. **Test Across Different Browsers**:
+   - Test in Chrome, Firefox, and Safari
+   - Verify the seed mechanism works consistently across browsers
+
+7. **Test Edge Cases**:
+   - Test with very large seed values
+   - Test with negative seed values
+   - Test with non-numeric seed values
+   - Verify appropriate handling in all cases
+
+8. **Test Integration with Existing Features**:
+   - Verify that all existing app functionality works correctly with seeded random generation
+   - Test interaction with other URL parameters if they exist

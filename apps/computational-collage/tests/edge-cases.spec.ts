@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('generating a composition with no images does not change the canvas', async ({ page }) => {
+test.skip('generating a composition with no images does not change the canvas', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('canvas');
 

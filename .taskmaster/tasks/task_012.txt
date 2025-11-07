@@ -1,0 +1,126 @@
+# Task ID: 12
+# Title: Add Save Functionality to those-shape-things App
+# Status: pending
+# Dependencies: 7, 9
+# Priority: medium
+# Description: Implement functionality to save the current composition as a PNG file with timestamp using keyboard shortcuts (Cmd+S or 's' key) in the those-shape-things app.
+# Details:
+Implement save functionality for the those-shape-things app:
+
+1. Add event listeners for keyboard shortcuts:
+   ```javascript
+   function keyPressed() {
+     // Check for 's' key or Cmd+S (metaKey is Cmd on Mac)
+     if (key === 's' || (keyCode === 83 && metaKey)) {
+       saveComposition();
+       return false; // Prevent default browser save dialog
+     }
+   }
+   ```
+
+2. Create the save function that generates a timestamped filename and saves the canvas:
+   ```javascript
+   function saveComposition() {
+     // Generate timestamp in format YYYYMMDD-HHMMSS
+     let now = new Date();
+     let timestamp = now.getFullYear() +
+                    String(now.getMonth() + 1).padStart(2, '0') +
+                    String(now.getDate()).padStart(2, '0') + '-' +
+                    String(now.getHours()).padStart(2, '0') +
+                    String(now.getMinutes()).padStart(2, '0') +
+                    String(now.getSeconds()).padStart(2, '0');
+     
+     // Create filename with timestamp
+     let filename = 'those-shape-things-' + timestamp + '.png';
+     
+     // Use p5.js saveCanvas() function to save the current canvas as PNG
+     saveCanvas(canvas, filename, 'png');
+     
+     // Optional: Provide visual feedback that the image was saved
+     displaySaveNotification();
+   }
+   ```
+
+3. Add visual feedback for the user when an image is saved:
+   ```javascript
+   function displaySaveNotification() {
+     // Create a temporary notification element
+     let notification = document.createElement('div');
+     notification.className = 'save-notification';
+     notification.textContent = 'Composition saved!';
+     document.body.appendChild(notification);
+     
+     // Remove the notification after 2 seconds
+     setTimeout(() => {
+       notification.classList.add('fade-out');
+       setTimeout(() => {
+         document.body.removeChild(notification);
+       }, 500);
+     }, 2000);
+   }
+   ```
+
+4. Add CSS for the save notification:
+   ```css
+   .save-notification {
+     position: fixed;
+     bottom: 20px;
+     right: 20px;
+     background-color: rgba(0, 0, 0, 0.7);
+     color: white;
+     padding: 10px 20px;
+     border-radius: 4px;
+     z-index: 1000;
+     transition: opacity 0.5s;
+   }
+   
+   .fade-out {
+     opacity: 0;
+   }
+   ```
+
+5. Update the help overlay (if it exists) to include information about the new save functionality:
+   - Add an entry for 'S' or 'Cmd+S': Save current composition as PNG
+
+6. Ensure the canvas is properly initialized and accessible for the saveCanvas() function:
+   ```javascript
+   let canvas;
+   
+   function setup() {
+     canvas = createCanvas(800, 600);
+     // other setup code...
+   }
+   ```
+
+# Test Strategy:
+1. Test the 's' key shortcut:
+   - Launch the those-shape-things app
+   - Create a composition
+   - Press the 's' key
+   - Verify a PNG file is downloaded with the correct timestamp format in the filename
+   - Confirm the saved image accurately represents the current canvas state
+
+2. Test the Cmd+S (or Ctrl+S on Windows) shortcut:
+   - Launch the those-shape-things app
+   - Create a composition
+   - Press Cmd+S (Mac) or Ctrl+S (Windows)
+   - Verify a PNG file is downloaded with the correct timestamp format
+   - Confirm the browser's default save dialog is prevented from appearing
+   - Verify the saved image matches the canvas content
+
+3. Test the save notification:
+   - Trigger a save using either shortcut
+   - Verify the save notification appears in the bottom right corner
+   - Confirm the notification disappears after approximately 2 seconds
+   - Check that the notification is visible against different background colors/compositions
+
+4. Test with different browsers:
+   - Verify the save functionality works in Chrome, Firefox, Safari, and Edge
+   - Ensure the file downloads correctly in each browser
+
+5. Test with different compositions:
+   - Save compositions of varying complexity
+   - Verify all elements are correctly captured in the saved PNG
+   - Check that transparency is handled correctly if applicable
+
+6. If help overlay exists, verify it includes the new save shortcut information

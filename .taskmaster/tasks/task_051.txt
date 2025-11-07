@@ -1,0 +1,39 @@
+# Task ID: 51
+# Title: Create app-specific Playwright configurations
+# Status: pending
+# Dependencies: 47, 48, 49, 50
+# Priority: high
+# Description: Create app-specific playwright.config.js files for each application that needs one, based on existing root configuration with app-specific overrides.
+# Details:
+For each application missing a playwright.config.js file:
+
+1. Create a new playwright.config.js in the app directory
+2. Base the configuration on the existing root config with app-specific overrides
+3. Ensure TEST_APP environment variable compatibility
+4. Include appropriate configuration for test directories and patterns
+
+Example configuration structure:
+```javascript
+const { mergeConfig } = require('@playwright/test');
+const baseConfig = require('../../playwright.config');
+
+module.exports = mergeConfig(baseConfig, {
+  // App-specific overrides
+  testDir: './tests',
+  use: {
+    // App-specific browser settings if needed
+  },
+  // Any other app-specific configuration
+});
+```
+
+5. Ensure configuration is appropriate for the app's specific testing needs
+6. Configure test file discovery patterns to match existing tests
+
+# Test Strategy:
+For each app-specific configuration:
+1. Verify the configuration loads without errors
+2. Run tests using the new configuration and compare with previous results
+3. Test the TEST_APP environment variable integration
+4. Verify test discovery works as expected
+5. Confirm that app-specific test requirements are properly handled

@@ -1,0 +1,196 @@
+# Task ID: 19
+# Title: Create Playwright Test Suites for crude-collage-painter and computational-collage
+# Status: pending
+# Dependencies: 18
+# Priority: high
+# Description: Develop comprehensive Playwright test suites for crude-collage-painter and computational-collage apps before converting them to instance mode, to serve as regression tests during the conversion process.
+# Details:
+Create detailed Playwright test suites for both crude-collage-painter and computational-collage applications to establish baseline functionality before instance mode conversion:
+
+1. **Project Setup**:
+   - Create test directories for each app:
+     ```bash
+     mkdir -p apps/crude-collage-painter/tests
+     mkdir -p apps/computational-collage/tests
+     ```
+   - Create test configuration files for each app, extending the base configuration:
+     ```typescript
+     // apps/crude-collage-painter/playwright.config.ts
+     import { defineConfig, devices } from '@playwright/test';
+     import { baseConfig } from '../../playwright.config';
+     
+     export default defineConfig({
+       ...baseConfig,
+       testDir: './tests',
+       use: {
+         ...baseConfig.use,
+         baseURL: 'http://localhost:3000/apps/crude-collage-painter/',
+       },
+     });
+     ```
+
+2. **Test Structure for crude-collage-painter**:
+   - Create test files organized by functionality:
+     - `basic-rendering.spec.ts`: Canvas appearance and dimensions
+     - `mode-switching.spec.ts`: Drawing, selecting, gallery modes
+     - `keyboard-shortcuts.spec.ts`: All keyboard controls
+     - `mouse-interactions.spec.ts`: Click, drag, drawing operations
+     - `image-loading.spec.ts`: File upload/drop functionality
+     - `save-functionality.spec.ts`: Export/download features
+     - `ui-controls.spec.ts`: Tweakpane controls and interactions
+     - `edge-cases.spec.ts`: Boundary conditions, error states
+
+3. **Test Structure for computational-collage**:
+   - Create similar test files as above, adapted for computational-collage functionality
+   - Add specific tests for composition modes (0-9 key switching)
+   - Include gallery view testing
+
+4. **Visual Regression Testing**:
+   - Implement screenshot comparison for key states:
+     ```typescript
+     test('canvas renders with correct initial state', async ({ page }) => {
+       await page.goto('/');
+       // Wait for canvas to be fully rendered
+       await page.waitForSelector('canvas');
+       await page.waitForTimeout(1000); // Allow animations to settle
+       
+       // Take screenshot and compare with baseline
+       expect(await page.screenshot({ 
+         fullPage: false,
+         clip: { x: 0, y: 0, width: 800, height: 600 }
+       })).toMatchSnapshot('initial-canvas.png');
+     });
+     ```
+
+5. **Keyboard Controls Testing**:
+   - Test all documented keyboard shortcuts:
+     ```typescript
+     test('pressing "s" key saves the current composition', async ({ page }) => {
+       await page.goto('/');
+       await page.waitForSelector('canvas');
+       
+       // Create a composition first
+       // ...interaction code...
+       
+       // Monitor for download event
+       const downloadPromise = page.waitForEvent('download');
+       await page.keyboard.press('s');
+       const download = await downloadPromise;
+       
+       expect(download.suggestedFilename()).toMatch(/\.png$/);
+     });
+     ```
+
+6. **Mouse Interaction Testing**:
+   - Test drawing, selecting, and other mouse operations:
+     ```typescript
+     test('can draw on canvas with mouse', async ({ page }) => {
+       await page.goto('/');
+       await page.waitForSelector('canvas');
+       
+       // Get canvas position and dimensions
+       const canvasBounds = await page.evaluate(() => {
+         const canvas = document.querySelector('canvas');
+         const rect = canvas.getBoundingClientRect();
+         return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+       });
+       
+       // Perform drawing operation
+       await page.mouse.move(canvasBounds.x + 100, canvasBounds.y + 100);
+       await page.mouse.down();
+       await page.mouse.move(canvasBounds.x + 200, canvasBounds.y + 200, { steps: 10 });
+       await page.mouse.up();
+       
+       // Take screenshot to verify drawing occurred
+       expect(await page.screenshot({ 
+         fullPage: false,
+         clip: { x: 0, y: 0, width: 800, height: 600 }
+       })).toMatchSnapshot('after-drawing.png');
+     });
+     ```
+
+7. **UI Controls Testing**:
+   - Test Tweakpane interactions:
+     ```typescript
+     test('tweakpane color control changes drawing color', async ({ page }) => {
+       await page.goto('/');
+       await page.waitForSelector('.tp-rotv'); // Tweakpane container
+       
+       // Find and interact with color picker
+       await page.click('.tp-rotv__content .tp-colswv');
+       // Set specific color values
+       // ...
+       await page.click('button:has-text("OK")');
+       
+       // Verify color change by drawing and checking pixel color
+       // ...
+     });
+     ```
+
+8. **Test Documentation**:
+   - Document expected behavior for each test with detailed comments
+   - Create a test documentation file for each app explaining test coverage
+
+9. **Baseline Screenshots**:
+   - Generate and save baseline screenshots for key app states
+   - Store these in a version-controlled directory for comparison
+
+10. **Test Runner Configuration**:
+    - Create npm scripts for running tests:
+      ```json
+      "scripts": {
+        "test:crude-collage": "playwright test -c apps/crude-collage-painter",
+        "test:computational-collage": "playwright test -c apps/computational-collage"
+      }
+      ```
+
+# Test Strategy:
+The test strategy will verify that the Playwright test suites are comprehensive and effective:
+
+1. **Test Coverage Verification**:
+   - Run all tests for each app and verify they cover all required functionality
+   - Generate and review test coverage reports to identify any gaps
+   - Ensure all 8 required test categories are implemented for each app
+
+2. **Visual Regression Testing**:
+   - Verify baseline screenshots are captured for all key states
+   - Run tests multiple times to ensure consistency in visual comparisons
+   - Check that screenshot comparisons correctly identify visual changes
+
+3. **Functionality Testing**:
+   - For crude-collage-painter:
+     - Verify tests for drawing functionality work correctly
+     - Confirm mode switching tests properly validate state changes
+     - Ensure image loading tests validate both file upload and drag-drop
+     - Check that save functionality tests confirm proper file generation
+   
+   - For computational-collage:
+     - Verify tests for all composition modes (0-9) work correctly
+     - Confirm gallery view tests validate image display and selection
+     - Ensure keyboard shortcut tests cover all documented shortcuts
+     - Check that UI control tests validate all Tweakpane interactions
+
+4. **Edge Case Testing**:
+   - Verify tests handle error conditions gracefully
+   - Confirm boundary conditions are properly tested
+   - Check that tests validate behavior with invalid inputs
+
+5. **Test Reliability**:
+   - Run tests in sequence and in parallel to verify stability
+   - Check for any flaky tests and refine them
+   - Ensure tests are deterministic and produce consistent results
+
+6. **Pre-Conversion Baseline**:
+   - Run complete test suite against current global mode implementation
+   - Document all test results as baseline for comparison
+   - Save screenshots and test reports for reference
+
+7. **Documentation Review**:
+   - Verify each test has clear documentation of expected behavior
+   - Confirm test documentation files are comprehensive and accurate
+   - Check that test organization follows best practices
+
+8. **CI Integration Testing**:
+   - Verify tests can run in CI environment
+   - Confirm test results are properly reported
+   - Check that visual comparison works in headless mode

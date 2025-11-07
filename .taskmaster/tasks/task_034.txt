@@ -1,0 +1,61 @@
+# Task ID: 34
+# Title: Fix Image Path from Backup to Main Images Directory
+# Status: done
+# Dependencies: 33, 32
+# Priority: low
+# Description: Update the duo-chrome application to reference images from the main images directory instead of the backup directory, ensuring proper image loading and display.
+# Details:
+This task involves correcting the image path references in the duo-chrome application to ensure images are loaded from the correct directory:
+
+1. **Identify Current Path Issues**:
+   - Locate all instances where images are being loaded from the backup directory
+   - Document the current path structure and how it's being referenced in the code
+   - Determine the correct path structure for the main images directory
+
+2. **Update Image Path References**:
+   - Modify all relevant code files where image paths are defined or used
+   - Update the path from `backup/images/` to `images/` or the appropriate main directory path
+   - Ensure any dynamic path generation logic is updated accordingly
+   - Check for any hardcoded paths in HTML, CSS, or JavaScript files
+
+3. **Implementation Example**:
+   ```javascript
+   // Before:
+   const imagePath = 'backup/images/duo-chrome-main.png';
+   
+   // After:
+   const imagePath = 'images/duo-chrome-main.png';
+   ```
+
+4. **Handle Path Configuration**:
+   - If using a configuration file for paths, update the configuration
+   - Ensure any environment-specific path settings are updated
+   - Update any import statements that reference the backup directory
+
+5. **Verify Image Loading**:
+   - Test the application to ensure all images load correctly from the new path
+   - Check for any console errors related to image loading
+   - Verify image rendering in different browsers and environments
+
+# Test Strategy:
+1. **Functional Testing**:
+   - Launch the duo-chrome application and verify all images load correctly
+   - Navigate through all screens/views that display images to confirm proper loading
+   - Check browser console for any 404 errors or image loading failures
+   - Test with different browsers (Chrome, Firefox, Safari) to ensure cross-browser compatibility
+
+2. **Code Review Verification**:
+   - Perform a grep or search through the codebase to ensure all instances of the backup directory path have been updated
+   - Verify no references to the backup directory remain in the code
+   - Check for any conditional logic that might still reference the backup path in certain scenarios
+
+3. **Build and Deployment Testing**:
+   - Run a production build of the application
+   - Deploy to a staging environment
+   - Verify images load correctly in the deployed version
+   - Check network requests to confirm images are being loaded from the correct path
+
+4. **Edge Case Testing**:
+   - Test with slow network connections to ensure images load properly
+   - Verify behavior when images are missing or corrupted
+   - Test with cache cleared to ensure fresh image loading works correctly

@@ -1,0 +1,113 @@
+# Task ID: 35
+# Title: Implement Undo/History System for Duo-Chrome
+# Status: pending
+# Dependencies: 25, 33
+# Priority: medium
+# Description: Develop a comprehensive undo/history system for the duo-chrome app that allows users to move backward and forward through parameter changes, with support for both manual edits and random mode.
+# Details:
+This task involves implementing a parameter-level undo/history system for the duo-chrome application:
+
+1. **Data Structure Design**:
+   - Create a history stack that stores parameter changes rather than entire images
+   - Define a history record structure that captures:
+     ```javascript
+     {
+       timestamp: Date.now(),
+       parameters: {
+         imageName: string,
+         colorPrimary: string,
+         colorSecondary: string,
+         size: number,
+         // other relevant parameters
+       },
+       source: 'manual' | 'random' // track if change came from user or random mode
+     }
+     ```
+   - Implement a maximum history size (e.g., 50 records) to limit memory usage
+   - Add a current position pointer to track where in history the user is
+
+2. **History Capture Mechanism**:
+   - Modify all parameter change functions to record state in history
+   - For image changes, store the image name/path rather than the image data
+   - Add history recording to the random mode generator
+   - Ensure history is captured after parameter changes are complete, not during intermediate states
+
+3. **Navigation Controls**:
+   - Add UI buttons for undo and redo operations
+   - Implement keyboard shortcuts (Ctrl+Z for undo, Ctrl+Y or Ctrl+Shift+Z for redo)
+   - Add visual indication when at the beginning or end of history (disabled buttons)
+   - Consider adding a history dropdown or sidebar to jump to specific states
+
+4. **Navigation Logic**:
+   - Implement `undo()` function to move backward in history:
+     ```javascript
+     function undo() {
+       if (historyPosition > 0) {
+         historyPosition--;
+         applyHistoryState(history[historyPosition]);
+       }
+     }
+     ```
+   - Implement `redo()` function to move forward:
+     ```javascript
+     function redo() {
+       if (historyPosition < history.length - 1) {
+         historyPosition++;
+         applyHistoryState(history[historyPosition]);
+       }
+     }
+     ```
+   - Create `applyHistoryState()` to restore parameters without adding to history
+
+5. **Random Mode Integration**:
+   - Ensure random mode changes are captured in history
+   - Allow users to stop random mode and navigate backward to find appealing states
+   - Add a "favorite" or "bookmark" feature to mark interesting states during random mode
+
+6. **Edge Case Handling**:
+   - Handle history truncation when making new changes after undoing
+   - Manage history when loading new images or resetting the application
+   - Implement error recovery if a historical state cannot be fully restored
+
+7. **Performance Optimization**:
+   - Use efficient data structures to minimize memory usage
+   - Consider implementing a throttling mechanism for rapid parameter changes
+   - Test with large history stacks to ensure performance remains acceptable
+
+# Test Strategy:
+1. **Unit Testing**:
+   - Test history stack data structure:
+     - Verify correct addition of new history entries
+     - Test maximum size enforcement and oldest entry removal
+     - Validate history truncation when new changes occur after undoing
+
+   - Test navigation functions:
+     - Verify undo() correctly moves backward in history
+     - Confirm redo() correctly moves forward in history
+     - Test edge cases (empty history, at beginning/end of history)
+
+2. **Integration Testing**:
+   - Test parameter restoration:
+     - Verify all parameters are correctly restored when navigating history
+     - Confirm images are properly reloaded when navigating to states with different images
+     - Test color changes are accurately applied
+
+   - Test with random mode:
+     - Verify history is correctly captured during random mode
+     - Confirm ability to stop random mode and navigate backward
+     - Test that resuming random mode after undoing properly handles history
+
+3. **User Interface Testing**:
+   - Verify UI controls for undo/redo are properly enabled/disabled based on history position
+   - Test keyboard shortcuts for undo/redo functionality
+   - Confirm visual feedback when reaching history limits
+
+4. **Performance Testing**:
+   - Measure memory usage with increasing history size
+   - Test performance with rapid parameter changes
+   - Verify the application remains responsive with large history stacks
+
+5. **User Acceptance Testing**:
+   - Have users test the undo/redo functionality in various scenarios
+   - Gather feedback on the intuitiveness of the history navigation
+   - Verify the feature meets user expectations for both manual and random modes

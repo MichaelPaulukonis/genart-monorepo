@@ -142,7 +142,7 @@ const pane = new Pane()
 
 sketch.preload = () => {
   // Load consistently-named images into an array
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 1; i++) {
     images[i] = loadImage('./uploads/trees' + i + '.jpg')
   }
   console.log('images loaded')

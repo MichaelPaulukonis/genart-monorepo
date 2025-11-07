@@ -1,0 +1,30 @@
+# Task ID: 6
+# Title: Copy screenshots to duo-chrome repository
+# Status: done
+# Dependencies: 3, 4
+# Priority: medium
+# Description: Copy the duo-chrome screenshot from the monorepo to the original duo-chrome repository
+# Details:
+Copy the duo-chrome screenshot from the monorepo to the original repository:
+
+1. Locate the screenshot in the monorepo at `docs/screenshots/duo-chrome-main.png`
+2. Copy the file to the duo-chrome repository root directory
+3. Rename the file to `screenshot.png` in the destination repository
+4. Verify the screenshot is correctly referenced in the README.md
+
+Implementation steps:
+```bash
+# Assuming you have both repositories cloned locally
+# Copy the screenshot from monorepo to the original repo
+cp /path/to/genart-monorepo/docs/screenshots/duo-chrome-main.png /path/to/duo-chrome/screenshot.png
+
+# Verify the file was copied correctly
+ls -la /path/to/duo-chrome/screenshot.png
+```
+
+# Test Strategy:
+1. Verify the screenshot file exists in the duo-chrome repository
+2. Check that the file is named 'screenshot.png'
+3. Confirm the file is identical to the one in the monorepo
+4. Validate that the image displays correctly when referenced in the README
+5. Ensure the file size is under 500KB

@@ -1,0 +1,403 @@
+# Task ID: 18
+# Title: Set up Playwright Testing Infrastructure for p5.js Apps
+# Status: done
+# Dependencies: 17
+# Priority: high
+# Description: Establish a comprehensive Playwright testing infrastructure for p5.js applications in the monorepo, using PolychromeText as the reference model for test configuration and patterns.
+# Details:
+This task involves setting up a robust Playwright testing infrastructure for all p5.js applications in the monorepo:
+
+1. **Review PolychromeText's Playwright setup**:
+   - Examine the test directory structure in the PolychromeText app
+   - Document the configuration patterns and test organization
+   - Identify reusable components and utilities
+   - Note how canvas rendering and p5.js-specific elements are tested
+
+2. **Install Playwright dependencies**:
+   ```bash
+   # Install Playwright at the monorepo root level
+   cd /path/to/monorepo
+   npm install --save-dev @playwright/test
+   npx playwright install --with-deps
+   ```
+
+3. **Create shared Playwright configuration**:
+   - Create a base `playwright.config.ts` file at the monorepo root:
+   ```typescript
+   // playwright.config.ts
+   import { PlaywrightTestConfig } from '@playwright/test';
+
+   const baseConfig: PlaywrightTestConfig = {
+     testDir: './tests',
+     timeout: 30000,
+     forbidOnly: !!process.env.CI,
+     retries: process.env.CI ? 2 : 0,
+     workers: process.env.CI ? 1 : undefined,
+     reporter: 'html',
+     use: {
+       baseURL: 'http://localhost:3000',
+       trace: 'on-first-retry',
+       screenshot: 'only-on-failure',
+     },
+     projects: [
+       {
+         name: 'chromium',
+         use: { browserName: 'chromium' },
+       },
+     ],
+   };
+
+   export default baseConfig;
+   ```
+
+4. **Set up test directory structure**:
+   ```bash
+   # Create test directories
+   mkdir -p tests/e2e
+   mkdir -p tests/utils
+   mkdir -p tests/fixtures
+   ```
+
+5. **Create reusable test utilities**:
+   - Canvas rendering verification:
+   ```typescript
+   // tests/utils/canvas-helpers.ts
+   import { Page, expect } from '@playwright/test';
+
+   export async function verifyCanvasExists(page: Page): Promise<void> {
+     const canvas = page.locator('canvas');
+     await expect(canvas).toBeVisible();
+   }
+
+   export async function verifyCanvasNotEmpty(page: Page): Promise<void> {
+     // Get canvas and check pixel data
+     const nonEmptyCanvas = await page.evaluate(() => {
+       const canvas = document.querySelector('canvas');
+       if (!canvas) return false;
+       
+       const ctx = canvas.getContext('2d');
+       const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+       
+       // Check if all pixels are transparent/empty
+       for (let i = 3; i < data.length; i += 4) {
+         if (data[i] !== 0) return true;
+       }
+       return false;
+     });
+     
+     expect(nonEmptyCanvas).toBeTruthy();
+   }
+   ```
+
+   - Keyboard interaction helpers:
+   ```typescript
+   // tests/utils/keyboard-helpers.ts
+   import { Page } from '@playwright/test';
+
+   export async function pressKeyAndWait(page: Page, key: string, waitTime = 100): Promise<void> {
+     await page.keyboard.press(key);
+     await page.waitForTimeout(waitTime);
+   }
+
+   export async function typeTextAndWait(page: Page, text: string, waitTime = 100): Promise<void> {
+     await page.keyboard.type(text);
+     await page.waitForTimeout(waitTime);
+   }
+   ```
+
+   - Mouse interaction helpers:
+   ```typescript
+   // tests/utils/mouse-helpers.ts
+   import { Page } from '@playwright/test';
+
+   export async function clickCanvasAt(page: Page, x: number, y: number): Promise<void> {
+     const canvas = page.locator('canvas');
+     const box = await canvas.boundingBox();
+     
+     if (!box) throw new Error('Canvas not found');
+     
+     await page.mouse.click(box.x + x, box.y + y);
+   }
+
+   export async function dragOnCanvas(page: Page, startX: number, startY: number, endX: number, endY: number): Promise<void> {
+     const canvas = page.locator('canvas');
+     const box = await canvas.boundingBox();
+     
+     if (!box) throw new Error('Canvas not found');
+     
+     await page.mouse.move(box.x + startX, box.y + startY);
+     await page.mouse.down();
+     await page.mouse.move(box.x + endX, box.y + endY);
+     await page.mouse.up();
+   }
+   ```
+
+   - Screenshot comparison utilities:
+   ```typescript
+   // tests/utils/screenshot-helpers.ts
+   import { Page, expect } from '@playwright/test';
+   import path from 'path';
+
+   export async function compareScreenshot(page: Page, screenshotName: string, threshold = 0.2): Promise<void> {
+     const screenshotPath = path.join('tests', 'screenshots', 'reference', `${screenshotName}.png`);
+     
+     await expect(page.locator('canvas')).toHaveScreenshot(screenshotName + '.png', {
+       maxDiffPixelRatio: threshold,
+     });
+   }
+
+   export async function captureCanvasScreenshot(page: Page, screenshotName: string): Promise<string> {
+     const canvas = page.locator('canvas');
+     const screenshotPath = path.join('tests', 'screenshots', 'actual', `${screenshotName}.png`);
+     
+     await canvas.screenshot({ path: screenshotPath });
+     return screenshotPath;
+   }
+   ```
+
+6. **Document the testing approach**:
+   - Create a comprehensive testing guide at `docs/testing/playwright-guide.md`:
+   ```markdown
+   # Playwright Testing Guide for p5.js Apps
+
+   This guide explains how to write and run Playwright tests for p5.js applications in the monorepo.
+
+   ## Getting Started
+
+   ### Running Tests
+   ```bash
+   # Run all tests
+   nx run-many --target=e2e --all
+   
+   # Run tests for a specific app
+   nx run those-shape-things:e2e
+   ```
+
+   ## Test Structure
+   
+   Tests are organized as follows:
+   - `tests/e2e/`: End-to-end tests for applications
+   - `tests/utils/`: Shared test utilities
+   - `tests/fixtures/`: Test data and fixtures
+
+   ## Writing Tests for p5.js Apps
+
+   ### Canvas Testing
+   
+   Canvas elements require special handling. Use the provided utilities:
+
+   ```typescript
+   import { test, expect } from '@playwright/test';
+   import { verifyCanvasExists, verifyCanvasNotEmpty } from '../../utils/canvas-helpers';
+
+   test('should render canvas with content', async ({ page }) => {
+     await page.goto('/apps/my-app/');
+     await verifyCanvasExists(page);
+     await verifyCanvasNotEmpty(page);
+   });
+   ```
+
+   ### Testing User Interactions
+   
+   For testing keyboard and mouse interactions:
+
+   ```typescript
+   import { test, expect } from '@playwright/test';
+   import { pressKeyAndWait } from '../../utils/keyboard-helpers';
+   import { clickCanvasAt } from '../../utils/mouse-helpers';
+
+   test('should respond to user input', async ({ page }) => {
+     await page.goto('/apps/my-app/');
+     
+     // Test keyboard interaction
+     await pressKeyAndWait(page, 'b');
+     
+     // Test mouse interaction
+     await clickCanvasAt(page, 100, 100);
+     
+     // Verify expected changes
+     // ...
+   });
+   ```
+
+   ### Visual Regression Testing
+   
+   For comparing canvas output against reference images:
+
+   ```typescript
+   import { test } from '@playwright/test';
+   import { compareScreenshot } from '../../utils/screenshot-helpers';
+
+   test('should match reference screenshot', async ({ page }) => {
+     await page.goto('/apps/my-app/');
+     await page.waitForTimeout(500); // Allow animations to settle
+     
+     await compareScreenshot(page, 'my-app-default-state');
+   });
+   ```
+   ```
+
+7. **Create example tests for those-shape-things**:
+   ```typescript
+   // tests/e2e/those-shape-things.spec.ts
+   import { test, expect } from '@playwright/test';
+   import { verifyCanvasExists, verifyCanvasNotEmpty } from '../utils/canvas-helpers';
+   import { pressKeyAndWait } from '../utils/keyboard-helpers';
+   import { clickCanvasAt } from '../utils/mouse-helpers';
+
+   test.beforeEach(async ({ page }) => {
+     await page.goto('/apps/those-shape-things/');
+     await page.waitForLoadState('networkidle');
+   });
+
+   test('should load with canvas visible', async ({ page }) => {
+     await verifyCanvasExists(page);
+     await verifyCanvasNotEmpty(page);
+   });
+
+   test('should toggle background color with "b" key', async ({ page }) => {
+     // Get initial background color
+     const initialBgColor = await page.evaluate(() => {
+       return window.getComputedStyle(document.querySelector('canvas')).backgroundColor;
+     });
+     
+     // Press 'b' to toggle background
+     await pressKeyAndWait(page, 'b');
+     
+     // Get new background color
+     const newBgColor = await page.evaluate(() => {
+       return window.getComputedStyle(document.querySelector('canvas')).backgroundColor;
+     });
+     
+     // Verify background color changed
+     expect(newBgColor).not.toEqual(initialBgColor);
+   });
+
+   test('should create new shape on canvas click', async ({ page }) => {
+     // Count initial shapes
+     const initialShapeCount = await page.evaluate(() => {
+       // This assumes there's a shapes array or similar in the app
+       // Adjust based on actual implementation
+       return window.appInstance?.shapes?.length || 0;
+     });
+     
+     // Click on canvas
+     await clickCanvasAt(page, 150, 150);
+     
+     // Count shapes after click
+     const newShapeCount = await page.evaluate(() => {
+       return window.appInstance?.shapes?.length || 0;
+     });
+     
+     // Verify a new shape was added
+     expect(newShapeCount).toBeGreaterThan(initialShapeCount);
+   });
+   ```
+
+8. **Add Nx targets for running Playwright tests**:
+   - Update the project.json for each app to include e2e testing:
+   ```json
+   {
+     "targets": {
+       "e2e": {
+         "executor": "nx:run-commands",
+         "options": {
+           "commands": [
+             "nx run {projectName}:serve --watch=false",
+             "npx playwright test tests/e2e/{projectName}.spec.ts"
+           ],
+           "parallel": true
+         }
+       }
+     }
+   }
+   ```
+
+9. **Update CI/CD configuration**:
+   - Add Playwright testing to GitHub Actions workflow:
+   ```yaml
+   # .github/workflows/e2e-tests.yml
+   name: E2E Tests
+
+   on:
+     push:
+       branches: [ main ]
+     pull_request:
+       branches: [ main ]
+
+   jobs:
+     test:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v3
+         - uses: actions/setup-node@v3
+           with:
+             node-version: 16
+             cache: 'npm'
+         - name: Install dependencies
+           run: npm ci
+         - name: Install Playwright browsers
+           run: npx playwright install --with-deps
+         - name: Build apps
+           run: npx nx run-many --target=build --all
+         - name: Run Playwright tests
+           run: npx nx run-many --target=e2e --all
+         - name: Upload test results
+           if: always()
+           uses: actions/upload-artifact@v3
+           with:
+             name: playwright-report
+             path: playwright-report/
+   ```
+
+# Test Strategy:
+The testing strategy for this task will verify that the Playwright infrastructure is correctly set up and functioning:
+
+1. **Verify Playwright installation and configuration**:
+   - Run `npx playwright --version` to confirm Playwright is installed
+   - Check that the base `playwright.config.ts` file exists and contains the correct configuration
+   - Verify that all required browsers are installed by running `npx playwright install --with-deps`
+
+2. **Validate test directory structure**:
+   - Confirm the existence of the test directories:
+     - `tests/e2e/`
+     - `tests/utils/`
+     - `tests/fixtures/`
+   - Verify that utility files are correctly placed and exported
+
+3. **Test the utility functions**:
+   - Create a simple test that imports and uses each utility function
+   - Verify each utility function works as expected with a minimal test case
+   - Run the tests in isolation to confirm they function correctly
+
+4. **Run example tests for those-shape-things**:
+   - Start the those-shape-things application locally
+   - Run the example tests using `npx playwright test tests/e2e/those-shape-things.spec.ts`
+   - Verify all tests pass and produce the expected results
+   - Check that test reports are generated correctly
+
+5. **Test Nx integration**:
+   - Run `nx run those-shape-things:e2e` to verify the Nx target works
+   - Confirm that both the app server starts and tests execute
+   - Check that the results are reported correctly through the Nx interface
+
+6. **Verify documentation**:
+   - Review the testing guide document for completeness and accuracy
+   - Ensure all code examples in the documentation are valid and match the actual implementation
+   - Have another team member follow the guide to write a simple test to verify clarity
+
+7. **Test CI/CD integration**:
+   - Create a test branch with the Playwright changes
+   - Push the branch to trigger the GitHub Actions workflow
+   - Verify that tests run successfully in the CI environment
+   - Confirm that test artifacts are correctly uploaded
+
+8. **Cross-browser testing**:
+   - Run the tests on all configured browsers (Chromium, Firefox, WebKit)
+   - Verify that tests pass consistently across all browser environments
+   - Document any browser-specific issues or considerations
+
+9. **Performance testing**:
+   - Measure the execution time of the test suite
+   - Optimize if tests take longer than 5 minutes to complete
+   - Verify that parallel execution works correctly when multiple tests are run

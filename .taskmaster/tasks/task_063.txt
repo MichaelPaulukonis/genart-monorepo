@@ -1,0 +1,141 @@
+# Task ID: 63
+# Title: Implement Whitelist-Based Image Format Validation for Drag-and-Drop Functionality
+# Status: pending
+# Dependencies: 30, 61
+# Priority: medium
+# Description: Improve file type validation for drag-and-drop image handling in monochromifier and crude-collage-painter apps by replacing the current broad check with a specific whitelist-based validation to ensure only supported image formats are accepted.
+# Details:
+1. Analyze current file type validation:
+   - Current implementation uses `file.type === 'image'` which accepts broadly any image type
+   - p5.js loadImage() doesn't support all image formats (e.g., .jp2)
+   - Need to implement stricter validation to prevent errors
+
+2. Implement whitelist-based validation:
+   ```javascript
+   function validateImageFile(file) {
+     const supportedTypes = [
+       'image/jpeg', 
+       'image/png', 
+       'image/gif', 
+       'image/webp', 
+       'image/bmp', 
+       'image/tiff'
+     ];
+     
+     // Check MIME type
+     if (!supportedTypes.includes(file.type)) {
+       return {
+         valid: false,
+         message: 'Unsupported file type. Please use JPG, PNG, GIF, WebP, BMP, or TIFF.'
+       };
+     }
+     
+     // Additional validation for extension
+     const fileName = file.name.toLowerCase();
+     const supportedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.tif'];
+     const hasValidExtension = supportedExtensions.some(ext => fileName.endsWith(ext));
+     
+     if (!hasValidExtension) {
+       return {
+         valid: false,
+         message: 'Unsupported file extension. Please use JPG, PNG, GIF, WebP, BMP, or TIFF.'
+       };
+     }
+     
+     return { valid: true };
+   }
+   ```
+
+3. Update the drag-and-drop handlers in affected applications:
+   - Modify monochromifier app:
+   ```javascript
+   function handleFile(file) {
+     const validation = validateImageFile(file);
+     
+     if (!validation.valid) {
+       // Display error message to user
+       showErrorMessage(validation.message);
+       return;
+     }
+     
+     // Proceed with file loading as before
+     loadImage(file.data, img => {
+       // Existing image processing code
+     });
+   }
+   ```
+   
+   - Update crude-collage-painter app:
+   ```javascript
+   function handleDrop(file) {
+     const validation = validateImageFile(file);
+     
+     if (!validation.valid) {
+       // Display error message to user
+       showErrorMessage(validation.message);
+       return;
+     }
+     
+     // Continue with existing image loading
+     // ...
+   }
+   ```
+
+4. Implement user feedback for invalid files:
+   - Add visual error messages when invalid files are dropped
+   - Include guidance on supported file types
+   - Consider implementing a helper tooltip or info icon that shows supported formats
+
+# Test Strategy:
+1. Unit testing:
+   - Create test cases for the validateImageFile function with various file types
+   - Test with valid file types (jpg, png, etc.) to ensure they pass validation
+   - Test with unsupported types (jp2, svg, pdf) to ensure they fail validation
+   - Verify proper error messages are returned
+
+2. Integration testing:
+   - Test drag-and-drop functionality in both applications with various file formats
+   - Verify that only supported formats are accepted and properly loaded
+   - Ensure error messages appear correctly for unsupported formats
+
+3. Edge case testing:
+   - Test with uppercase extensions (.JPG, .PNG)
+   - Test with files having correct extension but incorrect content
+   - Test with files having no extension but correct MIME type
+   - Test with very large images to ensure validation occurs before loading
+
+4. User feedback testing:
+   - Verify error messages are clear and helpful
+   - Test that the UI provides good guidance on supported formats
+
+# Subtasks:
+## 1. Analyze current validation and design whitelist approach [pending]
+### Dependencies: None
+### Description: Review existing validation code across all affected applications and design a comprehensive whitelist-based validation approach.
+### Details:
+Analyze current file type validation in monochromifier, crude-collage-painter, and computational-collage apps. Document how each app currently handles validation, identify improvement opportunities, and design a unified approach. Define the complete list of supported MIME types and file extensions to be whitelisted in the new implementation. Consider both browser compatibility and p5.js loadImage() support requirements.
+
+## 2. Implement core validation utility function in @genart/p5-utils [pending]
+### Dependencies: 63.1
+### Description: Develop a shared utility function for image format validation based on whitelists that can be used across multiple applications.
+### Details:
+Implement the `validateImageFile()` utility function in the @genart/p5-utils package that checks both MIME types and file extensions against a whitelist. Function should return validation status and appropriate error messages. Include full JSDoc documentation and examples of usage. The whitelist should include JPG, PNG, GIF, WebP, BMP, and TIFF formats as specified in the requirements.
+
+## 3. Create user feedback component for invalid file types [pending]
+### Dependencies: 63.2
+### Description: Implement a reusable feedback component for displaying validation errors to users when invalid files are dropped.
+### Details:
+Design and implement a consistent approach for displaying error messages when invalid file types are detected. Create a reusable function to show user-friendly error notifications that clearly indicate which file formats are supported. The component should be adaptable for use across different applications with minimal modification. Include visual indicators and clear, actionable messaging.
+
+## 4. Integrate validation in monochromifier and crude-collage-painter apps [pending]
+### Dependencies: 63.2, 63.3
+### Description: Replace current file validation with the new whitelist-based validation in the first two target applications.
+### Details:
+Update the file handling code in monochromifier (line 745 in monochromifier.js) and crude-collage-painter (line 110 in sketch.js) to use the new validation utility instead of the current broad checks. Implement error feedback when invalid files are dropped using the feedback component from the previous subtask. Test the integration thoroughly with both valid and invalid file types.
+
+## 5. Update computational-collage app and perform final testing [pending]
+### Dependencies: 63.4
+### Description: Integrate validation in the computational-collage app and perform comprehensive cross-application testing.
+### Details:
+Update the computational-collage app (line 737 in collage.js) to use the new validation utility function. Replace the current `file.type.startsWith('image')` check with the more robust validation. Perform comprehensive testing across all three applications to ensure consistent behavior and user experience with both valid and invalid file types. Document any edge cases discovered during testing.
+

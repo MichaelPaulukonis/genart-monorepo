@@ -1,0 +1,21 @@
+# Task ID: 46
+# Title: Audit current test targets across applications
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Document which apps have test targets and which don't. Identify configuration patterns from existing targets (duo-chrome, monochromifier) and map current root package.json scripts to target apps.
+# Details:
+1. Review project.json files for all 6 apps to identify which have test targets
+2. Analyze duo-chrome and monochromifier test target configurations as reference models
+3. Document the testing approach used in each app
+4. Map root package.json scripts (test:crude-collage, test:computational-collage, etc.) to corresponding apps
+5. Identify shared patterns and app-specific customizations
+6. Document TEST_APP environment variable usage across apps
+7. Create a mapping document with columns for: App Name, Has Test Target (Y/N), Current Test Command, Target Configuration (if exists)
+8. Identify any app-specific testing requirements
+
+# Test Strategy:
+Validation will be a documentation review:
+1. Ensure all 6 apps are accounted for in the audit
+2. Verify accuracy of current state documentation by running existing test commands
+3. Review with team members familiar with the testing infrastructure to confirm findings

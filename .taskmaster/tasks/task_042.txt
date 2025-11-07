@@ -1,0 +1,65 @@
+# Task ID: 42
+# Title: Improve Brush Selection and Mode Switching UX
+# Status: pending
+# Dependencies: 39, 41
+# Priority: high
+# Description: Enhance the initial user experience in the crude-collage-painter by implementing clearer mode indicators, automatic default brush selection, and visual feedback for mode switching between brush select and paint modes.
+# Details:
+This task involves improving the mode switching and brush selection user experience:
+
+1. **Default Paint Mode Implementation**:
+   - Modify app initialization to start in paint mode with a default brush selected
+   - Select an appropriate default brush based on common use cases
+   - Add a configuration option to customize the default brush
+
+2. **Mode Status Indicators**:
+   - Design and implement a persistent on-screen indicator showing the current mode ("Brush Select" or "Paint")
+   - Position the indicator in a non-intrusive but clearly visible area
+   - Use contrasting colors/styling to ensure visibility against various backgrounds
+   - Include an icon alongside text for better visual recognition
+
+3. **Mode Transition Feedback**:
+   - Add visual animation or transition effect when switching between modes
+   - Implement a brief flash or highlight effect on the cursor when mode changes
+   - Add subtle audio feedback (optional, with mute control)
+
+4. **Cursor Enhancements**:
+   - Modify the circular cursor implementation to visually indicate the current mode
+   - For brush select mode: add a distinctive border style or color
+   - For paint mode: show the selected brush style within the cursor
+
+5. **Brush Selection Interface Improvements**:
+   - Redesign the brush selection interface for better clarity
+   - Add visual highlight for currently selected brush
+   - Implement hover states for available brushes
+   - Consider a mini-preview of brush effect on hover
+
+# Test Strategy:
+1. **Default Mode Testing**:
+   - Launch the application and verify it starts in paint mode with default brush selected
+   - Check that the default brush is immediately usable without requiring additional user actions
+   - Verify the configuration option correctly changes the default brush selection
+
+2. **Mode Indicator Testing**:
+   - Verify the mode indicator is visible in all app states
+   - Test the indicator against different background colors/patterns to ensure readability
+   - Confirm the indicator accurately reflects the current app mode
+   - Test the indicator position doesn't interfere with painting operations
+
+3. **Mode Switching Testing**:
+   - Test switching between brush select and paint modes using all available methods
+   - Verify visual feedback appears when mode changes
+   - Check that the cursor style updates appropriately for each mode
+   - Time the transition to ensure it's not too lengthy or distracting
+
+4. **Cursor Enhancement Testing**:
+   - Verify the cursor clearly indicates the current mode
+   - Test the cursor against various background colors/patterns
+   - Check that cursor modifications don't negatively impact painting precision
+   - Test cursor behavior at canvas edges
+
+5. **Usability Testing**:
+   - Conduct user tests with both novice and experienced users
+   - Gather feedback on clarity of mode indicators and brush selection
+   - Measure time/clicks required to select brushes compared to previous implementation
+   - Collect subjective ratings on intuitiveness and ease of use

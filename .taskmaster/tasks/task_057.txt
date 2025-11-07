@@ -1,0 +1,34 @@
+# Task ID: 57
+# Title: Perform cross-app validation testing
+# Status: pending
+# Dependencies: 56
+# Priority: medium
+# Description: Test the multi-app TEST_APP approach across all applications and verify shared test utilities work with all p5.js instance mode implementations.
+# Details:
+1. Test the TEST_APP environment variable across all applications:
+   - Set TEST_APP for each application and run tests
+   - Verify correct app is tested based on environment variable
+   - Test with various combinations of apps
+
+2. Verify shared test utilities compatibility:
+   - Test p5-canvas-helpers.js with each application
+   - Verify canvas detection works across different p5.js implementations
+   - Test interaction helpers with each app's unique UI
+
+3. Performance test the global test suite:
+   - Measure execution time for the complete test suite
+   - Compare with baseline metrics from before migration
+   - Identify any performance bottlenecks
+
+4. Test across different environment configurations:
+   - Test on different developer machines if possible
+   - Test in CI environment
+   - Test with different browser configurations
+
+# Test Strategy:
+1. Create a cross-app test matrix documenting each test scenario
+2. For each application, verify TEST_APP variable correctly selects the app
+3. Test shared utilities with each application and document results
+4. Measure and record performance metrics for global test execution
+5. Compare results with pre-migration baseline
+6. Document any compatibility issues discovered

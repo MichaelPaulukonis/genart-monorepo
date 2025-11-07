@@ -1,0 +1,30 @@
+# Task ID: 53
+# Title: Remove legacy scripts from root package.json
+# Status: pending
+# Dependencies: 52
+# Priority: high
+# Description: Remove app-specific test scripts from root package.json and update any documentation referencing the removed scripts.
+# Details:
+1. Take a backup of the current root package.json file
+2. Remove app-specific test scripts including but not limited to:
+   - `test:crude-collage`
+   - `test:computational-collage`
+   - Any other app-specific test scripts identified in the audit
+
+3. Search the codebase for references to the removed scripts:
+   - Search in documentation files
+   - Check for references in CI/CD pipelines
+   - Look for usage in developer guides
+
+4. Update any references to use the new Nx commands instead
+   - Replace `npm run test:crude-collage` with `nx test crude-collage-painter`
+   - Update other command references accordingly
+
+5. Create a mapping document for developers showing old commands and their new equivalents
+
+# Test Strategy:
+1. Verify that removed scripts no longer exist in package.json
+2. Attempt to run the removed commands and confirm they fail as expected
+3. Run the alternative Nx commands and verify they work correctly
+4. If CI/CD pipelines existed using the old scripts, test them with the new commands
+5. Verify documentation is consistent with the new command structure

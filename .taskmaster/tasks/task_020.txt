@@ -1,0 +1,111 @@
+# Task ID: 20
+# Title: Analyze and Document p5.js Function Usage in Apps
+# Status: pending
+# Dependencies: 15, 19
+# Priority: high
+# Description: Create detailed reports documenting all p5.js functions, properties, and constants used in crude-collage-painter and computational-collage apps to understand the scope of conversion work.
+# Details:
+This task involves analyzing the codebase of two p5.js applications to document their p5.js usage patterns before conversion to instance mode. The analysis will help estimate conversion complexity and identify potential issues.
+
+For each application (crude-collage-painter and computational-collage):
+
+1. **Set up analysis environment**:
+   - Create a script that can parse JavaScript files and identify p5.js function calls
+   - Alternatively, use manual code review with search functionality
+
+2. **Analyze p5.js function usage**:
+   - Identify and count all p5.js drawing functions (createCanvas, background, image, rect, ellipse, etc.)
+   - Document math utilities (random, map, constrain, noise, etc.)
+   - List input functions (mouseX, mouseY, keyIsDown, mousePressed, etc.)
+   - Catalog lifecycle functions (setup, draw, preload, windowResized, etc.)
+
+3. **Document p5.js properties accessed**:
+   - Canvas properties (width, height)
+   - System variables (frameCount, deltaTime, etc.)
+   - Input states (mouseX, mouseY, pmouseX, pmouseY, etc.)
+
+4. **Identify p5.js constants used**:
+   - Drawing modes (CENTER, CORNER, etc.)
+   - Key codes (ENTER, SHIFT, ALT, etc.)
+   - Other constants (PI, TWO_PI, etc.)
+
+5. **Analyze custom functions**:
+   - Identify helper functions that call p5.js functions
+   - Document which functions will need p5 instance passed as parameter
+   - Note any complex nested function calls
+
+6. **Calculate complexity metrics**:
+   - Count total lines of code
+   - Count number of functions requiring conversion
+   - Estimate conversion effort (Low/Medium/High)
+   - Document any unusual patterns or edge cases
+
+7. **Identify potential conversion challenges**:
+   - Note nested function calls that might cause scope issues
+   - Document callback functions that might need special handling
+   - List event handlers that interact with p5.js
+   - Identify any global state that might cause issues
+
+8. **Generate comprehensive reports**:
+   - Create markdown files with all findings
+   - Include code snippets for complex cases
+   - Organize information in tables for clarity
+   - Save reports to docs/conversion/ directory
+
+Example report structure:
+```markdown
+# p5.js Usage Analysis: crude-collage-painter
+
+## Summary
+- Total p5.js function calls: XX
+- Total p5.js properties accessed: XX
+- Conversion complexity: Medium
+
+## Drawing Functions
+| Function | Count | Notes |
+|----------|-------|-------|
+| createCanvas | 1 | Called in setup() |
+| background | 12 | Used with color parameters |
+| image | 45 | Primary rendering method |
+...
+
+## Math Utilities
+...
+
+## Custom Functions
+...
+
+## Potential Issues
+...
+```
+
+# Test Strategy:
+1. **Verify report completeness**:
+   - Check that reports exist for both crude-collage-painter and computational-collage
+   - Confirm reports are saved to docs/conversion/ directory
+   - Verify all required sections are present (functions, properties, constants, custom functions, metrics, challenges)
+
+2. **Validate function identification accuracy**:
+   - Manually review a sample of files from each app to verify the analysis captured all p5.js functions
+   - Cross-check function counts with actual code
+   - Ensure no p5.js functions were missed or miscategorized
+
+3. **Test report usability**:
+   - Have a team member not involved in the analysis review the reports
+   - Verify they can understand the scope of conversion work
+   - Confirm the reports provide actionable information for conversion planning
+
+4. **Verify metrics accuracy**:
+   - Check that line counts match actual codebase
+   - Validate function counts with manual sampling
+   - Ensure conversion effort estimates are reasonable based on complexity
+
+5. **Test report formatting**:
+   - Verify markdown renders correctly in GitHub
+   - Check that tables are properly formatted
+   - Ensure code snippets have proper syntax highlighting
+
+6. **Validate completeness of potential issues**:
+   - Review code to confirm all potential conversion challenges are documented
+   - Check that nested function calls are properly identified
+   - Verify callback functions and event handlers are correctly listed

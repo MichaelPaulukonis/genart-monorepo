@@ -1,0 +1,49 @@
+# Task ID: 2
+# Title: Create archived repo README template
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Create a standardized README template for archived repositories based on the template at docs/templates/archived-repo-readme.md
+# Details:
+Create a markdown template that will be used for all archived repositories. The template should include:
+
+1. A prominent notice at the top indicating the repository has moved to the monorepo
+2. Placeholder for the app screenshot
+3. Links section with placeholders for:
+   - Live demo URL
+   - Monorepo URL
+   - Source code URL within monorepo
+   - Documentation URL
+4. Brief description placeholder
+5. Development instructions pointing to the monorepo
+6. MIT license notice
+
+Example template structure:
+```markdown
+# [App Name] - MOVED TO MONOREPO
+
+> ⚠️ **REPOSITORY MOVED**: This project has been migrated to the [genart-monorepo](https://github.com/username/genart-monorepo).
+
+![Screenshot of [App Name]](screenshot.png)
+
+## Links
+- [Live Demo](https://username.github.io/[app-name]/) (still active)
+- [Source Code](https://github.com/username/genart-monorepo/tree/main/apps/[app-name])
+- [Documentation](https://github.com/username/genart-monorepo/tree/main/docs/[app-name])
+
+## About
+[Brief description of what the app does]
+
+## Development
+This project is now developed as part of the genart-monorepo. Please refer to the [monorepo documentation](https://github.com/username/genart-monorepo) for development instructions.
+
+## License
+MIT
+```
+
+# Test Strategy:
+1. Verify the template includes all required sections
+2. Check that placeholder syntax is consistent and easy to replace
+3. Validate markdown formatting renders correctly on GitHub
+4. Ensure the template follows best practices for GitHub markdown
+5. Confirm the template matches the requirements specified in the PRD

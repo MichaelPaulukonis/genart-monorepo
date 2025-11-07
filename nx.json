@@ -12,6 +12,9 @@
       }
     }
   ],
+  "tui": {
+    "enabled": false
+  },
   "release": {
     "projectsRelationship": "independent",
     "projects": ["apps/*"],

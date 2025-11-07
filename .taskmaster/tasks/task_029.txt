@@ -1,0 +1,209 @@
+# Task ID: 29
+# Title: Implement Automated Version Management System for Monorepo Apps
+# Status: done
+# Dependencies: 18, 21
+# Priority: medium
+# Description: Create a system to automatically increment version numbers across all apps in the monorepo, updating the version field in each app's package.json file according to semantic versioning principles.
+# Details:
+This task involves implementing an automated version management system for all applications in the monorepo:
+
+1. **Version Management Strategy**:
+   - Implement semantic versioning (MAJOR.MINOR.PATCH) across all apps
+   - Update only apps that have actual changes (not all apps every time)
+   - Use standard npm versioning commands (`npm version patch|minor|major`)
+   - Define policies for when to increment each version component
+
+2. **Nx Integration for Change Detection**:
+   - Leverage Nx's affected detection to identify which apps have changes
+   - Use `nx affected:apps` to determine which apps need version bumps
+   - Create a simple script that:
+     - Detects affected apps using Nx commands
+     - Runs appropriate npm version commands in each affected app directory
+     - Commits version changes
+   
+   ```javascript
+   // Example implementation in version-update.js
+   const { execSync } = require('child_process');
+   
+   function updateVersions(versionBump = 'patch') {
+     // Get affected apps using Nx
+     const affectedOutput = execSync('npx nx affected:apps').toString();
+     const affectedApps = affectedOutput.trim().split('\n');
+     
+     if (affectedApps.length === 0 || (affectedApps.length === 1 && !affectedApps[0])) {
+       console.log('No affected apps detected. Skipping version updates.');
+       return;
+     }
+     
+     console.log(`Updating versions for affected apps: ${affectedApps.join(', ')}`);
+     
+     // Update version for each affected app
+     affectedApps.forEach(appName => {
+       const appPath = `apps/${appName}`;
+       console.log(`Updating ${appName} with npm version ${versionBump}`);
+       try {
+         execSync(`cd ${appPath} && npm version ${versionBump} --no-git-tag-version`);
+       } catch (error) {
+         console.error(`Error updating version for ${appName}:`, error.message);
+       }
+     });
+     
+     // Optionally commit changes
+     console.log('Version updates complete. Remember to commit the changes.');
+   }
+   
+   // Parse command line arguments
+   const args = process.argv.slice(2);
+   const versionBump = args[0] || 'patch';
+   updateVersions(versionBump);
+   ```
+
+3. **Integration with Build/Release Process**:
+   - Add an Nx target for version management in workspace.json
+   - Create npm scripts for version bumping (patch, minor, major)
+   - Integrate version update into the CI/CD pipeline
+   - Ensure version updates trigger appropriate rebuilds
+
+4. **Nx Configuration**:
+   ```json
+   // Example addition to workspace.json or nx.json
+   {
+     "targets": {
+       "version": {
+         "executor": "@nrwl/workspace:run-commands",
+         "options": {
+           "command": "node tools/scripts/version-update.js"
+         }
+       }
+     }
+   }
+   ```
+
+5. **Git Integration**:
+   - Add capability to automatically commit version changes
+   - Optionally create git tags for releases
+   - Ensure version changes are committed with appropriate messages
+
+6. **Documentation**:
+   - Document the versioning strategy for developers
+   - Create usage examples for version bumping
+   - Document integration with CI/CD processes
+   - Explain how the affected detection works with versioning
+
+7. **Error Handling and Validation**:
+   - Implement comprehensive error handling for all operations
+   - Validate version formats and changes before applying
+   - Provide clear error messages and recovery options
+
+8. **Manual Override Capabilities**:
+   - Support forced version updates regardless of detected changes
+   - Allow specifying specific apps for version updates
+   - Provide options to bypass normal version increment rules
+
+# Test Strategy:
+1. **Unit Testing**:
+   - Create unit tests for the version update script:
+     - Test affected app detection logic
+     - Test npm version command execution
+     - Verify handling of different version bump types (patch, minor, major)
+     - Test command-line argument parsing
+
+2. **Integration Testing**:
+   - Test the version update process on a subset of test apps
+   - Verify only affected apps are updated
+   - Confirm version numbers follow semantic versioning rules
+   - Test integration with Nx commands
+
+3. **Manual Verification**:
+   - Make changes to specific apps and run the version update script
+   - Verify only affected apps' package.json files are updated
+   - Check that version numbers are incremented correctly
+   - Validate git commit behavior (if implemented)
+
+4. **CI/CD Pipeline Testing**:
+   - Verify the version update step in the CI/CD pipeline
+   - Confirm version updates trigger appropriate rebuilds
+   - Test version update in combination with deployment processes
+   - Ensure version changes are properly committed
+
+5. **Edge Case Testing**:
+   - Test behavior when no apps are affected
+   - Verify handling of non-standard version formats
+   - Test with a large number of affected applications
+   - Validate behavior when some files cannot be written (permissions)
+
+6. **Nx Affected Testing**:
+   - Test that Nx correctly identifies affected apps
+   - Verify the integration between Nx affected commands and version updates
+   - Test with different base branches to ensure proper change detection
+
+7. **Manual Override Testing**:
+   - Test forced version updates on specific apps
+   - Verify override options work correctly
+   - Validate error handling during manual operations
+
+8. **Git Integration Testing**:
+   - Verify automatic commit messages are correctly formatted
+   - Test git tag creation for releases
+   - Confirm proper handling of git conflicts
+
+# Subtasks:
+## 1. Create requirements document for automated version management system [done]
+### Dependencies: None
+### Description: Create a comprehensive requirements document in .kiro/specs/automated-version-management/requirements.md that includes detailed requirements with user stories and acceptance criteria, integration with Nx affected detection, semantic versioning support, CI/CD pipeline integration, error handling and validation, git tagging and commit message automation, and manual override capabilities.
+### Details:
+<info added on 2025-10-18T15:54:06.242Z>
+Simplified the scope of the automated version management system by updating the requirements document at .kiro/specs/automated-version-management/requirements.md. The revised approach focuses on a "simple automated version bumping" solution rather than a complex management system. The new requirements emphasize a minimal, maintainable implementation using standard npm scripts and Nx targets instead of comprehensive CI/CD integration. This change will make the implementation more straightforward while still meeting the core need of managing versions across the monorepo.
+</info added on 2025-10-18T15:54:06.242Z>
+<info added on 2025-10-18T15:59:00.441Z>
+Updated the implementation plan in .kiro/specs/automated-version-management/tasks.md with several important changes to prevent conflicts and improve clarity. The script naming was modified from "publish" to "version-publish" across all apps to avoid conflicts. For crude-collage-painter specifically, its existing "publish" script will be renamed to "deploy" to maintain functionality while preventing collisions. The plan now acknowledges that computational-collage requires a new project.json file rather than just updates to an existing one. Testing approaches have been enhanced with dry-run options for safer validation before actual implementation. All task descriptions were improved for better clarity and to explicitly address potential conflicts between existing and new scripts.
+</info added on 2025-10-18T15:59:00.441Z>
+<info added on 2025-10-18T16:10:10.028Z>
+Implemented the updated implementation plan in .kiro/specs/automated-version-management/tasks.md. The file now contains a comprehensive breakdown of all implementation tasks including: detailed steps for adding version-related npm scripts to each app's package.json, creating corresponding Nx targets in project.json files, specific testing approaches with dry-run options, and documentation requirements. The plan addresses potential naming conflicts by renaming the "publish" script to "version-publish" across all apps and changing crude-collage-painter's existing "publish" script to "deploy". Special handling for computational-collage is included, noting it requires a new project.json file. Each app's specific requirements are clearly documented with explicit steps to prevent conflicts between existing and new scripts.
+</info added on 2025-10-18T16:10:10.028Z>
+<info added on 2025-10-18T18:18:18.180Z>
+Created comprehensive Implementation Notes document detailing the evolution from original manual version management approach to Nx Release with independent versioning. Document includes configuration examples, workflow changes, task status updates, and lessons learned. The implementation far exceeded original requirements by leveraging enterprise-grade Nx Release tooling instead of manual scripts. File: .kiro/specs/automated-version-management/IMPLEMENTATION_NOTES.md
+</info added on 2025-10-18T18:18:18.180Z>
+
+## 2. Implement version update script with Nx affected detection [done]
+### Dependencies: None
+### Description: Create the version-update.js script that uses Nx affected detection to identify which apps have changes and applies appropriate version bumps using npm version commands.
+### Details:
+
+
+## 3. Add Nx target configuration for version management [done]
+### Dependencies: None
+### Description: Configure Nx workspace to include version management targets in workspace.json or nx.json, making the version update script accessible through Nx commands.
+### Details:
+
+
+## 4. Implement Git integration for version changes [done]
+### Dependencies: None
+### Description: Add functionality to automatically commit version changes with appropriate messages and create git tags for releases as specified in the requirements document.
+### Details:
+
+
+## 5. Implement error handling and validation [done]
+### Dependencies: None
+### Description: Add comprehensive error handling and validation for all version management operations as specified in the requirements document.
+### Details:
+
+
+## 6. Implement manual override capabilities [done]
+### Dependencies: None
+### Description: Add support for forced version updates and other manual override options as specified in the requirements document.
+### Details:
+
+
+## 7. Integrate version management with CI/CD pipeline [done]
+### Dependencies: None
+### Description: Configure the CI/CD pipeline to use the version management system during build and deployment processes.
+### Details:
+
+
+## 8. Create documentation and usage examples [done]
+### Dependencies: None
+### Description: Document the versioning strategy, create usage examples, and explain integration with CI/CD processes for developers.
+### Details:
+
+

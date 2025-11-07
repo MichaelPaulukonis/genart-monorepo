@@ -1,0 +1,65 @@
+# Task ID: 10
+# Title: Verify all success criteria
+# Status: done
+# Dependencies: 8, 9
+# Priority: high
+# Description: Perform a final verification of all success criteria across all repositories and the monorepo
+# Details:
+Conduct a comprehensive verification of all success criteria specified in the PRD:
+
+1. Verify all 5 apps have screenshots captured and saved in the monorepo at `docs/screenshots/[app-name]-main.png`
+2. Confirm all 5 original repos have updated READMEs on their main branches
+3. Check that all screenshots are copied to original repos as `screenshot.png`
+4. Test all links in archived READMEs to ensure they are functional:
+   - Live demo links
+   - Monorepo link
+   - Source code links
+   - Documentation links
+5. Verify READMEs follow consistent format using the template
+6. Ensure all repositories remain unarchived (not read-only)
+7. Confirm all screenshots are PNG format and under 500KB
+
+Create a verification checklist and document the results:
+
+```markdown
+# Migration Verification Checklist
+
+## Monorepo Screenshots
+- [ ] duo-chrome-main.png exists and is high quality
+- [ ] crude-collage-painter-main.png exists and is high quality
+- [ ] those-shape-things-main.png exists and is high quality
+- [ ] computational-collage-main.png exists and is high quality
+- [ ] dragline-main.png exists and is high quality
+
+## Original Repo READMEs
+- [ ] duo-chrome README updated with migration notice
+- [ ] crude-collage-painter README updated with migration notice
+- [ ] those-shape-things README updated with migration notice
+- [ ] computational-collage README updated with migration notice
+- [ ] dragline README updated with migration notice
+
+## Original Repo Screenshots
+- [ ] duo-chrome screenshot.png exists
+- [ ] crude-collage-painter screenshot.png exists
+- [ ] those-shape-things screenshot.png exists
+- [ ] computational-collage screenshot.png exists
+- [ ] dragline screenshot.png exists
+
+## Link Verification
+- [ ] All live demo links work
+- [ ] All monorepo links work
+- [ ] All source code links work
+- [ ] All documentation links work
+
+## Repository Status
+- [ ] All repositories remain unarchived
+- [ ] All gh-pages deployments still work
+```
+
+# Test Strategy:
+1. Use the verification checklist to systematically test all requirements
+2. Have a second team member perform an independent verification
+3. Test all links from both internal network and external network
+4. Verify screenshots display correctly on different devices and screen sizes
+5. Check GitHub Pages deployments for all 5 apps to ensure they still function
+6. Document any issues found and address them before considering the task complete

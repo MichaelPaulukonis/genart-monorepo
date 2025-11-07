@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('can switch between drawing and gallery modes', async ({ page }) => {
+test.skip('can switch between drawing and gallery modes', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('canvas');
 

@@ -1,0 +1,130 @@
+# Task ID: 23
+# Title: Set up Vitest for Unit Testing in Monorepo
+# Status: deferred
+# Dependencies: 16, 18, 19, 21, 22
+# Priority: low
+# Description: Implement Vitest for unit testing across all applications in the monorepo, focusing on non-visual logic, utility functions, and helper components after instance mode conversions are complete.
+# Details:
+This task involves setting up a comprehensive unit testing infrastructure using Vitest across the monorepo:
+
+1. **Install Dependencies**:
+   ```bash
+   # Install Vitest and related packages at the monorepo root
+   npm install -D vitest @vitest/coverage-c8 @testing-library/react jsdom @vitest/ui
+   ```
+
+2. **Configure Vitest for Nx Monorepo**:
+   - Create a base `vitest.config.ts` at the root level:
+   ```typescript
+   import { defineConfig } from 'vitest/config';
+   
+   export default defineConfig({
+     test: {
+       globals: true,
+       environment: 'jsdom',
+       include: ['**/*.{test,spec}.{js,ts,jsx,tsx}'],
+       coverage: {
+         reporter: ['text', 'json', 'html'],
+         exclude: ['**/node_modules/**', '**/dist/**', '**/*.d.ts']
+       }
+     }
+   });
+   ```
+   
+   - Create project-specific configurations that extend the base config
+   - Update `nx.json` to include Vitest targets
+
+3. **Create Shared Test Utilities**:
+   - Establish a shared test utilities library at `libs/testing-utils`:
+   ```bash
+   nx g @nrwl/js:lib testing-utils --directory=libs
+   ```
+   
+   - Implement common test helpers:
+     - Mock p5.js instance creator
+     - Color comparison utilities
+     - Canvas snapshot helpers
+     - Random seed management for deterministic tests
+
+4. **Set Up Coverage Reporting**:
+   - Configure coverage thresholds in the base config
+   - Set up GitHub Actions integration for coverage reports
+   - Create coverage badges for the README
+
+5. **Add Nx Targets**:
+   - Update `project.json` files for each app/lib to include:
+     - `test`: Run unit tests
+     - `test:watch`: Run tests in watch mode
+     - `test:coverage`: Generate coverage reports
+     - `test:ui`: Open Vitest UI for interactive testing
+
+6. **Create Test Examples for Key Areas**:
+   - Utility functions:
+     - Color palette utilities in @genart/color-palettes
+     - Math helpers in @genart/p5-utils
+     - File naming/date utilities
+   
+   - Non-visual p5.js logic:
+     - State management tests
+     - Data transformation tests
+     - Algorithm logic tests
+   
+   - Helper functions:
+     - Image scaling calculations
+     - Coordinate transformations
+     - Random selection utilities
+
+7. **Documentation**:
+   - Create a testing guide in the docs folder
+   - Document patterns for testing p5.js-specific code
+   - Add examples of good unit tests for reference
+
+8. **Integration with Existing Workflow**:
+   - Update CI pipeline to run unit tests
+   - Configure pre-commit hooks to run affected tests
+   - Set up test result reporting in pull requests
+
+# Test Strategy:
+The testing strategy for this task will verify that Vitest is correctly set up and functioning across the monorepo:
+
+1. **Verify Installation and Configuration**:
+   - Confirm Vitest and all dependencies are correctly installed
+   - Validate that the base configuration file works as expected
+   - Check that project-specific configurations extend the base correctly
+   - Ensure Nx targets are properly configured in all project.json files
+
+2. **Test Shared Utilities**:
+   - Write tests for the shared test utilities themselves
+   - Verify mock p5.js instance creator works correctly
+   - Confirm color comparison utilities produce expected results
+   - Test canvas snapshot helpers with known inputs
+
+3. **Validate Coverage Reporting**:
+   - Generate coverage reports for a sample library
+   - Verify coverage thresholds are enforced
+   - Check that reports are generated in the expected formats
+   - Confirm GitHub Actions integration works correctly
+
+4. **Test Example Implementation**:
+   - Run tests for each example area:
+     ```bash
+     nx test color-palettes
+     nx test p5-utils
+     ```
+   - Verify tests pass and provide meaningful feedback
+   - Check that tests run quickly (under 1 second per test suite)
+
+5. **Integration Testing**:
+   - Verify Vitest works with the CI pipeline
+   - Test pre-commit hooks for running affected tests
+   - Confirm test results appear correctly in pull requests
+
+6. **Documentation Verification**:
+   - Review testing guide for completeness
+   - Verify examples are clear and follow best practices
+   - Check that documentation is accessible to all team members
+
+7. **Performance Benchmarking**:
+   - Measure and record test execution times
+   - Compare with previous testing solutions
+   - Verify tests run efficiently in watch mode

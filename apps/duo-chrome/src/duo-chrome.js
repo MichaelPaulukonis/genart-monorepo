@@ -19,6 +19,7 @@
  * - Arrow keys: Size (↑↓) and navigation (←→)
  * - Cmd+Arrow keys: Color cycling
  * - X: Exchange images A and B
+ * - Shift+S: Share composition (generate URL)
  * - I: Toggle status display
  * - V: Toggle visual indicators
  * - H/?: Toggle help
@@ -34,7 +35,7 @@
  */
 
 import { p5 } from 'p5js-wrapper'
-import { RISOCOLORS, PALETTE, PALETTE_TWO } from './risocolors'
+import { RISOCOLORS, PALETTE, PALETTE_TWO, BONE_WHITE } from './risocolors'
 import { imgs } from './generated/images.js'
 import { getFormattedVersion } from './utils/version.js'
 import '../css/style.css'
@@ -68,7 +69,8 @@ const sketch = function (p) {
   let autoSave = false
   let colorLayer1 = null
   let currentBackgroundModeIndex = 0 // Start with the first background mode
-  const COLORS = [RISOCOLORS, PALETTE, PALETTE_TWO]
+  const COLORS = [BONE_WHITE, RISOCOLORS, PALETTE, PALETTE_TWO]
+  let COLOR_MAPS = []
   let colorIndex = 0
   const imgSource = './images/'
 
@@ -563,6 +565,17 @@ const sketch = function (p) {
     })
   }
 
+  /**
+   * Pre-processes the color arrays into Maps for faster lookups.
+   */
+  function initializeColorMaps() {
+    COLOR_MAPS = COLORS.map(palette => {
+      const map = new Map()
+      palette.forEach(color => map.set(color.name, color))
+      return map
+    })
+  }
+
   p.setup = function () {
     p.pixelDensity(2)
     // display mode
@@ -574,6 +587,9 @@ const sketch = function (p) {
     colorLayer1 = p.createGraphics(100, 100)
     setBlendModeAndBackground()
 
+    // Pre-process colors for faster lookups
+    initializeColorMaps()
+
     // Initialize control state
     initializeControlState()
 
@@ -583,9 +599,12 @@ const sketch = function (p) {
     // Initialize help system
     initializeHelpSystem()
 
-    initializeImageColorPairs() // Initialize both pairs initially
-    updateImageColorPair(0)
-    updateImageColorPair(1)
+    // Try to restore composition from URL, otherwise initialize random pairs
+    if (!restoreCompositionFromURL()) {
+      initializeImageColorPairs() // Initialize both pairs initially
+      updateImageColorPair(0)
+      updateImageColorPair(1)
+    }
   }
 
   p.mousePressed = function () {
@@ -607,10 +626,14 @@ const sketch = function (p) {
     } else if (p.key === 'b') {
       // Select Image B as active
       setActiveImage(1)
-    } else if (p.key === 'B') {
+    } else if (p.key === 'B' && p.keyIsDown(p.SHIFT)) {
       // Toggle background color (capital B)
       toggleBackgroundColor()
       regenerateLayers()
+    } else if (p.key === 'S' && p.keyIsDown(p.SHIFT)) {
+      // Share composition (Shift+S)
+      generateShareURL()
+      return false // Prevent default browser behavior
     } else if (p.keyCode === p.UP_ARROW) {
       // Increase active image size
       const activeIndex = getActiveImageIndex()
@@ -675,7 +698,330 @@ const sketch = function (p) {
     }
   }
 
-  function setBlendModeAndBackground() {
+  /**
+   * URL-based Composition Sharing System
+   *
+   * Functions for encoding current composition state into URL parameters
+   * and restoring compositions from shared URLs.
+   */
+
+  /**
+   * Generates a shareable URL and uses the Web Share API if available.
+   * Falls back to copying the URL to the clipboard.
+   */
+  async function generateShareURL () {
+    try {
+      const params = serializeCompositionState()
+      const baseURL = `${window.location.origin}${window.location.pathname}`
+      const shareURL = `${baseURL}?${params.toString()}`
+
+      // Update browser URL without adding to history
+      window.history.replaceState(null, null, shareURL)
+      
+      const shareData = {
+        title: 'Duo-Chrome Composition',
+        text: 'Check out this duotone composition I made!',
+        url: shareURL
+      }
+
+      // Use Web Share API if available
+      if (navigator.share && navigator.canShare(shareData)) {
+        console.log('Using Web Share API')
+        await navigator.share(shareData)
+        showShareFeedback('Composition shared!')
+      } else {
+        // Fallback to copying to clipboard
+        console.log('Web Share API not available, falling back to clipboard')
+        await copyToClipboard(shareURL)
+        showShareFeedback('URL copied to clipboard!')
+      }
+      
+      console.log('Share URL generated:', shareURL)
+    } catch (error) {
+      // Don't show an error if the user cancels the share sheet
+      if (error.name !== 'AbortError') {
+        console.error('Failed to share:', error)
+        showShareFeedback('Failed to share composition', 'error')
+      } else {
+        console.log('Share action cancelled by user.')
+      }
+    }
+  }
+
+  /**
+   * Serializes the current composition state into URL parameters.
+   * @returns {URLSearchParams} - Encoded composition parameters
+   */
+  function serializeCompositionState () {
+    const params = new URLSearchParams()
+    
+    // Image indices
+    params.set('imageA', controlState.imageIndices[0])
+    params.set('imageB', controlState.imageIndices[1])
+    
+    // Colors (use color names for readability)
+    if (imageColorPairs[0].color) {
+      params.set('colorA', imageColorPairs[0].color.name)
+    }
+    if (imageColorPairs[1].color) {
+      params.set('colorB', imageColorPairs[1].color.name)
+    }
+    
+    // Scales
+    params.set('scaleA', parseFloat(imageColorPairs[0].scale).toFixed(2))
+    params.set('scaleB', parseFloat(imageColorPairs[1].scale).toFixed(2))
+    
+    // Visual settings
+    params.set('blendMode', currentBlendModeIndex)
+    params.set('bgMode', currentBackgroundModeIndex)
+    params.set('palette', colorIndex)
+    
+    // Active image
+    params.set('active', controlState.activeImageIndex)
+    
+    // Version parameter for future compatibility
+    params.set('v', '1')
+    
+    return params
+  }
+
+  /**
+   * Restores composition state from URL parameters.
+   * Called on page load to recreate shared compositions.
+   */
+  function restoreCompositionFromURL () {
+    const params = new URLSearchParams(window.location.search)
+    
+    const imageA = params.get('imageA')
+    const imageB = params.get('imageB')
+
+    // Check if this is a shared composition
+    if (!imageA && !imageB) {
+      return false // No composition to restore
+    }
+    
+    console.log('Restoring composition from URL:', window.location.search)
+    
+    try {
+      // Restore palette first
+      const paletteParam = params.get('palette')
+      if (paletteParam) {
+        const paletteIndex = parseInt(paletteParam)
+        if (paletteIndex >= 0 && paletteIndex < COLOR_MAPS.length) {
+          colorIndex = paletteIndex
+        }
+      }
+      
+      // Restore image indices
+      if (imageA) {
+        const imageAIndex = parseInt(imageA)
+        if (imageAIndex >= 0 && imageAIndex < imgs.length) {
+          controlState.imageIndices[0] = imageAIndex
+          imageColorPairs[0].img = imgs[imageAIndex]
+        }
+      }
+      
+      if (imageB) {
+        const imageBIndex = parseInt(imageB)
+        if (imageBIndex >= 0 && imageBIndex < imgs.length) {
+          controlState.imageIndices[1] = imageBIndex
+          imageColorPairs[1].img = imgs[imageBIndex]
+        }
+      }
+      
+      // Restore colors using the optimized color map
+      const colorAName = params.get('colorA')
+      if (colorAName) {
+        const colorA = COLOR_MAPS[colorIndex].get(colorAName)
+        if (colorA) {
+          imageColorPairs[0].color = colorA
+        }
+      }
+      
+      const colorBName = params.get('colorB')
+      if (colorBName) {
+        const colorB = COLOR_MAPS[colorIndex].get(colorBName)
+        if (colorB) {
+          imageColorPairs[1].color = colorB
+        }
+      }
+      
+      // Restore scales
+      const scaleAParam = params.get('scaleA')
+      if (scaleAParam) {
+        const scaleA = parseFloat(scaleAParam)
+        if (scaleA >= 0.05 && scaleA <= 5.0) {
+          imageColorPairs[0].scale = scaleA.toFixed(2)
+          controlState.manualSizeControl[0] = true
+        }
+      }
+      
+      const scaleBParam = params.get('scaleB')
+      if (scaleBParam) {
+        const scaleB = parseFloat(scaleBParam)
+        if (scaleB >= 0.05 && scaleB <= 5.0) {
+          imageColorPairs[1].scale = scaleB.toFixed(2)
+          controlState.manualSizeControl[1] = true
+        }
+      }
+      
+      // Restore visual settings
+      const blendModeParam = params.get('blendMode')
+      if (blendModeParam) {
+        const blendIndex = parseInt(blendModeParam)
+        const currentBgMode = backgroundModes[currentBackgroundModeIndex]
+        if (blendIndex >= 0 && blendIndex < currentBgMode.blendModes.length) {
+          currentBlendModeIndex = blendIndex
+        }
+      }
+      
+      const bgModeParam = params.get('bgMode')
+      if (bgModeParam) {
+        const bgIndex = parseInt(bgModeParam)
+        if (bgIndex >= 0 && bgIndex < backgroundModes.length) {
+          currentBackgroundModeIndex = bgIndex
+          // Reset blend mode for new background
+          currentBlendModeIndex = 0
+          if (blendModeParam) {
+            const blendIndex = parseInt(blendModeParam)
+            const newBgMode = backgroundModes[currentBackgroundModeIndex]
+            if (blendIndex >= 0 && blendIndex < newBgMode.blendModes.length) {
+              currentBlendModeIndex = blendIndex
+            }
+          }
+        }
+      }
+      
+      // Restore active image
+      const activeParam = params.get('active')
+      if (activeParam) {
+        const activeIndex = parseInt(activeParam)
+        if (activeIndex === 0 || activeIndex === 1) {
+          controlState.activeImageIndex = activeIndex
+        }
+      }
+      
+      // Mark as manual mode since this is a curated composition
+      controlState.isManualMode = true
+      
+      // Pause the app to preserve the shared composition
+      pause = true
+      console.log('App paused to preserve shared composition')
+      
+      // Load the images with restored state
+      loadRestoredImages()
+      
+      // Show feedback that composition was loaded
+      showShareFeedback('Composition loaded from URL')
+      
+      console.log('Composition restored successfully')
+      return true
+      
+    } catch (error) {
+      console.error('Failed to restore composition from URL:', error)
+      showShareFeedback('Failed to load composition from URL', 'error')
+      return false
+    }
+  }
+
+  /**
+   * Loads images for restored composition state.
+   * Creates monochrome layers with the restored colors and scales.
+   */
+  function loadRestoredImages () {
+    imageColorPairs.forEach((pair, index) => {
+      if (pair.img && pair.color) {
+        p.loadImage(imgSource + pair.img, (img) => {
+          // Remove old layer if it exists
+          if (pair.layer && pair.layer.remove) {
+            pair.layer.remove()
+          }
+          
+          // Create monochrome layer with restored color
+          pair.layer = createMonochromeImage(img, p.color(pair.color.color))
+          
+          // Update display when both images are loaded
+          requestScreenUpdate()
+          updateStatusDisplay()
+        })
+      }
+    })
+  }
+
+  /**
+   * Copies text to clipboard with fallback for older browsers.
+   * @param {string} text - Text to copy to clipboard
+   */
+  async function copyToClipboard (text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      }
+    } catch (error) {
+      console.warn('Failed to copy to clipboard:', error)
+    }
+  }
+
+  /**
+   * Shows user feedback for share actions.
+   * @param {string} message - Message to display
+   * @param {string} type - 'success' or 'error'
+   */
+  function showShareFeedback (message, type = 'success') {
+    // Create or update feedback element
+    let feedback = document.getElementById('share-feedback')
+    
+    if (!feedback) {
+      feedback = document.createElement('div')
+      feedback.id = 'share-feedback'
+      feedback.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        color: white;
+        z-index: 10000;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        max-width: 300px;
+        word-wrap: break-word;
+      `
+      document.body.appendChild(feedback)
+    }
+    
+    // Set colors based on type
+    feedback.style.backgroundColor = type === 'error' ? '#ff4444' : '#4CAF50'
+    feedback.textContent = message
+    feedback.style.opacity = '1'
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      feedback.style.opacity = '0'
+      setTimeout(() => {
+        if (feedback.parentNode) {
+          feedback.parentNode.removeChild(feedback)
+        }
+      }, 300)
+    }, 3000)
+  }
+
+  function setBlendModeAndBackground () {
     const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
     p.background(p.color(...currentBackgroundMode.color))

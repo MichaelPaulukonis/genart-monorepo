@@ -1,0 +1,169 @@
+# Task ID: 21
+# Title: Create p5.js Global to Instance Mode Conversion Tool
+# Status: pending
+# Dependencies: 15, 20
+# Priority: high
+# Description: Develop an automated conversion script that transforms p5.js global mode code to instance mode, handling the mechanical bulk of the conversion work while preserving code structure and functionality.
+# Details:
+This task involves creating a robust conversion tool that can automatically transform p5.js code from global mode to instance mode:
+
+1. **Tool Architecture**:
+   - Create a Node.js script that can be run from the command line
+   - Use an AST (Abstract Syntax Tree) parser like Babel or Acorn for accurate code transformation
+   - Implement a modular design with separate components for parsing, transformation, and output
+
+2. **P5.js API Reference Database**:
+   - Create a comprehensive JSON database of all p5.js functions, properties, and constants
+   - Categorize them by type (function, property, constant)
+   - Include lifecycle functions (setup, draw, preload, etc.)
+   - This database will be used to identify p5.js elements in the code
+
+3. **Code Parsing and Analysis**:
+   ```javascript
+   // Example parsing code
+   const ast = parser.parse(sourceCode, {
+     sourceType: 'module',
+     plugins: ['jsx', 'typescript']
+   });
+   ```
+   
+   - Parse JavaScript code into an AST
+   - Traverse the AST to identify:
+     - Global p5.js function calls (e.g., `rect()`, `ellipse()`)
+     - Property accesses (e.g., `width`, `height`)
+     - Constants (e.g., `CENTER`, `PI`)
+     - Lifecycle function declarations
+     - Import statements
+
+4. **Transformation Logic**:
+   - Add `p.` prefix to all p5.js functions, properties, and constants
+   - Convert lifecycle functions to instance mode format:
+     ```javascript
+     // From:
+     function setup() {
+       createCanvas(400, 400);
+     }
+     
+     // To:
+     p.setup = function() {
+       p.createCanvas(400, 400);
+     };
+     ```
+   - Wrap the entire sketch in an instance mode closure:
+     ```javascript
+     new p5(function(p) {
+       // Converted sketch code here
+     });
+     ```
+   - Update import statements to use p5js-wrapper:
+     ```javascript
+     // From:
+     import p5 from 'p5';
+     
+     // To:
+     import { p5 } from 'p5js-wrapper';
+     ```
+
+5. **Edge Case Handling**:
+   - Preserve non-p5 code unchanged
+   - Handle nested function calls correctly
+   - Maintain proper indentation and code style
+   - Preserve comments and formatting
+   - Handle variable declarations that might conflict with p5 properties
+   - Detect and flag potential naming conflicts
+
+6. **Output and Reporting**:
+   - Generate converted code with preserved formatting
+   - Create a detailed conversion report including:
+     - Number of transformations made by type
+     - List of all changes
+     - Flagged items requiring manual review
+     - Before/after diff
+   - Output the report in both console and file formats
+
+7. **Safety Features**:
+   - Implement a dry-run mode that shows changes without applying them
+   - Create automatic backups of original files
+   - Add syntax validation to ensure output code is valid JavaScript
+   - Include an undo option to revert changes
+
+8. **CLI Interface**:
+   ```javascript
+   // Example CLI setup
+   const program = require('commander');
+   
+   program
+     .version('1.0.0')
+     .description('Convert p5.js code from global mode to instance mode')
+     .option('-i, --input <file>', 'Input file path')
+     .option('-o, --output <file>', 'Output file path')
+     .option('-d, --dry-run', 'Show changes without applying them')
+     .option('-b, --backup', 'Create backup of original file')
+     .parse(process.argv);
+   ```
+
+9. **Testing Approach**:
+   - Create a suite of test cases with varying complexity
+   - Include edge cases and common p5.js patterns
+   - Verify conversions maintain functionality
+   - Test on small samples before applying to full applications
+
+10. **Documentation**:
+    - Create comprehensive usage documentation
+    - Include examples of common conversion scenarios
+    - Document known limitations and edge cases
+    - Provide troubleshooting guidance
+
+# Test Strategy:
+1. **Unit Testing**:
+   - Create unit tests for each component of the conversion tool:
+     - Test the p5.js API reference database for completeness
+     - Verify the AST parsing correctly identifies p5.js elements
+     - Test transformation logic on isolated code snippets
+     - Validate output formatting preserves code style
+   - Use Jest or Mocha for automated testing
+
+2. **Integration Testing**:
+   - Test the complete conversion pipeline on sample code snippets
+   - Verify the tool correctly handles different p5.js coding patterns
+   - Test with various input file formats and encodings
+   - Validate CLI interface and options work as expected
+
+3. **Functional Testing**:
+   - Create a test suite of small p5.js sketches in global mode
+   - Run the conversion tool on each test sketch
+   - Verify the converted code runs correctly in a browser
+   - Compare visual output before and after conversion
+   - Check that all functionality is preserved
+
+4. **Edge Case Testing**:
+   - Test with code that mixes p5.js and non-p5.js functions
+   - Verify handling of nested function calls
+   - Test with code that uses p5.js function names for other purposes
+   - Validate handling of comments and whitespace
+   - Test with minified/compressed code
+
+5. **Regression Testing**:
+   - Apply the tool to the actual project apps (duo-chrome, crude-collage-painter, etc.)
+   - Compare the output with expected instance mode conversion
+   - Verify the converted apps function correctly
+   - Run existing app tests on the converted code
+
+6. **Performance Testing**:
+   - Test with large files to ensure reasonable performance
+   - Measure memory usage during conversion
+   - Verify the tool can handle complex sketches without crashing
+
+7. **Usability Testing**:
+   - Verify clear error messages for invalid inputs
+   - Test the dry-run mode provides accurate previews
+   - Validate backup functionality works correctly
+   - Check that the conversion report is clear and actionable
+
+8. **Validation Criteria**:
+   - Converted code must run without errors
+   - Visual output must match original sketch
+   - Interactive elements must function correctly
+   - Code style and formatting should be preserved where possible
+   - All p5.js functions must be properly prefixed with `p.`
+   - Instance mode structure must be correctly implemented

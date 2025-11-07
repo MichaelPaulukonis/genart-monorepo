@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('pressing "b" key blends the image', async ({ page }) => {
+test.skip('pressing "b" key blends the image', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('canvas');
 

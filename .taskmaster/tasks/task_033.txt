@@ -1,0 +1,132 @@
+# Task ID: 33
+# Title: Implement Advanced Blend Modes for Duo-Chrome Monochrome Image Rendering
+# Status: pending
+# Dependencies: 28, 32
+# Priority: low
+# Description: Enhance the duo-chrome app's monochrome image rendering by implementing and experimenting with different blend modes to achieve better visual effects and artistic output.
+# Details:
+This task involves implementing advanced blend modes to improve the monochrome image rendering in the duo-chrome application. The initial implementation has already changed the blend mode from 'multiply' to 'destination-in' in the createMonochromeImage function:
+
+1. **Research and Selection of Blend Modes**:
+   - Research p5.js supported blend modes (BLEND, ADD, MULTIPLY, SCREEN, OVERLAY, HARD_LIGHT, SOFT_LIGHT, DODGE, BURN, etc.)
+   - Research CSS/Canvas blend modes like 'destination-in' which uses the image as a mask
+   - Analyze which blend modes work best with monochrome imagery
+   - Document the visual characteristics of each blend mode with monochrome content
+
+2. **Implementation of Blend Mode System**:
+   ```javascript
+   // Example implementation of blend mode selection
+   function applyBlendMode(graphics, mode) {
+     switch(mode) {
+       case 'multiply':
+         graphics.blendMode(MULTIPLY);
+         break;
+       case 'screen':
+         graphics.blendMode(SCREEN);
+         break;
+       case 'overlay':
+         graphics.blendMode(OVERLAY);
+         break;
+       case 'destination-in':
+         // Special handling for CSS/Canvas blend modes
+         // This mode uses the image as a mask, only keeping parts where source and destination overlap
+         graphics.blendMode('destination-in');
+         break;
+       // Add more blend modes as needed
+       default:
+         graphics.blendMode(BLEND);
+     }
+   }
+   ```
+
+3. **Integration with Layer System**:
+   - Modify the existing rendering pipeline to incorporate blend modes
+   - Add blend mode parameter to layer configuration
+   - Ensure blend modes work correctly with the off-screen rendering system
+   - Implement proper stacking of blend modes across multiple layers
+   - Build upon the existing 'destination-in' implementation in createMonochromeImage function
+
+4. **UI Controls for Blend Mode Selection**:
+   - Add UI controls to allow users to select different blend modes
+   - Implement real-time preview of blend mode changes
+   - Create presets of effective blend mode combinations
+   - Include 'destination-in' as one of the available options
+
+5. **Performance Optimization**:
+   - Test performance impact of different blend modes
+   - Optimize rendering for blend modes that are computationally expensive
+   - Implement caching for static elements when possible
+   - Compare performance between p5.js blend modes and CSS/Canvas blend modes
+
+6. **Documentation**:
+   - Document the available blend modes and their effects
+   - Create visual examples of each blend mode
+   - Update technical documentation with new blend mode capabilities
+   - Provide specific documentation on the 'destination-in' mode and its masking effect
+
+# Test Strategy:
+1. **Visual Testing**:
+   - Create a test composition with multiple layers using different blend modes
+   - Compare the visual output against expected results for each blend mode
+   - Verify that the blend modes produce the intended artistic effects
+   - Test with various monochrome images to ensure consistent results
+   - Specifically test the 'destination-in' mode to verify its masking effect works correctly
+
+2. **Functional Testing**:
+   - Verify all implemented blend modes work correctly
+   - Test switching between blend modes at runtime
+   - Ensure blend modes are correctly applied to the appropriate layers
+   - Validate that blend mode changes are reflected in the final rendered output
+   - Test the transition between the previous 'multiply' mode and the new 'destination-in' mode
+
+3. **Performance Testing**:
+   - Measure rendering performance with different blend modes
+   - Test with complex compositions to ensure acceptable frame rates
+   - Identify and optimize any blend modes that cause significant performance degradation
+   - Verify performance on both high-end and low-end devices
+   - Compare performance between p5.js native blend modes and CSS/Canvas blend modes
+
+4. **Integration Testing**:
+   - Test blend modes with the existing layer system
+   - Verify compatibility with the off-screen rendering system
+   - Ensure blend modes work correctly when exporting high-resolution images
+   - Test with the deterministic random seed system to ensure reproducibility
+   - Verify the createMonochromeImage function works correctly with the 'destination-in' blend mode
+
+5. **UI Testing**:
+   - Verify UI controls for blend mode selection function correctly
+   - Test that real-time previews accurately reflect the selected blend modes
+   - Ensure blend mode presets load and apply correctly
+   - Test accessibility of blend mode controls
+
+# Subtasks:
+## 1. Document the 'destination-in' blend mode implementation [pending]
+### Dependencies: None
+### Description: Create documentation for the already implemented 'destination-in' blend mode in the createMonochromeImage function, explaining how it creates a masking effect by only keeping parts where source and destination overlap.
+### Details:
+
+
+## 2. Research additional blend modes compatible with the current implementation [pending]
+### Dependencies: None
+### Description: Research and document additional blend modes that would work well with the current implementation, focusing on both p5.js supported modes and CSS/Canvas blend modes.
+### Details:
+
+
+## 3. Create a blend mode selection system [pending]
+### Dependencies: None
+### Description: Implement a system that allows switching between different blend modes, including the currently implemented 'destination-in' mode and other options like 'multiply', 'screen', etc.
+### Details:
+
+
+## 4. Develop UI controls for blend mode selection [pending]
+### Dependencies: None
+### Description: Add UI elements that allow users to select and preview different blend modes in real-time.
+### Details:
+
+
+## 5. Test and optimize blend mode performance [pending]
+### Dependencies: None
+### Description: Test the performance impact of different blend modes and optimize rendering, particularly comparing the performance of 'destination-in' with other blend modes.
+### Details:
+
+

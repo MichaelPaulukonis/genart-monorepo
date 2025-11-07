@@ -1,0 +1,113 @@
+# Task ID: 41
+# Title: Implement Circular Cursor for Crude-Collage-Painter
+# Status: pending
+# Dependencies: 39
+# Priority: medium
+# Description: Replace the default cursor with a circular cursor that visually represents the brush size and provides immediate visual feedback during painting operations in the crude-collage-painter app.
+# Details:
+This task involves implementing a custom circular cursor to replace the default system cursor in the crude-collage-painter app:
+
+1. **Hide Default Cursor**:
+   - Set cursor to 'none' on the canvas element:
+   ```javascript
+   function setup() {
+     // existing setup code
+     canvas.style('cursor', 'none');
+   }
+   ```
+
+2. **Implement Circular Cursor**:
+   - Add cursor drawing logic to the draw function:
+   ```javascript
+   function draw() {
+     // existing drawing code
+     
+     // Draw cursor at current mouse position
+     drawBrushCursor(mouseX, mouseY, currentBrushSize);
+   }
+   
+   function drawBrushCursor(x, y, size) {
+     push();
+     noFill();
+     stroke(0);
+     strokeWeight(1);
+     circle(x, y, size);
+     
+     // Add inner circle or crosshair for precision
+     stroke(255);
+     strokeWeight(0.5);
+     line(x-3, y, x+3, y);
+     line(x, y-3, x, y+3);
+     pop();
+   }
+   ```
+
+3. **Add Visual States**:
+   - Modify cursor appearance based on painting state:
+   ```javascript
+   function drawBrushCursor(x, y, size) {
+     push();
+     if (isActivePainting) {
+       // Active painting state
+       stroke(255, 0, 0); // Red outline when painting
+       strokeWeight(2);
+     } else {
+       // Idle state
+       stroke(0);
+       strokeWeight(1);
+     }
+     circle(x, y, size);
+     pop();
+   }
+   ```
+
+4. **Handle Canvas Boundaries**:
+   - Only show the cursor when within canvas bounds:
+   ```javascript
+   function draw() {
+     // existing drawing code
+     
+     if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+       drawBrushCursor(mouseX, mouseY, currentBrushSize);
+     }
+   }
+   ```
+
+5. **Brush Size Reflection**:
+   - Ensure the cursor size updates immediately when brush size changes:
+   ```javascript
+   function updateBrushSize(newSize) {
+     currentBrushSize = newSize;
+     // No need to wait for redraw, cursor will update in next draw cycle
+   }
+   ```
+
+6. **Performance Considerations**:
+   - Use requestAnimationFrame or p5.js draw loop for efficient cursor updates
+   - Consider adding a small amount of smoothing for better visual experience on lower-end devices
+
+# Test Strategy:
+1. **Basic Functionality Tests**:
+   - Verify the default cursor disappears when hovering over the canvas
+   - Confirm the circular cursor appears and follows the mouse position accurately
+   - Check that the cursor properly shows/hides when entering/leaving the canvas area
+
+2. **Visual Feedback Tests**:
+   - Verify the cursor appearance changes when actively painting (mousePressed)
+   - Confirm the cursor returns to idle state when painting stops (mouseReleased)
+   - Test the cursor visibility against different background colors/patterns
+
+3. **Brush Size Tests**:
+   - Change the brush size using app controls and verify cursor size updates accordingly
+   - Test extreme brush sizes (very small and very large) to ensure cursor remains usable
+   - Verify the cursor size matches the actual paint area when drawing
+
+4. **Edge Cases**:
+   - Test cursor behavior when the mouse moves very quickly
+   - Verify cursor works correctly when the window loses/regains focus
+   - Test cursor appearance when partially off-canvas
+   - Check cursor behavior during window resize events
+
+5. **Browser Compatibility**:
+   - Test in multiple browsers to ensure consistent cursor behavior
+   - Verify performance on different devices including touch devices

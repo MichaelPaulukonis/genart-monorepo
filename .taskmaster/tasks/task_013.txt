@@ -1,0 +1,81 @@
+# Task ID: 13
+# Title: Fix Black Background Toggle in those-shape-things App
+# Status: pending
+# Dependencies: 7, 11
+# Priority: medium
+# Description: Debug and fix the 'b' key background toggle functionality in the those-shape-things app, which currently fails to properly switch between black and white backgrounds.
+# Details:
+Implement a fix for the black background toggle functionality in the those-shape-things app:
+
+1. Locate the keyboard event handler that processes the 'b' key press:
+   ```javascript
+   function keyPressed() {
+     if (key === 'b' || key === 'B') {
+       toggleBackground();
+     }
+     // other key handlers...
+   }
+   ```
+
+2. Debug the `toggleBackground()` function to identify why the black background is not displaying correctly:
+   - Check if the function exists and is being called when 'b' is pressed
+   - Verify the current implementation of the toggle logic
+   - Look for issues with the background color setting or rendering
+
+3. Implement the fix based on findings. Likely solutions include:
+   ```javascript
+   // Option 1: If the function exists but has a logic error
+   function toggleBackground() {
+     // Fix the existing logic, e.g.:
+     isBlackBackground = !isBlackBackground;
+     backgroundColor = isBlackBackground ? 0 : 255; // Ensure proper color values
+   }
+   
+   // Option 2: If the function is missing or needs to be rewritten
+   function toggleBackground() {
+     if (backgroundColor === 255 || backgroundColor === '#FFFFFF') {
+       backgroundColor = 0; // or '#000000' depending on how colors are handled
+     } else {
+       backgroundColor = 255; // or '#FFFFFF'
+     }
+     redraw(); // Ensure canvas is redrawn with new background
+   }
+   ```
+
+4. Ensure the background color is properly applied in the draw loop:
+   ```javascript
+   function draw() {
+     background(backgroundColor);
+     // rest of drawing code...
+   }
+   ```
+
+5. Add a state variable if one doesn't exist to track the current background state:
+   ```javascript
+   let isBlackBackground = false; // Add to global variables
+   ```
+
+6. Update the help overlay (from Task 11) to ensure it correctly describes the 'b' key functionality.
+
+# Test Strategy:
+1. Launch the those-shape-things app in a browser.
+
+2. Test the basic background toggle functionality:
+   - Press the 'b' key and verify the background changes from white to black
+   - Press the 'b' key again and verify it changes back to white
+   - Repeat several times to ensure consistent toggling
+
+3. Test edge cases:
+   - Rapidly press the 'b' key multiple times to ensure the toggle doesn't break
+   - Test the toggle after generating new shapes to ensure it persists correctly
+   - Test the toggle before any shapes are generated
+
+4. Verify visual appearance:
+   - Ensure shapes are clearly visible against both background colors
+   - Check that the contrast between shapes and background is appropriate in both modes
+
+5. Cross-browser testing:
+   - Test the functionality in Chrome, Firefox, and Safari to ensure consistent behavior
+   - Test on both desktop and mobile devices if applicable
+
+6. Verify the help overlay (if implemented from Task 11) correctly describes the 'b' key functionality.

@@ -1,0 +1,131 @@
+# Task ID: 14
+# Title: Add Help Screen to Computational-Collage App
+# Status: pending
+# Dependencies: 7, 11
+# Priority: medium
+# Description: Create a toggleable overlay that displays keyboard controls and composition mode descriptions for the computational-collage app, providing users with an accessible reference for app functionality.
+# Details:
+Implement a help screen overlay for the computational-collage app:
+
+1. Create HTML structure for the help overlay:
+   ```html
+   <div id="help-overlay" class="help-overlay hidden">
+     <div class="help-content">
+       <h2>Computational Collage Controls</h2>
+       <ul>
+         <li><strong>0-9</strong>: Switch between composition modes</li>
+         <li><strong>s</strong>: Save current composition</li>
+         <li><strong>g</strong>: Open gallery view</li>
+         <li><strong>b</strong>: Toggle blend mode</li>
+         <li><strong>u</strong>: Upload custom image</li>
+         <li><strong>i</strong>: Toggle parameter panel</li>
+         <li><strong>h/i</strong>: Toggle this help screen</li>
+       </ul>
+       
+       <h3>Composition Modes</h3>
+       <ul>
+         <li><strong>Mode 0</strong>: [Description of mode 0]</li>
+         <li><strong>Mode 1</strong>: [Description of mode 1]</li>
+         <!-- Add descriptions for all available modes -->
+       </ul>
+     </div>
+   </div>
+   ```
+
+2. Add CSS styling for the help overlay:
+   ```css
+   .help-overlay {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background-color: rgba(0, 0, 0, 0.8);
+     z-index: 1000;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     color: white;
+   }
+   
+   .help-content {
+     max-width: 600px;
+     padding: 20px;
+     background-color: rgba(30, 30, 30, 0.9);
+     border-radius: 8px;
+     max-height: 80vh;
+     overflow-y: auto;
+   }
+   
+   .hidden {
+     display: none;
+   }
+   ```
+
+3. Implement JavaScript functionality to toggle the help overlay:
+   ```javascript
+   function keyPressed() {
+     // Existing key handlers...
+     
+     // Add help toggle functionality
+     if (key === 'h' || key === 'H' || key === 'i' || key === 'I') {
+       toggleHelpOverlay();
+     }
+   }
+   
+   function toggleHelpOverlay() {
+     const helpOverlay = document.getElementById('help-overlay');
+     helpOverlay.classList.toggle('hidden');
+   }
+   ```
+
+4. Ensure the help overlay content accurately describes all available keyboard shortcuts and composition modes in the computational-collage app.
+
+5. Make sure the overlay is responsive and displays correctly on different screen sizes.
+
+6. Add a small help icon in the corner of the UI that users can click to toggle the help overlay as an alternative to keyboard shortcuts.
+
+7. Consider adding a "Click anywhere to close" message at the bottom of the help overlay and implement the corresponding functionality:
+   ```javascript
+   document.getElementById('help-overlay').addEventListener('click', function(event) {
+     if (event.target === this) {
+       toggleHelpOverlay();
+     }
+   });
+   ```
+
+8. Review the implementation approach used in Task #11 (duo-chrome help overlay) for consistency across apps.
+
+# Test Strategy:
+1. Verify the help overlay is hidden by default when the app loads:
+   - Launch the computational-collage app
+   - Confirm the help overlay is not visible
+
+2. Test toggling the help overlay using keyboard shortcuts:
+   - Press the 'h' key and verify the help overlay appears
+   - Press the 'h' key again and verify the help overlay disappears
+   - Press the 'i' key and verify the help overlay appears
+   - Press the 'i' key again and verify the help overlay disappears
+
+3. Test the help overlay content:
+   - Verify all keyboard shortcuts are correctly listed
+   - Confirm all composition modes (0-9) are described accurately
+   - Check that the descriptions match the actual functionality of the app
+
+4. Test the help overlay appearance:
+   - Verify the overlay is properly centered and formatted
+   - Check that text is readable with good contrast
+   - Test on different screen sizes to ensure responsive behavior
+
+5. Test clicking functionality:
+   - If implemented, verify clicking the help icon toggles the overlay
+   - If implemented, verify clicking outside the help content area closes the overlay
+
+6. Cross-browser testing:
+   - Test the help overlay in Chrome, Firefox, and Safari
+   - Verify consistent appearance and behavior across browsers
+
+7. Accessibility testing:
+   - Verify the help overlay can be navigated using keyboard
+   - Check that screen readers can properly read the help content
+   - Ensure color contrast meets accessibility standards

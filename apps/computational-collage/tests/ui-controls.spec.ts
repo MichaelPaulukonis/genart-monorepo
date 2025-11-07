@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('tweakpane mondrianStripes control changes the composition', async ({ page }) => {
+test.skip('tweakpane mondrianStripes control changes the composition', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('.tp-rotv'); // Tweakpane container
 

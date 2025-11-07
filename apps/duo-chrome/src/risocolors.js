@@ -1,7 +1,7 @@
 export const RISOCOLORS = [
   { name: 'APRICOT', color: [246, 160, 77] },
   { name: 'AQUA', color: [94, 200, 229] },
-  // { name: "BLACK", color: [0, 0, 0] },
+  { name: "BLACK", color: [0, 0, 0] },
   { name: 'BLUE', color: [0, 120, 191] },
   { name: 'BRICK', color: [167, 81, 84] },
   { name: 'BRIGHTGOLD', color: [186, 128, 50] },
@@ -100,4 +100,13 @@ export const PALETTE_TWO = [
   { name: 'foo', color: '#e195bb' },
   { name: 'foo', color: '#aa4d7e' },
   { name: 'foo', color: '#34495e' }
+]
+
+export const BONE_WHITE = [
+  { name: 'foo', color: '#676767' },
+  { name: 'foo', color: '#808080' },
+  { name: 'foo', color: '#ffffff' },
+  { name: 'foo', color: '#f5f5f5' },
+  { name: 'foo', color: '#e2e5de' },
+  { name: 'foo', color: '#b2beb5' }
 ]

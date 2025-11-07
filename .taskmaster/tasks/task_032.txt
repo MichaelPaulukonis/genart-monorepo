@@ -1,0 +1,17 @@
+# Task ID: 32
+# Title: Implement Deterministic Random Seed System for Duo-Chrome App
+# Status: pending
+# Dependencies: 28
+# Priority: medium
+# Description: Add a deterministic random seed system to the duo-chrome app that reads a 'seed' URL parameter on page load, initializes a seeded random number generator for reproducible compositions, and updates the URL with a generated seed if none is provided.
+# Details:
+Integrate a seeded random number generator (such as the 'seedrandom' library) into the duo-chrome app to ensure deterministic art generation. On page load, parse the URL for a 'seed' parameter using `URLSearchParams`. If a seed is present, use it to initialize a local PRNG instance (e.g., `const rng = new Math.seedrandom(seed)`), ensuring all randomization in composition logic uses this instance for reproducibility[2][1]. If no seed is found, generate a new random seed (using a secure method like `window.crypto.getRandomValues` for entropy[4]), update the URL with this seed (using `history.replaceState` or `window.location.search`), and initialize the PRNG with it. Ensure the seed is displayed in the UI for easy sharing and bookmarking. Refactor all composition generation code to use the seeded PRNG, not global `Math.random`, to guarantee determinism. Document the system for users and developers, including how to share and bookmark compositions. Consider edge cases such as invalid seed values and ensure graceful fallback or error messaging. For regression testing, expose the seed value and provide a utility to re-generate compositions from a given seed.
+
+# Test Strategy:
+1. Load the app with a specific seed in the URL (e.g., `?seed=abc123`) and verify that the same composition is generated every time.
+2. Load the app without a seed; confirm a new seed is generated, added to the URL, and used for composition.
+3. Bookmark and reload a composition; verify the output is identical.
+4. Share a seed URL between devices/browsers and confirm reproducibility.
+5. Run visual regression tests by generating compositions with known seeds and comparing outputs pixel-by-pixel.
+6. Test with invalid or edge-case seed values and ensure the app handles them gracefully.
+7. Confirm all randomization in composition logic uses the seeded PRNG, not global Math.random.

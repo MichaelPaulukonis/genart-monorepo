@@ -1,0 +1,28 @@
+# Task ID: 31
+# Title: Automate Image List Module Generation at Build Time with Vite
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Implement a build-time system that scans image directories and generates JavaScript modules exporting arrays of image filenames, fully integrated with Vite's build process.
+# Details:
+Develop a custom Vite plugin (or a standalone Node.js script invoked via Vite's build hooks) that recursively scans specified image directories (e.g., public/images/) during the build process. For each directory, generate a corresponding JavaScript (or TypeScript) module (e.g., images.js) that exports an array of relative image filenames. 
+
+Key implementation steps:
+- Use Node.js file system APIs (fs/promises, path) to scan directories and filter for image file extensions (e.g., .png, .jpg, .jpeg, .gif, .svg, .webp).
+- Support recursive directory traversal if subfolders are present, optionally generating nested arrays or flattening paths as needed.
+- Generate modules in a predictable location (e.g., src/generated/images.js) with named exports for each directory or a default export for a single directory.
+- Ensure generated modules are updated on each build, overwriting previous output.
+- Integrate with Vite by implementing the plugin API (using hooks like buildStart or generateBundle) or by running the script as a pre-build step via package.json scripts.
+- Document usage so that application code can import the generated modules directly (e.g., import images from 'src/generated/images.js').
+- Consider cross-platform path handling and ensure compatibility with Vite's asset handling and public directory conventions[1][2][3].
+- Optionally, add configuration for directory paths and output module location via plugin options or environment variables.
+- Follow best practices for code generation: idempotency, clear error handling, and minimal build-time overhead.
+
+# Test Strategy:
+1. Add and remove images in the target directory, run the build, and verify that the generated module accurately reflects the current directory contents.
+2. Import the generated module in application code and confirm that all listed filenames are correct and accessible at runtime.
+3. Test with nested directories (if supported) and verify correct export structure.
+4. Ensure the build process fails gracefully with clear errors if the directory is missing or inaccessible.
+5. Validate that the generated module is updated on every build and does not require manual intervention.
+6. Review the generated code for correct syntax, export structure, and cross-platform path compatibility.
+7. Confirm that the solution works with Vite's dev server (hot reload) and production build outputs.

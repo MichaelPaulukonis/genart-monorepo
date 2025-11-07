@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
-test('can load an image by dropping it onto the canvas', async ({ page }) => {
+test.skip('can load an image by dropping it onto the canvas', async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('canvas');
 

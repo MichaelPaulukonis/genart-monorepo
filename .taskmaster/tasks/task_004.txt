@@ -1,0 +1,44 @@
+# Task ID: 4
+# Title: Generate README for duo-chrome repository
+# Status: done
+# Dependencies: 2
+# Priority: medium
+# Description: Create and update the README.md for the duo-chrome repository using the archived repo template
+# Details:
+Using the template created in Task 2, generate a README.md file for the duo-chrome repository:
+
+1. Copy the template and replace all placeholders with duo-chrome specific information
+2. Include a brief description of what duo-chrome does
+3. Update all links to point to the correct locations
+4. Reference the screenshot that will be added in a later task
+5. Ensure the README clearly indicates the repository has moved to the monorepo
+
+Example implementation:
+```markdown
+# Duo-Chrome - MOVED TO MONOREPO
+
+> ⚠️ **REPOSITORY MOVED**: This project has been migrated to the [genart-monorepo](https://github.com/username/genart-monorepo).
+
+![Screenshot of Duo-Chrome](screenshot.png)
+
+## Links
+- [Live Demo](https://username.github.io/duo-chrome/) (still active)
+- [Source Code](https://github.com/username/genart-monorepo/tree/main/apps/duo-chrome)
+- [Documentation](https://github.com/username/genart-monorepo/tree/main/docs/duo-chrome)
+
+## About
+Duo-Chrome is a generative art application that creates compositions using two-color palettes and geometric shapes.
+
+## Development
+This project is now developed as part of the genart-monorepo. Please refer to the [monorepo documentation](https://github.com/username/genart-monorepo) for development instructions.
+
+## License
+MIT
+```
+
+# Test Strategy:
+1. Verify all placeholders have been replaced with duo-chrome specific information
+2. Check that all links are correctly formatted and point to valid locations
+3. Confirm the README includes all required sections from the PRD
+4. Validate that the screenshot reference uses the correct path
+5. Ensure the migration notice is prominently displayed at the top

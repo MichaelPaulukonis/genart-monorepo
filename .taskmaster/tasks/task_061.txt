@@ -1,0 +1,67 @@
+# Task ID: 61
+# Title: Fix Monochromifier Save-Image Export to Match On-Screen Display
+# Status: done
+# Dependencies: 30
+# Priority: medium
+# Description: Resolve the inconsistency between the on-screen display and exported images in the monochromifier app, ensuring exported images maintain the same format (square, visible area, etc.) as what users see on screen.
+# Details:
+1. Architectural clarification (completed):
+   - `displayLayer` is the high-resolution (2000x2000) export layer, not the display layer as previously thought
+   - The main p5 canvas (600x600) shows a scaled-down version of displayLayer
+   - The issue was that transparency mode was recreating image processing instead of using the already-processed displayLayer
+
+2. Solution implemented:
+   ```javascript
+   function saveCurrentImage() {
+     // Always use displayLayer as the base for export (maintains 2000x2000 resolution)
+     let exportLayer;
+     
+     if (!transparencyMode) {
+       // For standard mode: return displayLayer directly
+       exportLayer = displayLayer;
+     } else {
+       // For transparency mode: create a copy and apply transparency processing
+       exportLayer = createGraphics(outputSize, outputSize);
+       // Apply necessary transparency processing to the copy
+       exportLayer.copy(displayLayer, 0, 0, outputSize, outputSize, 0, 0, outputSize, outputSize);
+       // Apply any additional transparency-specific processing
+     }
+     
+     saveCanvas(exportLayer, 'monochrome-creation', 'png');
+   }
+   ```
+
+3. Key improvements:
+   - Exports are now 2000x2000 pixels (outputSize x outputSize) as intended
+   - Exported images match the on-screen display exactly in content and formatting
+   - All transformations, zoom, paint strokes, etc. are preserved
+   - Both transparency and standard modes work consistently
+
+4. Final verification:
+   - Confirm exports match screen display in all modes and states
+   - Test various transformations and view configurations
+   - Verify file naming and format options
+
+# Test Strategy:
+1. Verify export functionality with new implementation:
+   - Test exporting images in standard mode and verify dimensions are 2000x2000
+   - Test exporting images in transparency mode and verify correct transparency rendering
+   - Compare exported content with on-screen display for pixel-perfect match
+
+2. Test specific use cases and transformations:
+   - Test with various zoom levels to ensure the correct content is exported
+   - Verify that any paint strokes, effects, or transformations are preserved
+   - Confirm that the full 2000x2000 output size is maintained regardless of view settings
+
+3. Test mode-specific behavior:
+   - Verify standard mode directly exports displayLayer without modifications
+   - Verify transparency mode correctly applies transparency effects to exports
+   - Test switching between modes and confirm export behavior is consistent
+
+4. Cross-browser compatibility:
+   - Verify export works consistently in Chrome, Firefox, Safari, and Edge
+   - Test with different device types and screen resolutions
+
+5. Performance testing:
+   - Measure export time for large/complex images in both standard and transparency modes
+   - Verify memory usage during export of high-resolution outputs

@@ -28,7 +28,7 @@ Our testing infrastructure provides specialized utilities for testing p5.js canv
 
 ```bash
 # Install Playwright and browsers
-npm install -D @playwright/test
+pnpm install -D @playwright/test
 npx playwright install
 ```
 

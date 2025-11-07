@@ -1,0 +1,134 @@
+# Task ID: 27
+# Title: Enable Comprehensive E2E Testing for Computational-Collage After Instance Mode Conversion
+# Status: deferred
+# Dependencies: 15, 26
+# Priority: low
+# Description: Update E2E tests for computational-collage to remove skipped tests and ensure full test coverage after the app's conversion to instance mode, addressing canvas content detection and overlay UI interaction issues.
+# Details:
+This task involves updating the E2E tests for the computational-collage app to ensure comprehensive test coverage after the instance mode conversion:
+
+1. **Identify and analyze the skipped tests**:
+   - Locate the two skipped tests in the E2E test suite:
+     - "canvas has content after initialization"
+     - "utilities can import correctly"
+   - Review the reasons for skipping (blank canvas on initialization and overlay UI interference)
+
+2. **Remove test.skip() conditions**:
+   ```typescript
+   // FROM:
+   test.skip('canvas has content after initialization', async ({ page }) => {
+     // Test implementation
+   });
+   
+   // TO:
+   test('canvas has content after initialization', async ({ page }) => {
+     // Updated test implementation
+   });
+   ```
+
+3. **Update canvas content detection test**:
+   - Modify the test to account for the app's specific rendering patterns
+   - Add appropriate wait conditions for canvas initialization
+   - Implement a reliable method to detect canvas content:
+   ```typescript
+   test('canvas has content after initialization', async ({ page }) => {
+     await page.goto('/apps/computational-collage');
+     
+     // Wait for canvas to be fully initialized
+     await page.waitForSelector('canvas');
+     await page.waitForTimeout(500); // Allow time for p5.js to render initial content
+     
+     // Check for canvas content using pixel data
+     const hasContent = await page.evaluate(() => {
+       const canvas = document.querySelector('canvas');
+       const ctx = canvas.getContext('2d');
+       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+       const data = imageData.data;
+       
+       // Check if canvas has non-transparent pixels
+       for (let i = 0; i < data.length; i += 4) {
+         if (data[i+3] > 0) return true; // Alpha channel > 0 means content exists
+       }
+       return false;
+     });
+     
+     expect(hasContent).toBeTruthy();
+   });
+   ```
+
+4. **Handle overlay UI interactions**:
+   - Implement methods to manage the app's overlay UI during testing
+   - Create helper functions to dismiss or interact with overlays:
+   ```typescript
+   // Helper function to dismiss overlay if present
+   async function dismissOverlayIfPresent(page) {
+     const overlayVisible = await page.evaluate(() => {
+       const overlay = document.querySelector('.overlay');
+       return overlay && window.getComputedStyle(overlay).display !== 'none';
+     });
+     
+     if (overlayVisible) {
+       await page.keyboard.press('Escape'); // Assuming ESC dismisses the overlay
+       await page.waitForTimeout(300); // Wait for animation
+     }
+   }
+   
+   test('utilities can import correctly', async ({ page }) => {
+     await page.goto('/apps/computational-collage');
+     await dismissOverlayIfPresent(page);
+     
+     // Now proceed with the test
+     // ...
+   });
+   ```
+
+5. **Update test utilities**:
+   - Ensure all testing utilities work correctly with the instance mode implementation
+   - Update any utility functions that may be affected by the instance mode conversion
+   - Add new utilities specific to the computational-collage app's needs
+
+6. **Add tests for instance mode specific functionality**:
+   - Create tests that verify the p5.js instance is properly initialized
+   - Test that multiple canvases can coexist if applicable
+   - Verify that the app's state is properly encapsulated
+
+7. **Integrate with Nx E2E testing infrastructure**:
+   - Ensure the tests work with the Nx E2E testing targets configured in Task 26
+   - Update any configuration needed to run the tests in the Nx environment
+
+# Test Strategy:
+1. **Verify skipped tests are enabled**:
+   - Check that all `test.skip()` calls have been removed from the computational-collage E2E tests
+   - Run the test suite and confirm that all tests are now executed
+
+2. **Test canvas content detection**:
+   - Run the "canvas has content after initialization" test
+   - Verify that the test passes consistently across multiple runs
+   - Check that the test correctly detects canvas content after initialization
+   - Test with different window sizes to ensure the detection is reliable
+
+3. **Test overlay UI handling**:
+   - Run the "utilities can import correctly" test
+   - Verify that the test can properly interact with the canvas despite overlay UI
+   - Confirm that the helper functions correctly manage overlay dismissal
+   - Test with different overlay states to ensure robustness
+
+4. **Integration testing**:
+   - Run the full E2E test suite for computational-collage
+   - Verify that all tests pass consistently
+   - Check that there are no timing issues or race conditions
+   - Ensure tests run correctly in CI/CD environment
+
+5. **Cross-browser testing**:
+   - Run the tests in multiple browsers (Chrome, Firefox, Safari)
+   - Verify consistent behavior across browsers
+   - Check for any browser-specific issues
+
+6. **Performance testing**:
+   - Measure test execution time before and after changes
+   - Ensure the updated tests don't introduce significant performance regressions
+
+7. **Nx integration testing**:
+   - Run the tests using Nx commands: `nx test:e2e computational-collage`
+   - Verify that the tests integrate correctly with the Nx testing infrastructure
+   - Check that test results are properly reported in the Nx output

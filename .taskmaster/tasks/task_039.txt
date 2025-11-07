@@ -1,0 +1,60 @@
+# Task ID: 39
+# Title: Add Paintbrush Visual Indicator During Active Painting
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Implement a thin black outline around the paintbrush cursor when the user is actively painting in the crude-collage-painter app to provide visual feedback during painting operations.
+# Details:
+This task involves implementing a visual indicator for the paintbrush cursor in the crude-collage-painter app:
+
+1. **Track Painting State**:
+   - Create or modify the existing mouse event handlers to track when the user is actively painting
+   - Set a boolean flag `isActivePainting` that's true when mousePressed/mouseDragged and false on mouseReleased
+   
+2. **Implement Cursor Outline**:
+   - In the draw function, check if `isActivePainting` is true
+   - If true, draw a thin black outline around the current paintbrush cursor
+   - Ensure the outline is properly sized relative to the current brush size
+   ```javascript
+   function drawCursorOutline() {
+     if (isActivePainting) {
+       push();
+       noFill();
+       stroke(0);
+       strokeWeight(1);
+       ellipse(mouseX, mouseY, brushSize + 2); // Slightly larger than brush size
+       pop();
+     }
+   }
+   ```
+
+3. **Optimize Performance**:
+   - Ensure the cursor outline doesn't interfere with the actual painting operation
+   - Draw the outline after all other painting operations
+   - Use p5.js's built-in noCursor() and cursor() functions to hide/show the default cursor as appropriate
+
+4. **Handle Edge Cases**:
+   - Consider touch interfaces where there's no cursor
+   - Handle cases when the brush is very small (ensure outline is still visible)
+   - Ensure outline stays visible at canvas edges
+
+# Test Strategy:
+1. **Basic Functionality**:
+   - Start the crude-collage-painter app
+   - Move the cursor around without clicking and verify no outline appears
+   - Click and drag to paint, confirming the black outline appears around the paintbrush
+   - Release the mouse button and verify the outline disappears
+
+2. **Different Brush Sizes**:
+   - Test with different brush sizes (very small to very large)
+   - Verify the outline scales appropriately with the brush size
+   - Ensure the outline remains visible even with very small brush sizes
+
+3. **Edge Cases**:
+   - Paint near and at the edges of the canvas
+   - Verify the outline remains visible and doesn't get clipped
+   - Test rapid clicking/painting to ensure the outline toggles correctly
+
+4. **Performance Testing**:
+   - Test on lower-end devices to ensure the outline rendering doesn't cause performance issues
+   - Create a complex painting and verify the outline rendering doesn't slow down the painting experience

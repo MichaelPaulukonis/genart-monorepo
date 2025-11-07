@@ -1,0 +1,128 @@
+# Task ID: 43
+# Title: Add Fit-to-Canvas Tiling Mode for Crude-Collage-Painter
+# Status: pending
+# Dependencies: 41, 42
+# Priority: medium
+# Description: Extend the existing 'm' key tiling functionality to include an option that scales the brush to fit an even number of tiles across the canvas dimensions, creating uniform tiling that perfectly fits the canvas.
+# Details:
+This task involves implementing a fit-to-canvas tiling mode that creates uniform tiles across the entire canvas:
+
+1. **Analyze Existing Tiling Implementation**:
+   - Review the current 'm' key tiling functionality
+   - Identify where brush size is used in the tiling calculations
+
+2. **Implement Fit-to-Canvas Calculation**:
+   ```javascript
+   function calculateFitToCanvasBrushSize() {
+     // Calculate brush sizes that would evenly divide the canvas
+     const evenDivisorsWidth = findEvenDivisors(canvasWidth);
+     const evenDivisorsHeight = findEvenDivisors(canvasHeight);
+     
+     // Find optimal divisor that works well for both dimensions
+     const optimalDivisor = findOptimalDivisor(evenDivisorsWidth, evenDivisorsHeight);
+     
+     // Calculate new brush size
+     return { 
+       width: canvasWidth / optimalDivisor,
+       height: canvasHeight / optimalDivisor
+     };
+   }
+   
+   function findEvenDivisors(dimension) {
+     // Find divisors that result in even number of tiles
+     // Limit to reasonable brush sizes (not too small or large)
+     const divisors = [];
+     const minTiles = 2;  // At least 2 tiles
+     const maxTiles = 40; // Not more than 40 tiles
+     
+     for(let i = minTiles; i <= maxTiles; i++) {
+       const size = dimension / i;
+       if (Math.abs(size - Math.round(size)) < 0.001) { // Allow tiny rounding errors
+         divisors.push(i);
+       }
+     }
+     return divisors;
+   }
+   
+   function findOptimalDivisor(widthDivisors, heightDivisors) {
+     // Logic to find divisor that works well for both dimensions
+     // Prefer divisors that are common to both dimensions or close
+     // Could use aspect ratio considerations
+     // Default to a reasonable value if no good match
+     // ...
+   }
+   ```
+
+3. **Implement Keyboard Control**:
+   ```javascript
+   function keyPressed() {
+     // Existing key handlers...
+     
+     // Option 1: Use 't' key for fit-to-canvas tiling
+     if (key === 't') {
+       enableFitToCanvasTiling();
+       return false;
+     }
+     
+     // Option 2: Use modifier with 'm' key
+     if (key === 'm' && keyIsDown(SHIFT)) {
+       enableFitToCanvasTiling();
+       return false;
+     }
+   }
+   
+   function enableFitToCanvasTiling() {
+     const newBrushSize = calculateFitToCanvasBrushSize();
+     brushWidth = newBrushSize.width;
+     brushHeight = newBrushSize.height;
+     
+     // Set tiling mode active
+     tilingMode = 'fit-to-canvas';
+     
+     // Update UI indicators
+     updateModeIndicator();
+   }
+   ```
+
+4. **Add Visual Feedback**:
+   - Update the circular cursor to reflect the new calculated brush size
+   - Add a temporary on-screen notification when fit-to-canvas tiling is activated
+   - Update any mode indicators to show the new tiling mode
+
+5. **Handle Window/Canvas Resize**:
+   - Recalculate brush size if the canvas is resized while in fit-to-canvas tiling mode
+   - Add resize event listener if not already present
+
+6. **Documentation**:
+   - Update help text/overlay to include the new tiling mode
+   - Add comments explaining the calculation logic
+
+# Test Strategy:
+1. **Basic Functionality Testing**:
+   - Launch the crude-collage-painter app
+   - Press 'm' to verify existing tiling functionality works
+   - Press 't' (or alternate key combination) to activate fit-to-canvas tiling
+   - Verify brush size changes to fit canvas dimensions evenly
+   - Paint across the canvas and confirm tiles align perfectly with canvas edges
+
+2. **Edge Case Testing**:
+   - Test with different canvas sizes (resize window if responsive)
+   - Test with extreme aspect ratios (very wide or tall canvases)
+   - Test switching between normal tiling and fit-to-canvas tiling
+   - Test when canvas dimensions are prime numbers (should handle gracefully)
+
+3. **Visual Feedback Testing**:
+   - Verify the circular cursor updates to show the new brush size
+   - Check that mode indicators correctly show the fit-to-canvas tiling mode
+   - Confirm any on-screen notifications appear and are legible
+
+4. **Integration Testing**:
+   - Test interaction with zoom functionality (if applicable)
+   - Verify brush selection still works with fit-to-canvas tiling
+   - Ensure other keyboard shortcuts still function correctly
+   - Test toggling tiling on/off and switching between tiling modes
+
+5. **User Experience Testing**:
+   - Verify the feature is discoverable (through help text or UI)
+   - Ensure visual feedback is clear and immediate
+   - Check that calculated brush sizes are usable (not too small or large)

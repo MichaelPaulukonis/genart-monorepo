@@ -1,0 +1,73 @@
+# Task ID: 3
+# Title: Capture screenshots for all 5 apps
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: Use manual screenshot capture to generate high-quality screenshots for the remaining 3 apps and save them to the monorepo
+# Details:
+Capture screenshots for the remaining 3 apps (duo-chrome, those-shape-things, and computational-collage):
+
+1. Ensure all apps are properly deployed and accessible via GitHub Pages
+2. Manually capture screenshots at 1200x800 resolution
+3. Save the screenshots to `apps/[app-name]/docs/screenshots/[app-name]-main.png`
+4. Manually review each screenshot to ensure it shows a representative example of the app's output
+5. If any screenshots don't properly showcase the app's functionality, recapture them
+
+For apps with randomized output, you may need to refresh multiple times or add interaction steps to get a good representative example.
+
+Note: Screenshots for dragline and crude-collage-painter have already been captured and saved.
+
+Implementation steps:
+```bash
+# Navigate to each app directory
+cd apps/[app-name]
+
+# Create screenshots directory if it doesn't exist
+mkdir -p docs/screenshots
+
+# Capture screenshot manually and save to the correct location
+# Ensure 1200x800 resolution
+
+# Verify screenshots were created
+ls -la apps/*/docs/screenshots/
+```
+
+# Test Strategy:
+1. Visually inspect each screenshot for quality and representation of app functionality
+2. Verify all 5 screenshots exist in the correct location (apps/[app-name]/docs/screenshots/[app-name]-main.png)
+3. Check that each screenshot has the correct dimensions (1200x800)
+4. Confirm all screenshots are in PNG format
+5. Validate that file sizes are under 500KB
+6. Ensure screenshots show meaningful content (not loading screens or errors)
+
+# Subtasks:
+## 1. Capture screenshot for duo-chrome [done]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 2. Capture screenshot for those-shape-things [done]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 3. Capture screenshot for computational-collage [done]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 4. Verify dragline screenshot is correctly saved [done]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 5. Verify crude-collage-painter screenshot is correctly saved [done]
+### Dependencies: None
+### Description: 
+### Details:
+
+

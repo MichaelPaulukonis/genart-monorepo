@@ -1,0 +1,113 @@
+# Task ID: 62
+# Title: Implement Click-and-Drag Source Image Repositioning for Monochromifier
+# Status: done
+# Dependencies: 30, 61
+# Priority: medium
+# Description: Develop functionality that allows users to reposition the source image within the canvas/frame using click-and-drag interaction, with an on-screen display (OSD) showing the original image and a highlighted viewport representing the visible canvas area.
+# Details:
+1. **Event Handler Implementation**:
+   - Add mouse event listeners (mousePressed, mouseDragged, mouseReleased)
+   - Implement touch event support for mobile devices
+   - Track drag state and calculate position offsets
+   ```javascript
+   let isDragging = false;
+   let dragStartX, dragStartY;
+   let imageOffsetX = 0, imageOffsetY = 0;
+   
+   function mousePressed() {
+     isDragging = true;
+     dragStartX = mouseX;
+     dragStartY = mouseY;
+     // Store initial offsets
+   }
+   
+   function mouseDragged() {
+     if (isDragging) {
+       imageOffsetX += mouseX - dragStartX;
+       imageOffsetY += mouseY - dragStartY;
+       dragStartX = mouseX;
+       dragStartY = mouseY;
+       redraw();
+     }
+   }
+   ```
+
+2. **OSD Implementation**:
+   - Create a thumbnail view of the original image in a corner of the screen
+   - Draw a rectangular highlight showing the current viewport position
+   - Update highlight in real-time as the image is repositioned
+   ```javascript
+   function drawOSD() {
+     // Draw thumbnail in corner
+     const osdSize = 150;
+     const thumbScale = Math.min(osdSize / sourceImg.width, osdSize / sourceImg.height);
+     
+     // Draw original image thumbnail
+     image(sourceImg, width-osdSize-10, 10, sourceImg.width * thumbScale, sourceImg.height * thumbScale);
+     
+     // Calculate and draw viewport rectangle
+     noFill();
+     stroke(255, 0, 0);
+     strokeWeight(2);
+     rect(
+       width-osdSize-10 + (-imageOffsetX * thumbScale),
+       10 + (-imageOffsetY * thumbScale),
+       canvas.width * thumbScale,
+       canvas.height * thumbScale
+     );
+   }
+   ```
+
+3. **Boundary Constraints**:
+   - Implement limits to prevent the image from being dragged completely out of view
+   - Calculate constraints based on image and canvas dimensions
+   ```javascript
+   function applyBoundaryConstraints() {
+     // Ensure at least 25% of the image remains visible
+     const minVisible = 0.25;
+     imageOffsetX = constrain(imageOffsetX, -(sourceImg.width * (1-minVisible)), canvas.width * minVisible);
+     imageOffsetY = constrain(imageOffsetY, -(sourceImg.height * (1-minVisible)), canvas.height * minVisible);
+   }
+   ```
+
+4. **UI Enhancements**:
+   - Change cursor to 'move' when over draggable areas
+   - Add a toggle button to show/hide OSD
+   - Implement a reset position button
+   - Add visual feedback during dragging operations
+
+5. **Integration with Rendering Pipeline**:
+   - Modify the image rendering code to apply offsets
+   - Ensure repositioning affects monochromifier output
+   - Update the position calculation when canvas is resized
+
+# Test Strategy:
+1. **Basic Functionality Tests**:
+   - Verify mouse dragging correctly repositions the source image
+   - Test touch-based dragging on mobile devices
+   - Confirm the image position updates in real-time during dragging
+   - Verify the position offsets are maintained after releasing the mouse
+
+2. **OSD Verification**:
+   - Confirm the OSD displays an accurate representation of the original image
+   - Verify the viewport rectangle correctly represents the current view
+   - Test that the viewport highlight updates in real-time during dragging
+   - Check that the OSD scale and positioning are correct for different image sizes
+
+3. **Boundary Testing**:
+   - Test dragging the image to all edges of the canvas
+   - Verify the image cannot be dragged completely out of view
+   - Test behavior when rapidly dragging or flinging the image
+   - Confirm constraints work with images of varying dimensions and aspect ratios
+
+4. **Integration Tests**:
+   - Verify the repositioned view is correctly reflected in the monochrome output
+   - Confirm the image position affects the exported/saved images correctly
+   - Test interaction with other monochromifier features and filters
+   - Verify the image position is preserved when toggling between app modes
+
+5. **Cross-device Testing**:
+   - Test on desktop browsers with mouse input
+   - Verify touch functionality on tablets and smartphones
+   - Check performance on low-end devices to ensure smooth dragging
+   - Test with different image sizes and screen resolutions

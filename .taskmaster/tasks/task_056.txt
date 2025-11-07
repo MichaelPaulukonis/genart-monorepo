@@ -1,0 +1,34 @@
+# Task ID: 56
+# Title: Update testing documentation
+# Status: pending
+# Dependencies: 55
+# Priority: medium
+# Description: Update docs/testing/ to reflect the Nx-first approach and update docs/guides/adding-projects.md with test target requirements.
+# Details:
+1. Update docs/testing/ directory with Nx-first approach:
+   - Update testing overview to reflect Nx integration
+   - Update command examples to use `nx test app-name` instead of legacy scripts
+   - Document the standardized test configuration pattern
+   - Include information about app-specific playwright.config.js files
+
+2. Update docs/guides/adding-projects.md:
+   - Add section on required test target configuration
+   - Include example test target JSON for project.json files
+   - Explain the relationship between test targets and playwright configs
+
+3. Create migration guide for existing developers:
+   - Document the transition from legacy to Nx testing
+   - Provide command mapping (old scripts → new Nx commands)
+   - Explain benefits of the new approach
+
+4. Update any other documentation referring to testing:
+   - README files
+   - Developer onboarding materials
+   - CI/CD documentation
+
+# Test Strategy:
+1. Review documentation for completeness and accuracy
+2. Verify all command examples work as documented
+3. Have a team member unfamiliar with the changes attempt to follow the documentation
+4. Check that all apps and test patterns are covered
+5. Verify that adding a new project following the updated guide results in proper test configuration

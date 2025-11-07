@@ -1,0 +1,52 @@
+# Task ID: 5
+# Title: Generate READMEs for remaining repositories
+# Status: done
+# Dependencies: 2
+# Priority: medium
+# Description: Create and update README.md files for the remaining 4 repositories using the archived repo template
+# Details:
+Using the template created in Task 2, generate README.md files for the remaining 4 repositories:
+
+1. crude-collage-painter
+2. those-shape-things
+3. computational-collage
+4. dragline
+
+For each repository:
+1. Copy the template and replace all placeholders with app-specific information
+2. Include a brief description of what each app does
+3. Update all links to point to the correct locations
+4. Reference the screenshot that will be added in a later task
+5. Ensure each README clearly indicates the repository has moved to the monorepo
+
+Consider creating a script to automate this process if the repositories follow a consistent pattern. Example script pseudo-code:
+
+```javascript
+const fs = require('fs');
+const template = fs.readFileSync('docs/templates/archived-repo-readme.md', 'utf8');
+
+const apps = [
+  {
+    name: 'crude-collage-painter',
+    description: 'An interactive collage creation tool that allows users to paint with image fragments.'
+  },
+  // Add remaining apps with descriptions
+];
+
+apps.forEach(app => {
+  let readme = template
+    .replace(/\[App Name\]/g, app.name)
+    .replace(/\[app-name\]/g, app.name.toLowerCase())
+    .replace(/\[Brief description of what the app does\]/g, app.description);
+  
+  fs.writeFileSync(`${app.name}-README.md`, readme);
+});
+```
+
+# Test Strategy:
+1. Verify all placeholders have been replaced with app-specific information in each README
+2. Check that all links are correctly formatted and point to valid locations
+3. Confirm each README includes all required sections from the PRD
+4. Validate that the screenshot references use the correct paths
+5. Ensure the migration notices are prominently displayed at the top of each README
+6. Compare all READMEs to ensure consistency in formatting and structure

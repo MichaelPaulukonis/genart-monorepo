@@ -1,0 +1,159 @@
+# Task ID: 36
+# Title: Audit and Optimize Package Dependencies Across Workspace
+# Status: pending
+# Dependencies: 30
+# Priority: medium
+# Description: Review all app package.json files against workspace root package.json to identify and resolve duplications, version mismatches, and optimize dependency management across the monorepo.
+# Details:
+This task involves conducting a comprehensive audit of dependencies across the monorepo to establish a clean separation between workspace-level and app-specific dependencies:
+
+1. **Dependency Analysis**:
+   - Create a script to analyze all package.json files in the monorepo:
+   ```javascript
+   const fs = require('fs');
+   const path = require('path');
+   const glob = require('glob');
+   
+   // Read workspace root package.json
+   const rootPkg = require('./package.json');
+   const rootDeps = {...rootPkg.dependencies, ...rootPkg.devDependencies};
+   
+   // Find all app package.json files
+   const appPackageJsons = glob.sync('./apps/*/package.json');
+   
+   const analysis = {
+     duplicates: [],
+     versionMismatches: [],
+     appSpecific: {},
+     unused: []
+   };
+   
+   appPackageJsons.forEach(pkgPath => {
+     const appName = path.dirname(pkgPath).split('/').pop();
+     const appPkg = require(pkgPath);
+     const appDeps = {...appPkg.dependencies, ...appPkg.devDependencies};
+     
+     analysis.appSpecific[appName] = [];
+     
+     // Check for duplicates and mismatches
+     Object.entries(appDeps).forEach(([dep, version]) => {
+       if (rootDeps[dep]) {
+         analysis.duplicates.push({app: appName, dep, appVersion: version, rootVersion: rootDeps[dep]});
+         
+         if (version !== rootDeps[dep]) {
+           analysis.versionMismatches.push({app: appName, dep, appVersion: version, rootVersion: rootDeps[dep]});
+         }
+       } else {
+         analysis.appSpecific[appName].push({dep, version});
+       }
+     });
+   });
+   
+   // Output analysis results
+   console.log(JSON.stringify(analysis, null, 2));
+   ```
+
+2. **Dependency Categorization**:
+   - Identify build tools that should be managed at workspace level only:
+     - Vite, ESLint, Prettier, TypeScript, Nx, Jest, Playwright, etc.
+   - Identify runtime dependencies that should be shared:
+     - React, p5.js, common UI libraries, utility libraries
+   - Identify app-specific dependencies that should remain local:
+     - Specialized libraries used by only one app
+     - App-specific plugins or extensions
+
+3. **Dependency Cleanup**:
+   - Move all build tools to workspace root package.json:
+   ```bash
+   # Example: moving ESLint from app to root
+   npm uninstall eslint --workspace=app-name
+   npm install eslint --save-dev
+   ```
+   - Standardize versions for shared dependencies:
+   ```bash
+   # Update all apps to use the same version as root
+   npm install react@workspace-version --workspace=app-name
+   ```
+   - Remove unused dependencies identified during analysis
+   - Keep truly app-specific dependencies in their respective package.json files
+
+4. **Documentation Update**:
+   - Create a dependency management strategy document in docs/architecture/:
+   ```markdown
+   # Dependency Management Strategy
+   
+   ## Workspace-level Dependencies
+   - **Build Tools**: All build tools (Vite, ESLint, TypeScript, etc.) are managed at the workspace level
+   - **Shared Runtime Dependencies**: Common libraries used across multiple apps
+   
+   ## App-level Dependencies
+   - Only dependencies that are truly specific to a single app
+   - Must not duplicate workspace dependencies
+   
+   ## Adding New Dependencies
+   1. Determine if the dependency will be used by multiple apps
+      - If yes: Add to workspace root
+      - If no: Add to specific app
+   
+   ## Version Management
+   - All shared dependencies must use the same version across the workspace
+   - Version upgrades should be coordinated across all affected packages
+   ```
+   
+   - Update adding-projects.md with clear guidelines:
+   ```markdown
+   ## Dependency Management
+   
+   When adding dependencies to your project:
+   
+   1. Check if the dependency already exists in the workspace root
+      - If yes: Do not add it to your app's package.json
+   
+   2. For build tools (Vite, ESLint, etc.):
+      - These should only be added to workspace root
+      - Configure as needed in your app
+   
+   3. For app-specific dependencies:
+      - Add only to your app's package.json
+      - Document why this dependency is needed
+   ```
+
+5. **Testing and Verification**:
+   - Run builds for all apps to ensure they still function correctly
+   - Verify that dependency hoisting works as expected
+   - Check for any resolution warnings or errors
+
+# Test Strategy:
+1. **Dependency Analysis Verification**:
+   - Run the analysis script and verify it correctly identifies:
+     - All duplicated dependencies between apps and workspace root
+     - All version mismatches between apps and workspace root
+     - App-specific dependencies that should remain local
+     - Potentially unused dependencies
+   - Cross-check results with manual inspection of package.json files
+
+2. **Build Tool Migration Testing**:
+   - After moving build tools to workspace root:
+     - Run `npm run build` for each app to verify builds still work
+     - Run linting (`npm run lint`) to verify ESLint still functions
+     - Run tests to verify test runners still function
+   - Check for any new warnings or errors in the build process
+
+3. **Dependency Resolution Testing**:
+   - Inspect the node_modules structure to verify proper hoisting
+   - Run `npm ls <package-name>` for key dependencies to verify version resolution
+   - Check for duplicate installations using `npm dedupe` and verify it doesn't find issues
+
+4. **App Functionality Testing**:
+   - Start each app locally after dependency changes
+   - Verify all functionality works as expected
+   - Test features that rely on dependencies that were moved or had version changes
+
+5. **Documentation Review**:
+   - Have team members review the dependency management strategy document
+   - Verify the guidelines in adding-projects.md are clear and actionable
+   - Test the guidelines by having a team member follow them to add a new dependency
+
+6. **CI/CD Verification**:
+   - Run the CI pipeline to ensure all builds, tests, and deployments still work
+   - Verify build times to ensure dependency optimization hasn't negatively impacted performance

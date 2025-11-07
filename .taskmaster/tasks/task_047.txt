@@ -1,0 +1,28 @@
+# Task ID: 47
+# Title: Create test target for crude-collage-painter
+# Status: pending
+# Dependencies: 46
+# Priority: high
+# Description: Add a proper test target to the crude-collage-painter application's project.json file that can be executed via nx test crude-collage-painter.
+# Details:
+1. Locate the project.json file for crude-collage-painter in the apps/crude-collage-painter directory
+2. Add a test target using @nx/playwright:playwright executor:
+```json
+{
+  "test": {
+    "executor": "@nx/playwright:playwright",
+    "options": {
+      "config": "apps/crude-collage-painter/playwright.config.js"
+    }
+  }
+}
+```
+3. Ensure the configuration aligns with patterns identified in the audit
+4. Map the existing root-level test script functionality to this new target
+5. If the app has special testing requirements, account for them in the configuration
+
+# Test Strategy:
+1. Run `nx test crude-collage-painter` and verify it executes successfully
+2. Compare test output and behavior with the previous `npm run test:crude-collage` command
+3. Verify that all existing test files are detected and run
+4. Check that any app-specific test requirements continue to function
