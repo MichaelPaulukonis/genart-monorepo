@@ -1484,11 +1484,22 @@
         ],
         "priority": "medium",
         "subtasks": []
+      },
+      {
+        "id": 67,
+        "title": "Automate/Document Duo-Chrome Image Swap for Deployment",
+        "description": "Create a script or clear documentation to streamline the process of swapping `apps/duo-chrome/public/images` and `apps/duo-chrome/public/images_original` for deployment, ensuring the correct image set is active.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-10-27T13:48:05.544Z",
-      "updated": "2025-11-07T23:50:10.411Z",
+      "updated": "2025-11-07T23:59:00.657Z",
       "description": "Tasks for master context"
     }
   }
