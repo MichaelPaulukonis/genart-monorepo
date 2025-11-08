@@ -1,0 +1,95 @@
+# Task ID: 64
+# Title: Evaluate and redesign fit methods, zoom, and autocrop interaction
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Analyze and redesign the interaction between fit methods (fitToWidth, fitToHeight, fitToCanvas), zoom functionality, dragging, painting, and auto-crop in monochromifier. The current implementation has poorly specified behavior that can be surprising to users.
+# Details:
+## Problem Analysis
+
+The current monochromifier implementation has several overlapping and potentially conflicting features:
+
+1. **Fit Methods**: Originally designed for import-time behavior
+   - `fitToWidth`: Scale image to fit canvas width
+   - `fitToHeight`: Scale image to fit canvas height  
+   - `fitToCanvas`: Scale to fit both dimensions (letterbox/pillarbox)
+
+2. **Runtime Features**: Added later, creating interaction complexity
+   - Zoom (sizeRatio): User-controlled scaling
+   - Dragging: User-controlled image positioning
+   - Painting: Adds content that affects final output
+   - Auto-crop: Content-aware cropping that maximizes output resolution
+
+## Key Issues
+
+1. **Behavioral Ambiguity**: The interaction between fit methods and runtime features is not well-defined
+2. **User Confusion**: Fit method changes can produce surprising results when combined with zoom/drag
+3. **Inconsistent Scaling**: Different code paths for import vs runtime vs export scaling
+4. **Overlapping Functionality**: Auto-crop and fit methods serve similar purposes but work differently
+
+## Proposed Design Direction
+
+### Import Strategy
+- **Single Smart Import Method**: Automatically choose the fit method that maximizes imported image resolution
+- **Rubric for Selection**: 
+  - If image is wider than tall → fitToHeight (maximize resolution)
+  - If image is taller than wide → fitToWidth (maximize resolution)
+  - If image is square → fitToCanvas
+  - Consider pixel density and target output size
+
+### Runtime User Controls
+- **Unified Fit Commands**: Replace mode-switching with direct action commands
+  - `fitWidth`: Instantly fit current content to canvas width
+  - `fitHeight`: Instantly fit current content to canvas height
+  - `fitBoth`: Instantly fit current content to full canvas
+  - These would work on the current visual content (including paint, zoom, crop state)
+
+### Auto-crop Integration
+- **Content-Aware Fitting**: Auto-crop becomes the foundation for all fit operations
+  - When disabled: Fit operations work on full image bounds
+  - When enabled: Fit operations work on content bounds (black pixels)
+  - This unifies the concepts - auto-crop IS the smart content detection for fitting
+
+## Implementation Tasks
+
+1. **Research Phase**:
+   - Document current behavior of all fit methods with various image aspect ratios
+   - Test interaction patterns: fit→zoom→drag→fit, etc.
+   - Identify specific surprising behaviors and edge cases
+   - Create user stories for expected vs actual behavior
+
+2. **Design Phase**:
+   - Define clear behavioral specifications for each feature
+   - Design unified command system for fit operations
+   - Specify auto-crop integration with fit commands
+   - Create interaction flow diagrams
+
+3. **Implementation Phase**:
+   - Implement smart import fit selection
+   - Replace fit method switching with direct fit commands
+   - Integrate auto-crop as foundation for all fit operations
+   - Update UI and help documentation
+
+4. **Testing Phase**:
+   - Test with various image aspect ratios and sizes
+   - Verify consistent behavior across all feature combinations
+   - User testing for intuitive behavior
+
+## User Stories to Develop
+
+- As a user, I want imported images to automatically use the best fit method for maximum quality
+- As a user, I want fit commands to work predictably regardless of current zoom/drag state
+- As a user, I want auto-crop and fit methods to work together logically
+- As a user, I want to understand what each fit command will do before I use it
+- As a user, I want consistent behavior when I switch between normal and paint modes
+
+## Success Criteria
+
+- Clear, predictable behavior for all fit operations
+- No surprising interactions between zoom, drag, and fit commands
+- Unified conceptual model for auto-crop and fitting
+- Comprehensive documentation of all behaviors
+- User testing confirms intuitive operation
+
+# Test Strategy:
+

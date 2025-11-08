@@ -1,6 +1,6 @@
 # Task ID: 31
 # Title: Automate Image List Module Generation at Build Time with Vite
-# Status: pending
+# Status: done
 # Dependencies: None
 # Priority: medium
 # Description: Implement a build-time system that scans image directories and generates JavaScript modules exporting arrays of image filenames, fully integrated with Vite's build process.

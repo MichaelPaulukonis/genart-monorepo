@@ -1,6 +1,6 @@
 # Task ID: 51
 # Title: Create app-specific Playwright configurations
-# Status: pending
+# Status: in-progress
 # Dependencies: 47, 48, 49, 50
 # Priority: high
 # Description: Create app-specific playwright.config.js files for each application that needs one, based on existing root configuration with app-specific overrides.

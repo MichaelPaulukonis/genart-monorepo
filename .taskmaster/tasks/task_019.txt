@@ -1,6 +1,6 @@
 # Task ID: 19
 # Title: Create Playwright Test Suites for crude-collage-painter and computational-collage
-# Status: pending
+# Status: done
 # Dependencies: 18
 # Priority: high
 # Description: Develop comprehensive Playwright test suites for crude-collage-painter and computational-collage apps before converting them to instance mode, to serve as regression tests during the conversion process.

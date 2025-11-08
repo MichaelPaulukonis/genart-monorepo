@@ -1,0 +1,145 @@
+# Task ID: 65
+# Title: Implement Build-Time Image List Generation for Duo-Chrome App
+# Status: done
+# Dependencies: 31, 34
+# Priority: medium
+# Description: Develop a system that automatically scans public/images/*.png files during build time and generates a JavaScript module with an array of image filenames that can be imported by the duo-chrome application, using Vite build hooks to update whenever PNG files are added or removed.
+# Details:
+This task involves implementing a build-time image list generation system specifically for the duo-chrome application:
+
+1. **Create a Vite Plugin**:
+   ```javascript
+   // vite-image-list-plugin.js
+   import fs from 'fs/promises';
+   import path from 'path';
+   
+   export default function imageListPlugin() {
+     return {
+       name: 'image-list-generator',
+       buildStart: async () => {
+         // This will run at the start of each build
+         await generateImageList();
+       },
+       // Add a file watcher for the images directory
+       configureServer(server) {
+         server.watcher.add('public/images/**/*.png');
+         server.watcher.on('add', (path) => {
+           if (path.includes('public/images') && path.endsWith('.png')) {
+             generateImageList();
+           }
+         });
+         server.watcher.on('unlink', (path) => {
+           if (path.includes('public/images') && path.endsWith('.png')) {
+             generateImageList();
+           }
+         });
+       }
+     };
+   }
+   ```
+
+2. **Implement Image List Generation Function**:
+   ```javascript
+   async function generateImageList() {
+     const imagesDir = path.resolve('public/images');
+     try {
+       // Get all PNG files in the directory
+       const files = await fs.readdir(imagesDir);
+       const pngFiles = files.filter(file => file.toLowerCase().endsWith('.png'));
+       
+       // Create the output as a JavaScript module
+       const outputContent = `// Auto-generated file - DO NOT EDIT
+// Generated on ${new Date().toISOString()}
+
+/**
+ * Array of available images for duo-chrome app
+ * @type {string[]}
+ */
+const imageList = ${JSON.stringify(pngFiles, null, 2)};
+
+export default imageList;
+`;
+       
+       // Write the output file to the src directory so it can be imported
+       await fs.writeFile(
+         path.resolve('src/apps/duo-chrome/image-list.js'),
+         outputContent
+       );
+       
+       console.log(`Generated image list with ${pngFiles.length} images`);
+     } catch (error) {
+       console.error('Error generating image list:', error);
+     }
+   }
+   ```
+
+3. **Configure Vite Plugin in Build Config**:
+   ```javascript
+   // vite.config.js
+   import { defineConfig } from 'vite';
+   import imageListPlugin from './vite-image-list-plugin';
+   
+   export default defineConfig({
+     plugins: [
+       // ... other plugins
+       imageListPlugin()
+     ]
+   });
+   ```
+
+4. **Update Duo-Chrome App to Use Generated Image List**:
+   ```javascript
+   // In the duo-chrome app file where images are loaded
+   import imageList from './image-list.js';
+   
+   // Use the image list in the application
+   function getRandomImage() {
+     const randomIndex = Math.floor(Math.random() * imageList.length);
+     return `/images/${imageList[randomIndex]}`;
+   }
+   
+   // Update UI to display available images
+   function populateImageSelector(selectElement) {
+     imageList.forEach(image => {
+       const option = document.createElement('option');
+       option.value = image;
+       option.textContent = image.replace('.png', '');
+       selectElement.appendChild(option);
+     });
+   }
+   ```
+
+5. **Handle Edge Cases**:
+   - Add error handling for empty directories
+   - Ensure the output directory exists before writing
+   - Implement logging for debugging purposes
+   - Add support for nested directories if needed in the future
+
+# Test Strategy:
+1. **Basic Functionality Testing**:
+   - Add a new PNG file to public/images/ and run the build process
+   - Verify the generated image-list.js contains the correct array of filenames
+   - Remove a PNG file and verify it's removed from the generated list
+   - Check that image paths are correctly formatted for use in the application
+
+2. **Integration Testing with Duo-Chrome**:
+   - Import the generated module in the duo-chrome app
+   - Verify that all images in the list can be loaded and displayed correctly
+   - Test the app's image selection functionality with the generated list
+   - Confirm images are properly referenced with correct paths
+
+3. **Development Workflow Testing**:
+   - Add a new image while the dev server is running and verify the list updates
+   - Remove an image during development and check that the list updates
+   - Verify build hooks are correctly triggered during production builds
+
+4. **Edge Case Testing**:
+   - Test with an empty images directory to ensure graceful handling
+   - Test with non-PNG files in the directory to verify they're excluded
+   - Test with special characters in filenames
+   - Check performance with a large number of image files (100+)
+
+5. **Error Handling Testing**:
+   - Simulate file system errors to test error handling
+   - Verify appropriate error messages are logged when issues occur
+   - Test recovery from transient errors

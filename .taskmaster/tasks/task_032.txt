@@ -1,17 +1,132 @@
 # Task ID: 32
 # Title: Implement Deterministic Random Seed System for Duo-Chrome App
-# Status: pending
+# Status: in-progress
 # Dependencies: 28
 # Priority: medium
-# Description: Add a deterministic random seed system to the duo-chrome app that reads a 'seed' URL parameter on page load, initializes a seeded random number generator for reproducible compositions, and updates the URL with a generated seed if none is provided.
+# Description: Implement URL-based composition sharing for the duo-chrome app that encodes the current composition state into URL parameters, allows restoring compositions from URL parameters, and provides convenient sharing features for users to share their curated compositions.
 # Details:
-Integrate a seeded random number generator (such as the 'seedrandom' library) into the duo-chrome app to ensure deterministic art generation. On page load, parse the URL for a 'seed' parameter using `URLSearchParams`. If a seed is present, use it to initialize a local PRNG instance (e.g., `const rng = new Math.seedrandom(seed)`), ensuring all randomization in composition logic uses this instance for reproducibility[2][1]. If no seed is found, generate a new random seed (using a secure method like `window.crypto.getRandomValues` for entropy[4]), update the URL with this seed (using `history.replaceState` or `window.location.search`), and initialize the PRNG with it. Ensure the seed is displayed in the UI for easy sharing and bookmarking. Refactor all composition generation code to use the seeded PRNG, not global `Math.random`, to guarantee determinism. Document the system for users and developers, including how to share and bookmark compositions. Consider edge cases such as invalid seed values and ensure graceful fallback or error messaging. For regression testing, expose the seed value and provide a utility to re-generate compositions from a given seed.
+Create a robust URL-based state sharing system for the duo-chrome app to enable easy sharing and bookmarking of curated compositions. The implementation should include:
+
+1. **State Serialization**:
+   - Encode the current app state (image indices, colors, scales, blend modes, background modes) into URL parameters
+   - Example URL structure: `?imageA=42&imageB=156&colorA=riso-red&colorB=riso-blue&scaleA=1.2&scaleB=0.8&blendMode=1&bgMode=0`
+   - Ensure encoding is compact but human-readable when possible
+
+2. **State Restoration**:
+   - On page load, parse URL parameters using `URLSearchParams`
+   - Restore composition state from parameters if present
+   - Gracefully handle missing or invalid parameters with sensible defaults
+
+3. **Share Functionality**:
+   - Add a share button to the UI and/or keyboard shortcut (e.g., Shift+S)
+   - Only update the URL when the share button is clicked to avoid performance overhead
+   - Consider implementing native Web Share API support where available
+   - Add visual feedback (toast notification, modal, etc.) when a link is generated
+
+4. **User Experience**:
+   - Provide clear indicators when a composition has been loaded from URL parameters
+   - Add copy-to-clipboard functionality for easier sharing
+   - Consider shortened URL options for very complex compositions
+   - Auto-pause feature when loading shared compositions to preserve the intended state
+
+5. **Maintainability & Future-Proofing**:
+   - Design the parameter schema to be extensible for future composition parameters
+   - Add version parameter to URL to handle potential future breaking changes to parameter encoding
+   - Document the URL parameter schema for future reference
 
 # Test Strategy:
-1. Load the app with a specific seed in the URL (e.g., `?seed=abc123`) and verify that the same composition is generated every time.
-2. Load the app without a seed; confirm a new seed is generated, added to the URL, and used for composition.
-3. Bookmark and reload a composition; verify the output is identical.
-4. Share a seed URL between devices/browsers and confirm reproducibility.
-5. Run visual regression tests by generating compositions with known seeds and comparing outputs pixel-by-pixel.
-6. Test with invalid or edge-case seed values and ensure the app handles them gracefully.
-7. Confirm all randomization in composition logic uses the seeded PRNG, not global Math.random.
+1. **State Serialization Testing**:
+   - Verify that all relevant composition parameters are correctly encoded in the URL
+   - Test encoding of edge case values (very large/small numbers, special characters in color names)
+   - Ensure URL length stays reasonable for typical compositions
+
+2. **State Restoration Testing**:
+   - Test loading the app with various URL parameter combinations
+   - Verify the composition is exactly reproduced from URL parameters
+   - Test with missing or partial parameters and confirm graceful fallbacks
+   - Test with invalid parameters and verify error handling
+
+3. **Share Functionality Testing**:
+   - Test share button/shortcut creates a correct URL with current state
+   - Verify copy-to-clipboard functionality works across browsers
+   - Test share workflows on mobile and desktop devices
+
+4. **Cross-Browser & Platform Testing**:
+   - Share URLs between different browsers and verify compositions render identically
+   - Test URL sharing between desktop and mobile devices
+   - Verify long URLs are handled correctly across platforms
+
+5. **Performance Testing**:
+   - Confirm URL updates only happen on explicit share actions
+   - Verify parsing URL parameters on load doesn't significantly impact startup time
+
+6. **Regression Testing**:
+   - Ensure existing app functionality is not affected by the URL parameter system
+
+# Subtasks:
+## 1. undefined [done]
+### Dependencies: None
+### Description: Design URL parameter schema for composition state
+### Details:
+
+
+## 2. undefined [done]
+### Dependencies: None
+### Description: Implement state serialization to URL parameters
+### Details:
+
+
+## 3. undefined [done]
+### Dependencies: None
+### Description: Implement state restoration from URL parameters
+### Details:
+
+
+## 4. undefined [done]
+### Dependencies: None
+### Description: Add share button/shortcut with URL generation
+### Details:
+
+
+## 5. undefined [done]
+### Dependencies: None
+### Description: Implement copy-to-clipboard functionality
+### Details:
+
+
+## 6. undefined [done]
+### Dependencies: None
+### Description: Add visual feedback for share actions
+### Details:
+
+
+## 7. undefined [done]
+### Dependencies: None
+### Description: Write tests for state serialization/restoration
+### Details:
+
+
+## 8. undefined [done]
+### Dependencies: None
+### Description: Document URL parameter schema and sharing system
+### Details:
+
+
+## 9. undefined [done]
+### Dependencies: None
+### Description: Perform comprehensive cross-browser testing
+### Details:
+
+
+## 10. undefined [done]
+### Dependencies: None
+### Description: Optimize performance for URL parameter parsing and generation
+### Details:
+
+
+## 11. undefined [done]
+### Dependencies: None
+### Description: Implement advanced Web Share API support where available
+### Details:
+
+

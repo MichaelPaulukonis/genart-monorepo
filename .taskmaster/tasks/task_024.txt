@@ -1,6 +1,6 @@
 # Task ID: 24
 # Title: Resolve MCP Configuration Conflicts Between User and Workspace Settings
-# Status: deferred
+# Status: done
 # Dependencies: 19, 22
 # Priority: medium
 # Description: Investigate and resolve conflicts between user-level (~/.kiro/settings/mcp.json) and workspace-level (.kiro/settings/mcp.json) MCP configurations for the taskmaster-ai server, focusing on eliminating hardcoded project paths.

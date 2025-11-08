@@ -313,6 +313,9 @@ const sketch = function (p) {
 
     img = newImg
 
+    // Set fit mode to fitToCanvas after cropping (Feature 66.3)
+    scaleMethod = scaleMethods.fitToCanvas
+
     // 5. Reset state and switch to ADJUST mode
     switchToAdjustMode(true)
   }
@@ -727,22 +730,23 @@ const sketch = function (p) {
     const scaledWidth = Math.round(img.width * scaleRatio)
     const scaledHeight = Math.round(img.height * scaleRatio)
 
-    // Ensure at least 25% of the image remains visible within the output canvas
-    const minVisible = 0.25
+    let calculatedMaxOffsetX = 0
+    let calculatedMinOffsetX = 0
+    if (scaledWidth > outputSize) { // Compare scaledWidth with outputSize
+      calculatedMaxOffsetX = (scaledWidth - outputSize) / 2
+      calculatedMinOffsetX = -calculatedMaxOffsetX
+    }
 
-    // Calculate the maximum allowed offsets
-    // The image can be moved so that 75% is hidden, but 25% must remain visible
-    const maxOffsetX = scaledWidth * (1 - minVisible)
-    const maxOffsetY = scaledHeight * (1 - minVisible)
-
-    // Calculate the minimum allowed offsets
-    // The image can be moved so that it's mostly off-screen on the opposite side
-    const minOffsetX = -(outputSize - scaledWidth * minVisible)
-    const minOffsetY = -(outputSize - scaledHeight * minVisible)
+    let calculatedMaxOffsetY = 0
+    let calculatedMinOffsetY = 0
+    if (scaledHeight > outputSize) { // Compare scaledHeight with outputSize
+      calculatedMaxOffsetY = (scaledHeight - outputSize) / 2
+      calculatedMinOffsetY = -calculatedMaxOffsetY
+    }
 
     // Apply constraints
-    imageOffsetX = p.constrain(imageOffsetX, minOffsetX, maxOffsetX)
-    imageOffsetY = p.constrain(imageOffsetY, minOffsetY, maxOffsetY)
+    imageOffsetX = p.constrain(imageOffsetX, calculatedMinOffsetX, calculatedMaxOffsetX)
+    imageOffsetY = p.constrain(imageOffsetY, calculatedMinOffsetY, calculatedMaxOffsetY)
   }
 
   const buildCombinedLayer = img => {
@@ -814,6 +818,22 @@ const sketch = function (p) {
       displayLayer.width / 2,
       displayLayer.height / 2
     )
+
+    // Force displayLayer to be monochrome for display
+    displayLayer.loadPixels();
+    for (let i = 0; i < displayLayer.pixels.length; i += 4) {
+      const r = displayLayer.pixels[i];
+      const g = displayLayer.pixels[i + 1];
+      const b = displayLayer.pixels[i + 2];
+      const avg = (r + g + b) / 3;
+      const bw = avg > threshold ? 255 : 0; // Use actual threshold
+      displayLayer.pixels[i] = bw;
+      displayLayer.pixels[i + 1] = bw;
+      displayLayer.pixels[i + 2] = bw;
+      displayLayer.pixels[i + 3] = 255; // Ensure opaque
+    }
+    displayLayer.updatePixels();
+
     dirty = true
   }
 

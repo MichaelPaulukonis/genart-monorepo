@@ -1,0 +1,11 @@
+# Task ID: 67
+# Title: Automate/Document Duo-Chrome Image Swap for Deployment
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Create a script or clear documentation to streamline the process of swapping `apps/duo-chrome/public/images` and `apps/duo-chrome/public/images_original` for deployment, ensuring the correct image set is active.
+# Details:
+
+
+# Test Strategy:
+

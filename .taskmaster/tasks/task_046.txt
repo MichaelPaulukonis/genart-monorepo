@@ -1,6 +1,6 @@
 # Task ID: 46
 # Title: Audit current test targets across applications
-# Status: pending
+# Status: done
 # Dependencies: None
 # Priority: high
 # Description: Document which apps have test targets and which don't. Identify configuration patterns from existing targets (duo-chrome, monochromifier) and map current root package.json scripts to target apps.

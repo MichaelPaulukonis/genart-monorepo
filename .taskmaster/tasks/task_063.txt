@@ -18,27 +18,26 @@
        'image/png', 
        'image/gif', 
        'image/webp', 
-       'image/bmp', 
-       'image/tiff'
+       'image/bmp'
      ];
      
      // Check MIME type
      if (!supportedTypes.includes(file.type)) {
        return {
          valid: false,
-         message: 'Unsupported file type. Please use JPG, PNG, GIF, WebP, BMP, or TIFF.'
+         message: 'Unsupported file type. Please use JPG, PNG, GIF, WebP, or BMP.'
        };
      }
      
      // Additional validation for extension
      const fileName = file.name.toLowerCase();
-     const supportedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.tif'];
+     const supportedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
      const hasValidExtension = supportedExtensions.some(ext => fileName.endsWith(ext));
      
      if (!hasValidExtension) {
        return {
          valid: false,
-         message: 'Unsupported file extension. Please use JPG, PNG, GIF, WebP, BMP, or TIFF.'
+         message: 'Unsupported file extension. Please use JPG, PNG, GIF, WebP, or BMP.'
        };
      }
      
@@ -90,19 +89,22 @@
 1. Unit testing:
    - Create test cases for the validateImageFile function with various file types
    - Test with valid file types (jpg, png, etc.) to ensure they pass validation
-   - Test with unsupported types (jp2, svg, pdf) to ensure they fail validation
+   - Test with unsupported types (jp2, svg, pdf, tiff) to ensure they fail validation
    - Verify proper error messages are returned
+   - Use https://toolsfairy.com/image-test/ as a source for diverse sample image files in different formats
 
 2. Integration testing:
    - Test drag-and-drop functionality in both applications with various file formats
    - Verify that only supported formats are accepted and properly loaded
    - Ensure error messages appear correctly for unsupported formats
+   - Use sample files from https://toolsfairy.com/image-test/ for comprehensive test coverage
 
 3. Edge case testing:
    - Test with uppercase extensions (.JPG, .PNG)
    - Test with files having correct extension but incorrect content
    - Test with files having no extension but correct MIME type
    - Test with very large images to ensure validation occurs before loading
+   - Use the diverse file samples from https://toolsfairy.com/image-test/ to test boundary cases
 
 4. User feedback testing:
    - Verify error messages are clear and helpful
@@ -113,13 +115,13 @@
 ### Dependencies: None
 ### Description: Review existing validation code across all affected applications and design a comprehensive whitelist-based validation approach.
 ### Details:
-Analyze current file type validation in monochromifier, crude-collage-painter, and computational-collage apps. Document how each app currently handles validation, identify improvement opportunities, and design a unified approach. Define the complete list of supported MIME types and file extensions to be whitelisted in the new implementation. Consider both browser compatibility and p5.js loadImage() support requirements.
+Analyze current file type validation in monochromifier, crude-collage-painter, and computational-collage apps. Document how each app currently handles validation, identify improvement opportunities, and design a unified approach. Define the complete list of supported MIME types and file extensions to be whitelisted in the new implementation. Consider both browser compatibility and p5.js loadImage() support requirements. The supported formats will include JPG, PNG, GIF, WebP, and BMP (TIFF format will not be supported). Use https://toolsfairy.com/image-test/ as a resource to identify and analyze different image formats for testing.
 
 ## 2. Implement core validation utility function in @genart/p5-utils [pending]
 ### Dependencies: 63.1
 ### Description: Develop a shared utility function for image format validation based on whitelists that can be used across multiple applications.
 ### Details:
-Implement the `validateImageFile()` utility function in the @genart/p5-utils package that checks both MIME types and file extensions against a whitelist. Function should return validation status and appropriate error messages. Include full JSDoc documentation and examples of usage. The whitelist should include JPG, PNG, GIF, WebP, BMP, and TIFF formats as specified in the requirements.
+Implement the `validateImageFile()` utility function in the @genart/p5-utils package that checks both MIME types and file extensions against a whitelist. Function should return validation status and appropriate error messages. Include full JSDoc documentation and examples of usage. The whitelist should include JPG, PNG, GIF, WebP, and BMP formats as specified in the requirements.
 
 ## 3. Create user feedback component for invalid file types [pending]
 ### Dependencies: 63.2

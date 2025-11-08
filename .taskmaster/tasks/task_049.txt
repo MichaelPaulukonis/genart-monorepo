@@ -1,6 +1,6 @@
 # Task ID: 49
 # Title: Create test target for those-shape-things
-# Status: pending
+# Status: done
 # Dependencies: 46
 # Priority: high
 # Description: Add a proper test target to the those-shape-things application's project.json file that can be executed via nx test those-shape-things.

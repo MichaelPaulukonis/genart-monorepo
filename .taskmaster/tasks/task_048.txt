@@ -1,6 +1,6 @@
 # Task ID: 48
 # Title: Create test target for computational-collage
-# Status: pending
+# Status: done
 # Dependencies: 46
 # Priority: high
 # Description: Add a proper test target to the computational-collage application's project.json file that can be executed via nx test computational-collage.

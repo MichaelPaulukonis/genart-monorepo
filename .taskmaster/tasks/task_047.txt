@@ -1,6 +1,6 @@
 # Task ID: 47
 # Title: Create test target for crude-collage-painter
-# Status: pending
+# Status: done
 # Dependencies: 46
 # Priority: high
 # Description: Add a proper test target to the crude-collage-painter application's project.json file that can be executed via nx test crude-collage-painter.
