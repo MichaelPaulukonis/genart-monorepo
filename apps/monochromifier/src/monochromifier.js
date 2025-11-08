@@ -730,23 +730,22 @@ const sketch = function (p) {
     const scaledWidth = Math.round(img.width * scaleRatio)
     const scaledHeight = Math.round(img.height * scaleRatio)
 
-    let calculatedMaxOffsetX = 0
-    let calculatedMinOffsetX = 0
-    if (scaledWidth > outputSize) { // Compare scaledWidth with outputSize
-      calculatedMaxOffsetX = (scaledWidth - outputSize) / 2
-      calculatedMinOffsetX = -calculatedMaxOffsetX
-    }
+    // Ensure at least 25% of the image remains visible within the output canvas
+    const minVisible = 0.25
 
-    let calculatedMaxOffsetY = 0
-    let calculatedMinOffsetY = 0
-    if (scaledHeight > outputSize) { // Compare scaledHeight with outputSize
-      calculatedMaxOffsetY = (scaledHeight - outputSize) / 2
-      calculatedMinOffsetY = -calculatedMaxOffsetY
-    }
+    // Calculate the maximum allowed offsets
+    // The image can be moved so that 75% is hidden, but 25% must remain visible
+    const maxOffsetX = scaledWidth * (1 - minVisible)
+    const maxOffsetY = scaledHeight * (1 - minVisible)
+
+    // Calculate the minimum allowed offsets
+    // The image can be moved so that it's mostly off-screen on the opposite side
+    const minOffsetX = -(outputSize - scaledWidth * minVisible)
+    const minOffsetY = -(outputSize - scaledHeight * minVisible)
 
     // Apply constraints
-    imageOffsetX = p.constrain(imageOffsetX, calculatedMinOffsetX, calculatedMaxOffsetX)
-    imageOffsetY = p.constrain(imageOffsetY, calculatedMinOffsetY, calculatedMaxOffsetY)
+    imageOffsetX = p.constrain(imageOffsetX, minOffsetX, maxOffsetX)
+    imageOffsetY = p.constrain(imageOffsetY, minOffsetY, maxOffsetY)
   }
 
   const buildCombinedLayer = img => {
