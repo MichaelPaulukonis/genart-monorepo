@@ -1,4 +1,3 @@
-/* eslint no-labels: 0 */
 import { p5 } from 'p5js-wrapper'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
@@ -36,19 +35,15 @@ const sketch = function (p) {
   const displaySize = 600
   const outputSize = 2000
   let previousMouse = { x: 0, y: 0 }
-  const offset = {
-    vertical: 0,
-    horizontal: 0,
-    verticalMax: 0,
-    horizontalMax: 0
-  }
 
-  // Image dragging state
-  let isDragging = false
-  let dragStartX = 0
-  let dragStartY = 0
-  let imageOffsetX = 0
-  let imageOffsetY = 0
+  const camera = {
+    x: 0,
+    y: 0,
+    zoom: 1.0,
+    isDragging: false,
+    dragStartX: 0,
+    dragStartY: 0
+  }
   let showOSD = true // On-Screen Display for image positioning
 
   const scaleMethods = {
@@ -109,12 +104,12 @@ const sketch = function (p) {
     paintLayer.clear()
   }
 
-  const setupCombinedBuffer = ({ width, height }) => {
+  const setupCombinedBuffer = () => { // No width, height parameters
     combinedLayer && combinedLayer.remove()
-    combinedLayer = p.createGraphics(width, height)
+    combinedLayer = p.createGraphics(outputSize, outputSize) // Always outputSize
     combinedLayer.elt.id = `combined.${p.frameCount}`
     combinedLayer.pixelDensity(density)
-    // combinedLayer.imageMode(p.CENTER)
+    // combinedLayer.imageMode(p.CENTER) // This might need to be adjusted or removed
   }
 
   p.draw = function () {
@@ -167,7 +162,7 @@ const sketch = function (p) {
       if (showOSD && appMode === modes.ADJUST) drawOSD()
 
       // Visual feedback when dragging
-      if (isDragging && appMode === modes.ADJUST) {
+      if (camera.isDragging && appMode === modes.ADJUST) {
         p.push()
         p.stroke(255, 100, 100, 150)
         p.strokeWeight(2)
@@ -178,7 +173,7 @@ const sketch = function (p) {
 
       // Set cursor based on mode
       if (appMode === modes.ADJUST && !modal.showHelp) {
-        p.cursor(isDragging ? 'grabbing' : 'grab')
+        p.cursor(camera.isDragging ? 'grabbing' : 'grab')
       } else if (appMode === modes.EDIT) {
         if (editTool === editTools.PAINT) {
           // The brush ellipse is drawn, so a simple cursor is fine.
@@ -234,12 +229,12 @@ const sketch = function (p) {
       dirty = true
     } else if (appMode === modes.EDIT && editTool === editTools.PAINT && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
       drawPaintLine()
-    } else if (appMode === modes.ADJUST && isDragging) {
-      // Image dragging when in adjust mode
-      imageOffsetX += p.mouseX - dragStartX
-      imageOffsetY += p.mouseY - dragStartY
-      dragStartX = p.mouseX
-      dragStartY = p.mouseY
+    } else if (appMode === modes.ADJUST && camera.isDragging) {
+      // Update camera position based on drag
+      camera.x -= (p.mouseX - camera.dragStartX) / camera.zoom
+      camera.y -= (p.mouseY - camera.dragStartY) / camera.zoom
+      camera.dragStartX = p.mouseX
+      camera.dragStartY = p.mouseY
       applyBoundaryConstraints()
       buildCombinedLayer(img)
       dirty = true
@@ -254,8 +249,8 @@ const sketch = function (p) {
       isCropping = false
       performCrop()
       dirty = true
-    } else if (isDragging) {
-      isDragging = false
+    } else if (camera.isDragging) {
+      camera.isDragging = false
     }
     previousMouse = { x: 0, y: 0 }
   }
@@ -278,10 +273,10 @@ const sketch = function (p) {
         dirty = true
       }
     } else if (appMode === modes.ADJUST && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-      // Start dragging the image when in adjust mode
-      isDragging = true
-      dragStartX = p.mouseX
-      dragStartY = p.mouseY
+      // Start dragging the camera
+      camera.isDragging = true
+      camera.dragStartX = p.mouseX
+      camera.dragStartY = p.mouseY
     }
   }
 
@@ -346,34 +341,25 @@ const sketch = function (p) {
       bwCachedImage = null
       combinedLayer?.remove()
       combinedLayer = null
-      offset.vertical = 0
-      offset.horizontal = 0
-      offset.verticalMax = 0
-      offset.horizontalMax = 0
-      imageOffsetX = 0
-      imageOffsetY = 0
-      const offsetMax = calculateOffsetMax(img, outputSize)
-      if (scaleMethod === scaleMethods.fitToWidth) {
-        offset.verticalMax = offsetMax
-      } else if (scaleMethod === scaleMethods.fitToHeight) {
-        offset.horizontalMax = offsetMax
-      }
+      camera.x = 0
+      camera.y = 0
+      camera.zoom = 1.0
     }
 
     buildCombinedLayer(img)
   }
 
   const specialKeys = () => {
-    const change = p.keyIsDown(p.SHIFT) ? 1 : 10
+    const change = p.keyIsDown(p.SHIFT) ? 0.01 : 0.1
     let handledKey = false
 
     if (appMode === modes.EDIT && editTool === editTools.PAINT) {
       if (p.keyIsDown(p.RIGHT_ARROW)) {
-        brushSize = p.constrain(brushSize + change, 1, 300)
+        brushSize = p.constrain(brushSize + (p.keyIsDown(p.SHIFT) ? 1 : 10), 1, 300)
         buildPaintLayer(img)
         handledKey = true
       } else if (p.keyIsDown(p.LEFT_ARROW)) {
-        brushSize = p.constrain(brushSize - change, 1, 300)
+        brushSize = p.constrain(brushSize - (p.keyIsDown(p.SHIFT) ? 1 : 10), 1, 300)
         buildPaintLayer(img)
         handledKey = true
       } else if (p.keyIsDown(p.BACKSPACE) || p.keyIsDown(p.DELETE)) {
@@ -384,22 +370,22 @@ const sketch = function (p) {
       }
     } else if (appMode === modes.ADJUST) {
       if (p.keyIsDown(p.RIGHT_ARROW)) {
-        sizeRatio = p.constrain(sizeRatio + change / 100, 0.01, 10)
+        camera.zoom = p.constrain(camera.zoom + change, 0.1, 10)
         buildCombinedLayer(img)
         handledKey = true
       } else if (p.keyIsDown(p.LEFT_ARROW)) {
-        sizeRatio = p.constrain(sizeRatio - change / 100, 0.01, 10)
+        camera.zoom = p.constrain(camera.zoom - change, 0.1, 10)
         buildCombinedLayer(img)
         handledKey = true
       }
     }
 
     if (p.keyIsDown(p.UP_ARROW)) {
-      threshold = p.constrain(threshold + change, 0, 255)
+      threshold = p.constrain(threshold + change * 100, 0, 255)
       buildCombinedLayer(img)
       handledKey = true
     } else if (p.keyIsDown(p.DOWN_ARROW)) {
-      threshold = p.constrain(threshold - change, 0, 255)
+      threshold = p.constrain(threshold - change * 100, 0, 255)
       buildCombinedLayer(img)
       handledKey = true
     }
@@ -437,8 +423,8 @@ const sketch = function (p) {
     }
     if (p.key === 'd' && appMode === modes.ADJUST) {
       // Reset drag position when in adjust mode
-      imageOffsetX = 0
-      imageOffsetY = 0
+      camera.x = 0
+      camera.y = 0
       buildCombinedLayer(img)
       dirty = true
       return false
@@ -446,11 +432,9 @@ const sketch = function (p) {
     if (p.key === 'r' && !p.keyIsDown(p.CONTROL) && !p.keyIsDown(91)) {
       // Only reset if 'r' is pressed alone (not CMD+R or Ctrl+R)
       threshold = 128
-      sizeRatio = 1
-      offset.horizontal = 0
-      offset.vertical = 0
-      imageOffsetX = 0
-      imageOffsetY = 0
+      camera.zoom = 1.0
+      camera.x = 0
+      camera.y = 0
       buildCombinedLayer(img)
       dirty = true
       return false
@@ -529,32 +513,7 @@ const sketch = function (p) {
       const saveImage = createSaveImage()
       p.save(saveImage, generateFilename())
       return false
-    } else if (p.key === '>') {
-      if (scaleMethod === scaleMethods.fitToWidth) {
-        offset.vertical = Math.min(offset.vertical + 100, offset.verticalMax)
-      } else if (scaleMethod === scaleMethods.fitToHeight) {
-        offset.horizontal = Math.min(
-          offset.horizontal + 100,
-          offset.horizontalMax
-        )
-      }
-      dirty = true
-      buildCombinedLayer(img)
-      return false
-    } else if (p.key === '<') {
-      if (scaleMethod === scaleMethods.fitToWidth) {
-        offset.vertical = Math.max(offset.vertical - 100, -offset.verticalMax)
-      } else if (scaleMethod === scaleMethods.fitToHeight) {
-        offset.horizontal = Math.max(
-          offset.horizontal - 100,
-          -offset.horizontalMax
-        )
-      }
-      dirty = true
-      buildCombinedLayer(img)
-      return false
     }
-    // Allow browser default behavior for unhandled keys
   }
 
   p.keyReleased = function () {
@@ -724,28 +683,8 @@ const sketch = function (p) {
   }
 
   const applyBoundaryConstraints = () => {
-    if (!img) return
-
-    const scaleRatio = calculateScaleRatio(img, outputSize)
-    const scaledWidth = Math.round(img.width * scaleRatio)
-    const scaledHeight = Math.round(img.height * scaleRatio)
-
-    // Ensure at least 25% of the image remains visible within the output canvas
-    const minVisible = 0.25
-
-    // Calculate the maximum allowed offsets
-    // The image can be moved so that 75% is hidden, but 25% must remain visible
-    const maxOffsetX = scaledWidth * (1 - minVisible)
-    const maxOffsetY = scaledHeight * (1 - minVisible)
-
-    // Calculate the minimum allowed offsets
-    // The image can be moved so that it's mostly off-screen on the opposite side
-    const minOffsetX = -(outputSize - scaledWidth * minVisible)
-    const minOffsetY = -(outputSize - scaledHeight * minVisible)
-
-    // Apply constraints
-    imageOffsetX = p.constrain(imageOffsetX, minOffsetX, maxOffsetX)
-    imageOffsetY = p.constrain(imageOffsetY, minOffsetY, maxOffsetY)
+    // This function can be expanded to constrain camera movement
+    // For now, we'll allow free movement
   }
 
   const buildCombinedLayer = img => {
@@ -753,85 +692,58 @@ const sketch = function (p) {
     const scaledWidth = Math.round(img.width * scaleRatio)
     const scaledHeight = Math.round(img.height * scaleRatio)
 
-    // TODO: if the entire image is not display
-    // no need to process the entire image
     const newImg = getMonochromeImage(img, threshold)
 
     if (combinedLayer === null) {
-      setupCombinedBuffer({ width: scaledWidth, height: scaledHeight })
+      setupCombinedBuffer()
     }
 
-    // Clear the combined layer only if it exists and we're dragging
-    // to prevent artifacts from previous positions
-    if (isDragging || imageOffsetX !== 0 || imageOffsetY !== 0) {
-      combinedLayer.clear()
-    }
+    combinedLayer.clear()
+    combinedLayer.push()
+    combinedLayer.translate(combinedLayer.width / 2, combinedLayer.height / 2)
+    combinedLayer.scale(camera.zoom)
+    combinedLayer.translate(-camera.x, -camera.y)
 
+    combinedLayer.imageMode(p.CENTER)
     combinedLayer.image(
       newImg,
-      0 + offset.horizontal + imageOffsetX,
-      0 + offset.vertical + imageOffsetY,
-      scaledWidth,
-      scaledHeight,
       0,
       0,
-      img.width,
-      img.height
-    )
-    combinedLayer.image(
-      paintLayer,
-      0 + offset.horizontal + imageOffsetX,
-      0 + offset.vertical + imageOffsetY,
       scaledWidth,
       scaledHeight
     )
+    combinedLayer.image(
+      paintLayer,
+      0,
+      0,
+      scaledWidth,
+      scaledHeight
+    )
+    combinedLayer.pop()
 
     const croppedImg = cropWhitespace(combinedLayer, autoCrop)
 
-    // Scale the cropped image to ensure it is as large as possible
-    // and apply zoom
-    const finalScaleRatio = calculateScaleRatio(croppedImg, outputSize)
-    const finalWidth = Math.round(
-      croppedImg.width * finalScaleRatio * sizeRatio
-    )
-    const finalHeight = Math.round(
-      croppedImg.height * finalScaleRatio * sizeRatio
-    )
-    const finalImg = p.createImage(finalWidth, finalHeight)
-
-    finalImg.copy(
-      croppedImg,
-      0,
-      0,
-      croppedImg.width,
-      croppedImg.height,
-      0,
-      0,
-      finalWidth,
-      finalHeight
-    )
-
     displayLayer.background(backgroundColor)
     displayLayer.image(
-      finalImg,
+      croppedImg,
       displayLayer.width / 2,
       displayLayer.height / 2
     )
 
     // Force displayLayer to be monochrome for display
-    displayLayer.loadPixels();
+    displayLayer.loadPixels()
     for (let i = 0; i < displayLayer.pixels.length; i += 4) {
-      const r = displayLayer.pixels[i];
-      const g = displayLayer.pixels[i + 1];
-      const b = displayLayer.pixels[i + 2];
-      const avg = (r + g + b) / 3;
-      const bw = avg > threshold ? 255 : 0; // Use actual threshold
-      displayLayer.pixels[i] = bw;
-      displayLayer.pixels[i + 1] = bw;
-      displayLayer.pixels[i + 2] = bw;
-      displayLayer.pixels[i + 3] = 255; // Ensure opaque
+      const r = displayLayer.pixels[i]
+      const g = displayLayer.pixels[i + 1]
+      const b = displayLayer.pixels[i + 2]
+      const avg = (r + g + b) / 3
+      const bw = avg > threshold ? 255 : 0 // Use actual threshold
+      displayLayer.pixels[i] = bw
+      displayLayer.pixels[i + 1] = bw
+      displayLayer.pixels[i + 2] = bw
+      displayLayer.pixels[i + 3] = 255 // Ensure opaque
     }
-    displayLayer.updatePixels();
+    displayLayer.updatePixels()
 
     dirty = true
   }
@@ -880,20 +792,9 @@ const sketch = function (p) {
     modal.processing = false
     combinedLayer && combinedLayer.remove()
     combinedLayer = null
-    offset.vertical = 0
-    offset.horizontal = 0
-    offset.verticalMax = 0
-    offset.horizontalMax = 0
-    imageOffsetX = 0
-    imageOffsetY = 0
-
-    const offsetMax = calculateOffsetMax(img, outputSize)
-
-    if (scaleMethod === scaleMethods.fitToWidth) {
-      offset.verticalMax = offsetMax
-    } else if (scaleMethod === scaleMethods.fitToHeight) {
-      offset.horizontalMax = offsetMax
-    }
+    camera.x = 0
+    camera.y = 0
+    camera.zoom = 1.0
 
     buildCombinedLayer(img)
     modal.refit = false
@@ -1078,15 +979,9 @@ const sketch = function (p) {
   }
 
   const displayUI = () => {
-    const offsetAmount =
-      scaleMethod === scaleMethods.fitToWidth
-        ? offset.vertical
-        : offset.horizontal
-
     const adjustModeText = [
-      `zoom: ${(sizeRatio * 100).toFixed(0)}%`,
-      `offset: ${offsetAmount}`,
-      `drag offset: (${Math.round(imageOffsetX)}, ${Math.round(imageOffsetY)})`,
+      `zoom: ${(camera.zoom * 100).toFixed(0)}%`,
+      `pan: (${Math.round(camera.x)}, ${Math.round(camera.y)})`,
       `fit method: ${scaleMethod}`,
       `invert: ${invert ? 'inverted' : 'normal'}`,
       `autocrop: ${autoCrop ? 'ON' : 'OFF'}`,
@@ -1164,53 +1059,30 @@ const sketch = function (p) {
     p.noTint()
     p.pop()
 
-    // Calculate viewport rectangle based on current offsets and scale
+    // 1. Convert the camera's view (which is in world space) back to original image pixel space.
     const scaleRatio = calculateScaleRatio(img, outputSize)
 
-    // Calculate visible area in image coordinates
-    // Account for center-based zoom and drag offsets
+    // Width of the viewport in world space
+    const viewportWidthInWorld = outputSize / camera.zoom
 
-    // Key insight: When you drag the image, you're changing what part of the original
-    // image is visible. Dragging the image right means you see the left part of the image.
+    // Width of the viewport in original image pixels
+    const viewportWidthInPixels = viewportWidthInWorld / scaleRatio
+    const viewportHeightInPixels = (outputSize / camera.zoom) / scaleRatio
 
-    // Start with the display canvas size (what we can see)
-    const displayWidth = displayLayer.width
-    const displayHeight = displayLayer.height
+    // Center of the view in world space is (camera.x, camera.y)
+    // Convert this to original image pixel space
+    const viewCenterXInPixels = (img.width / 2) + (camera.x / scaleRatio)
+    const viewCenterYInPixels = (img.height / 2) + (camera.y / scaleRatio)
 
-    // Calculate what portion of the image is visible due to zoom
-    // When zoomed in, we see a smaller portion of the image
-    const viewportWidthInDisplay = displayWidth / sizeRatio
-    const viewportHeightInDisplay = displayHeight / sizeRatio
+    // Top-left corner of the visible rect in original image pixels
+    const visibleXInPixels = viewCenterXInPixels - (viewportWidthInPixels / 2)
+    const visibleYInPixels = viewCenterYInPixels - (viewportHeightInPixels / 2)
 
-    // Convert drag offsets to original image coordinates
-    // Note: drag offsets work in the opposite direction - dragging image right
-    // means we're seeing the left portion of the image
-    const dragOffsetInImageCoords = {
-      x: -(imageOffsetX + offset.horizontal) / scaleRatio,
-      y: -(imageOffsetY + offset.vertical) / scaleRatio
-    }
-
-    // Calculate the center of what we're viewing in original image coordinates
-    const imageCenterX = img.width / 2
-    const imageCenterY = img.height / 2
-    const viewCenterX = imageCenterX + dragOffsetInImageCoords.x
-    const viewCenterY = imageCenterY + dragOffsetInImageCoords.y
-
-    // Calculate the viewport dimensions in original image coordinates
-    const viewportWidthInImage = viewportWidthInDisplay / scaleRatio
-    const viewportHeightInImage = viewportHeightInDisplay / scaleRatio
-
-    // Calculate viewport bounds (don't clamp to image bounds - allow showing outside)
-    const visibleX = viewCenterX - viewportWidthInImage / 2
-    const visibleY = viewCenterY - viewportHeightInImage / 2
-    const visibleWidth = viewportWidthInImage
-    const visibleHeight = viewportHeightInImage
-
-    // Convert to thumbnail coordinates
-    const rectX = thumbX + (visibleX * thumbScale)
-    const rectY = thumbY + (visibleY * thumbScale)
-    const rectWidth = visibleWidth * thumbScale
-    const rectHeight = visibleHeight * thumbScale
+    // 2. Convert these pixel-space coordinates to OSD thumbnail coordinates.
+    const rectX = thumbX + (visibleXInPixels * thumbScale)
+    const rectY = thumbY + (visibleYInPixels * thumbScale)
+    const rectWidth = viewportWidthInPixels * thumbScale
+    const rectHeight = viewportHeightInPixels * thumbScale
 
     // Draw viewport rectangle
     p.noFill()
