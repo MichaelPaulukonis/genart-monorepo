@@ -32,7 +32,7 @@ const sketch = function (p) {
   const transparencyThreshold = 128 // Threshold for gray pixels in transparency mode
   const density = 1 // need to use density in size calculations for both w+h
   // but if we render offscreen, why worry about pixeldensity ?!?!?
-  const displaySize = 600
+  const displaySize = 800
   const outputSize = 2000
   let previousMouse = { x: 0, y: 0 }
 
@@ -290,10 +290,10 @@ const sketch = function (p) {
     undoStack.push(currentState)
 
     // 2. Calculate crop dimensions in image space
-    const x = Math.min(cropStart.x, cropEnd.x) / paintScale
-    const y = Math.min(cropStart.y, cropEnd.y) / paintScale
-    const w = Math.abs(cropEnd.x - cropStart.x) / paintScale
-    const h = Math.abs(cropEnd.y - cropStart.y) / paintScale
+    const x = Math.round(Math.min(cropStart.x, cropEnd.x) / paintScale)
+    const y = Math.round(Math.min(cropStart.y, cropEnd.y) / paintScale)
+    const w = Math.round(Math.abs(cropEnd.x - cropStart.x) / paintScale)
+    const h = Math.round(Math.abs(cropEnd.y - cropStart.y) / paintScale)
 
     if (w < 1 || h < 1) return // Ignore tiny crops
 
@@ -689,8 +689,8 @@ const sketch = function (p) {
 
   const buildCombinedLayer = img => {
     const scaleRatio = calculateScaleRatio(img, outputSize)
-    const scaledWidth = Math.round(img.width * scaleRatio)
-    const scaledHeight = Math.round(img.height * scaleRatio)
+    const scaledWidth = Math.floor(img.width * scaleRatio)
+    const scaledHeight = Math.floor(img.height * scaleRatio)
 
     const newImg = getMonochromeImage(img, threshold)
 
