@@ -2,6 +2,7 @@ import { p5 } from 'p5js-wrapper'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
 import { formatVersion } from './utils/version.js'
+import { validateImageFile, showErrorMessage } from '../../../libs/p5-utils/src/index.js'
 
 const sketch = function (p) {
   let img
@@ -802,14 +803,19 @@ const sketch = function (p) {
   }
 
   function handleFile(file) {
-    if (file.type === 'image') {
-      modal.processing = true
-      img = null
-      p.loadImage(file.data, loadedImg => {
-        img = loadedImg
-        processImage(loadedImg)
-      })
+    const validation = validateImageFile(file);
+
+    if (!validation.valid) {
+      showErrorMessage(validation.message);
+      return;
     }
+
+    modal.processing = true
+    img = null
+    p.loadImage(file.data, loadedImg => {
+      img = loadedImg
+      processImage(loadedImg)
+    })
   }
 
   const cropWhitespace = (buffer, shouldCrop = true) => {

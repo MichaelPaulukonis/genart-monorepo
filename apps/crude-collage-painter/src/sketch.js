@@ -4,6 +4,7 @@ import { sketch, p5 } from 'p5js-wrapper'
 import { Pane } from 'tweakpane'
 import saveAs from 'file-saver'
 import { datestring, filenamer } from './filelib'
+import { validateImageFile, showErrorMessage } from '../../../libs/p5-utils/src/index.js'
 
 let namer = filenamer(datestring())
 const pane = new Pane()
@@ -107,22 +108,25 @@ sketch.setup = () => {
 
 // Handle file uploads
 function handleFile (file) {
-  if (file.type === 'image') {
-    loadImage(file.data, img => {
-      elementImages.push(img)
-      scale = getScale(img, cnvs)
-      // if we're drawing, paint it
-      if (config.activity === activityModes.Drawing) {
-        image(img, 0, 0)
-        captureDrawing()
-      } else {
-        config.activity = activityModes.Gallery
-        displayGallery()
-      }
-    })
-  } else {
-    console.log('Not an image file!')
+  const validation = validateImageFile(file);
+
+  if (!validation.valid) {
+    showErrorMessage(validation.message);
+    return;
   }
+
+  loadImage(file.data, img => {
+    elementImages.push(img)
+    scale = getScale(img, cnvs)
+    // if we're drawing, paint it
+    if (config.activity === activityModes.Drawing) {
+      image(img, 0, 0)
+      captureDrawing()
+    } else {
+      config.activity = activityModes.Gallery
+      displayGallery()
+    }
+  })
 }
 
 const addToGallery = () => {

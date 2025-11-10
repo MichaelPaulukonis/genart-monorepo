@@ -10,6 +10,7 @@ import 'p5js-wrapper/sound'
 import { datestring, filenamer } from './filelib'
 import { CroppableImage, OutlineableImage, Images } from './images'
 import { AboutDialog } from './AboutDialog.js'
+import { validateImageFile, showErrorMessage } from '../../../libs/p5-utils/src/index.js'
 
 const imagesContainer = document.getElementById('images')
 const overlay = document.getElementById('overlay')
@@ -734,6 +735,13 @@ const getImageVectorKeys = zip => {
 
 // Handle file uploads
 async function handleFile(file) {
+  const validation = validateImageFile(file);
+
+  if (!validation.valid) {
+    showErrorMessage(validation.message);
+    return;
+  }
+
   if (file.type.startsWith('image')) {
     loadImage(URL.createObjectURL(file), img => {
       const cropped = squareCrop(img)

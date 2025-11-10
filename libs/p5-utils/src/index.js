@@ -79,3 +79,42 @@ export function mapRange(value, start1, stop1, start2, stop2) {
 export function constrain(value, min, max) {
   return Math.min(Math.max(value, min), max)
 }
+
+/**
+ * Validates an image file based on a whitelist of supported MIME types and file extensions.
+ * @param {File} file - The file object to validate.
+ * @returns {{valid: boolean, message?: string}} An object indicating validation status and an optional error message.
+ */
+export function validateImageFile(file) {
+  const supportedTypes = [
+    'jpeg',
+    'png',
+    'gif',
+    'webp',
+    'bmp'
+  ];
+
+  // Check MIME type
+  if (!supportedTypes.includes(file.subtype)) {
+    return {
+      valid: false,
+      message: 'Unsupported file type. Please use JPG, PNG, GIF, WebP, or BMP.'
+    };
+  }
+
+  // Additional validation for extension
+  const fileName = file.name.toLowerCase();
+  const supportedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+  const hasValidExtension = supportedExtensions.some(ext => fileName.endsWith(ext));
+
+  if (!hasValidExtension) {
+    return {
+      valid: false,
+      message: 'Unsupported file extension. Please use JPG, PNG, GIF, WebP, or BMP.'
+    };
+  }
+
+  return { valid: true };
+}
+
+export { showErrorMessage } from './feedback.js'
