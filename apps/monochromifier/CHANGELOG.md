@@ -1,4 +1,23 @@
-## 0.4.0 (2025-11-04)
+## 0.4.0 (2025-11-10)
+
+### 🚀 Features
+
+- Implement whitelist-based image validation and feedback ([1cc1562d](https://github.com/MichaelPaulukonis/genart-monorepo/commit/1cc1562d))
+- **monochromifier:** Refactor image manipulation with camera object ([793afdb7](https://github.com/MichaelPaulukonis/genart-monorepo/commit/793afdb7))
+- **monochromifier:** Implement crop feature and improve image processing ([6c48a416](https://github.com/MichaelPaulukonis/genart-monorepo/commit/6c48a416))
+- Implement URL sharing and improve testing infrastructure ([b3a04718](https://github.com/MichaelPaulukonis/genart-monorepo/commit/b3a04718))
+
+### 🩹 Fixes
+
+- **monochromifier:** Enforce integer math for pixel calculations ([041879a4](https://github.com/MichaelPaulukonis/genart-monorepo/commit/041879a4))
+- **monochromifier:** apply fixes for post-crop preview and fit mode ([40009850](https://github.com/MichaelPaulukonis/genart-monorepo/commit/40009850))
+- **nx:** resolve release configuration conflicts across all apps ([22f7de53](https://github.com/MichaelPaulukonis/genart-monorepo/commit/22f7de53))
+
+### ❤️ Thank You
+
+- MichaelPaulukonis
+
+## 0.3.0 (2025-11-04)
 
 ### 🚀 Features
 
@@ -9,6 +28,8 @@
   - Include keyboard controls: 'o' to toggle OSD, 'd' to reset drag position
   - Support zoom-aware viewport calculations and drag offset tracking
   - Add visual feedback with red border during drag operations
+  - add version display in help screen accessible via '?' key
+  - complete monorepo-wide version display implementation across all apps
 
 ### 🩹 Fixes
 
@@ -16,13 +37,6 @@
   - Remove double-inversion logic in createSaveImage function
   - Ensure transparency mode correctly exports inverted images
   - Fix white/black pixel transparency mapping for inverted mode
-
-## 0.3.0 (2025-11-04)
-
-### 🚀 Features
-
-- **monochromifier:** add version display in help screen accessible via '?' key
-- **monochromifier:** complete monorepo-wide version display implementation across all apps
 
 ### 🧹 Code Quality
 
