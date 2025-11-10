@@ -1,3 +1,13 @@
+## 0.5.0 (2025-11-10)
+
+### 🚀 Features
+
+- **monochromifier:** Redesign fit methods, zoom, and autocrop interaction ([#64](https://github.com/MichaelPaulukonis/genart-monorepo/issues/64))
+
+### ❤️ Thank You
+
+- MichaelPaulukonis
+
 ## 0.4.0 (2025-11-10)
 
 ### 🚀 Features
