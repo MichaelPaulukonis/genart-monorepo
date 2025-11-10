@@ -1523,11 +1523,25 @@
         "dependencies": [],
         "priority": "medium",
         "subtasks": []
+      },
+      {
+        "id": 68,
+        "title": "Clean-up Monochromifier README",
+        "description": "Improve the monochromifier app README by moving out TODOs, expanding explanations, adding screenshots, and enhancing overall documentation quality.",
+        "details": "1. Remove TODOs from README:\n   - Extract all TODOs and move them to GitHub issues\n   - Categorize TODOs by priority and type\n   - Link to issues from the README where appropriate\n\n2. Expand explanations:\n   - Add comprehensive overview of what monochromifier does\n   - Provide clear usage instructions with step-by-step examples\n   - Document key features, particularly the image export functionality\n   - Explain design concepts and algorithms used\n   - Add troubleshooting section for common issues\n\n3. Add screenshots:\n   - Capture new screenshot showing the main interface\n   - Add screenshots demonstrating different processing modes\n   - Include before/after examples of processed images\n   - Show export functionality in action\n   - Ensure all screenshots have descriptive captions\n\n4. Improve structure and formatting:\n   - Add table of contents for easy navigation\n   - Organize content with clear hierarchy and sections\n   - Use consistent markdown formatting throughout\n   - Add badges for build status and version information\n\n5. Additional enhancements:\n   - Include information about the fixed export functionality\n   - Add code examples for key operations\n   - Update contribution guidelines\n   - Ensure license information is properly displayed",
+        "testStrategy": "1. Documentation completeness:\n   - Verify all TODOs have been removed and properly relocated\n   - Confirm all features are documented, especially the fixed image export functionality\n   - Ensure installation and usage instructions are complete and accurate\n\n2. Visual validation:\n   - Check that all screenshots render properly in the GitHub UI\n   - Verify screenshots accurately represent the application\n   - Confirm images are appropriately sized and formatted\n\n3. Link validation:\n   - Test all links in the document to ensure they work\n   - Verify references to other documentation are correct\n\n4. Readability assessment:\n   - Have a team member unfamiliar with the application read the README\n   - Collect feedback on clarity and comprehensiveness\n   - Verify a new user could successfully use the application based solely on README instructions\n\n5. Technical review:\n   - Ensure technical descriptions are accurate\n   - Verify code examples are correct and follow best practices\n   - Confirm explanation of the export functionality matches the implementation",
+        "status": "pending",
+        "dependencies": [
+          3,
+          61
+        ],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-10-27T13:48:05.544Z",
-      "updated": "2025-11-10T04:15:17.747Z",
+      "updated": "2025-11-10T13:40:23.783Z",
       "description": "Tasks for master context"
     }
   }
