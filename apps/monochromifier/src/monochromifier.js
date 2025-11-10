@@ -2,168 +2,166 @@ import { p5 } from 'p5js-wrapper'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
 import { formatVersion } from './utils/version.js'
-import { validateImageFile, showErrorMessage } from '../../../libs/p5-utils/src/index.js'
+import { displayUI, drawOSD, displayHelpScreen, displayProcessingText } from './ui.js'
+import { mouseDragged, mouseReleased, mousePressed, specialKeys, handleKeys, keyReleased, handleFile } from './input.js'
 
 const sketch = function (p) {
-  let img
-  let threshold = 128
-  let lastThreshold = null
-  let backgroundColor
-  let displayLayer
-  let paintLayer
-  let paintScale = 1.0
-  let combinedLayer = null
-  let bwCachedImage = null
-  let dirty = false
-  let invert = false
-  let sizeRatio = 1.0
-  let brushSize = 10
-  let transparencyModeEnabled = true // Default to enabled
-  let autoCrop = true // Default to enabled
-  let isDrawingLine = false
-  let startPoint = { x: 0, y: 0 }
-  let endPoint = { x: 0, y: 0 }
+  const state = {
+    img: null,
+    threshold: 128,
+    lastThreshold: null,
+    backgroundColor: null,
+    displayLayer: null,
+    paintLayer: null,
+    paintScale: 1.0,
+    combinedLayer: null,
+    bwCachedImage: null,
+    dirty: false,
+    invert: false,
+    sizeRatio: 1.0,
+    brushSize: 10,
+    transparencyModeEnabled: true, // Default to enabled
+    autoCrop: true, // Default to enabled
+    isDrawingLine: false,
+    startPoint: { x: 0, y: 0 },
+    endPoint: { x: 0, y: 0 },
 
-  let isCropping = false
-  let cropStart = { x: 0, y: 0 }
-  let cropEnd = { x: 0, y: 0 }
-
-  const undoStack = []
-
-  const transparencyThreshold = 128 // Threshold for gray pixels in transparency mode
-  const density = 1 // need to use density in size calculations for both w+h
-  // but if we render offscreen, why worry about pixeldensity ?!?!?
-  const displaySize = 800
-  const outputSize = 2000
-  let previousMouse = { x: 0, y: 0 }
-
-  const camera = {
-    x: 0,
-    y: 0,
-    zoom: 1.0,
     isDragging: false,
     dragStartX: 0,
-    dragStartY: 0
-  }
-  let showOSD = true // On-Screen Display for image positioning
+    dragStartY: 0,
 
-  const scaleMethods = {
-    fitToWidth: 'fitToWidth',
-    fitToHeight: 'fitToHeight',
-    fitToCanvas: 'fitToCanvas'
-  }
+    isCropping: false,
+    cropStart: { x: 0, y: 0 },
+    cropEnd: { x: 0, y: 0 },
 
-  let scaleMethod = scaleMethods.fitToWidth
+    undoStack: [],
 
-  const modes = {
-    ADJUST: 'ADJUST',
-    EDIT: 'EDIT'
-  }
-  const editTools = {
-    PAINT: 'PAINT',
-    CROP: 'CROP'
-  }
-  let appMode = modes.ADJUST
-  let editTool = editTools.PAINT
+    transparencyThreshold: 128, // Threshold for gray pixels in transparency mode
+    density: 1, // need to use density in size calculations for both w+h
+    // but if we render offscreen, why worry about pixeldensity ?!?!?
+    displaySize: 800,
+    outputSize: 2000,
+    previousMouse: { x: 0, y: 0 },
 
-  const modal = {
-    showHelp: false,
-    showUI: true,
-    processing: false,
-    eraseMode: false,
-    refit: false
+    view: {
+      x: 0, // Pan offset X, in image pixels
+      y: 0, // Pan offset Y, in image pixels
+      zoom: 1.0, // User-controlled zoom, defaults to 1.0
+      baseScale: 1.0 // Calculated by fit actions
+    },
+
+    showOSD: true, // On-Screen Display for image positioning
+
+    modes: {
+      ADJUST: 'ADJUST',
+      EDIT: 'EDIT'
+    },
+    editTools: {
+      PAINT: 'PAINT',
+      CROP: 'CROP'
+    },
+    appMode: 'ADJUST',
+    editTool: 'PAINT',
+
+    modal: {
+      showHelp: false,
+      showUI: true,
+      processing: false,
+      eraseMode: false,
+      refit: false
+    }
   }
 
   p.preload = function () {
-    img = p.loadImage(
+    state.img = p.loadImage(
       './sample_images/mona.crosshairs.png'
     )
   }
 
   p.setup = function () {
-    p.pixelDensity(density)
-    const c = p.createCanvas(displaySize, displaySize)
-    c.drop(handleFile)
+    p.pixelDensity(state.density)
+    const c = p.createCanvas(state.displaySize, state.displaySize)
+    c.drop((file) => handleFile(p, state, { processImage }, file))
     p.imageMode(p.CENTER)
-    backgroundColor = p.color(255, 255, 255)
-    p.background(backgroundColor)
+    state.backgroundColor = p.color(255, 255, 255)
+    p.background(state.backgroundColor)
 
-    displayLayer = p.createGraphics(outputSize, outputSize)
-    displayLayer.pixelDensity(density)
-    displayLayer.imageMode(p.CENTER)
-    processImage(img)
+    state.displayLayer = p.createGraphics(state.outputSize, state.outputSize)
+    state.displayLayer.pixelDensity(state.density)
+    state.displayLayer.imageMode(p.CENTER)
+    processImage(state.img)
   }
 
   const setupPaintBuffer = ({ width, height }) => {
     const maxSize = Math.max(width, height)
-    paintScale = displaySize / maxSize
-    paintLayer && paintLayer.remove()
-    paintLayer = p.createGraphics(width, height)
-    paintLayer.elt.id = `paint.${p.frameCount}`
-    paintLayer.pixelDensity(density)
-    paintLayer.imageMode(p.CENTER)
-    paintLayer.clear()
+    state.paintScale = state.displaySize / maxSize
+    state.paintLayer && state.paintLayer.remove()
+    state.paintLayer = p.createGraphics(width, height)
+    state.paintLayer.elt.id = `paint.${p.frameCount}`
+    state.paintLayer.pixelDensity(state.density)
+    state.paintLayer.imageMode(p.CENTER)
+    state.paintLayer.clear()
   }
 
   const setupCombinedBuffer = () => { // No width, height parameters
-    combinedLayer && combinedLayer.remove()
-    combinedLayer = p.createGraphics(outputSize, outputSize) // Always outputSize
-    combinedLayer.elt.id = `combined.${p.frameCount}`
-    combinedLayer.pixelDensity(density)
+    state.combinedLayer && state.combinedLayer.remove()
+    state.combinedLayer = p.createGraphics(state.outputSize, state.outputSize) // Always outputSize
+    state.combinedLayer.elt.id = `combined.${p.frameCount}`
+    state.combinedLayer.pixelDensity(state.density)
     // combinedLayer.imageMode(p.CENTER) // This might need to be adjusted or removed
   }
 
   p.draw = function () {
-    if (modal.showHelp) {
-      displayHelpScreen()
+    if (state.modal.showHelp) {
+      displayHelpScreen(p)
       return
     }
-    if (modal.processing) {
-      displayProcessingText()
+    if (state.modal.processing) {
+      displayProcessingText(p)
       return
     }
-    if (modal.refit) {
-      processImage(img)
+    if (state.modal.refit) {
+      processImage(state.img)
       return
     }
-    specialKeys()
-    if (displayLayer && dirty) {
-      p.background(backgroundColor)
-      p.image(displayLayer, p.width / 2, p.height / 2, p.width, p.height)
-      dirty = false
+    specialKeys(p, state, { buildPaintLayer, buildCombinedLayer })
+    if (state.displayLayer && state.dirty) {
+      p.background(state.backgroundColor)
+      p.image(state.displayLayer, p.width / 2, p.height / 2, p.width, p.height)
+      state.dirty = false
 
-      if (appMode === modes.EDIT && editTool === editTools.PAINT) {
+      if (state.appMode === state.modes.EDIT && state.editTool === state.editTools.PAINT) {
         // draw brush
         p.stroke(0)
         p.strokeWeight(1)
         p.fill(255)
-        p.ellipse(p.mouseX, p.mouseY, brushSize * paintScale)
-        dirty = true
+        p.ellipse(p.mouseX, p.mouseY, state.brushSize * state.paintScale)
+        state.dirty = true
       }
 
-      if (isDrawingLine) {
+      if (state.isDrawingLine) {
         p.push()
         p.stroke('red')
-        p.strokeWeight(brushSize * paintScale)
-        p.line(startPoint.x, startPoint.y, endPoint.x, endPoint.y)
+        p.strokeWeight(state.brushSize * state.paintScale)
+        p.line(state.startPoint.x, state.startPoint.y, state.endPoint.x, state.endPoint.y)
         p.pop()
       }
 
-      if (isCropping) {
+      if (state.isCropping) {
         p.push()
         p.noFill()
         p.stroke('red')
         p.strokeWeight(1)
-        p.rect(cropStart.x, cropStart.y, cropEnd.x - cropStart.x, cropEnd.y - cropStart.y)
+        p.rect(state.cropStart.x, state.cropStart.y, state.cropEnd.x - state.cropStart.x, state.cropEnd.y - state.cropStart.y)
         p.pop()
-        dirty = true
+        state.dirty = true
       }
 
-      if (modal.showUI) displayUI()
-      if (showOSD && appMode === modes.ADJUST) drawOSD()
+      if (state.modal.showUI) displayUI(p, state)
+      if (state.showOSD && state.appMode === state.modes.ADJUST) drawOSD(p, state)
 
       // Visual feedback when dragging
-      if (camera.isDragging && appMode === modes.ADJUST) {
+      if (state.isDragging && state.appMode === state.modes.ADJUST) {
         p.push()
         p.stroke(255, 100, 100, 150)
         p.strokeWeight(2)
@@ -173,13 +171,13 @@ const sketch = function (p) {
       }
 
       // Set cursor based on mode
-      if (appMode === modes.ADJUST && !modal.showHelp) {
-        p.cursor(camera.isDragging ? 'grabbing' : 'grab')
-      } else if (appMode === modes.EDIT) {
-        if (editTool === editTools.PAINT) {
-          // The brush ellipse is drawn, so a simple cursor is fine.
+      if (state.appMode === state.modes.ADJUST && !state.modal.showHelp) {
+        p.cursor(state.isDragging ? 'grabbing' : 'grab')
+      } else if (state.appMode === state.modes.EDIT) {
+        if (state.editTool === state.editTools.PAINT) {
+          // The brush ellipse is drawn, so a simple cursor is fine..
           p.cursor(p.CROSS)
-        } else if (editTool === editTools.CROP) {
+        } else if (state.editTool === state.editTools.CROP) {
           p.cursor(p.CROSS)
         }
       }
@@ -187,346 +185,121 @@ const sketch = function (p) {
   }
 
   const drawPaintLine = () => {
-    paintLayer.stroke(255)
-    paintLayer.strokeWeight(brushSize)
-    if (modal.eraseMode) {
-      paintLayer.erase()
+    state.paintLayer.stroke(255)
+    state.paintLayer.strokeWeight(state.brushSize)
+    if (state.modal.eraseMode) {
+      state.paintLayer.erase()
     }
-    paintLayer.line(
-      previousMouse.x / paintScale,
-      previousMouse.y / paintScale,
-      p.mouseX / paintScale,
-      p.mouseY / paintScale
+    state.paintLayer.line(
+      state.previousMouse.x / state.paintScale,
+      state.previousMouse.y / state.paintScale,
+      p.mouseX / state.paintScale,
+      p.mouseY / state.paintScale
     )
-    paintLayer.noErase()
-    previousMouse = { x: p.mouseX, y: p.mouseY }
-    buildPaintLayer(img)
-    dirty = true
+    state.paintLayer.noErase()
+    state.previousMouse = { x: p.mouseX, y: p.mouseY }
+    buildPaintLayer(state.img)
+    state.dirty = true
   }
 
   const drawLine = (start, end) => {
-    paintLayer.stroke(255)
-    paintLayer.strokeWeight(brushSize)
-    if (modal.eraseMode) {
-      paintLayer.erase()
+    state.paintLayer.stroke(255)
+    state.paintLayer.strokeWeight(state.brushSize)
+    if (state.modal.eraseMode) {
+      state.paintLayer.erase()
     }
-    paintLayer.line(
-      start.x / paintScale,
-      start.y / paintScale,
-      end.x / paintScale,
-      end.y / paintScale
+    state.paintLayer.line(
+      start.x / state.paintScale,
+      start.y / state.paintScale,
+      end.x / state.paintScale,
+      end.y / state.paintScale
     )
-    paintLayer.noErase()
-    buildPaintLayer(img)
-    dirty = true
+    state.paintLayer.noErase()
+    buildPaintLayer(state.img)
+    state.dirty = true
   }
 
-  p.mouseDragged = function () {
-    if (isDrawingLine) {
-      endPoint = { x: p.mouseX, y: p.mouseY }
-      dirty = true
-    } else if (isCropping) {
-      cropEnd = { x: p.mouseX, y: p.mouseY }
-      dirty = true
-    } else if (appMode === modes.EDIT && editTool === editTools.PAINT && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-      drawPaintLine()
-    } else if (appMode === modes.ADJUST && camera.isDragging) {
-      // Update camera position based on drag
-      camera.x -= (p.mouseX - camera.dragStartX) / camera.zoom
-      camera.y -= (p.mouseY - camera.dragStartY) / camera.zoom
-      camera.dragStartX = p.mouseX
-      camera.dragStartY = p.mouseY
-      applyBoundaryConstraints()
-      buildCombinedLayer(img)
-      dirty = true
-    }
-  }
+  p.mouseDragged = function () { mouseDragged(p, state, { drawPaintLine, applyBoundaryConstraints, buildCombinedLayer }) }
 
-  p.mouseReleased = function () {
-    if (isDrawingLine) {
-      drawLine(startPoint, endPoint)
-      isDrawingLine = false
-    } else if (isCropping) {
-      isCropping = false
-      performCrop()
-      dirty = true
-    } else if (camera.isDragging) {
-      camera.isDragging = false
-    }
-    previousMouse = { x: 0, y: 0 }
-  }
+  p.mouseReleased = function () { mouseReleased(p, state, { drawLine, performCrop }) }
 
-  p.mousePressed = function () {
-    if (appMode === modes.EDIT && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-      if (editTool === editTools.PAINT) {
-        if (p.keyIsDown(91)) {
-          isDrawingLine = true
-          startPoint = { x: p.mouseX, y: p.mouseY }
-          endPoint = { x: p.mouseX, y: p.mouseY }
-        } else {
-          previousMouse = { x: p.mouseX, y: p.mouseY }
-          drawPaintLine()
-        }
-      } else if (editTool === editTools.CROP) {
-        isCropping = true
-        cropStart = { x: p.mouseX, y: p.mouseY }
-        cropEnd = { x: p.mouseX, y: p.mouseY }
-        dirty = true
-      }
-    } else if (appMode === modes.ADJUST && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-      // Start dragging the camera
-      camera.isDragging = true
-      camera.dragStartX = p.mouseX
-      camera.dragStartY = p.mouseY
-    }
-  }
+  p.mousePressed = function () { mousePressed(p, state, { drawPaintLine }) }
 
   const performCrop = () => {
     // 1. Save state for undo
     const currentState = {
-      img: img.get(),
-      paintLayer: p.createGraphics(paintLayer.width, paintLayer.height)
+      img: state.img.get(),
+      paintLayer: p.createGraphics(state.paintLayer.width, state.paintLayer.height)
     }
-    currentState.paintLayer.image(paintLayer, 0, 0, paintLayer.width, paintLayer.height)
-    undoStack.push(currentState)
+    currentState.paintLayer.image(state.paintLayer, 0, 0, state.paintLayer.width, state.paintLayer.height)
+    state.undoStack.push(currentState)
 
     // 2. Calculate crop dimensions in image space
-    const x = Math.round(Math.min(cropStart.x, cropEnd.x) / paintScale)
-    const y = Math.round(Math.min(cropStart.y, cropEnd.y) / paintScale)
-    const w = Math.round(Math.abs(cropEnd.x - cropStart.x) / paintScale)
-    const h = Math.round(Math.abs(cropEnd.y - cropStart.y) / paintScale)
+    const x = Math.round(Math.min(state.cropStart.x, state.cropEnd.x) / state.paintScale)
+    const y = Math.round(Math.min(state.cropStart.y, state.cropEnd.y) / state.paintScale)
+    const w = Math.round(Math.abs(state.cropEnd.x - state.cropStart.x) / state.paintScale)
+    const h = Math.round(Math.abs(state.cropEnd.y - state.cropStart.y) / state.paintScale)
 
     if (w < 1 || h < 1) return // Ignore tiny crops
 
     // 3. Crop the main image
-    const newImg = img.get(x, y, w, h)
+    const newImg = state.img.get(x, y, w, h)
 
     // 4. Crop the paint layer
     const newPaintLayer = p.createGraphics(w, h)
-    newPaintLayer.image(paintLayer, 0, 0, w, h, x, y, w, h)
-    paintLayer.remove()
-    paintLayer = newPaintLayer
+    newPaintLayer.image(state.paintLayer, 0, 0, w, h, x, y, w, h)
+    state.paintLayer.remove()
+    state.paintLayer = newPaintLayer
 
-    img = newImg
+    state.img = newImg
 
-    // Set fit mode to fitToCanvas after cropping (Feature 66.3)
-    scaleMethod = scaleMethods.fitToCanvas
+    // Set fit mode to fitToCanvas after cropping (Feature 66.3) - This is now handled by fitBoth in switchToAdjustMode
 
     // 5. Reset state and switch to ADJUST mode
     switchToAdjustMode(true)
   }
 
   const undoCrop = () => {
-    if (undoStack.length === 0) return
-    const lastState = undoStack.pop()
+    if (state.undoStack.length === 0) return
+    const lastState = state.undoStack.pop()
 
-    img = lastState.img
-    paintLayer.remove()
-    paintLayer = lastState.paintLayer
+    state.img = lastState.img
+    state.paintLayer.remove()
+    state.paintLayer = lastState.paintLayer
 
     switchToAdjustMode(true)
   }
 
   const switchToAdjustMode = (fromCrop = false) => {
-    appMode = modes.ADJUST
-    p.resizeCanvas(displaySize, displaySize)
-    const tempBuff = p.createGraphics(outputSize, outputSize)
+    state.appMode = state.modes.ADJUST
+    p.resizeCanvas(state.displaySize, state.displaySize)
+    const tempBuff = p.createGraphics(state.outputSize, state.outputSize)
     tempBuff.elt.id = `temp_adjust_on.${p.frameCount}`
-    tempBuff.pixelDensity(density)
+    tempBuff.pixelDensity(state.density)
     tempBuff.imageMode(p.CENTER)
-    displayLayer.remove()
-    displayLayer = tempBuff
+    state.displayLayer.remove()
+    state.displayLayer = tempBuff
 
     if (fromCrop) {
-      // Reset view parameters after a crop/undo
-      bwCachedImage = null
-      combinedLayer?.remove()
-      combinedLayer = null
-      camera.x = 0
-      camera.y = 0
-      camera.zoom = 1.0
-    }
-
-    buildCombinedLayer(img)
-  }
-
-  const specialKeys = () => {
-    const change = p.keyIsDown(p.SHIFT) ? 0.01 : 0.1
-    let handledKey = false
-
-    if (appMode === modes.EDIT && editTool === editTools.PAINT) {
-      if (p.keyIsDown(p.RIGHT_ARROW)) {
-        brushSize = p.constrain(brushSize + (p.keyIsDown(p.SHIFT) ? 1 : 10), 1, 300)
-        buildPaintLayer(img)
-        handledKey = true
-      } else if (p.keyIsDown(p.LEFT_ARROW)) {
-        brushSize = p.constrain(brushSize - (p.keyIsDown(p.SHIFT) ? 1 : 10), 1, 300)
-        buildPaintLayer(img)
-        handledKey = true
-      } else if (p.keyIsDown(p.BACKSPACE) || p.keyIsDown(p.DELETE)) {
-        paintLayer.clear()
-        buildPaintLayer(img)
-        dirty = true
-        handledKey = true
-      }
-    } else if (appMode === modes.ADJUST) {
-      if (p.keyIsDown(p.RIGHT_ARROW)) {
-        camera.zoom = p.constrain(camera.zoom + change, 0.1, 10)
-        buildCombinedLayer(img)
-        handledKey = true
-      } else if (p.keyIsDown(p.LEFT_ARROW)) {
-        camera.zoom = p.constrain(camera.zoom - change, 0.1, 10)
-        buildCombinedLayer(img)
-        handledKey = true
-      }
-    }
-
-    if (p.keyIsDown(p.UP_ARROW)) {
-      threshold = p.constrain(threshold + change * 100, 0, 255)
-      buildCombinedLayer(img)
-      handledKey = true
-    } else if (p.keyIsDown(p.DOWN_ARROW)) {
-      threshold = p.constrain(threshold - change * 100, 0, 255)
-      buildCombinedLayer(img)
-      handledKey = true
-    }
-
-    return handledKey ? false : undefined
-  }
-
-  p.keyPressed = () => handleKeys()
-
-  const handleKeys = () => {
-    if (p.key === 'z' && (p.keyIsDown(p.CONTROL) || p.keyIsDown(91))) {
-      undoCrop()
-      return false
-    }
-    if (p.key === 'i') {
-      invert = !invert
-      backgroundColor = invert ? p.color(0, 0, 0) : p.color(255, 255, 255)
-      bwCachedImage = null
-      buildCombinedLayer(img)
-      dirty = true
-      return false
-    }
-    if (p.key === 't') {
-      transparencyModeEnabled = !transparencyModeEnabled
-      bwCachedImage = null // Clear cache to force regeneration
-      buildCombinedLayer(img)
-      dirty = true
-      return false
-    }
-    if (p.key === 'o') {
-      // Toggle OSD (On-Screen Display)
-      showOSD = !showOSD
-      dirty = true
-      return false
-    }
-    if (p.key === 'd' && appMode === modes.ADJUST) {
-      // Reset drag position when in adjust mode
-      camera.x = 0
-      camera.y = 0
-      buildCombinedLayer(img)
-      dirty = true
-      return false
-    }
-    if (p.key === 'r' && !p.keyIsDown(p.CONTROL) && !p.keyIsDown(91)) {
-      // Only reset if 'r' is pressed alone (not CMD+R or Ctrl+R)
-      threshold = 128
-      camera.zoom = 1.0
-      camera.x = 0
-      camera.y = 0
-      buildCombinedLayer(img)
-      dirty = true
-      return false
-    }
-
-    if (appMode === modes.EDIT) {
-      if (p.key === 'p') {
-        editTool = editTools.PAINT
-        dirty = true
-        return false
-      }
-      if (p.key === 'c') {
-        editTool = editTools.CROP
-        dirty = true
-        return false
-      }
-      if (editTool === editTools.PAINT && p.key === 'x') {
-        modal.eraseMode = !modal.eraseMode
-        dirty = true
-        return false
-      }
-    }
-
-    if (p.key === 'e') {
-      modal.showHelp = false
-      if (appMode === modes.ADJUST) {
-        appMode = modes.EDIT
-        editTool = editTools.PAINT // Default to paint
-        p.resizeCanvas(img.width * paintScale, img.height * paintScale)
-        const tempBuff = p.createGraphics(img.width, img.height)
-        tempBuff.elt.id = `temp_edit_on.${p.frameCount}`
-        tempBuff.pixelDensity(density)
-        tempBuff.imageMode(p.CENTER)
-        displayLayer.remove()
-        displayLayer = tempBuff
-        buildPaintLayer(img)
-        previousMouse = { x: p.mouseX, y: p.mouseY }
-      } else {
-        switchToAdjustMode()
-      }
-      dirty = true
-      return false
-    }
-
-    if (p.key === 'c' && (p.keyIsDown(p.CONTROL) || p.keyIsDown(91))) {
-      autoCrop = !autoCrop
-      dirty = true // Update UI to show the change
-      console.log('AutoCrop toggled:', autoCrop)
-      return false
-    }
-
-    if (p.key === '?') {
-      modal.showHelp = !modal.showHelp
-      dirty = true
-      return false
-    } else if (p.key === 'h' || p.key === 'H') {
-      modal.showUI = !modal.showUI
-      dirty = true
-      return false
-    } else if (p.key === 'f' || p.key === 'F') {
-      // toggle fit method
-      scaleMethod =
-        scaleMethod === scaleMethods.fitToWidth
-          ? scaleMethods.fitToHeight
-          : scaleMethod === scaleMethods.fitToHeight
-            ? scaleMethods.fitToCanvas
-            : scaleMethods.fitToWidth
-      modal.refit = true
-      dirty = true
-      return false
-    } else if (
-      p.key === 's' &&
-      appMode === modes.ADJUST &&
-      (p.keyIsDown(p.CONTROL) || p.keyIsDown(91))
-    ) {
-      const saveImage = createSaveImage()
-      p.save(saveImage, generateFilename())
-      return false
+      // Reset view parameters after a crop/undo and refit the new image
+      state.bwCachedImage = null
+      state.combinedLayer?.remove()
+      state.combinedLayer = null
+      fitBoth(state.img)
+    } else {
+      buildCombinedLayer(state.img)
     }
   }
 
-  p.keyReleased = function () {
-    if (p.keyCode === 91 && isDrawingLine) {
-      drawLine(startPoint, endPoint)
-      isDrawingLine = false
-    }
-  }
+  p.keyPressed = () => handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, switchToAdjustMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight })
+
+
+
+  p.keyReleased = function () { keyReleased(p, state, { drawLine }) }
 
   function generateFilename() {
     const d = new Date()
-    const modeIndicator = transparencyModeEnabled ? '-transparent' : ''
+    const modeIndicator = state.transparencyModeEnabled ? '-transparent' : ''
     return (
       'monochrome_image.' +
       d.getFullYear() +
@@ -544,12 +317,12 @@ const sketch = function (p) {
 
   // Create save image that matches exactly what user sees on screen
   const createSaveImage = () => {
-    if (transparencyModeEnabled) {
+    if (state.transparencyModeEnabled) {
       // For transparency mode, use the same flow as standard mode but apply transparency
       // Create a copy of displayLayer and apply transparency processing
-      const exportCanvas = p.createGraphics(displayLayer.width, displayLayer.height)
-      exportCanvas.pixelDensity(density)
-      exportCanvas.image(displayLayer, 0, 0)
+      const exportCanvas = p.createGraphics(state.displayLayer.width, state.displayLayer.height)
+      exportCanvas.pixelDensity(state.density)
+      exportCanvas.image(state.displayLayer, 0, 0)
 
       // Process for transparency mode
       exportCanvas.loadPixels()
@@ -564,9 +337,9 @@ const sketch = function (p) {
 
           // displayLayer already contains correctly processed (inverted) pixels
           // Just determine transparency based on the processed values
-          const bw = avg > threshold ? 255 : 0
+          const bw = avg > state.threshold ? 255 : 0
 
-          const shouldBeTransparent = bw >= 255 - transparencyThreshold
+          const shouldBeTransparent = bw >= 255 - state.transparencyThreshold
 
           if (shouldBeTransparent) {
             exportCanvas.pixels[i + 3] = 0 // Make transparent
@@ -583,29 +356,29 @@ const sketch = function (p) {
       return exportCanvas
     } else {
       // For standard mode, use the existing displayLayer
-      return displayLayer
+      return state.displayLayer
     }
   }
 
   const getMonochromeImage = (img, threshold, forSave = false) => {
-    if (bwCachedImage && lastThreshold === threshold && !forSave) {
-      return bwCachedImage
+    if (state.bwCachedImage && state.lastThreshold === threshold && !forSave) {
+      return state.bwCachedImage
     }
 
     const newImg = p.createImage(img.width, img.height)
     newImg.copy(img, 0, 0, img.width, img.height, 0, 0, img.width, img.height)
 
     newImg.loadPixels()
-    for (let y = 0; y < img.height * density; y++) {
-      for (let x = 0; x < img.width * density; x++) {
-        const index = (x + y * img.width * density) * 4
+    for (let y = 0; y < img.height * state.density; y++) {
+      for (let x = 0; x < img.width * state.density; x++) {
+        const index = (x + y * img.width * state.density) * 4
         const r = newImg.pixels[index]
         const g = newImg.pixels[index + 1]
         const b = newImg.pixels[index + 2]
         const a = newImg.pixels[index + 3]
         const avg = (r + g + b) / 3
 
-        if (forSave && transparencyModeEnabled) {
+        if (forSave && state.transparencyModeEnabled) {
           // Transparency mode logic for saving
           if (a === 0) {
             // Already transparent pixels stay transparent
@@ -616,13 +389,13 @@ const sketch = function (p) {
           } else {
             // First convert to black/white like display mode
             let bw = avg > threshold ? 255 : 0
-            if (invert) {
+            if (state.invert) {
               bw = 255 - bw
             }
 
             // Determine what should be transparent based on display values
             // White pixels on screen (bw = 255) should be transparent
-            const shouldBeTransparent = bw >= 255 - transparencyThreshold
+            const shouldBeTransparent = bw >= 255 - state.transparencyThreshold
 
             if (shouldBeTransparent) {
               // Make transparent
@@ -642,19 +415,19 @@ const sketch = function (p) {
           // Standard mode (for display or non-transparent save)
           let bw = avg > threshold ? 255 : 0
 
-          if (invert) {
+          if (state.invert) {
             bw = 255 - bw
           }
 
-          if (a === 0 || bw === (invert ? 0 : 255)) {
+          if (a === 0 || bw === (state.invert ? 0 : 255)) {
             // Transparent pixel (a = 0) sets to background color
-            newImg.pixels[index] = p.red(backgroundColor)
-            newImg.pixels[index + 1] = p.green(backgroundColor)
-            newImg.pixels[index + 2] = p.blue(backgroundColor)
+            newImg.pixels[index] = p.red(state.backgroundColor)
+            newImg.pixels[index + 1] = p.green(state.backgroundColor)
+            newImg.pixels[index + 2] = p.blue(state.backgroundColor)
           } else {
-            newImg.pixels[index] = invert ? 255 : 0 // Invert black to white
-            newImg.pixels[index + 1] = invert ? 255 : 0 // Invert black to white
-            newImg.pixels[index + 2] = invert ? 255 : 0 // Invert black to white
+            newImg.pixels[index] = state.invert ? 255 : 0 // Invert black to white
+            newImg.pixels[index + 1] = state.invert ? 255 : 0 // Invert black to white
+            newImg.pixels[index + 2] = state.invert ? 255 : 0 // Invert black to white
           }
           newImg.pixels[index + 3] = 255 // Set alpha to fully opaque
         }
@@ -663,24 +436,24 @@ const sketch = function (p) {
     newImg.updatePixels()
 
     if (!forSave) {
-      bwCachedImage = newImg
-      lastThreshold = threshold
+      state.bwCachedImage = newImg
+      state.lastThreshold = threshold
     }
 
     return newImg
   }
 
   const buildPaintLayer = img => {
-    const newImg = getMonochromeImage(img, threshold)
-    displayLayer.background(backgroundColor)
-    displayLayer.image(newImg, displayLayer.width / 2, displayLayer.height / 2)
-    displayLayer.image(
-      paintLayer,
-      displayLayer.width / 2,
-      displayLayer.height / 2
+    const newImg = getMonochromeImage(img, state.threshold)
+    state.displayLayer.background(state.backgroundColor)
+    state.displayLayer.image(newImg, state.displayLayer.width / 2, state.displayLayer.height / 2)
+    state.displayLayer.image(
+      state.paintLayer,
+      state.displayLayer.width / 2,
+      state.displayLayer.height / 2
     )
 
-    dirty = true
+    state.dirty = true
   }
 
   const applyBoundaryConstraints = () => {
@@ -689,492 +462,189 @@ const sketch = function (p) {
   }
 
   const buildCombinedLayer = img => {
-    const scaleRatio = calculateScaleRatio(img, outputSize)
-    const scaledWidth = Math.floor(img.width * scaleRatio)
-    const scaledHeight = Math.floor(img.height * scaleRatio)
+    const newImg = getMonochromeImage(img, state.threshold)
 
-    const newImg = getMonochromeImage(img, threshold)
-
-    if (combinedLayer === null) {
+    if (state.combinedLayer === null) {
       setupCombinedBuffer()
     }
 
-    combinedLayer.clear()
-    combinedLayer.push()
-    combinedLayer.translate(combinedLayer.width / 2, combinedLayer.height / 2)
-    combinedLayer.scale(camera.zoom)
-    combinedLayer.translate(-camera.x, -camera.y)
+    state.combinedLayer.clear()
+    state.combinedLayer.push()
 
-    combinedLayer.imageMode(p.CENTER)
-    combinedLayer.image(
-      newImg,
-      0,
-      0,
-      scaledWidth,
-      scaledHeight
-    )
-    combinedLayer.image(
-      paintLayer,
-      0,
-      0,
-      scaledWidth,
-      scaledHeight
-    )
-    combinedLayer.pop()
+    // 1. Center the transform origin
+    state.combinedLayer.translate(state.combinedLayer.width / 2, state.combinedLayer.height / 2)
 
-    const croppedImg = cropWhitespace(combinedLayer, autoCrop)
+    // 2. Apply the unified view transform
+    const finalScale = state.view.zoom * state.view.baseScale
+    state.combinedLayer.scale(finalScale)
+    state.combinedLayer.translate(-state.view.x, -state.view.y)
 
-    displayLayer.background(backgroundColor)
-    displayLayer.image(
-      croppedImg,
-      displayLayer.width / 2,
-      displayLayer.height / 2
+    // 3. Draw the image and paint layer at their native resolution, centered on the view
+    state.combinedLayer.imageMode(p.CENTER)
+    state.combinedLayer.image(newImg, 0, 0) // Draw at native resolution
+    state.combinedLayer.image(state.paintLayer, 0, 0)
+
+    state.combinedLayer.pop()
+
+    // The result is directly displayed. No more cropping at the end of the pipe.
+    state.displayLayer.background(state.backgroundColor)
+    state.displayLayer.image(
+      state.combinedLayer,
+      state.displayLayer.width / 2,
+      state.displayLayer.height / 2,
+      state.displayLayer.width,
+      state.displayLayer.height
     )
 
     // Force displayLayer to be monochrome for display
-    displayLayer.loadPixels()
-    for (let i = 0; i < displayLayer.pixels.length; i += 4) {
-      const r = displayLayer.pixels[i]
-      const g = displayLayer.pixels[i + 1]
-      const b = displayLayer.pixels[i + 2]
+    state.displayLayer.loadPixels()
+    for (let i = 0; i < state.displayLayer.pixels.length; i += 4) {
+      const r = state.displayLayer.pixels[i]
+      const g = state.displayLayer.pixels[i + 1]
+      const b = state.displayLayer.pixels[i + 2]
       const avg = (r + g + b) / 3
-      const bw = avg > threshold ? 255 : 0 // Use actual threshold
-      displayLayer.pixels[i] = bw
-      displayLayer.pixels[i + 1] = bw
-      displayLayer.pixels[i + 2] = bw
-      displayLayer.pixels[i + 3] = 255 // Ensure opaque
+      const bw = avg > state.threshold ? 255 : 0 // Use actual threshold
+      state.displayLayer.pixels[i] = bw
+      state.displayLayer.pixels[i + 1] = bw
+      state.displayLayer.pixels[i + 2] = bw
+      state.displayLayer.pixels[i + 3] = 255 // Ensure opaque
     }
-    displayLayer.updatePixels()
+    state.displayLayer.updatePixels()
 
-    dirty = true
-  }
-
-  const calculateScaleRatio = function (img, size = outputSize) {
-    // canvas size should be a square, normally
-    // if not, we can reconsider everything
-    switch (scaleMethod) {
-      case scaleMethods.fitToWidth:
-        return size / img.width
-
-      case scaleMethods.fitToHeight:
-        return size / img.height
-
-      case scaleMethods.fitToCanvas:
-      default:
-        return size / Math.max(img.width, img.height)
-    }
-  }
-
-  const calculateOffsetMax = function (img, size = outputSize) {
-    switch (scaleMethod) {
-      case scaleMethods.fitToWidth:
-        return Math.max(
-          Math.floor(((img.height * size) / img.width - size) / 2),
-          0
-        )
-
-      case scaleMethods.fitToHeight:
-        return Math.max(
-          Math.floor(((img.width * size) / img.height - size) / 2),
-          0
-        )
-
-      case scaleMethods.fitToCanvas:
-      default:
-        return 0
-    }
+    state.dirty = true
   }
 
   function processImage(img) {
-    if (!modal.refit) {
-      bwCachedImage = null // this is not required for refit
+    if (!state.modal.refit) {
+      state.bwCachedImage = null // this is not required for refit
       setupPaintBuffer(img)
     }
-    modal.processing = false
-    combinedLayer && combinedLayer.remove()
-    combinedLayer = null
-    camera.x = 0
-    camera.y = 0
-    camera.zoom = 1.0
+    state.modal.processing = false
+    state.combinedLayer && state.combinedLayer.remove()
+    state.combinedLayer = null
 
+    fitBoth(img) // This will set the initial view and call buildCombinedLayer
+
+    state.modal.refit = false
+    state.dirty = true
+  }
+
+
+
+  const getContentBounds = (img) => {
+    // This is computationally expensive, but necessary for accurate bounds.
+    // Create a temporary buffer to combine the monochrome image and the paint layer.
+    const source = getMonochromeImage(img, state.threshold)
+    const tempLayer = p.createGraphics(source.width, source.height)
+    tempLayer.pixelDensity(state.density)
+    tempLayer.image(source, 0, 0)
+    tempLayer.image(state.paintLayer, 0, 0)
+
+    tempLayer.loadPixels()
+    let top = -1
+    let bottom = -1
+    let left = -1
+    let right = -1
+
+    // Find top
+    for (let y = 0; y < tempLayer.height; y++) {
+      for (let x = 0; x < tempLayer.width; x++) {
+        const index = (x + y * tempLayer.width) * 4
+        if (tempLayer.pixels[index] !== p.red(state.backgroundColor) || tempLayer.pixels[index + 1] !== p.green(state.backgroundColor) || tempLayer.pixels[index + 2] !== p.blue(state.backgroundColor)) {
+          top = y
+          break
+        }
+      }
+      if (top !== -1) break
+    }
+
+    // Image is blank
+    if (top === -1) {
+      tempLayer.remove()
+      return { x: 0, y: 0, width: img.width, height: img.height, isEmpty: true }
+    }
+
+    // Find bottom
+    for (let y = tempLayer.height - 1; y >= 0; y--) {
+      for (let x = 0; x < tempLayer.width; x++) {
+        const index = (x + y * tempLayer.width) * 4
+        if (tempLayer.pixels[index] !== p.red(state.backgroundColor) || tempLayer.pixels[index + 1] !== p.green(state.backgroundColor) || tempLayer.pixels[index + 2] !== p.blue(state.backgroundColor)) {
+          bottom = y
+          break
+        }
+      }
+      if (bottom !== -1) break
+    }
+
+    // Find left
+    for (let x = 0; x < tempLayer.width; x++) {
+      for (let y = 0; y < tempLayer.height; y++) {
+        const index = (x + y * tempLayer.width) * 4
+        if (tempLayer.pixels[index] !== p.red(state.backgroundColor) || tempLayer.pixels[index + 1] !== p.green(state.backgroundColor) || tempLayer.pixels[index + 2] !== p.blue(state.backgroundColor)) {
+          left = x
+          break
+        }
+      }
+      if (left !== -1) break
+    }
+
+    // Find right
+    for (let x = tempLayer.width - 1; x >= 0; x--) {
+      for (let y = 0; y < tempLayer.height; y++) {
+        const index = (x + y * tempLayer.width) * 4
+        if (tempLayer.pixels[index] !== p.red(state.backgroundColor) || tempLayer.pixels[index + 1] !== p.green(state.backgroundColor) || tempLayer.pixels[index + 2] !== p.blue(state.backgroundColor)) {
+          right = x
+          break
+        }
+      }
+      if (right !== -1) break
+    }
+
+    tempLayer.remove()
+    return { x: left, y: top, width: right - left + 1, height: bottom - top + 1, isEmpty: false }
+  }
+
+  const fitBoth = (img) => {
+    const contentBounds = state.autoCrop ? getContentBounds(img) : { x: 0, y: 0, width: img.width, height: img.height, isEmpty: false }
+    if (contentBounds.isEmpty) { // Don't fit an empty image
+      state.view.baseScale = 1.0
+      state.view.zoom = 1.0
+      state.view.x = 0
+      state.view.y = 0
+      buildCombinedLayer(img)
+      return
+    }
+    const scaleX = state.outputSize / contentBounds.width
+    const scaleY = state.outputSize / contentBounds.height
+    state.view.baseScale = Math.min(scaleX, scaleY)
+    state.view.zoom = 1.0
+    state.view.x = 0 // Reset pan
+    state.view.y = 0 // Reset pan
     buildCombinedLayer(img)
-    modal.refit = false
-    dirty = true
   }
 
-  function handleFile(file) {
-    const validation = validateImageFile(file);
-
-    if (!validation.valid) {
-      showErrorMessage(validation.message);
-      return;
-    }
-
-    modal.processing = true
-    img = null
-    p.loadImage(file.data, loadedImg => {
-      img = loadedImg
-      processImage(loadedImg)
-    })
+  const fitWidth = (img) => {
+    const contentBounds = state.autoCrop ? getContentBounds(img) : { x: 0, y: 0, width: img.width, height: img.height, isEmpty: false }
+    if (contentBounds.isEmpty) return
+    state.view.baseScale = state.outputSize / contentBounds.width
+    state.view.zoom = 1.0
+    state.view.x = 0 // Reset pan
+    state.view.y = 0 // Reset pan
+    buildCombinedLayer(img)
   }
 
-  const cropWhitespace = (buffer, shouldCrop = true) => {
-    // If cropping is disabled, return the original buffer as an image
-    if (!shouldCrop) {
-      const originalImg = p.createImage(buffer.width, buffer.height)
-      originalImg.copy(
-        buffer,
-        0,
-        0,
-        buffer.width,
-        buffer.height,
-        0,
-        0,
-        buffer.width,
-        buffer.height
-      )
-      return originalImg
-    }
-
-    buffer.loadPixels()
-    let top = 0
-    let bottom = buffer.height - 1
-    let left = 0
-    let right = buffer.width - 1
-
-    // Find top boundary
-    outer: for (let y = 0; y < buffer.height * density; y++) {
-      for (let x = 0; x < buffer.width * density; x++) {
-        const index = (x + y * buffer.width * density) * 4
-        if (
-          buffer.pixels[index] !== p.red(backgroundColor) ||
-          buffer.pixels[index + 1] !== p.green(backgroundColor) ||
-          buffer.pixels[index + 2] !== p.blue(backgroundColor)
-        ) {
-          top = y
-          break outer
-        }
-      }
-    }
-
-    // Find bottom boundary
-    outer: for (let y = buffer.height * density - 1; y >= 0; y--) {
-      for (let x = 0; x < buffer.width * density; x++) {
-        const index = (x + y * buffer.width * density) * 4
-        if (
-          buffer.pixels[index] !== p.red(backgroundColor) ||
-          buffer.pixels[index + 1] !== p.green(backgroundColor) ||
-          buffer.pixels[index + 2] !== p.blue(backgroundColor)
-        ) {
-          bottom = y
-          break outer
-        }
-      }
-    }
-
-    // Find left boundary
-    outer: for (let x = 0; x < buffer.width * density; x++) {
-      for (let y = 0; y < buffer.height * density; y++) {
-        const index = (x + y * buffer.width * density) * 4
-        if (
-          buffer.pixels[index] !== p.red(backgroundColor) ||
-          buffer.pixels[index + 1] !== p.green(backgroundColor) ||
-          buffer.pixels[index + 2] !== p.blue(backgroundColor)
-        ) {
-          left = x
-          break outer
-        }
-      }
-    }
-
-    // Find right boundary
-    outer: for (let x = buffer.width * density - 1; x >= 0; x--) {
-      for (let y = 0; y < buffer.width * density; y++) {
-        const index = (x + y * buffer.width * density) * 4
-        if (
-          buffer.pixels[index] !== p.red(backgroundColor) ||
-          buffer.pixels[index + 1] !== p.green(backgroundColor) ||
-          buffer.pixels[index + 2] !== p.blue(backgroundColor)
-        ) {
-          right = x
-          break outer
-        }
-      }
-    }
-
-    const croppedWidth = right - left + 1
-    const croppedHeight = bottom - top + 1
-    const croppedImg = p.createImage(croppedWidth, croppedHeight)
-    croppedImg.copy(
-      buffer,
-      left,
-      top,
-      croppedWidth,
-      croppedHeight,
-      0,
-      0,
-      croppedWidth,
-      croppedHeight
-    )
-    return croppedImg
+  const fitHeight = (img) => {
+    const contentBounds = state.autoCrop ? getContentBounds(img) : { x: 0, y: 0, width: img.width, height: img.height, isEmpty: false }
+    if (contentBounds.isEmpty) return
+    state.view.baseScale = state.outputSize / contentBounds.height
+    state.view.zoom = 1.0
+    state.view.x = 0 // Reset pan
+    state.view.y = 0 // Reset pan
+    buildCombinedLayer(img)
   }
 
-  const cropTransparentWhitespace = buffer => {
-    buffer.loadPixels()
-    let top = 0
-    let bottom = buffer.height - 1
-    let left = 0
-    let right = buffer.width - 1
 
-    // Find top boundary - look for non-transparent pixels
-    outer: for (let y = 0; y < buffer.height * density; y++) {
-      for (let x = 0; x < buffer.width * density; x++) {
-        const index = (x + y * buffer.width * density) * 4
-        const alpha = buffer.pixels[index + 3]
-        if (alpha > 0) { // Found non-transparent pixel
-          top = y
-          break outer
-        }
-      }
-    }
 
-    // Find bottom boundary
-    outer: for (let y = buffer.height * density - 1; y >= 0; y--) {
-      for (let x = 0; x < buffer.width * density; x++) {
-        const index = (x + y * buffer.width * density) * 4
-        const alpha = buffer.pixels[index + 3]
-        if (alpha > 0) {
-          bottom = y
-          break outer
-        }
-      }
-    }
-
-    // Find left boundary
-    outer: for (let x = 0; x < buffer.width * density; x++) {
-      for (let y = 0; y < buffer.height * density; y++) {
-        const index = (x + y * buffer.width * density) * 4
-        const alpha = buffer.pixels[index + 3]
-        if (alpha > 0) {
-          left = x
-          break outer
-        }
-      }
-    }
-
-    // Find right boundary
-    outer: for (let x = buffer.width * density - 1; x >= 0; x--) {
-      for (let y = 0; y < buffer.height * density; y++) {
-        const index = (x + y * buffer.width * density) * 4
-        const alpha = buffer.pixels[index + 3]
-        if (alpha > 0) {
-          right = x
-          break outer
-        }
-      }
-    }
-
-    const croppedWidth = right - left + 1
-    const croppedHeight = bottom - top + 1
-    const croppedBuffer = p.createGraphics(croppedWidth, croppedHeight)
-    croppedBuffer.pixelDensity(density)
-    croppedBuffer.clear()
-    croppedBuffer.image(buffer, -left, -top)
-
-    return croppedBuffer
-  }
-
-  const displayUI = () => {
-    const adjustModeText = [
-      `zoom: ${(camera.zoom * 100).toFixed(0)}%`,
-      `pan: (${Math.round(camera.x)}, ${Math.round(camera.y)})`,
-      `fit method: ${scaleMethod}`,
-      `invert: ${invert ? 'inverted' : 'normal'}`,
-      `autocrop: ${autoCrop ? 'ON' : 'OFF'}`,
-      `OSD: ${showOSD ? 'ON' : 'OFF'}`
-    ]
-
-    const editModeText = [
-      `tool: ${editTool}`,
-      `erase mode: ${modal.eraseMode ? 'ON' : 'OFF'}`
-    ]
-    const paintToolText = [
-      `brush size: ${brushSize}`
-    ]
-
-    let modeText = []
-    if (appMode === modes.ADJUST) {
-      modeText = adjustModeText
-    } else if (appMode === modes.EDIT) {
-      modeText = editModeText
-      if (editTool === editTools.PAINT) {
-        modeText = [...modeText, ...paintToolText]
-      }
-    }
-
-    const uiText = [
-      `threshold: ${threshold}`,
-      `mode: ${appMode}`,
-      ...modeText,
-      `transparency: ${transparencyModeEnabled ? 'ON' : 'OFF'}`,
-      transparencyModeEnabled ? `transparency threshold: ${transparencyThreshold}` : ''
-    ].filter(Boolean)
-
-    const boxWidth = 200
-    const boxHeight = uiText.length * 20 + 20
-
-    p.fill(0, 150)
-    p.noStroke()
-    p.rect(5, p.height - boxHeight - 5, boxWidth, boxHeight, 10)
-
-    p.fill('white')
-    p.textSize(16)
-    p.textAlign(p.LEFT, p.TOP)
-    uiText.forEach((text, index) => {
-      p.text(text, 10, p.height - boxHeight + 10 + index * 20)
-    })
-  }
-
-  const drawOSD = () => {
-    if (!img) return
-
-    const osdSize = 150
-    const osdPadding = 10
-    const osdX = p.width - osdSize - osdPadding
-    const osdY = osdPadding
-
-    // Calculate thumbnail scale to fit within OSD
-    const thumbScale = Math.min(osdSize / img.width, osdSize / img.height)
-    const thumbWidth = img.width * thumbScale
-    const thumbHeight = img.height * thumbScale
-
-    // Center thumbnail within OSD area
-    const thumbX = osdX + (osdSize - thumbWidth) / 2
-    const thumbY = osdY + (osdSize - thumbHeight) / 2
-
-    // Draw OSD background
-    p.fill(0, 150)
-    p.noStroke()
-    p.rect(osdX - 5, osdY - 5, osdSize + 10, osdSize + 10, 5)
-
-    // Draw original image thumbnail (temporarily use CORNER mode for precise positioning)
-    p.push()
-    p.imageMode(p.CORNER)
-    p.tint(255, 200) // Slight transparency for contrast
-    p.image(img, thumbX, thumbY, thumbWidth, thumbHeight)
-    p.noTint()
-    p.pop()
-
-    // 1. Convert the camera's view (which is in world space) back to original image pixel space.
-    const scaleRatio = calculateScaleRatio(img, outputSize)
-
-    // Width of the viewport in world space
-    const viewportWidthInWorld = outputSize / camera.zoom
-
-    // Width of the viewport in original image pixels
-    const viewportWidthInPixels = viewportWidthInWorld / scaleRatio
-    const viewportHeightInPixels = (outputSize / camera.zoom) / scaleRatio
-
-    // Center of the view in world space is (camera.x, camera.y)
-    // Convert this to original image pixel space
-    const viewCenterXInPixels = (img.width / 2) + (camera.x / scaleRatio)
-    const viewCenterYInPixels = (img.height / 2) + (camera.y / scaleRatio)
-
-    // Top-left corner of the visible rect in original image pixels
-    const visibleXInPixels = viewCenterXInPixels - (viewportWidthInPixels / 2)
-    const visibleYInPixels = viewCenterYInPixels - (viewportHeightInPixels / 2)
-
-    // 2. Convert these pixel-space coordinates to OSD thumbnail coordinates.
-    const rectX = thumbX + (visibleXInPixels * thumbScale)
-    const rectY = thumbY + (visibleYInPixels * thumbScale)
-    const rectWidth = viewportWidthInPixels * thumbScale
-    const rectHeight = viewportHeightInPixels * thumbScale
-
-    // Draw viewport rectangle
-    p.noFill()
-    p.stroke(255, 100, 100)
-    p.strokeWeight(2)
-    p.rect(rectX, rectY, rectWidth, rectHeight)
-
-    // Draw OSD border
-    p.noFill()
-    p.stroke(255, 150)
-    p.strokeWeight(1)
-    p.rect(osdX, osdY, osdSize, osdSize)
-  }
-
-  function displayHelpScreen() {
-    p.fill(50, 150)
-    p.rect(50, 50, p.width - 100, p.height - 100, 10)
-
-    p.fill(255)
-    p.textSize(16)
-    p.textAlign(p.LEFT, p.TOP)
-    p.text(
-      `
-      Help Screen:
-
-      ? - Show/Hide this help screen
-      h - Show/Hide UI
-      r - Reset to default settings
-      i - Invert image
-      t - Toggle transparency mode
-      o - Toggle OSD (position overlay)
-      e - Toggle Edit Mode
-
-      ADJUST Mode:
-      d - Reset drag position
-      → / ← - increase/decrease zoom
-      > / < - increase/decrease offset (h/v)
-      CMD-s - Save image
-      Click + Drag - Move source image position
-
-      EDIT Mode:
-      p - Activate PAINT tool
-      c - Activate CROP tool
-      x - Toggle erase mode (in PAINT tool)
-      → / ← - increase/decrease brush size (in PAINT tool)
-      CMD-click - Draw a line (in PAINT tool)
-
-      Global:
-      ↑ / ↓ - increase/decrease threshold
-      CMD-c - Toggle autocrop
-      `,
-      70,
-      70
-    )
-
-    // Display version information at the bottom of the help screen
-    p.textSize(12)
-    p.textAlign(p.CENTER, p.BOTTOM)
-    p.fill(200)
-    try {
-      formatVersion().then(version => {
-        // Store version for display
-        if (!p._versionText) {
-          p._versionText = version
-        }
-      }).catch(() => {
-        p._versionText = 'v0.2.0'
-      })
-    } catch (error) {
-      p._versionText = 'v0.2.0'
-    }
-
-    if (p._versionText) {
-      p.text(p._versionText, p.width / 2, p.height - 70)
-    }
-  }
-
-  function displayProcessingText() {
-    p.fill(p.color('#e75397'), 150)
-    p.rect(50, 50, p.width - 100, 100, 10)
-
-    p.fill(255)
-    p.textSize(16)
-    p.textAlign(p.CENTER, p.CENTER)
-    p.text('Processing image, please wait...', p.width / 2, 100)
-  }
 }
 
 new p5(sketch) // eslint-disable-line no-new, new-cap
