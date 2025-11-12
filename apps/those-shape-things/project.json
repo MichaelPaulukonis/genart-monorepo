@@ -32,7 +32,7 @@
         "lintFilePatterns": ["apps/those-shape-things/**/*.{js,jsx}"]
       }
     },
-    "test": {
+    "e2e": {
       "executor": "@nx/playwright:playwright",
       "options": {
         "config": "apps/those-shape-things/playwright.config.js"

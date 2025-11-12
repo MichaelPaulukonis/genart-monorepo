@@ -32,7 +32,7 @@
         "lintFilePatterns": ["apps/computational-collage/**/*.{js,jsx}"]
       }
     },
-    "test": {
+    "e2e": {
       "executor": "@nx/playwright:playwright",
       "options": {
         "config": "apps/computational-collage/playwright.config.js"

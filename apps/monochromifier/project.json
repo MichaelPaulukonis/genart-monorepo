@@ -39,6 +39,18 @@
         "cwd": "apps/monochromifier"
       }
     },
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "options": {
+        "config": "apps/monochromifier/playwright.config.js"
+      },
+      "configurations": {
+        "ci": {
+          "forbidOnly": true,
+          "workers": 1
+        }
+      }
+    },
     "deploy": {
       "dependsOn": ["build"],
       "executor": "nx:run-commands",

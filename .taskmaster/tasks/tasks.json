@@ -1068,7 +1068,7 @@
         "description": "Implement a thin black outline around the paintbrush cursor when the user is actively painting in the crude-collage-painter app to provide visual feedback during painting operations.",
         "details": "This task involves implementing a visual indicator for the paintbrush cursor in the crude-collage-painter app:\n\n1. **Track Painting State**:\n   - Create or modify the existing mouse event handlers to track when the user is actively painting\n   - Set a boolean flag `isActivePainting` that's true when mousePressed/mouseDragged and false on mouseReleased\n   \n2. **Implement Cursor Outline**:\n   - In the draw function, check if `isActivePainting` is true\n   - If true, draw a thin black outline around the current paintbrush cursor\n   - Ensure the outline is properly sized relative to the current brush size\n   ```javascript\n   function drawCursorOutline() {\n     if (isActivePainting) {\n       push();\n       noFill();\n       stroke(0);\n       strokeWeight(1);\n       ellipse(mouseX, mouseY, brushSize + 2); // Slightly larger than brush size\n       pop();\n     }\n   }\n   ```\n\n3. **Optimize Performance**:\n   - Ensure the cursor outline doesn't interfere with the actual painting operation\n   - Draw the outline after all other painting operations\n   - Use p5.js's built-in noCursor() and cursor() functions to hide/show the default cursor as appropriate\n\n4. **Handle Edge Cases**:\n   - Consider touch interfaces where there's no cursor\n   - Handle cases when the brush is very small (ensure outline is still visible)\n   - Ensure outline stays visible at canvas edges",
         "testStrategy": "1. **Basic Functionality**:\n   - Start the crude-collage-painter app\n   - Move the cursor around without clicking and verify no outline appears\n   - Click and drag to paint, confirming the black outline appears around the paintbrush\n   - Release the mouse button and verify the outline disappears\n\n2. **Different Brush Sizes**:\n   - Test with different brush sizes (very small to very large)\n   - Verify the outline scales appropriately with the brush size\n   - Ensure the outline remains visible even with very small brush sizes\n\n3. **Edge Cases**:\n   - Paint near and at the edges of the canvas\n   - Verify the outline remains visible and doesn't get clipped\n   - Test rapid clicking/painting to ensure the outline toggles correctly\n\n4. **Performance Testing**:\n   - Test on lower-end devices to ensure the outline rendering doesn't cause performance issues\n   - Create a complex painting and verify the outline rendering doesn't slow down the painting experience",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [],
         "priority": "medium",
         "subtasks": []
@@ -1220,7 +1220,7 @@
         "id": 51,
         "title": "Create app-specific Playwright configurations",
         "description": "Create app-specific playwright.config.js files for each application that needs one, based on existing root configuration with app-specific overrides.",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           47,
           48,
@@ -1236,7 +1236,7 @@
         "id": 52,
         "title": "Perform validation testing for Phase 1",
         "description": "Test each app's test target individually and verify all existing test functionality works, including global test execution.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           51
         ],
@@ -1249,7 +1249,7 @@
         "id": 53,
         "title": "Remove legacy scripts from root package.json",
         "description": "Remove app-specific test scripts from root package.json and update any documentation referencing the removed scripts.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           52
         ],
@@ -1262,7 +1262,7 @@
         "id": 54,
         "title": "Standardize workspace scripts in root package.json",
         "description": "Keep only workspace-level scripts in the root package.json and ensure they use Nx commands for test execution.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           53
         ],
@@ -1553,11 +1553,24 @@
         ],
         "priority": "medium",
         "subtasks": []
+      },
+      {
+        "id": 70,
+        "title": "Enhance Crop Tool in Monochromifier with Interactive Adjustment and Constraint Features",
+        "description": "Improve the crop tool in the monochromifier application by implementing post-selection bounding box manipulation, keyboard-based commit functionality, and proper canvas boundary constraints for better usability.",
+        "details": "This task involves enhancing the existing crop tool in the monochromifier application:\n\n1. **Post-Selection Adjustment**:\n   - Implement an adjustment mode that activates after the initial bounding box is drawn\n   - Add corner and edge handles for manipulating the crop area\n   - Implement hit detection for handles with appropriate cursor style changes\n   - Allow resizing from any corner or edge of the bounding box\n   - Provide visual indicators for handle areas\n\n2. **Commit Action**:\n   - Add keyboard listener for Enter key to finalize/commit the crop\n   - Implement visual feedback when crop is committed\n   - Add Escape key functionality to cancel the crop operation\n   - Consider adding a small UI button alternative for touch devices\n\n3. **Canvas Boundary Constraints**:\n   - Modify drag handling to ensure crop stays within canvas boundaries\n   - Fix the current issue where dragging extends beyond canvas edges\n   - Allow drag operations to start from outside the canvas but constrain results\n   - Implement proper boundary detection and limitation\n\n4. **Implementation Code**:\n   ```javascript\n   // Example for handling different crop modes\n   let cropMode = 'idle'; // Modes: idle, drawing, adjusting\n   let cropStart = { x: 0, y: 0 };\n   let cropEnd = { x: 0, y: 0 };\n   let activeHandle = null;\n\n   function mousePressed() {\n     if (cropMode === 'idle') {\n       // Start a new crop\n       cropStart = { x: constrain(mouseX, 0, width), y: constrain(mouseY, 0, height) };\n       cropEnd = { ...cropStart };\n       cropMode = 'drawing';\n     } else if (cropMode === 'adjusting') {\n       // Check if clicking on a handle\n       activeHandle = getHandleAtPosition(mouseX, mouseY);\n     }\n   }\n\n   function mouseDragged() {\n     const x = constrain(mouseX, 0, width);\n     const y = constrain(mouseY, 0, height);\n     \n     if (cropMode === 'drawing') {\n       cropEnd = { x, y };\n     } else if (cropMode === 'adjusting' && activeHandle) {\n       // Update the appropriate corner/edge based on active handle\n       updateCropRectangle(activeHandle, x, y);\n     }\n   }\n\n   function mouseReleased() {\n     if (cropMode === 'drawing') {\n       // Transition to adjustment mode\n       cropMode = 'adjusting';\n     }\n     activeHandle = null;\n   }\n\n   function keyPressed() {\n     if (keyCode === ENTER && cropMode === 'adjusting') {\n       commitCrop();\n       cropMode = 'idle';\n     } else if (keyCode === ESCAPE && cropMode !== 'idle') {\n       cancelCrop();\n       cropMode = 'idle';\n     }\n   }\n   ```\n\n5. **UX Considerations**:\n   - Ensure handles are large enough for easy interaction\n   - Add visual cues to indicate current mode (drawing vs. adjusting)\n   - Consider adding tooltips for available actions\n   - Maintain responsive performance during drag operations",
+        "testStrategy": "1. **Basic Functionality Testing**:\n   - Verify the initial crop drawing creates a proper bounding box\n   - Test that entering adjustment mode after initial drawing works correctly\n   - Confirm all handles (corners and edges) can be dragged to adjust the crop\n   - Validate Enter key commits the crop as expected\n   - Test Escape key cancels the crop operation\n\n2. **Boundary Constraint Testing**:\n   - Verify crop cannot extend beyond canvas boundaries when drawing\n   - Test starting a drag from outside the canvas and confirm it functions correctly\n   - Attempt dragging handles outside canvas boundaries and verify constraints work\n   - Test extreme cases like very small crop areas\n   - Check edge-case behaviors at canvas corners and edges\n\n3. **Visual Feedback Testing**:\n   - Confirm appropriate cursor styles appear when hovering over different handles\n   - Verify visual indicators clearly show which part of the box is being manipulated\n   - Test that the commit action provides appropriate visual confirmation\n\n4. **User Experience Testing**:\n   - Conduct informal user tests to validate the intuitive nature of the crop tool\n   - Compare ease of use with crop tools in other image editing applications\n   - Verify the tool is accessible and follows expected interaction patterns\n\n5. **Cross-browser Testing**:\n   - Test in Chrome, Firefox, Safari and Edge\n   - Verify consistent behavior across all supported browsers\n   - Check for any performance issues during drag operations",
+        "status": "pending",
+        "dependencies": [
+          61
+        ],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-10-27T13:48:05.544Z",
-      "updated": "2025-11-10T20:26:42.177Z",
+      "updated": "2025-11-11T18:21:21.551Z",
       "description": "Tasks for master context"
     }
   }

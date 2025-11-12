@@ -32,7 +32,7 @@
         "lintFilePatterns": ["apps/crude-collage-painter/**/*.{js,jsx}"]
       }
     },
-    "test": {
+    "e2e": {
       "executor": "@nx/playwright:playwright",
       "options": {
         "config": "apps/crude-collage-painter/playwright.config.js"

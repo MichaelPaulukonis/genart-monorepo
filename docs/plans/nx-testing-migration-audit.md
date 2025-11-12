@@ -5,90 +5,96 @@ This document provides a comprehensive audit of the current testing configuratio
 ## Executive Summary
 
 **Current State**: The monorepo uses a hybrid testing approach with:
-- 2 out of 6 apps have proper Nx test targets 
-- 4 apps missing test targets entirely
-- Root package.json contains both workspace-level and app-specific test scripts
-- Inconsistent testing patterns across applications
+- All 6 apps now have proper Nx e2e targets
+- Root package.json contains only workspace-level test scripts
+- Consistent testing patterns across applications
 
 ## Detailed Application Analysis
 
 | App Name | Has Test Target | Current Test Command | Target Configuration | Playwright Config |
 |----------|-----------------|---------------------|---------------------|-------------------|
-| duo-chrome | ✅ Yes | `nx test duo-chrome` | nx:run-commands | Has config |
-| monochromifier | ✅ Yes | `nx test monochromifier` | nx:run-commands | Has config |
-| crude-collage-painter | ❌ No | `npm run test:crude-collage` | N/A | Has config |
-| computational-collage | ❌ No | `npm run test:computational-collage` | N/A | Has config |
-| those-shape-things | ❌ No | No existing test script | N/A | Has config |
-| dragline | ❌ No | No existing test script | N/A | No config |
+| duo-chrome | ✅ Yes | `nx e2e duo-chrome` | @nx/playwright:playwright | Has config |
+| monochromifier | ✅ Yes | `nx e2e monochromifier` | @nx/playwright:playwright | Has config |
+| crude-collage-painter | ✅ Yes | `nx e2e crude-collage-painter` | @nx/playwright:playwright | Has config |
+| computational-collage | ✅ Yes | `nx e2e computational-collage` | @nx/playwright:playwright | Has config |
+| those-shape-things | ✅ Yes | `nx e2e those-shape-things` | @nx/playwright:playwright | Has config |
+| dragline | ✅ Yes | `nx e2e dragline` | @nx/playwright:playwright | Has config |
 
 ## Apps WITH Test Targets
 
 ### duo-chrome
 ```json
-"test": {
-  "executor": "nx:run-commands",
+"e2e": {
+  "executor": "@nx/playwright:playwright",
   "options": {
-    "command": "node src/size-control.test.js",
-    "cwd": "apps/duo-chrome"
+    "config": "apps/duo-chrome/playwright.config.js"
   }
 }
 ```
 
 ### monochromifier  
 ```json
-"test": {
-  "executor": "nx:run-commands",
+"e2e": {
+  "executor": "@nx/playwright:playwright",
   "options": {
-    "command": "node src/size-control.test.js",
-    "cwd": "apps/monochromifier"
+    "config": "apps/monochromifier/playwright.config.js"
   }
 }
 ```
 
-**Pattern**: Both apps use `nx:run-commands` executor to run a simple Node.js test script.
-
-## Apps WITHOUT Test Targets
-
 ### crude-collage-painter
-- **Current Command**: `npm run test:crude-collage`
-- **Implementation**: `cross-env TEST_APP=crude-collage-painter playwright test -c apps/crude-collage-painter/playwright.config.js`
-- **Playwright Config**: ✅ Present at `apps/crude-collage-painter/playwright.config.js`
-- **Test Directory**: Has `tests/` directory with comprehensive Playwright tests
+```json
+"e2e": {
+  "executor": "@nx/playwright:playwright",
+  "options": {
+    "config": "apps/crude-collage-painter/playwright.config.js"
+  }
+}
+```
 
 ### computational-collage
-- **Current Command**: `npm run test:computational-collage`  
-- **Implementation**: `cross-env TEST_APP=computational-collage playwright test -c apps/computational-collage/playwright.config.js`
-- **Playwright Config**: ✅ Present at `apps/computational-collage/playwright.config.js`
-- **Test Directory**: Has `tests/` directory with Playwright tests
+```json
+"e2e": {
+  "executor": "@nx/playwright:playwright",
+  "options": {
+    "config": "apps/computational-collage/playwright.config.js"
+  }
+}
+```
 
 ### those-shape-things
-- **Current Command**: None
-- **Implementation**: No existing test script
-- **Playwright Config**: ✅ Present (likely from template)
-- **Test Directory**: Has `tests/` directory
+```json
+"e2e": {
+  "executor": "@nx/playwright:playwright",
+  "options": {
+    "config": "apps/those-shape-things/playwright.config.js"
+  }
+}
+```
 
 ### dragline
-- **Current Command**: None
-- **Implementation**: No existing test script  
-- **Playwright Config**: ❌ Missing
-- **Test Directory**: No test directory found
+```json
+"e2e": {
+  "executor": "@nx/playwright:playwright",
+  "options": {
+    "config": "apps/dragline/playwright.config.js"
+  }
+}
+```
+
+**Pattern**: All apps now use `@nx/playwright:playwright` executor with their own `playwright.config.js` file.
 
 ## Root Package.json Script Analysis
 
 ### Workspace-Level Scripts (Should Remain)
 ```json
 "test": "nx run-many --target=test --all",
+"e2e": "nx run-many --target=e2e --all",
 "test:e2e": "playwright test",
 "test:e2e:ui": "playwright test --ui",
 "test:e2e:debug": "playwright test --debug",
 "test:e2e:update": "playwright test --update-snapshots",
 "test:e2e:report": "playwright show-report"
-```
-
-### App-Specific Scripts (Should Be Removed)
-```json
-"test:crude-collage": "cross-env TEST_APP=crude-collage-painter playwright test -c apps/crude-collage-painter/playwright.config.js",
-"test:computational-collage": "cross-env TEST_APP=computational-collage playwright test -c apps/computational-collage/playwright.config.js"
 ```
 
 ### Testing Infrastructure Scripts (Should Remain)
@@ -117,16 +123,10 @@ The current implementation uses `TEST_APP` environment variable to target specif
 
 ### Phase 1: Project Configuration Migration
 1. ✅ **Audit Complete** - Current state documented
-2. **Add test targets** for 4 apps without them:
-   - crude-collage-painter
-   - computational-collage  
-   - those-shape-things
-   - dragline
+2. ✅ **Add test targets** for 4 apps without them: All apps now have `e2e` targets.
 
 ### Phase 2: Root Package.json Cleanup  
-1. **Remove app-specific scripts**:
-   - `test:crude-collage`
-   - `test:computational-collage`
+1. ✅ **Remove app-specific scripts**: `test:crude-collage` and `test:computational-collage` have been removed.
 2. **Keep workspace-level scripts** unchanged
 
 ### Phase 3: Standardization
@@ -148,8 +148,8 @@ The current implementation uses `TEST_APP` environment variable to target specif
 ## Success Criteria
 
 ### Immediate (Phase 1-2)
-- ✅ All 6 apps have working `nx test app-name` commands
-- ✅ `nx run-many --target=test --all` executes successfully  
+- ✅ All 6 apps have working `nx e2e app-name` commands
+- ✅ `nx run-many --target=e2e --all` executes successfully  
 - ✅ Root package.json contains only workspace-level test scripts
 - ✅ All existing test functionality preserved
 - ✅ No CI/CD pipeline disruption

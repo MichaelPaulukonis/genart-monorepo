@@ -1,3 +1,7 @@
+## Core Project Rules & Conventions
+
+For detailed project context, coding conventions, architectural patterns, technology preferences, commit and changelog messages, refer to the primary AI instruction file at `.github/copilot-instructions.md`.
+
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
 

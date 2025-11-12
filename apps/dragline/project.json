@@ -32,7 +32,7 @@
         "lintFilePatterns": ["apps/dragline/**/*.js"]
       }
     },
-    "test": {
+    "e2e": {
       "executor": "@nx/playwright:playwright",
       "options": {
         "config": "apps/dragline/playwright.config.js"

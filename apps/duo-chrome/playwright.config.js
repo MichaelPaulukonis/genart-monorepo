@@ -1,4 +1,4 @@
-const { defineConfig, devices } = require('@playwright/test')
+const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests',
@@ -11,7 +11,7 @@ module.exports = defineConfig({
     ['list']
   ],
   use: {
-    baseURL: 'http://localhost:5176',
+    baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure'
@@ -23,8 +23,8 @@ module.exports = defineConfig({
     }
   ],
   webServer: {
-    command: 'python3 -m http.server 5176 --directory dist/apps/computational-collage',
-    url: 'http://localhost:5176',
+    command: 'python3 -m http.server 5173 --directory dist/apps/duo-chrome',
+    url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 180 * 1000,
     stdout: 'pipe',
@@ -38,4 +38,4 @@ module.exports = defineConfig({
       mode: 'pixel'
     }
   }
-})
+});

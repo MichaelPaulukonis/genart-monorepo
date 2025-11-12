@@ -9,7 +9,7 @@ module.exports = defineConfig({
     baseURL: 'http://localhost:5175/'
   },
   webServer: {
-    command: 'nx dev those-shape-things',
+    command: 'python3 -m http.server 5175 --directory dist/apps/those-shape-things',
     url: 'http://localhost:5175/',
     reuseExistingServer: !process.env.CI,
     timeout: 180 * 1000, // 3 minutes

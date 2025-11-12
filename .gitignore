@@ -145,8 +145,8 @@ temp/
 # Editor directories and files
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
-
 dev-debug.log
+
 # Environment variables
 .idea
 .vscode
@@ -155,6 +155,7 @@ dev-debug.log
 *.njsproj
 *.sln
 *.sw?
+
 # OS specific
 
 # Task files
@@ -165,3 +166,6 @@ dev-debug.log
 test-results/
 playwright-report/
 playwright/.cache/
+
+# misc chats
+conversation/

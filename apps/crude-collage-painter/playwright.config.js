@@ -23,7 +23,7 @@ module.exports = defineConfig({
     }
   ],
   webServer: {
-    command: 'nx dev crude-collage-painter',
+    command: 'python3 -m http.server 5174 --directory dist/apps/crude-collage-painter',
     url: 'http://localhost:5174',
     reuseExistingServer: !process.env.CI,
     timeout: 180 * 1000,
