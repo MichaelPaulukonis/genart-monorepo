@@ -162,10 +162,17 @@ dev-debug.log
 # tasks.json
 # tasks/ 
 
-# Playwright Test Artifacts
+# Playwright Test Artifacts3
 test-results/
 playwright-report/
 playwright/.cache/
 
 # misc chats
 conversation/
+
+# working images
+# duo-chrome/public/images has been committed - temp changes s/b ignored
+apps/duo-chrome/public/images/
+apps/duo-chrome/public/images_original
+apps/duo-chrome/public/images_local
+# images.bak are b&w non-transparent files saved for potential future use

@@ -1,7 +1,7 @@
 export const RISOCOLORS = [
   { name: 'APRICOT', color: [246, 160, 77] },
   { name: 'AQUA', color: [94, 200, 229] },
-  { name: "BLACK", color: [0, 0, 0] },
+  { name: 'BLACK', color: [0, 0, 0] },
   { name: 'BLUE', color: [0, 120, 191] },
   { name: 'BRICK', color: [167, 81, 84] },
   { name: 'BRIGHTGOLD', color: [186, 128, 50] },
@@ -109,4 +109,52 @@ export const BONE_WHITE = [
   { name: 'foo', color: '#f5f5f5' },
   { name: 'foo', color: '#e2e5de' },
   { name: 'foo', color: '#b2beb5' }
+]
+
+const convertCoolorToArray = (coolor) => {
+  // Example: https://coolors.co/palette/780000-c1121f-fdf0d5-003049-669bbc
+  // Extract the last part after the last slash
+  const lastSlash = coolor.lastIndexOf('/')
+  if (lastSlash === -1) return []
+  const palettePart = coolor.substring(lastSlash + 1)
+  // Remove 'palette/' if present
+  const palette = palettePart.replace(/^palette\//, '')
+  // Split by hyphen
+  const hexes = palette.split('-')
+  // Only allow valid 3 or 6 digit hex codes
+  return hexes
+    .filter(h => /^[0-9a-fA-F]{3,6}$/.test(h))
+    .map(h => {
+      const hex = '#' + h.toLowerCase()
+      return { name: hex, color: hex }
+    })
+}
+
+export const FIERY_OCEAN = convertCoolorToArray('https://coolors.co/palette/780000-c1121f-fdf0d5-003049-669bbc')
+export const PEACHY_DELIGHT = convertCoolorToArray('https://coolors.co/palette/d8e2dc-ffe5d9-ffcad4-f4acb7-9d8189')
+export const PINK_OMBRE = convertCoolorToArray('https://coolors.co/palette/ff0a54-ff477e-ff5c8a-ff7096-ff85a1-ff99ac-fbb1bd-f9bec7-f7cad0-fae0e4')
+export const VIBRANT_NATURE = convertCoolorToArray('https://coolors.co/palette/ee6055-60d394-aaf683-ffd97d-ff9b85')
+export const COOL_COASTAL_VIBES = convertCoolorToArray('https://coolors.co/palette/2b2d42-8d99ae-edf2f4-ef233c-d90429')
+export const GOLDEN_TWILIGHT = convertCoolorToArray('https://coolors.co/palette/000814-001d3d-003566-ffc300-ffd60a')
+export const GOLD_ELEGANCE = convertCoolorToArray('https://coolors.co/palette/000000-14213d-fca311-e5e5e5-ffffff')
+export const VIBRANT_SUNSET = convertCoolorToArray('https://coolors.co/palette/ff6d00-ff7900-ff8500-ff9100-ff9e00-240046-3c096c-5a189a-7b2cbf-9d4edd')
+export const YELLOW_PINK = convertCoolorToArray('https://coolors.co/palette/ede342-f1c664-f4a986-f88ba7-fb6ec9-ff51eb')
+export const JELLY_DREAM = convertCoolorToArray('https://coolors.co/palette/edf67d-f896d8-ca7df9-724cf9-564592')
+export const FRESH_GREENS = convertCoolorToArray('https://coolors.co/palette/386641-6a994e-a7c957-f2e8cf-bc4749')
+
+export const ALL_PALETTES = [
+  RISOCOLORS,
+  PALETTE,
+  PALETTE_TWO,
+  BONE_WHITE,
+  FIERY_OCEAN,
+  PEACHY_DELIGHT,
+  PINK_OMBRE,
+  VIBRANT_NATURE,
+  COOL_COASTAL_VIBES,
+  GOLDEN_TWILIGHT,
+  GOLD_ELEGANCE,
+  VIBRANT_SUNSET,
+  YELLOW_PINK,
+  JELLY_DREAM
 ]

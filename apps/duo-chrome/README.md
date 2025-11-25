@@ -90,7 +90,21 @@ The help overlay can be closed by pressing `H`, `I`, or `ESC`.
 - Uses StandardJS code style and ESLint with p5.js rules
 - The app uses p5js-wrapper for module compatibility with p5.js
 
-### Adding Images
+### Managing Images
+
+**For Local Development with Custom Images:**
+
+```bash
+# Switch to your custom working images
+npm run images:work
+
+# Switch back to official images (before committing)
+npm run images:commit
+```
+
+See [Image Management Guide](../../docs/guides/duo-chrome-image-management.md) for details.
+
+**Adding New Images to the Official Collection:**
 
 1. Add image to `public/images/`
 2. Update `imgs` array in `src/imagelist.js`

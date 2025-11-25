@@ -151,6 +151,7 @@ sketch.draw = () => {
     case activityModes.Drawing:
       noCursor()
       handleKeyInput()
+
       render()
 
       if (

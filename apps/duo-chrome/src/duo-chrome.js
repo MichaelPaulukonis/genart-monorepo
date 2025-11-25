@@ -35,7 +35,7 @@
  */
 
 import { p5 } from 'p5js-wrapper'
-import { RISOCOLORS, PALETTE, PALETTE_TWO, BONE_WHITE } from './risocolors'
+import { ALL_PALETTES } from './risocolors'
 import { imgs } from './generated/images.js'
 import { getFormattedVersion } from './utils/version.js'
 import '../css/style.css'
@@ -55,11 +55,11 @@ let currentBlendModeIndex = 0 // Start with the first blend mode
 const backgroundModes = [
   {
     color: [0, 0, 0],
-    blendModes: ['ADD', 'EXCLUSION', 'SCREEN', 'DIFFERENCE', 'LIGHTEST']
+    blendModes: ['ADD', 'EXCLUSION', 'SCREEN', 'BLEND', 'DIFFERENCE', 'LIGHTEST']
   },
   {
     color: [255, 255, 255],
-    blendModes: ['MULTIPLY', 'EXCLUSION', 'DIFFERENCE', 'DARKEST', 'HARD_LIGHT']
+    blendModes: ['MULTIPLY', 'EXCLUSION', 'BLEND', 'DIFFERENCE', 'DARKEST', 'HARD_LIGHT']
   }
 ]
 
@@ -69,7 +69,6 @@ const sketch = function (p) {
   let autoSave = false
   let colorLayer1 = null
   let currentBackgroundModeIndex = 0 // Start with the first background mode
-  const COLORS = [BONE_WHITE, RISOCOLORS, PALETTE, PALETTE_TWO]
   let COLOR_MAPS = []
   let colorIndex = 0
   const imgSource = './images/'
@@ -349,9 +348,9 @@ const sketch = function (p) {
       return false
     }
 
-    const currentColorArray = COLORS[colorIndex]
+    const currentColorArray = ALL_PALETTES[colorIndex]
     const currentColor = imageColorPairs[imageIndex].color
-    let currentColorIndex = currentColorArray.findIndex(color => color.name === currentColor.name)
+    let currentColorIndex = currentColorArray.findIndex(c => c.color === currentColor.color)
 
     // If current color not found in array (shouldn't happen), start from 0
     if (currentColorIndex === -1) {
@@ -376,7 +375,7 @@ const sketch = function (p) {
 
     // If the new color would conflict with the other image, skip to the next available
     let newColor = currentColorArray[newColorIndex]
-    if (newColor.name === otherColor.name) {
+    if (newColor.color === otherColor.color) {
       // Continue in the same direction to find the next unique color
       if (direction === 'next' || direction === 1) {
         newColorIndex = (newColorIndex + 1) % currentColorArray.length
@@ -386,7 +385,7 @@ const sketch = function (p) {
 
       // Safety check to prevent infinite loop
       let attempts = 0
-      while (currentColorArray[newColorIndex].name === otherColor.name && attempts < currentColorArray.length) {
+      while (currentColorArray[newColorIndex].color === otherColor.color && attempts < currentColorArray.length) {
         if (direction === 'next' || direction === 1) {
           newColorIndex = (newColorIndex + 1) % currentColorArray.length
         } else {
@@ -569,7 +568,7 @@ const sketch = function (p) {
    * Pre-processes the color arrays into Maps for faster lookups.
    */
   function initializeColorMaps() {
-    COLOR_MAPS = COLORS.map(palette => {
+    COLOR_MAPS = ALL_PALETTES.map(palette => {
       const map = new Map()
       palette.forEach(color => map.set(color.name, color))
       return map
@@ -669,7 +668,7 @@ const sketch = function (p) {
       showIndicatorsTemporarily()
       return false // Prevent default browser behavior
     } else if (p.key === 'c') {
-      colorIndex = (colorIndex + 1) % COLORS.length
+      colorIndex = (colorIndex + 1) % ALL_PALETTES.length
     } else if (p.key === 'm') {
       cycleBlendMode()
     } else if (p.key === 'p' || p.keyCode === 32) {
@@ -1132,9 +1131,9 @@ const sketch = function (p) {
 
   function initializeImageColorPairs() {
     imageColorPairs[0].img = getRandomUniqueItem(imgs, [])
-    imageColorPairs[0].color = getRandomUniqueItem(COLORS[colorIndex], [])
+    imageColorPairs[0].color = getRandomUniqueItem(ALL_PALETTES[colorIndex], [])
     imageColorPairs[1].img = getRandomUniqueItem(imgs, [imageColorPairs[0].img])
-    imageColorPairs[1].color = getRandomUniqueItem(COLORS[colorIndex], [
+    imageColorPairs[1].color = getRandomUniqueItem(ALL_PALETTES[colorIndex], [
       imageColorPairs[0].color
     ])
 
@@ -1177,7 +1176,7 @@ const sketch = function (p) {
 
     // Always get a new random color (unless preserving existing color for navigation)
     const selectedColor = getRandomUniqueItem(
-      COLORS[colorIndex],
+      ALL_PALETTES[colorIndex],
       imageColorPairs.map(pair => pair.color)
     )
 

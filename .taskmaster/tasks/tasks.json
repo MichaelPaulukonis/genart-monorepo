@@ -553,15 +553,15 @@
       {
         "id": 28,
         "title": "Implement Tagged Layer System with Off-Screen Rendering for Duo-Chrome",
-        "description": "Implement a layer system for the duo-chrome app that uses off-screen rendering to create high-resolution compositions that can be scaled down for on-screen display, with a focus on the core rendering functionality first.",
+        "description": "Implement a layer system for the duo-chrome app that uses off-screen rendering to create high-resolution compositions that can be scaled down for on-screen display, with a focus on the core rendering functionality first. Reference Task #71 (similar layer system for crude-collage-painter) and the external app `polychromeText` for implementation guidance.",
         "status": "pending",
         "dependencies": [
           "11",
           "15"
         ],
         "priority": "high",
-        "details": "This task involves implementing a layer system for the duo-chrome app with a primary focus on high-resolution off-screen rendering that fits-to-window for on-screen display:\n\n1. **Core Off-Screen Rendering**:\n   - Implement high-resolution off-screen rendering using p5.Graphics buffers\n   - Create a system that renders compositions at high resolution (e.g., 2400x1600)\n   - Develop automatic scaling to fit the browser window for on-screen display\n   - Ensure the scaling maintains visual quality and performance\n\n2. **Basic Layer System Foundation**:\n   - Implement a simple but extensible layer architecture\n   - Create a minimal layer management system that supports future expansion\n   - Design the system to eventually support tagged layers (e.g., \"background\", \"shapes\", \"effects\")\n   - Each layer should render to its own off-screen p5.Graphics buffer\n\n3. **Memory and Performance Management**:\n   - Implement efficient buffer management to avoid memory issues\n   - Optimize rendering pipeline for smooth performance\n   - Add support for different export resolutions\n   - Create a system for managing memory with multiple high-resolution buffers\n\n4. **Essential Layer Controls**:\n   - Implement basic layer visibility toggling\n   - Add simple layer creation and deletion functionality\n   - Design the system to support future expansion of layer controls\n\n5. **High-Resolution Export**:\n   - Implement export functionality at the native high resolution\n   - Support basic export options (PNG format)\n   - Design the export system to be extensible for future enhancements\n\n6. **Future-Proof Architecture**:\n   - Design the system with clear extension points for \"day two\" features\n   - Document how future layer tagging, blending modes, and advanced management will integrate\n   - Create a roadmap for implementing advanced layer features in future tasks\n\nThis implementation will prioritize the core high-resolution rendering functionality while establishing a foundation that can be expanded with more sophisticated layer management features in the future.",
-        "testStrategy": "1. **Core Off-Screen Rendering Testing**:\n   - Verify high-resolution rendering (2400x1600) functions correctly\n   - Test scaling to fit browser window at various sizes\n   - Confirm visual quality is maintained when scaling down\n   - Test performance across different device capabilities\n\n2. **Basic Layer System Testing**:\n   - Verify the foundation layer system works as expected\n   - Test basic layer creation and management\n   - Confirm the architecture can support future expansion\n   - Validate the buffer management for individual layers\n\n3. **Performance Testing**:\n   - Measure rendering performance with high-resolution buffers\n   - Test memory usage during extended use\n   - Verify the system performs well on target devices\n   - Monitor for memory leaks or performance degradation\n\n4. **Essential Controls Testing**:\n   - Test layer visibility toggling functionality\n   - Verify basic layer creation and deletion\n   - Confirm the controls are intuitive and responsive\n\n5. **Export Functionality Testing**:\n   - Test high-resolution export functionality\n   - Verify exported images maintain the correct resolution\n   - Confirm PNG format exports work correctly\n   - Test export process on different browsers and devices\n\n6. **Architecture Extensibility Testing**:\n   - Review code architecture for clear extension points\n   - Validate that the design will support future layer features\n   - Confirm documentation adequately explains the extension strategy\n\n7. **Integration Testing**:\n   - Verify layer system integrates well with existing duo-chrome functionality\n   - Test compatibility with existing keyboard shortcuts and features\n   - Confirm the system doesn't break existing functionality",
+        "details": "This task involves implementing a layer system for the duo-chrome app with a primary focus on high-resolution off-screen rendering that fits-to-window for on-screen display. The implementation should reference Task #71, which is a similar layer system implementation for the crude-collage-painter app, and the external app `polychromeText` which provides another reference for a layer system implementation:\n\n1. **Core Off-Screen Rendering**:\n   - Implement high-resolution off-screen rendering using p5.Graphics buffers\n   - Create a system that renders compositions at high resolution (e.g., 2400x1600)\n   - Develop automatic scaling to fit the browser window for on-screen display\n   - Ensure the scaling maintains visual quality and performance\n\n2. **Basic Layer System Foundation**:\n   - Implement a simple but extensible layer architecture\n   - Create a minimal layer management system that supports future expansion\n   - Design the system to eventually support tagged layers (e.g., \"background\", \"shapes\", \"effects\")\n   - Each layer should render to its own off-screen p5.Graphics buffer\n   - Review the approaches used in Task #71 and polychromeText for guidance\n\n3. **Memory and Performance Management**:\n   - Implement efficient buffer management to avoid memory issues\n   - Optimize rendering pipeline for smooth performance\n   - Add support for different export resolutions\n   - Create a system for managing memory with multiple high-resolution buffers\n\n4. **Essential Layer Controls**:\n   - Implement basic layer visibility toggling\n   - Add simple layer creation and deletion functionality\n   - Design the system to support future expansion of layer controls\n\n5. **High-Resolution Export**:\n   - Implement export functionality at the native high resolution\n   - Support basic export options (PNG format)\n   - Design the export system to be extensible for future enhancements\n\n6. **Future-Proof Architecture**:\n   - Design the system with clear extension points for \"day two\" features\n   - Document how future layer tagging, blending modes, and advanced management will integrate\n   - Create a roadmap for implementing advanced layer features in future tasks\n\nThis implementation will prioritize the core high-resolution rendering functionality while establishing a foundation that can be expanded with more sophisticated layer management features in the future.",
+        "testStrategy": "1. **Core Off-Screen Rendering Testing**:\n   - Verify high-resolution rendering (2400x1600) functions correctly\n   - Test scaling to fit browser window at various sizes\n   - Confirm visual quality is maintained when scaling down\n   - Test performance across different device capabilities\n   - Compare implementation with Task #71 and `polychromeText` to ensure consistency in approach\n\n2. **Basic Layer System Testing**:\n   - Verify the foundation layer system works as expected\n   - Test basic layer creation and management\n   - Confirm the architecture can support future expansion\n   - Validate the buffer management for individual layers\n   - Reference techniques from Task #71 and `polychromeText` where appropriate\n\n3. **Performance Testing**:\n   - Measure rendering performance with high-resolution buffers\n   - Test memory usage during extended use\n   - Verify the system performs well on target devices\n   - Monitor for memory leaks or performance degradation\n\n4. **Essential Controls Testing**:\n   - Test layer visibility toggling functionality\n   - Verify basic layer creation and deletion\n   - Confirm the controls are intuitive and responsive\n\n5. **Export Functionality Testing**:\n   - Test high-resolution export functionality\n   - Verify exported images maintain the correct resolution\n   - Confirm PNG format exports work correctly\n   - Test export process on different browsers and devices\n\n6. **Architecture Extensibility Testing**:\n   - Review code architecture for clear extension points\n   - Validate that the design will support future layer features\n   - Confirm documentation adequately explains the extension strategy\n\n7. **Integration Testing**:\n   - Verify layer system integrates well with existing duo-chrome functionality\n   - Test compatibility with existing keyboard shortcuts and features\n   - Confirm the system doesn't break existing functionality",
         "subtasks": [
           {
             "id": 1,
@@ -570,8 +570,7 @@
             "status": "pending",
             "dependencies": [],
             "details": "",
-            "testStrategy": "",
-            "parentId": "undefined"
+            "testStrategy": ""
           },
           {
             "id": 2,
@@ -580,8 +579,7 @@
             "status": "pending",
             "dependencies": [],
             "details": "",
-            "testStrategy": "",
-            "parentId": "undefined"
+            "testStrategy": ""
           },
           {
             "id": 3,
@@ -590,8 +588,7 @@
             "status": "pending",
             "dependencies": [],
             "details": "",
-            "testStrategy": "",
-            "parentId": "undefined"
+            "testStrategy": ""
           },
           {
             "id": 4,
@@ -600,8 +597,7 @@
             "status": "pending",
             "dependencies": [],
             "details": "",
-            "testStrategy": "",
-            "parentId": "undefined"
+            "testStrategy": ""
           },
           {
             "id": 5,
@@ -610,8 +606,7 @@
             "status": "pending",
             "dependencies": [],
             "details": "",
-            "testStrategy": "",
-            "parentId": "undefined"
+            "testStrategy": ""
           },
           {
             "id": 6,
@@ -620,8 +615,7 @@
             "status": "pending",
             "dependencies": [],
             "details": "",
-            "testStrategy": "",
-            "parentId": "undefined"
+            "testStrategy": ""
           },
           {
             "id": 7,
@@ -630,8 +624,16 @@
             "status": "pending",
             "dependencies": [],
             "details": "",
-            "testStrategy": "",
-            "parentId": "undefined"
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Review Task #71 and polychromeText implementations for applicable techniques",
+            "description": "Study the similar layer system in Task #71 and the polychromeText app to identify reusable patterns and implementation approaches",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Thoroughly examine the code and architecture of both Task #71 (crude-collage-painter layer system) and the polychromeText external app to identify effective approaches for layer management, buffer handling, and rendering pipelines that could be adapted for duo-chrome.",
+            "testStrategy": "Document findings and create a comparison matrix of techniques that could be applied to the duo-chrome implementation."
           }
         ]
       },
@@ -853,7 +855,7 @@
         "id": 32,
         "title": "Implement Deterministic Random Seed System for Duo-Chrome App",
         "description": "Implement URL-based composition sharing for the duo-chrome app that encodes the current composition state into URL parameters, allows restoring compositions from URL parameters, and provides convenient sharing features for users to share their curated compositions.",
-        "details": "Create a robust URL-based state sharing system for the duo-chrome app to enable easy sharing and bookmarking of curated compositions. The implementation should include:\n\n1. **State Serialization**:\n   - Encode the current app state (image indices, colors, scales, blend modes, background modes) into URL parameters\n   - Example URL structure: `?imageA=42&imageB=156&colorA=riso-red&colorB=riso-blue&scaleA=1.2&scaleB=0.8&blendMode=1&bgMode=0`\n   - Ensure encoding is compact but human-readable when possible\n\n2. **State Restoration**:\n   - On page load, parse URL parameters using `URLSearchParams`\n   - Restore composition state from parameters if present\n   - Gracefully handle missing or invalid parameters with sensible defaults\n\n3. **Share Functionality**:\n   - Add a share button to the UI and/or keyboard shortcut (e.g., Shift+S)\n   - Only update the URL when the share button is clicked to avoid performance overhead\n   - Consider implementing native Web Share API support where available\n   - Add visual feedback (toast notification, modal, etc.) when a link is generated\n\n4. **User Experience**:\n   - Provide clear indicators when a composition has been loaded from URL parameters\n   - Add copy-to-clipboard functionality for easier sharing\n   - Consider shortened URL options for very complex compositions\n   - Auto-pause feature when loading shared compositions to preserve the intended state\n\n5. **Maintainability & Future-Proofing**:\n   - Design the parameter schema to be extensible for future composition parameters\n   - Add version parameter to URL to handle potential future breaking changes to parameter encoding\n   - Document the URL parameter schema for future reference",
+        "details": "Create a robust URL-based state sharing system for the duo-chrome app to enable easy sharing and bookmarking of curated compositions. The implementation should include:\n\n1. **State Serialization**:\n   - Encode the current app state (image indices, colors, scales, blend modes, background modes) into URL parameters\n   - Example URL structure: `?imageA=42&imageB=156&colorA=riso-red&colorB=riso-blue&scaleA=1.2&scaleB=0.8&blendMode=1&bgMode=0`\n   - Ensure encoding is compact but human-readable when possible\n\n2. **State Restoration**:\n   - On page load, parse URL parameters using `URLSearchParams`\n   - Restore composition state from parameters if present\n   - Gracefully handle missing or invalid parameters with sensible defaults\n\n3. **Share Functionality**:\n   - Add a share button to the UI and/or keyboard shortcut (e.g., Shift+S)\n   - Only update the URL when the share button is clicked to avoid performance overhead\n   - Consider implementing native Web Share API support where available\n   - Add visual feedback (toast notification, modal, etc.) when a link is generated\n\n4. **User Experience**:\n   - Provide clear indicators when a composition has been loaded from URL parameters\n   - Add copy-to-clipboard functionality for easier sharing\n   - Consider shortened URL options for very complex compositions\n   - Auto-pause feature when loading shared compositions to preserve the intended state\n\n5. **Maintainability & Future-Proofing**:\n   - Design the parameter schema to be extensible for future composition parameters\n   - Add version parameter to URL to handle potential future breaking changes to parameter encoding\n   - Document the URL parameter schema for future reference\n<info added on 2025-11-25T14:28:52.016Z>\n6. **Version Control Configuration**:\n   - Added .gitignore rules to exclude working image directories from version control:\n     - apps/duo-chrome/public/images/ (working images directory)\n     - apps/duo-chrome/public/images_original (backup directory for image swapping)\n   - Official images remain in version control while local working image modifications are excluded\n   - Configuration supports the image swap workflow by preventing accidental commits of temporary files\n   - Images.bak files (black and white non-transparent versions) are preserved for potential future use\n</info added on 2025-11-25T14:28:52.016Z>\n<info added on 2025-11-25T14:35:27.748Z>\n7. **Updated Version Control Configuration**:\n   - Extended .gitignore configuration to exclude an additional directory:\n     - apps/duo-chrome/public/images_local (custom working images backup during commit mode)\n   - The complete image directory exclusion now covers all three directories in the rotation:\n     - apps/duo-chrome/public/images/ (active working images)\n     - apps/duo-chrome/public/images_original (official images backup during work mode)\n     - apps/duo-chrome/public/images_local (custom working images backup during commit mode)\n   - This configuration fully supports the three-folder rotation system managed by the image swap script (scripts/swap-duo-chrome-images.js)\n   - Prevents accidental commits of temporary working images while preserving access to all image sets locally\n</info added on 2025-11-25T14:35:27.748Z>\n<info added on 2025-11-25T14:39:50.003Z>\n8. **Revised Version Control Configuration**:\n   - Updated .gitignore to uncomment exclusion rules for:\n     - apps/duo-chrome/public/images/ (active working images)\n     - apps/duo-chrome/public/images_original (official images backup)\n   - These directories are now tracked in version control again, reversing the previous configuration\n   - The apps/duo-chrome/public/images_local directory remains excluded from version control\n   - This change allows official images to be committed while still supporting the image swap workflow\n   - The image swap script (scripts/swap-duo-chrome-images.js) continues to function as intended with this configuration\n</info added on 2025-11-25T14:39:50.003Z>",
         "testStrategy": "1. **State Serialization Testing**:\n   - Verify that all relevant composition parameters are correctly encoded in the URL\n   - Test encoding of edge case values (very large/small numbers, special characters in color names)\n   - Ensure URL length stays reasonable for typical compositions\n\n2. **State Restoration Testing**:\n   - Test loading the app with various URL parameter combinations\n   - Verify the composition is exactly reproduced from URL parameters\n   - Test with missing or partial parameters and confirm graceful fallbacks\n   - Test with invalid parameters and verify error handling\n\n3. **Share Functionality Testing**:\n   - Test share button/shortcut creates a correct URL with current state\n   - Verify copy-to-clipboard functionality works across browsers\n   - Test share workflows on mobile and desktop devices\n\n4. **Cross-Browser & Platform Testing**:\n   - Share URLs between different browsers and verify compositions render identically\n   - Test URL sharing between desktop and mobile devices\n   - Verify long URLs are handled correctly across platforms\n\n5. **Performance Testing**:\n   - Confirm URL updates only happen on explicit share actions\n   - Verify parsing URL parameters on load doesn't significantly impact startup time\n\n6. **Regression Testing**:\n   - Ensure existing app functionality is not affected by the URL parameter system",
         "status": "in-progress",
         "dependencies": [
@@ -1065,12 +1067,14 @@
       {
         "id": 39,
         "title": "Add Paintbrush Visual Indicator During Active Painting",
-        "description": "Implement a thin black outline around the paintbrush cursor when the user is actively painting in the crude-collage-painter app to provide visual feedback during painting operations.",
-        "details": "This task involves implementing a visual indicator for the paintbrush cursor in the crude-collage-painter app:\n\n1. **Track Painting State**:\n   - Create or modify the existing mouse event handlers to track when the user is actively painting\n   - Set a boolean flag `isActivePainting` that's true when mousePressed/mouseDragged and false on mouseReleased\n   \n2. **Implement Cursor Outline**:\n   - In the draw function, check if `isActivePainting` is true\n   - If true, draw a thin black outline around the current paintbrush cursor\n   - Ensure the outline is properly sized relative to the current brush size\n   ```javascript\n   function drawCursorOutline() {\n     if (isActivePainting) {\n       push();\n       noFill();\n       stroke(0);\n       strokeWeight(1);\n       ellipse(mouseX, mouseY, brushSize + 2); // Slightly larger than brush size\n       pop();\n     }\n   }\n   ```\n\n3. **Optimize Performance**:\n   - Ensure the cursor outline doesn't interfere with the actual painting operation\n   - Draw the outline after all other painting operations\n   - Use p5.js's built-in noCursor() and cursor() functions to hide/show the default cursor as appropriate\n\n4. **Handle Edge Cases**:\n   - Consider touch interfaces where there's no cursor\n   - Handle cases when the brush is very small (ensure outline is still visible)\n   - Ensure outline stays visible at canvas edges",
-        "testStrategy": "1. **Basic Functionality**:\n   - Start the crude-collage-painter app\n   - Move the cursor around without clicking and verify no outline appears\n   - Click and drag to paint, confirming the black outline appears around the paintbrush\n   - Release the mouse button and verify the outline disappears\n\n2. **Different Brush Sizes**:\n   - Test with different brush sizes (very small to very large)\n   - Verify the outline scales appropriately with the brush size\n   - Ensure the outline remains visible even with very small brush sizes\n\n3. **Edge Cases**:\n   - Paint near and at the edges of the canvas\n   - Verify the outline remains visible and doesn't get clipped\n   - Test rapid clicking/painting to ensure the outline toggles correctly\n\n4. **Performance Testing**:\n   - Test on lower-end devices to ensure the outline rendering doesn't cause performance issues\n   - Create a complex painting and verify the outline rendering doesn't slow down the painting experience",
-        "status": "in-progress",
-        "dependencies": [],
+        "description": "Implement a thin black outline around the paintbrush cursor when the user is actively painting in the crude-collage-painter app to provide visual feedback during painting operations. This implementation depends on the layer system (task #71) to ensure proper rendering of the visual indicator.",
+        "status": "pending",
+        "dependencies": [
+          71
+        ],
         "priority": "medium",
+        "details": "This task involves implementing a visual indicator for the paintbrush cursor in the crude-collage-painter app:\n\n1. **Track Painting State**:\n   - Create or modify the existing mouse event handlers to track when the user is actively painting\n   - Set a boolean flag `isActivePainting` that's true when mousePressed/mouseDragged and false on mouseReleased\n   \n2. **Implement Cursor Outline Using Layer System**:\n   - Utilize the layer system implementation from task #71\n   - In the draw function, check if `isActivePainting` is true\n   - If true, draw a thin black outline around the current paintbrush cursor on the UI/overlay layer\n   - Ensure the outline is properly sized relative to the current brush size\n   ```javascript\n   function drawCursorOutline() {\n     if (isActivePainting) {\n       push();\n       noFill();\n       stroke(0);\n       strokeWeight(1);\n       ellipse(mouseX, mouseY, brushSize + 2); // Slightly larger than brush size\n       pop();\n     }\n   }\n   ```\n\n3. **Optimize Performance with Layer Management**:\n   - Ensure the cursor outline doesn't interfere with the actual painting operation\n   - Draw the outline on a dedicated UI/overlay layer that sits above the painting layers\n   - Use p5.js's built-in noCursor() and cursor() functions to hide/show the default cursor as appropriate\n   - Make sure the indicator updates efficiently without affecting the painting layers\n\n4. **Handle Edge Cases**:\n   - Consider touch interfaces where there's no cursor\n   - Handle cases when the brush is very small (ensure outline is still visible)\n   - Ensure outline stays visible at canvas edges\n   - Verify the cursor outline works correctly across all layers in the system",
+        "testStrategy": "1. **Basic Functionality**:\n   - Start the crude-collage-painter app with the layer system enabled\n   - Move the cursor around without clicking and verify no outline appears\n   - Click and drag to paint, confirming the black outline appears around the paintbrush\n   - Release the mouse button and verify the outline disappears\n\n2. **Different Brush Sizes**:\n   - Test with different brush sizes (very small to very large)\n   - Verify the outline scales appropriately with the brush size\n   - Ensure the outline remains visible even with very small brush sizes\n\n3. **Layer Interaction Testing**:\n   - Test the visual indicator while painting on different layers\n   - Switch between layers and verify the outline appears correctly\n   - Verify that the outline doesn't affect the content of the painting layers\n\n4. **Edge Cases**:\n   - Paint near and at the edges of the canvas\n   - Verify the outline remains visible and doesn't get clipped\n   - Test rapid clicking/painting to ensure the outline toggles correctly\n\n5. **Performance Testing**:\n   - Test on lower-end devices to ensure the outline rendering doesn't cause performance issues\n   - Create a complex painting with multiple layers and verify the outline rendering doesn't slow down the painting experience",
         "subtasks": []
       },
       {
@@ -1517,12 +1521,62 @@
         "id": 67,
         "title": "Automate/Document Duo-Chrome Image Swap for Deployment",
         "description": "Create a script or clear documentation to streamline the process of swapping `apps/duo-chrome/public/images` and `apps/duo-chrome/public/images_original` for deployment, ensuring the correct image set is active.",
-        "details": "",
-        "testStrategy": "",
-        "status": "pending",
+        "details": "Implement a Node.js script to automate the image folder swapping process for duo-chrome, with associated documentation and npm scripts for easy use.\n\n**Implementation Approach:**\nScript-based swapping that supports two modes:\n- Work mode (local development): `images/` → `images_original/`, `images_local/` → `images/`\n- Commit mode (for deployment): `images/` → `images_local/`, `images_original/` → `images/`\n\nThe implementation includes safety checks to prevent accidental overwrites and status display for visibility into the current folder state.\n\n**Current Setup:**\nUser is already in \"work mode\" with custom images active. Before committing, they should run `npm run images:commit` to swap to official images, then `npm run images:work` after committing to return to custom images.",
+        "testStrategy": "1. Verify the script correctly swaps folders without data loss\n2. Confirm npm scripts work as expected in both directions (work → commit and commit → work)\n3. Test error handling when folders are missing or in an unexpected state\n4. Validate documentation is clear and accurate\n5. Test the workflow with real use cases (local development followed by commit)",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Node.js swap script",
+            "description": "Develop a script (`scripts/swap-duo-chrome-images.js`) that manages image folder swapping with safety checks",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 2,
+            "title": "Create comprehensive documentation",
+            "description": "Create detailed documentation in `docs/guides/duo-chrome-image-management.md` with complete instructions",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 3,
+            "title": "Create quick reference guide",
+            "description": "Add a quick reference guide in `apps/duo-chrome/IMAGE-SWAP-SETUP.md` for easy access",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 4,
+            "title": "Add npm scripts to package.json",
+            "description": "Modify `apps/duo-chrome/package.json` to add npm scripts for image swapping: `npm run images:work` and `npm run images:commit`",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 5,
+            "title": "Update duo-chrome README.md",
+            "description": "Add image management section to `apps/duo-chrome/README.md` referencing the new scripts and documentation",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 6,
+            "title": "Create team onboarding documentation",
+            "description": "Prepare documentation for new team members on using the image swap workflow",
+            "status": "done",
+            "dependencies": []
+          },
+          {
+            "id": 7,
+            "title": "Final testing and verification",
+            "description": "Perform a final round of testing to ensure the swap process works reliably in all scenarios",
+            "status": "done",
+            "dependencies": []
+          }
+        ]
       },
       {
         "id": 68,
@@ -1566,11 +1620,108 @@
         ],
         "priority": "medium",
         "subtasks": []
+      },
+      {
+        "id": 71,
+        "title": "Implement Layer System in Crude Collage Painter",
+        "description": "Implement a layer system in the crude-collage-painter app. This system should separate the main canvas (where the collage is drawn) from a UI layer (for overlays like cursors, guides, etc.). This will prevent UI elements from being permanently drawn onto the artwork. The implementation should be similar to the layer systems in the monochromifier or duo-chrome apps, using an offscreen buffer for the main artwork and a separate on-screen canvas for UI. Refer to task #28 for a similar layer system implementation in the duo-chrome app. Additionally, the external app `polychromeText` can be used as a reference for layer system implementation.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "The layer system should include:\n1. An offscreen canvas buffer for the main artwork\n2. An on-screen canvas for UI elements\n3. Proper rendering logic to composite these layers\n4. Clear separation of drawing operations between artwork and UI elements\n5. Mechanism to clear UI elements without affecting the artwork\n\nReference implementations:\n- See task #28 for duo-chrome implementation\n- Review `polychromeText` external app for its layer system approach",
+        "testStrategy": "1. Verify UI elements (cursors, guides) appear correctly on the UI layer\n2. Confirm UI elements do not appear in saved/exported artwork\n3. Test that clearing the UI layer does not affect the artwork\n4. Validate proper rendering performance with the multi-layer approach\n5. Ensure compatibility with existing features of the crude-collage-painter",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "",
+            "description": "Study reference implementations (task #28 and polychromeText app)",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "",
+            "description": "Set up offscreen canvas buffer for artwork",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "",
+            "description": "Implement UI canvas layer",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "",
+            "description": "Create compositing mechanism to render both layers",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "",
+            "description": "Update drawing operations to use appropriate layer",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "",
+            "description": "Modify save/export functionality to use only the artwork layer",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "",
+            "description": "Add utilities to clear UI layer independently",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "",
+            "description": "Test and debug layer system implementation",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 72,
+        "title": "Implement Configurable Grid Overlay in Monochromifier",
+        "description": "Add a configurable grid overlay feature to the monochromifier application that allows users to divide the canvas into various grid patterns such as quadrants (1-split), 9-squares (2-split), and potentially more complex divisions, while ensuring the overlay is only visible on-screen and not included in exported images.",
+        "details": "1. **UI Controls Implementation**:\n   - Add a new section to the UI for grid overlay configuration\n   - Create a dropdown or radio button set to select grid division type (1-split for quadrants, 2-split for 9 squares, etc.)\n   - Add a toggle button to enable/disable the grid overlay\n   - Implement a color picker for grid line color\n   - Add opacity/thickness controls for the grid lines\n\n2. **Grid Rendering Logic**:\n   - Implement a function to calculate grid line positions based on the selected division type\n   - For 1-split (quadrants): Draw one vertical and one horizontal line at the center\n   - For 2-split (9 squares): Draw two vertical and two horizontal lines at 1/3 and 2/3 positions\n   - For n-split: Calculate positions to create (n+1)² cells\n   - Ensure grid is drawn at the correct scale regardless of zoom level\n\n3. **Layer Integration**:\n   - Use the existing layer system to ensure grid is drawn on the UI layer, not the image layer\n   - Update the rendering pipeline to include grid overlay in the display rendering but exclude it from export operations\n   - Ensure grid is redrawn appropriately when the canvas is manipulated (panned/zoomed)\n\n4. **Performance Optimization**:\n   - Use efficient drawing methods to prevent performance degradation\n   - Implement throttling for grid recalculation during continuous operations\n\n5. **Persistence**:\n   - Save grid configuration in the application state\n   - Restore grid settings when application loads",
+        "testStrategy": "1. **Functionality Testing**:\n   - Verify all grid types (1-split, 2-split, etc.) render correctly\n   - Test grid visibility toggle works as expected\n   - Validate color and opacity/thickness controls affect the grid appearance\n   - Ensure grid remains properly positioned during zoom and pan operations\n\n2. **Export Testing**:\n   - Confirm grid overlay does not appear in exported images\n   - Test exports with different grid configurations enabled\n   - Verify export quality and dimensions remain unaffected\n\n3. **UI Testing**:\n   - Validate UI controls for grid configuration appear correctly\n   - Test responsiveness of controls at different screen sizes\n   - Ensure controls state reflects current grid configuration\n\n4. **Performance Testing**:\n   - Measure any performance impact from grid rendering\n   - Test with multiple grid configurations to ensure consistent performance\n   - Verify there's no noticeable lag when manipulating images with grid overlay enabled\n\n5. **Integration Testing**:\n   - Test interaction with other features like crop tool\n   - Ensure grid overlay works correctly with different image processing modes",
+        "status": "pending",
+        "dependencies": [
+          61
+        ],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-10-27T13:48:05.544Z",
-      "updated": "2025-11-11T18:21:21.551Z",
+      "updated": "2025-11-25T04:12:16.471Z",
       "description": "Tasks for master context"
     }
   }
