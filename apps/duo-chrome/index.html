@@ -56,6 +56,21 @@
           </div>
           
           <div class="shortcut-section">
+            <h4>History Navigation</h4>
+            <ul>
+              <li><kbd>[</kbd> - Previous composition</li>
+              <li><kbd>]</kbd> - Next composition</li>
+              <li><kbd>Shift+[</kbd> - Previous 10 compositions</li>
+              <li><kbd>Shift+]</kbd> - Next 10 compositions</li>
+              <li><kbd>Cmd+[</kbd> - Jump to beginning</li>
+              <li><kbd>Cmd+]</kbd> - Jump to end</li>
+              <li><kbd>F</kbd> - Toggle filmstrip</li>
+              <li><kbd>Shift+C</kbd> - Clear history</li>
+              <li><kbd>Shift+T</kbd> - Regenerate thumbnails</li>
+            </ul>
+          </div>
+          
+          <div class="shortcut-section">
             <h4>Animation & Save</h4>
             <ul>
               <li><kbd>P / Space</kbd> - Pause/resume</li>
@@ -94,6 +109,31 @@
             <div class="status-color" id="status-color-b">-</div>
             <div class="status-scale">Scale: <span id="status-scale-b">1.00</span></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="filmstrip-panel" class="filmstrip-panel hidden">
+      <div class="filmstrip-header">
+        <div class="filmstrip-title">History</div>
+        <div class="filmstrip-counter" id="filmstrip-counter">0 / 0</div>
+        <button id="filmstrip-close" class="filmstrip-close-btn" aria-label="Close filmstrip">×</button>
+      </div>
+      <div class="filmstrip-container">
+        <div class="filmstrip-scroll" id="filmstrip-scroll">
+          <!-- Thumbnails will be dynamically inserted here -->
+        </div>
+      </div>
+    </div>
+
+    <div id="clear-history-dialog" class="confirmation-dialog hidden">
+      <div class="confirmation-content">
+        <h3>Clear History?</h3>
+        <p>This will permanently delete all history entries except the current composition.</p>
+        <p class="confirmation-warning">This action cannot be undone.</p>
+        <div class="confirmation-buttons">
+          <button id="clear-history-cancel" class="confirmation-btn confirmation-btn-cancel">Cancel</button>
+          <button id="clear-history-confirm" class="confirmation-btn confirmation-btn-confirm">Clear History</button>
         </div>
       </div>
     </div>

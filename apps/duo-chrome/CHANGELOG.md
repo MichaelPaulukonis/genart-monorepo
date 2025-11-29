@@ -2,6 +2,18 @@
 
 ## Features
 
+- **history:** Add comprehensive history system with filmstrip navigation
+  - Implemented HistoryManager for composition state tracking and restoration
+  - Added ThumbnailGenerator with LRU caching for efficient thumbnail generation
+  - Created FilmstripPanel with virtual scrolling for large history sets (100+ entries)
+  - Added keyboard navigation: `[`/`]` (step), `Shift+[`/`]` (10 steps), `Cmd+[`/`]` (jump to beginning/end)
+  - Implemented debounced capture for rapid parameter changes
+  - Added thumbnail regeneration feature (`Shift+T`) to fix corrupted thumbnails
+  - Included clear history dialog with confirmation (`Shift+C`)
+  - Added localStorage persistence with automatic size management
+  - Provided visual and audio feedback for navigation boundaries
+  - Created comprehensive architecture documentation in `docs/reference/history-system.md`
+
 - **palettes:** Add 11 new color palettes from Coolors.co
   - Added Fiery Ocean, Peachy Delight, Pink Ombre, Vibrant Nature, Cool Coastal Vibes
   - Added Golden Twilight, Gold Elegance, Vibrant Sunset, Yellow Pink, Jelly Dream, Fresh Greens

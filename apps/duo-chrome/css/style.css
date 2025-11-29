@@ -1,7 +1,6 @@
 html,
 body {
   margin: 0;
-  /* padding: 5px; */
   align-items: center;
   text-align: center;
 }
@@ -9,8 +8,13 @@ body {
 canvas {
   display: block;
   margin: auto;
-  /* margin-top: 50px; */
-  display: block;
+  /* Scale canvas to fit viewport while maintaining aspect ratio */
+  /* Override p5.js inline styles */
+  max-width: 95vw !important;
+  max-height: 95vh !important;
+  width: auto !important;
+  height: auto !important;
+  padding-top: 20px;
 }
 
 .emoji {
@@ -355,3 +359,329 @@ canvas {
   @apply version-theme-prominent version-color-primary;
 }
 */
+
+/* Filmstrip Panel Styles */
+.filmstrip-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+  z-index: 800;
+  font-family: 'Times New Roman', Times, serif;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  max-height: 220px;
+}
+
+.filmstrip-panel.hidden {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.filmstrip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.filmstrip-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  font-variant: small-caps;
+  letter-spacing: 1px;
+}
+
+.filmstrip-counter {
+  font-size: 12px;
+  color: #aaa;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.filmstrip-close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.filmstrip-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filmstrip-container {
+  padding: 12px 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.filmstrip-scroll {
+  display: flex;
+  gap: 10px;
+  min-height: 140px;
+  align-items: center;
+}
+
+.filmstrip-thumbnail {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.filmstrip-thumbnail:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.filmstrip-thumbnail.current {
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+}
+
+.filmstrip-thumbnail.current::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.filmstrip-thumbnail img,
+.filmstrip-thumbnail canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.filmstrip-thumbnail-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+}
+
+.filmstrip-thumbnail-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  padding: 4px 6px;
+  font-size: 10px;
+  color: #fff;
+  font-family: monospace;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.filmstrip-thumbnail:hover .filmstrip-thumbnail-info {
+  opacity: 1;
+}
+
+/* Custom scrollbar for filmstrip */
+.filmstrip-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.filmstrip-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.filmstrip-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.filmstrip-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive design for filmstrip */
+@media (max-width: 700px) {
+  .filmstrip-panel {
+    max-height: 180px;
+  }
+  
+  .filmstrip-thumbnail {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .filmstrip-header {
+    padding: 6px 12px;
+  }
+  
+  .filmstrip-title {
+    font-size: 12px;
+  }
+  
+  .filmstrip-counter {
+    font-size: 11px;
+  }
+  
+  .filmstrip-container {
+    padding: 10px 12px;
+  }
+  
+  .filmstrip-scroll {
+    gap: 8px;
+    min-height: 110px;
+  }
+}
+
+/* Confirmation Dialog Styles */
+.confirmation-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  font-family: 'Times New Roman', Times, serif;
+  backdrop-filter: blur(4px);
+}
+
+.confirmation-dialog.hidden {
+  display: none;
+}
+
+.confirmation-content {
+  background-color: rgba(255, 255, 255, 0.97);
+  padding: 24px;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90vw;
+  color: #333;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+}
+
+.confirmation-content h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 20px;
+  color: #222;
+  font-variant: small-caps;
+  letter-spacing: 1px;
+}
+
+.confirmation-content p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.confirmation-warning {
+  color: #d32f2f;
+  font-weight: bold;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.confirmation-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.confirmation-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: 'Times New Roman', Times, serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: bold;
+  min-width: 100px;
+}
+
+.confirmation-btn-cancel {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.confirmation-btn-cancel:hover {
+  background-color: #e0e0e0;
+  border-color: #999;
+}
+
+.confirmation-btn-confirm {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.confirmation-btn-confirm:hover {
+  background-color: #b71c1c;
+  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+}
+
+/* Responsive design for confirmation dialog */
+@media (max-width: 700px) {
+  .confirmation-content {
+    width: 90vw;
+    padding: 20px;
+  }
+  
+  .confirmation-content h3 {
+    font-size: 18px;
+  }
+  
+  .confirmation-content p {
+    font-size: 13px;
+  }
+  
+  .confirmation-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .confirmation-btn {
+    width: 100%;
+  }
+}

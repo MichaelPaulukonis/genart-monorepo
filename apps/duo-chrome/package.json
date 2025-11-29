@@ -3,6 +3,9 @@
   "version": "0.4.0",
   "scripts": {
     "clean": "standard --fix",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
     "test:size-control": "node src/size-control.test.js",
     "images:work": "node ../../scripts/swap-duo-chrome-images.js work",
     "images:commit": "node ../../scripts/swap-duo-chrome-images.js commit"
@@ -10,6 +13,7 @@
   "devDependencies": {
     "eslint": "^8.57.1",
     "eslint-plugin-p5js": "^1.0.0",
+    "jsdom": "^27.2.0",
     "standard": "^17.1.2",
     "vite-plugin-eslint": "^1.8.1"
   },

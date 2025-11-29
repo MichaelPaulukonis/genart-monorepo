@@ -41,6 +41,9 @@ nx --version
 - **Vite**: Fast development server and optimized production builds
 - **pnpm**: Package manager with workspace support
 - **ESLint + StandardJS**: Code linting and formatting
+- **Vitest**: Unit testing framework (fast, Vite-native)
+- **Playwright**: End-to-end testing framework
+- **fast-check**: Property-based testing library
 
 ## Core Technologies
 
@@ -75,6 +78,46 @@ nx --version
 - **Utilize Kiro's context awareness** (#File, #Folder, #Codebase)
 - **Take advantage of Kiro's AI capabilities** for code generation and analysis
 
+## Package Management
+
+### Adding Dependencies
+
+**Use `pnpm add` for regular packages:**
+```bash
+pnpm add lodash                    # Add to workspace root
+pnpm add -D vitest fast-check -w   # Add dev dependencies to workspace
+pnpm add axios --filter duo-chrome # Add to specific app
+```
+
+**Use `nx add` for Nx plugins:**
+```bash
+nx add @nx/react        # Installs AND configures React plugin
+nx add @nx/playwright   # Installs AND sets up Playwright with Nx
+nx add @nx/vite         # Installs AND configures Vite plugin
+```
+
+**When to use which:**
+- `pnpm add`: Regular npm packages, testing libraries without Nx integration
+- `nx add`: Nx plugins with generators/executors, packages needing Nx workspace configuration
+
+## Testing Strategy
+
+### Unit Tests (Vitest)
+- **Location**: `src/**/*.test.js` files within apps
+- **Framework**: Vitest (Vite-native, fast)
+- **Run**: `nx test <app-name>` or `pnpm test` in app directory
+- **Use for**: Component logic, utilities, business logic, property-based tests
+
+### E2E Tests (Playwright)
+- **Location**: `tests/**/*.spec.js` files within apps
+- **Framework**: Playwright
+- **Run**: `nx e2e <app-name>`
+- **Use for**: Full application workflows, user interactions, visual testing
+
+### File Naming Convention
+- `*.test.js` - Unit tests (vitest)
+- `*.spec.js` - E2E tests (Playwright)
+
 ## Development Commands
 
 **CRITICAL: Always use `nx` commands instead of `npm run` or `pnpm` scripts for individual apps**
@@ -108,10 +151,11 @@ nx run-many --target=lint --all   # Lint all
 pnpm lint                      # fallback
 standard --fix                 # Auto-fix formatting
 
-# Testing - prefer nx (when targets are available)
-nx test <project-name>         # Unit tests
-nx test:e2e <project-name>     # E2E tests
-nx run-many --target=test --all    # All tests
+# Testing - prefer nx
+nx test <project-name>         # Unit tests (vitest)
+nx e2e <project-name>          # E2E tests (Playwright)
+nx run-many --target=test --all    # All unit tests
+nx run-many --target=e2e --all     # All E2E tests
 
 # Utilities - leverage nx features
 nx graph                       # View dependency graph

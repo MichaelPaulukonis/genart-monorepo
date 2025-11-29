@@ -35,7 +35,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node src/size-control.test.js",
+        "command": "vitest --run",
         "cwd": "apps/duo-chrome"
       }
     },

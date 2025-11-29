@@ -38,6 +38,9 @@ import { p5 } from 'p5js-wrapper'
 import { ALL_PALETTES } from './risocolors'
 import { imgs } from './generated/images.js'
 import { getFormattedVersion } from './utils/version.js'
+import { HistoryManager } from './history/HistoryManager.js'
+import { ThumbnailGenerator } from './history/ThumbnailGenerator.js'
+import { FilmstripPanel } from './ui/FilmstripPanel.js'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
 
@@ -72,6 +75,13 @@ const sketch = function (p) {
   let COLOR_MAPS = []
   let colorIndex = 0
   const imgSource = './images/'
+
+  // History management
+  let historyManager = null
+  let thumbnailGenerator = null
+  let filmstripPanel = null
+  let captureDebounceTimer = null
+  const CAPTURE_DEBOUNCE_DELAY = 300 // ms - wait for rapid changes to settle
 
   const imageColorPairs = [
     { img: null, color: null, layer: null, scale: 1 },
@@ -184,6 +194,547 @@ const sketch = function (p) {
   }
 
   /**
+   * History Capture System
+   * 
+   * Functions for capturing composition state to history with debouncing.
+   * Debouncing prevents excessive history entries during rapid parameter changes.
+   */
+
+  /**
+   * Captures current state to history with debouncing.
+   * Delays capture to allow rapid changes to settle before creating entry.
+   * 
+   * @param {string} source - How the entry was created: 'manual', 'random', 'url', 'modified'
+   */
+  function debouncedCaptureHistory(source = 'manual') {
+    if (!historyManager) {
+      return
+    }
+
+    // Clear existing timer
+    if (captureDebounceTimer) {
+      clearTimeout(captureDebounceTimer)
+    }
+
+    // Set new timer to capture after delay
+    captureDebounceTimer = setTimeout(() => {
+      historyManager.captureCurrentState(source)
+      captureDebounceTimer = null
+
+      // Update filmstrip if visible
+      if (filmstripPanel && filmstripPanel.isVisible) {
+        filmstripPanel.update()
+      }
+    }, CAPTURE_DEBOUNCE_DELAY)
+  }
+
+  /**
+   * Captures current state to history immediately without debouncing.
+   * Use for discrete actions like image exchange or blend mode changes.
+   * 
+   * @param {string} source - How the entry was created: 'manual', 'random', 'url', 'modified'
+   */
+  function captureHistoryImmediate(source = 'manual') {
+    if (!historyManager) {
+      return
+    }
+
+    // Clear any pending debounced capture
+    if (captureDebounceTimer) {
+      clearTimeout(captureDebounceTimer)
+      captureDebounceTimer = null
+    }
+
+    historyManager.captureCurrentState(source)
+
+    // Update filmstrip if visible
+    if (filmstripPanel && filmstripPanel.isVisible) {
+      filmstripPanel.update()
+    }
+  }
+
+  /**
+   * History Navigation System
+   * 
+   * Functions for navigating through the history stack using keyboard shortcuts.
+   * Provides visual and status feedback when navigating or reaching boundaries.
+   */
+
+  /**
+   * Navigates to the previous composition in history.
+   * Shows temporary status message with feedback.
+   * Provides boundary feedback when at the beginning of history.
+   * 
+   * @param {number} step - Number of positions to move backward (default: 1)
+   */
+  function navigateHistoryBackward(step = 1) {
+    if (!historyManager) {
+      console.warn('History manager not initialized')
+      return
+    }
+
+    // Navigate multiple steps
+    let actualSteps = 0
+    for (let i = 0; i < step; i++) {
+      const success = historyManager.navigateBackward()
+      if (success) {
+        actualSteps++
+      } else {
+        break // Stop if we hit the beginning
+      }
+    }
+
+    if (actualSteps > 0) {
+      const currentPos = historyManager.getCurrentPosition() + 1 // +1 for 1-based display
+      const totalEntries = historyManager.getTotalEntries()
+      const stepText = actualSteps > 1 ? ` (-${actualSteps})` : ''
+      showHistoryNavigationFeedback(`History: ${currentPos} / ${totalEntries}${stepText}`)
+
+      // Update filmstrip highlight and counter if visible
+      if (filmstripPanel && filmstripPanel.isVisible) {
+        filmstripPanel.updateHighlight()
+        filmstripPanel.updateCounter()
+        filmstripPanel.scrollToCurrentPosition()
+      }
+    } else {
+      // At the beginning of history
+      showHistoryNavigationFeedback('At beginning of history', 'boundary')
+      provideHistoryBoundsFeedback('beginning')
+    }
+  }
+
+  /**
+   * Navigates to the next composition in history.
+   * Shows temporary status message with feedback.
+   * Provides boundary feedback when at the end of history.
+   * 
+   * @param {number} step - Number of positions to move forward (default: 1)
+   */
+  function navigateHistoryForward(step = 1) {
+    if (!historyManager) {
+      console.warn('History manager not initialized')
+      return
+    }
+
+    // Navigate multiple steps
+    let actualSteps = 0
+    for (let i = 0; i < step; i++) {
+      const success = historyManager.navigateForward()
+      if (success) {
+        actualSteps++
+      } else {
+        break // Stop if we hit the end
+      }
+    }
+
+    if (actualSteps > 0) {
+      const currentPos = historyManager.getCurrentPosition() + 1 // +1 for 1-based display
+      const totalEntries = historyManager.getTotalEntries()
+      const stepText = actualSteps > 1 ? ` (+${actualSteps})` : ''
+      showHistoryNavigationFeedback(`History: ${currentPos} / ${totalEntries}${stepText}`)
+
+      // Update filmstrip highlight and counter if visible
+      if (filmstripPanel && filmstripPanel.isVisible) {
+        filmstripPanel.updateHighlight()
+        filmstripPanel.updateCounter()
+        filmstripPanel.scrollToCurrentPosition()
+      }
+    } else {
+      // At the end of history
+      showHistoryNavigationFeedback('At end of history', 'boundary')
+      provideHistoryBoundsFeedback('end')
+    }
+  }
+
+  /**
+   * Jumps to the beginning of history (first entry).
+   * Shows feedback with current position.
+   */
+  function navigateHistoryToBeginning() {
+    if (!historyManager) {
+      console.warn('History manager not initialized')
+      return
+    }
+
+    const totalEntries = historyManager.getTotalEntries()
+    if (totalEntries === 0) {
+      showHistoryNavigationFeedback('History is empty', 'boundary')
+      return
+    }
+
+    // Navigate to position 0
+    const success = historyManager.navigateTo(0)
+
+    if (success) {
+      showHistoryNavigationFeedback(`History: 1 / ${totalEntries} (beginning)`)
+
+      // Update filmstrip highlight and counter if visible
+      if (filmstripPanel && filmstripPanel.isVisible) {
+        filmstripPanel.updateHighlight()
+        filmstripPanel.updateCounter()
+        filmstripPanel.scrollToCurrentPosition()
+      }
+    }
+  }
+
+  /**
+   * Jumps to the end of history (last entry).
+   * Shows feedback with current position.
+   */
+  function navigateHistoryToEnd() {
+    if (!historyManager) {
+      console.warn('History manager not initialized')
+      return
+    }
+
+    const totalEntries = historyManager.getTotalEntries()
+    if (totalEntries === 0) {
+      showHistoryNavigationFeedback('History is empty', 'boundary')
+      return
+    }
+
+    // Navigate to last position
+    const lastPosition = totalEntries - 1
+    const success = historyManager.navigateTo(lastPosition)
+
+    if (success) {
+      showHistoryNavigationFeedback(`History: ${totalEntries} / ${totalEntries} (end)`)
+
+      // Update filmstrip highlight and counter if visible
+      if (filmstripPanel && filmstripPanel.isVisible) {
+        filmstripPanel.updateHighlight()
+        filmstripPanel.updateCounter()
+        filmstripPanel.scrollToCurrentPosition()
+      }
+    }
+  }
+
+  /**
+   * Toggles the filmstrip panel visibility.
+   * Updates the filmstrip when shown to reflect current history state.
+   */
+  function toggleFilmstrip() {
+    if (!filmstripPanel) {
+      console.warn('Filmstrip panel not initialized')
+      return
+    }
+
+    filmstripPanel.toggle()
+
+    // Update filmstrip when shown
+    if (filmstripPanel.isVisible) {
+      filmstripPanel.update()
+    }
+  }
+
+  /**
+   * Clear History System
+   * 
+   * Functions for clearing the history stack with user confirmation.
+   * Provides a confirmation dialog to prevent accidental deletion.
+   */
+
+  /**
+   * Regenerates all thumbnails by clearing the cache.
+   * Forces thumbnails to be recreated when filmstrip is next displayed.
+   */
+  function regenerateThumbnails () {
+    if (!historyManager) {
+      console.warn('History manager not initialized')
+      return
+    }
+
+    // Clear the thumbnail cache
+    historyManager.thumbnailGenerator.clearCache()
+    console.log('Thumbnail cache cleared - thumbnails will regenerate')
+
+    // Update filmstrip if visible to trigger regeneration
+    if (filmstripPanel && filmstripPanel.isVisible) {
+      // Clear the DOM completely
+      filmstripPanel.scrollContainer.innerHTML = ''
+      // Reset tracking variables
+      filmstripPanel.renderedCount = 0
+      filmstripPanel.renderedThumbnails.clear()
+      // Re-render with fresh thumbnails
+      filmstripPanel.update()
+    }
+
+    // Show feedback to user
+    showClearHistoryFeedback('Thumbnails regenerated', 'success')
+  }
+
+  /**
+   * Shows the clear history confirmation dialog.
+   * Prompts user to confirm before clearing history.
+   */
+  function showClearHistoryDialog() {
+    if (!historyManager) {
+      console.warn('History manager not initialized')
+      return
+    }
+
+    const dialog = document.getElementById('clear-history-dialog')
+    if (!dialog) {
+      console.error('Clear history dialog not found')
+      return
+    }
+
+    const cancelBtn = document.getElementById('clear-history-cancel')
+    const confirmBtn = document.getElementById('clear-history-confirm')
+
+    if (!cancelBtn || !confirmBtn) {
+      console.error('Clear history dialog buttons not found')
+      return
+    }
+
+    // Cleanup function to remove all event listeners
+    const cleanup = () => {
+      cancelBtn.removeEventListener('click', handleCancel)
+      confirmBtn.removeEventListener('click', handleConfirm)
+      document.removeEventListener('keydown', handleEscape)
+      dialog.removeEventListener('click', handleBackdropClick)
+    }
+
+    // Cancel handler
+    const handleCancel = (event) => {
+      if (event) {
+        event.stopPropagation()
+        event.preventDefault()
+      }
+      dialog.classList.add('hidden')
+      cleanup()
+    }
+
+    // Confirm handler
+    const handleConfirm = (event) => {
+      if (event) {
+        event.stopPropagation()
+        event.preventDefault()
+      }
+      dialog.classList.add('hidden')
+      cleanup()
+
+      // Clear the history
+      clearHistory()
+    }
+
+    // Escape key handler
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        handleCancel(e)
+      }
+    }
+
+    // Dialog backdrop click handler (close on backdrop click)
+    const handleBackdropClick = (event) => {
+      // Only close if clicking the backdrop itself, not the content
+      if (event.target === dialog) {
+        handleCancel(event)
+      }
+    }
+
+    // Attach event listeners
+    cancelBtn.addEventListener('click', handleCancel)
+    confirmBtn.addEventListener('click', handleConfirm)
+    document.addEventListener('keydown', handleEscape)
+    dialog.addEventListener('click', handleBackdropClick)
+
+    // Show the dialog
+    dialog.classList.remove('hidden')
+  }
+
+  /**
+   * Clears the history stack after user confirmation.
+   * Keeps the current composition as the first entry in new history.
+   * Provides visual feedback for the clear operation.
+   */
+  function clearHistory() {
+    if (!historyManager) {
+      console.warn('History manager not initialized')
+      return
+    }
+
+    const totalEntries = historyManager.getTotalEntries()
+
+    // Clear history from both memory and localStorage
+    const success = historyManager.clearHistory()
+
+    if (success) {
+      console.log(`Cleared ${totalEntries} history entries`)
+
+      // Update filmstrip if visible
+      if (filmstripPanel) {
+        // Clear the DOM and reset rendered count
+        filmstripPanel.scrollContainer.innerHTML = ''
+        filmstripPanel.renderedCount = 0
+
+        // Update if visible
+        if (filmstripPanel.isVisible) {
+          filmstripPanel.update()
+        }
+      }
+
+      // Show feedback to user
+      showClearHistoryFeedback(`History cleared (${totalEntries} entries removed)`)
+    } else {
+      console.error('Failed to clear history')
+      showClearHistoryFeedback('Failed to clear history', 'error')
+    }
+  }
+
+  /**
+   * Shows visual feedback for clear history operation.
+   * 
+   * @param {string} message - Message to display
+   * @param {string} type - 'success' or 'error'
+   */
+  function showClearHistoryFeedback(message, type = 'success') {
+    // Create or update feedback element
+    let feedback = document.getElementById('clear-history-feedback')
+
+    if (!feedback) {
+      feedback = document.createElement('div')
+      feedback.id = 'clear-history-feedback'
+      feedback.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 16px 24px;
+        border-radius: 8px;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+        color: white;
+        z-index: 10000;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        text-align: center;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      `
+      document.body.appendChild(feedback)
+    }
+
+    // Set colors based on type
+    if (type === 'error') {
+      feedback.style.backgroundColor = '#d32f2f'
+    } else {
+      feedback.style.backgroundColor = '#4CAF50'
+    }
+
+    feedback.textContent = message
+    feedback.style.opacity = '1'
+
+    // Auto-hide after 2.5 seconds
+    setTimeout(() => {
+      feedback.style.opacity = '0'
+      setTimeout(() => {
+        if (feedback.parentNode) {
+          feedback.parentNode.removeChild(feedback)
+        }
+      }, 300)
+    }, 2500)
+  }
+
+  /**
+   * Shows temporary status message for history navigation.
+   * 
+   * @param {string} message - Message to display
+   * @param {string} type - 'normal' or 'boundary' for styling
+   */
+  function showHistoryNavigationFeedback(message, type = 'normal') {
+    // Create or update feedback element
+    let feedback = document.getElementById('history-navigation-feedback')
+
+    if (!feedback) {
+      feedback = document.createElement('div')
+      feedback.id = 'history-navigation-feedback'
+      // TODO: move back to css
+      feedback.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        color: white;
+        z-index: 10000;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        white-space: nowrap;
+      `
+      document.body.appendChild(feedback)
+    }
+
+    // Set colors based on type
+    if (type === 'boundary') {
+      feedback.style.backgroundColor = '#ff9800' // Orange for boundary
+    } else {
+      feedback.style.backgroundColor = 'rgba(0, 0, 0, 0.8)' // Dark for normal
+    }
+
+    feedback.textContent = message
+    feedback.style.opacity = '1'
+
+    // Auto-hide after 2 seconds
+    setTimeout(() => {
+      feedback.style.opacity = '0'
+      setTimeout(() => {
+        if (feedback.parentNode) {
+          feedback.parentNode.removeChild(feedback)
+        }
+      }, 300)
+    }, 2000)
+  }
+
+  /**
+   * Provides visual and audio feedback when reaching history boundaries.
+   * 
+   * @param {string} boundType - 'beginning' or 'end'
+   */
+  function provideHistoryBoundsFeedback(boundType) {
+    // Visual feedback - briefly flash the canvas border
+    const canvas = p.canvas
+    const originalStyle = canvas.style.border
+
+    // Use orange color for history boundaries
+    canvas.style.border = '3px solid #ff9800'
+
+    // Reset border after brief flash
+    setTimeout(() => {
+      canvas.style.border = originalStyle
+    }, 200)
+
+    // Audio feedback (if available)
+    try {
+      // Create a brief audio beep for bounds feedback
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      // Use different frequencies for beginning vs end
+      oscillator.frequency.setValueAtTime(boundType === 'beginning' ? 300 : 500, audioContext.currentTime)
+      oscillator.type = 'sine'
+
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.1)
+    } catch (error) {
+      // Audio feedback not available, continue silently
+      console.log('Audio feedback not available:', error.message)
+    }
+  }
+
+  /**
    * Size Control System
    * 
    * Functions for adjusting image scale with bounds enforcement and visual feedback.
@@ -227,6 +778,8 @@ const sketch = function (p) {
       setManualSizeControl(imageIndex, true)
       // Update status display when size changes
       showStatusDisplay()
+      // Capture to history with debouncing (size adjustments are often rapid)
+      debouncedCaptureHistory('manual')
       return true
     }
   }
@@ -323,6 +876,9 @@ const sketch = function (p) {
     requestScreenUpdate()
     updateStatusDisplay()
     showStatusDisplay()
+
+    // Capture to history immediately (discrete action)
+    captureHistoryImmediate('manual')
   }
 
   /**
@@ -374,6 +930,7 @@ const sketch = function (p) {
     const otherColor = imageColorPairs[otherImageIndex].color
 
     // If the new color would conflict with the other image, skip to the next available
+    // TODO: also check if new color is same as background and skip (white on white, black on black, etc)
     let newColor = currentColorArray[newColorIndex]
     if (newColor.color === otherColor.color) {
       // Continue in the same direction to find the next unique color
@@ -428,6 +985,9 @@ const sketch = function (p) {
 
     // Update status display immediately for color name change
     showStatusDisplay()
+
+    // Capture to history immediately (discrete action)
+    captureHistoryImmediate('manual')
 
     return true
   }
@@ -512,6 +1072,9 @@ const sketch = function (p) {
     // Update status display when image changes
     showStatusDisplay()
 
+    // Capture to history immediately (discrete action)
+    captureHistoryImmediate('manual')
+
     return true
   }
 
@@ -586,6 +1149,9 @@ const sketch = function (p) {
     colorLayer1 = p.createGraphics(100, 100)
     setBlendModeAndBackground()
 
+    // Add cleanup on page unload to prevent memory leaks
+    window.addEventListener('beforeunload', cleanupGraphicsObjects)
+
     // Pre-process colors for faster lookups
     initializeColorMaps()
 
@@ -598,6 +1164,39 @@ const sketch = function (p) {
     // Initialize help system
     initializeHelpSystem()
 
+    // Initialize HistoryManager with state references
+    // Use getters for primitive values to ensure they're always current
+    historyManager = new HistoryManager(p, {
+      imageColorPairs,
+      controlState,
+      get colorIndex() { return colorIndex },
+      set colorIndex(value) { colorIndex = value },
+      get currentBlendModeIndex() { return currentBlendModeIndex },
+      set currentBlendModeIndex(value) { currentBlendModeIndex = value },
+      get currentBackgroundModeIndex() { return currentBackgroundModeIndex },
+      set currentBackgroundModeIndex(value) { currentBackgroundModeIndex = value },
+      imgs,
+      ALL_PALETTES,
+      COLOR_MAPS,
+      requestScreenUpdate,
+      updateStatusDisplay
+    })
+
+    // Initialize ThumbnailGenerator
+    thumbnailGenerator = new ThumbnailGenerator(p, {
+      imageColorPairs,
+      get colorIndex() { return colorIndex },
+      get currentBlendModeIndex() { return currentBlendModeIndex },
+      get currentBackgroundModeIndex() { return currentBackgroundModeIndex },
+      imgs,
+      ALL_PALETTES,
+      COLOR_MAPS,
+      backgroundModes
+    })
+
+    // Initialize FilmstripPanel
+    filmstripPanel = new FilmstripPanel(historyManager, thumbnailGenerator)
+
     // Try to restore composition from URL, otherwise initialize random pairs
     if (!restoreCompositionFromURL()) {
       initializeImageColorPairs() // Initialize both pairs initially
@@ -606,17 +1205,36 @@ const sketch = function (p) {
     }
   }
 
-  p.mousePressed = function () {
+  p.mousePressed = function (event) {
     // Don't update images if currently dragging status display
     if (controlState.isDraggingStatus) {
       return
+    }
+
+    // Don't update images if clear history dialog is visible
+    const clearHistoryDialog = document.getElementById('clear-history-dialog')
+    if (clearHistoryDialog && !clearHistoryDialog.classList.contains('hidden')) {
+      return
+    }
+
+    // Don't update images if clicking on filmstrip panel
+    if (filmstripPanel && filmstripPanel.isVisible) {
+      const filmstripElement = document.getElementById('filmstrip-panel')
+      if (filmstripElement && event && event.target) {
+        // Check if click target is within filmstrip
+        if (filmstripElement.contains(event.target)) {
+          return
+        }
+      }
     }
 
     loadNewImagesAndColors() // Update one pair at a time
   }
 
   p.keyPressed = function () {
-    if ((p.keyIsDown(p.CONTROL) || p.keyIsDown(91)) && p.key === 's') {
+    const IS_SHIFTED = p.keyIsDown(p.SHIFT)
+    const IS_CMD = p.keyIsDown(91) || p.keyIsDown(93)
+    if ((p.keyIsDown(p.CONTROL) || IS_CMD) && p.key === 's') {
       p.saveCanvas(generateFilename())
       return false // Prevent default browser behavior
     } else if (p.key === 'a') {
@@ -625,11 +1243,11 @@ const sketch = function (p) {
     } else if (p.key === 'b') {
       // Select Image B as active
       setActiveImage(1)
-    } else if (p.key === 'B' && p.keyIsDown(p.SHIFT)) {
+    } else if (p.key === 'B' && IS_SHIFTED) {
       // Toggle background color (capital B)
       toggleBackgroundColor()
       regenerateLayers()
-    } else if (p.key === 'S' && p.keyIsDown(p.SHIFT)) {
+    } else if (p.key === 'S' && IS_SHIFTED) {
       // Share composition (Shift+S)
       generateShareURL()
       return false // Prevent default browser behavior
@@ -666,6 +1284,44 @@ const sketch = function (p) {
         navigateImage(activeIndex, 'next')
       }
       showIndicatorsTemporarily()
+      return false // Prevent default browser behavior
+    } else if (p.key === '[' || p.key === '{') {
+      // Navigate to previous composition in history
+      // Cmd+[ jumps to beginning, Shift+[ moves 10 steps, [ moves 1 step
+      if (IS_CMD) {
+        navigateHistoryToBeginning()
+      } else {
+        const step = p.key === '{' ? 10 : 1
+        navigateHistoryBackward(step)
+      }
+      return false // Prevent default browser behavior
+    } else if (p.key === ']' || p.key === '}') {
+      // Navigate to next composition in history
+      // Cmd+] jumps to end, Shift+] moves 10 steps, ] moves 1 step
+      if (IS_CMD) {
+        navigateHistoryToEnd()
+      } else {
+        const step = p.key === '}' ? 10 : 1
+        navigateHistoryForward(step)
+      }
+      return false // Prevent default browser behavior
+    } else if (p.key === 'f') {
+      // Toggle filmstrip panel
+      toggleFilmstrip()
+      return false // Prevent default browser behavior
+    } else if (p.key === 'C' && IS_SHIFTED) {
+      // Clear history (Shift+C)
+      showClearHistoryDialog()
+      return false // Prevent default browser behavior
+    } else if (p.key === 'T' && IS_SHIFTED) {
+      // Regenerate thumbnails (Shift+T)
+      regenerateThumbnails()
+      return false // Prevent default browser behavior
+    } else if (p.key === 'P' && IS_SHIFTED) {
+      // Show performance statistics (Shift+P)
+      if (historyManager) {
+        historyManager.logPerformanceStats()
+      }
       return false // Prevent default browser behavior
     } else if (p.key === 'c') {
       colorIndex = (colorIndex + 1) % ALL_PALETTES.length
@@ -708,7 +1364,7 @@ const sketch = function (p) {
    * Generates a shareable URL and uses the Web Share API if available.
    * Falls back to copying the URL to the clipboard.
    */
-  async function generateShareURL () {
+  async function generateShareURL() {
     try {
       const params = serializeCompositionState()
       const baseURL = `${window.location.origin}${window.location.pathname}`
@@ -716,7 +1372,7 @@ const sketch = function (p) {
 
       // Update browser URL without adding to history
       window.history.replaceState(null, null, shareURL)
-      
+
       const shareData = {
         title: 'Duo-Chrome Composition',
         text: 'Check out this duotone composition I made!',
@@ -734,7 +1390,7 @@ const sketch = function (p) {
         await copyToClipboard(shareURL)
         showShareFeedback('URL copied to clipboard!')
       }
-      
+
       console.log('Share URL generated:', shareURL)
     } catch (error) {
       // Don't show an error if the user cancels the share sheet
@@ -751,13 +1407,13 @@ const sketch = function (p) {
    * Serializes the current composition state into URL parameters.
    * @returns {URLSearchParams} - Encoded composition parameters
    */
-  function serializeCompositionState () {
+  function serializeCompositionState() {
     const params = new URLSearchParams()
-    
+
     // Image indices
     params.set('imageA', controlState.imageIndices[0])
     params.set('imageB', controlState.imageIndices[1])
-    
+
     // Colors (use color names for readability)
     if (imageColorPairs[0].color) {
       params.set('colorA', imageColorPairs[0].color.name)
@@ -765,22 +1421,22 @@ const sketch = function (p) {
     if (imageColorPairs[1].color) {
       params.set('colorB', imageColorPairs[1].color.name)
     }
-    
+
     // Scales
     params.set('scaleA', parseFloat(imageColorPairs[0].scale).toFixed(2))
     params.set('scaleB', parseFloat(imageColorPairs[1].scale).toFixed(2))
-    
+
     // Visual settings
     params.set('blendMode', currentBlendModeIndex)
     params.set('bgMode', currentBackgroundModeIndex)
     params.set('palette', colorIndex)
-    
+
     // Active image
     params.set('active', controlState.activeImageIndex)
-    
+
     // Version parameter for future compatibility
     params.set('v', '1')
-    
+
     return params
   }
 
@@ -788,9 +1444,9 @@ const sketch = function (p) {
    * Restores composition state from URL parameters.
    * Called on page load to recreate shared compositions.
    */
-  function restoreCompositionFromURL () {
+  function restoreCompositionFromURL() {
     const params = new URLSearchParams(window.location.search)
-    
+
     const imageA = params.get('imageA')
     const imageB = params.get('imageB')
 
@@ -798,9 +1454,9 @@ const sketch = function (p) {
     if (!imageA && !imageB) {
       return false // No composition to restore
     }
-    
+
     console.log('Restoring composition from URL:', window.location.search)
-    
+
     try {
       // Restore palette first
       const paletteParam = params.get('palette')
@@ -810,7 +1466,7 @@ const sketch = function (p) {
           colorIndex = paletteIndex
         }
       }
-      
+
       // Restore image indices
       if (imageA) {
         const imageAIndex = parseInt(imageA)
@@ -819,7 +1475,7 @@ const sketch = function (p) {
           imageColorPairs[0].img = imgs[imageAIndex]
         }
       }
-      
+
       if (imageB) {
         const imageBIndex = parseInt(imageB)
         if (imageBIndex >= 0 && imageBIndex < imgs.length) {
@@ -827,7 +1483,7 @@ const sketch = function (p) {
           imageColorPairs[1].img = imgs[imageBIndex]
         }
       }
-      
+
       // Restore colors using the optimized color map
       const colorAName = params.get('colorA')
       if (colorAName) {
@@ -836,7 +1492,7 @@ const sketch = function (p) {
           imageColorPairs[0].color = colorA
         }
       }
-      
+
       const colorBName = params.get('colorB')
       if (colorBName) {
         const colorB = COLOR_MAPS[colorIndex].get(colorBName)
@@ -844,7 +1500,7 @@ const sketch = function (p) {
           imageColorPairs[1].color = colorB
         }
       }
-      
+
       // Restore scales
       const scaleAParam = params.get('scaleA')
       if (scaleAParam) {
@@ -854,7 +1510,7 @@ const sketch = function (p) {
           controlState.manualSizeControl[0] = true
         }
       }
-      
+
       const scaleBParam = params.get('scaleB')
       if (scaleBParam) {
         const scaleB = parseFloat(scaleBParam)
@@ -863,7 +1519,7 @@ const sketch = function (p) {
           controlState.manualSizeControl[1] = true
         }
       }
-      
+
       // Restore visual settings
       const blendModeParam = params.get('blendMode')
       if (blendModeParam) {
@@ -873,7 +1529,7 @@ const sketch = function (p) {
           currentBlendModeIndex = blendIndex
         }
       }
-      
+
       const bgModeParam = params.get('bgMode')
       if (bgModeParam) {
         const bgIndex = parseInt(bgModeParam)
@@ -890,7 +1546,7 @@ const sketch = function (p) {
           }
         }
       }
-      
+
       // Restore active image
       const activeParam = params.get('active')
       if (activeParam) {
@@ -899,23 +1555,23 @@ const sketch = function (p) {
           controlState.activeImageIndex = activeIndex
         }
       }
-      
+
       // Mark as manual mode since this is a curated composition
       controlState.isManualMode = true
-      
+
       // Pause the app to preserve the shared composition
       pause = true
       console.log('App paused to preserve shared composition')
-      
+
       // Load the images with restored state
       loadRestoredImages()
-      
+
       // Show feedback that composition was loaded
       showShareFeedback('Composition loaded from URL')
-      
+
       console.log('Composition restored successfully')
       return true
-      
+
     } catch (error) {
       console.error('Failed to restore composition from URL:', error)
       showShareFeedback('Failed to load composition from URL', 'error')
@@ -927,7 +1583,10 @@ const sketch = function (p) {
    * Loads images for restored composition state.
    * Creates monochrome layers with the restored colors and scales.
    */
-  function loadRestoredImages () {
+  function loadRestoredImages() {
+    let loadedCount = 0
+    const totalImages = imageColorPairs.filter(pair => pair.img && pair.color).length
+
     imageColorPairs.forEach((pair, index) => {
       if (pair.img && pair.color) {
         p.loadImage(imgSource + pair.img, (img) => {
@@ -935,13 +1594,20 @@ const sketch = function (p) {
           if (pair.layer && pair.layer.remove) {
             pair.layer.remove()
           }
-          
+
           // Create monochrome layer with restored color
           pair.layer = createMonochromeImage(img, p.color(pair.color.color))
-          
+
           // Update display when both images are loaded
           requestScreenUpdate()
           updateStatusDisplay()
+
+          // Capture initial state after all images are loaded
+          loadedCount++
+          if (loadedCount === totalImages) {
+            // Capture with 'url' source since this is from URL restoration
+            captureHistoryImmediate('url')
+          }
         })
       }
     })
@@ -951,7 +1617,7 @@ const sketch = function (p) {
    * Copies text to clipboard with fallback for older browsers.
    * @param {string} text - Text to copy to clipboard
    */
-  async function copyToClipboard (text) {
+  async function copyToClipboard(text) {
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(text)
@@ -978,10 +1644,10 @@ const sketch = function (p) {
    * @param {string} message - Message to display
    * @param {string} type - 'success' or 'error'
    */
-  function showShareFeedback (message, type = 'success') {
+  function showShareFeedback(message, type = 'success') {
     // Create or update feedback element
     let feedback = document.getElementById('share-feedback')
-    
+
     if (!feedback) {
       feedback = document.createElement('div')
       feedback.id = 'share-feedback'
@@ -1003,12 +1669,12 @@ const sketch = function (p) {
       `
       document.body.appendChild(feedback)
     }
-    
+
     // Set colors based on type
     feedback.style.backgroundColor = type === 'error' ? '#ff4444' : '#4CAF50'
     feedback.textContent = message
     feedback.style.opacity = '1'
-    
+
     // Auto-hide after 3 seconds
     setTimeout(() => {
       feedback.style.opacity = '0'
@@ -1020,7 +1686,7 @@ const sketch = function (p) {
     }, 3000)
   }
 
-  function setBlendModeAndBackground () {
+  function setBlendModeAndBackground() {
     const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
     p.background(p.color(...currentBackgroundMode.color))
@@ -1032,6 +1698,9 @@ const sketch = function (p) {
     currentBlendModeIndex = 0 // Reset to the first blend mode for the new background
     setBlendModeAndBackground()
     requestScreenUpdate()
+
+    // Capture to history immediately (discrete action)
+    captureHistoryImmediate('manual')
   }
 
   function regenerateLayers() {
@@ -1060,6 +1729,9 @@ const sketch = function (p) {
       (currentBlendModeIndex + 1) % currentBackgroundMode.blendModes.length
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
     requestScreenUpdate()
+
+    // Capture to history immediately (discrete action)
+    captureHistoryImmediate('manual')
   }
 
   function generateFilename() {
@@ -1208,6 +1880,17 @@ const sketch = function (p) {
         p.color(selectedColor.color)
       )
       requestScreenUpdate()
+
+      // Check if this is initial load (both images now have layers)
+      if (imageColorPairs[0].layer && imageColorPairs[1].layer && historyManager && historyManager.getTotalEntries() === 0) {
+        // Capture initial state after both images are loaded
+        captureHistoryImmediate('manual')
+      } else if (historyManager && historyManager.getTotalEntries() > 0) {
+        // Capture subsequent automatic updates (mouse clicks or timer-based)
+        // Use 'random' source for automatic cycling, 'manual' for user-initiated
+        const source = controlState.isManualMode || specificArrayIndex !== null ? 'manual' : 'random'
+        captureHistoryImmediate(source)
+      }
     })
   }
 
@@ -1696,6 +2379,54 @@ const sketch = function (p) {
   }
 
   /**
+   * Cleanup function to remove all graphics objects and prevent memory leaks
+   */
+  function cleanupGraphicsObjects() {
+    console.log('Cleaning up graphics objects...')
+
+    // Clean up image layers
+    imageColorPairs.forEach((pair, index) => {
+      if (pair.layer && pair.layer.remove) {
+        console.log(`Removing layer for image ${index}`)
+        pair.layer.remove()
+        pair.layer = null
+      }
+    })
+
+    // Clean up the shared color layer
+    if (colorLayer1 && colorLayer1.remove) {
+      console.log('Removing shared color layer')
+      colorLayer1.remove()
+      colorLayer1 = null
+    }
+
+    console.log('Graphics cleanup complete')
+  }
+
+  /**
+   * Debug function to count canvas elements in the DOM
+   * Useful for monitoring memory leaks
+   */
+  function debugCanvasCount() {
+    const canvases = document.querySelectorAll('canvas')
+    console.log(`Total canvas elements in DOM: ${canvases.length}`)
+
+    // Count by size to identify the problematic 100x100 elements
+    const sizeCount = {}
+    canvases.forEach(canvas => {
+      const size = `${canvas.width}x${canvas.height}`
+      sizeCount[size] = (sizeCount[size] || 0) + 1
+    })
+
+    console.log('Canvas elements by size:', sizeCount)
+    return { total: canvases.length, bySizes: sizeCount }
+  }
+
+  // Add debug function to global scope for console access
+  window.debugCanvasCount = debugCanvasCount
+  window.cleanupGraphicsObjects = cleanupGraphicsObjects
+
+  /**
    * Optimized layer creation with caching considerations
    */
   function createOptimizedMonochromeImage(img, monoColor, cacheKey = null) {
@@ -1717,12 +2448,17 @@ const sketch = function (p) {
     const scaledWidth = Math.round(img.width * scaleRatio)
     const scaledHeight = Math.round(img.height * scaleRatio)
 
-    colorLayer1.background(monoColor)
+    // Create a temporary color layer instead of reusing colorLayer1
+    const tempColorLayer = p.createGraphics(scaledWidth, scaledHeight)
+    tempColorLayer.background(monoColor)
 
     const layer = p.createGraphics(scaledWidth, scaledHeight)
     layer.image(img, 0, 0, scaledWidth, scaledHeight)
     layer.drawingContext.globalCompositeOperation = 'source-in'
-    layer.image(colorLayer1, 0, 0, scaledWidth, scaledHeight)
+    layer.image(tempColorLayer, 0, 0, scaledWidth, scaledHeight)
+
+    // Clean up the temporary color layer immediately
+    tempColorLayer.remove()
 
     return layer
   }
