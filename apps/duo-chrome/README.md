@@ -6,9 +6,15 @@ Overlays two monochrome images in different colors to create duotone composition
 
 ![DUO-CHROME Screenshot](./docs/screenshots/duo-chrome-main.png)
 
+![DUO-CHROME Screenshot with info box](./docs/screenshots/duo-chrome-info-box.png)
+
+![DUO-CHROME Screenshot showing history "filmstrip"](./docs/screenshots/duo-chrome-filmstrip-history.png)
+
+![DUO-CHROME Screenshot](./docs/screenshots/duo-chrome-main-01.png)
+
 **Live build:** <https://michaelpaulukonis.github.io/duo-chrome>
 
-Takes two random black & white images from a curated collection, applies different RISO colors to each, and composites them using various blend modes. Images cycle automatically or manually to create unexpected juxtapositions.
+Selects two random black & white images from a curated collection, applies different colors from various palettes to each, and generates a composite using various blend modes. Images cycle automatically or manually to create unexpected juxtapositions.
 
 ## Table of Contents
 
