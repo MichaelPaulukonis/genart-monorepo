@@ -4,20 +4,33 @@ A monorepo for creative coding and generative art projects using Nx.
 
 ## Projects
 
-- **[duo-chrome](./apps/duo-chrome/)** (port 5173) - Duotone image compositions using RISO colors
+- **[duo-chrome](./apps/duo-chrome/)** (port 5173) - Duotone image compositions using color pallettes
+- **[monochromifier](./apps/monochromifier/)** (port 5178) - Create square black-and-white imates from non-square color images (for use with duo-chrome)
 - **[crude-collage-painter](./apps/crude-collage-painter/)** (port 5174) - Interactive collage painting tool
 - **[those-shape-things](./apps/those-shape-things/)** (port 5175) - Geometric tile-based compositions with color palettes
 - **[computational-collage](./apps/computational-collage/)** (port 5176) - Advanced collage creation with multiple composition modes
 - **[dragline](./apps/dragline/)** (port 5177) -  A draggable text landscape
-- **[monochromifier](./apps/monochromifier/)** (port 5178) - Create square black-and-white imates from non-square color images (suitable for use with duo-chrom)
 
+<img src="./apps/duo-chrome/docs/screenshots/duo-chrome-info-box.png" alt="image from duo-chrome" style="width:auto; height:150px;">\
+Duo-chrome composition with info-box
 
-All applications include version display functionality accessible through help screens or about dialogs.
+<img src="./apps/monochromifier/docs/screenshots/monochromifier-main-00.png" alt="screenshot of main monochromifier UI" style="width:150px; height:auto;">\
+Monochromifier main UI
+
+<img src="./apps/dragline/docs/screenshots/dragline-main.png" alt="screenshot of dragline showing text blocks and help screen" style="width:auto; height:150px;">\
+Dragline, with text blocks and help screen
+
+<img src="./apps/computational-collage/docs/screenshots/computational-collage-main.png" alt="Screenshot of collage app showing a generated collage" style="width:auto; height:150px;">\
+Computational Collage app showing a generated collage and UI
+
+<img src="./apps/crude-collage-painter/docs/screenshots/crude-collage-painter-main.png" alt="Screenshot of collage painter app with UI" style="width:auto; height:150px;">\
+Crude Collage Painter app with collage and UI
+
 
 ## Shared Libraries
 
 - **[@genart/p5-utils](./libs/p5-utils/)** - Common p5.js utilities and helper functions
-- **[@genart/color-palettes](./libs/color-palettes/)** - RISO colors and palette management
+- **[@genart/color-palettes](./libs/color-palettes/)** - Colors and palette management
 - **[@genart/version-utils](./libs/version-utils/)** - Shared version display utilities (future consolidation)
 
 ## Quick Start
