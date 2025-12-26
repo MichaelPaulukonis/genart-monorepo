@@ -111,6 +111,55 @@ export function drawOSD(p, state) {
   p.rect(osdX, osdY, osdSize, osdSize)
 }
 
+export function drawGrid(p, state) {
+  if (!state.showGrid) return
+
+  const { width, height } = p
+  const { gridType, gridColor, gridOpacity, gridThickness } = state
+
+  // Parse hex color to RGB
+  const r = parseInt(gridColor.substr(1, 2), 16)
+  const g = parseInt(gridColor.substr(3, 2), 16)
+  const b = parseInt(gridColor.substr(5, 2), 16)
+
+  p.push()
+  p.stroke(r, g, b, parseInt(gridOpacity))
+  p.strokeWeight(parseInt(gridThickness))
+  p.noFill()
+
+  if (gridType === 'golden') {
+    // Golden Ratio (phi)
+    const phi = 0.61803398875
+    const invPhi = 1 - phi
+
+    // Vertical lines
+    p.line(width * invPhi, 0, width * invPhi, height)
+    p.line(width * phi, 0, width * phi, height)
+
+    // Horizontal lines
+    p.line(0, height * invPhi, width, height * invPhi)
+    p.line(0, height * phi, width, height * phi)
+  } else {
+    // n-split (1-split = halves, 2-split = thirds, etc.)
+    const splitMap = {
+      '1-split': 2,
+      '2-split': 3,
+      '3-split': 4,
+      '4-split': 5,
+      '9-split': 10
+    }
+    const divisions = splitMap[gridType] || 2
+
+    for (let i = 1; i < divisions; i++) {
+      const x = (width / divisions) * i
+      const y = (height / divisions) * i
+      p.line(x, 0, x, height)
+      p.line(0, y, width, y)
+    }
+  }
+
+  p.pop()
+}
 export function displayProcessingText(p) {
   p.fill(p.color('#e75397'), 150)
   p.rect(50, 50, p.width - 100, 100, 10)

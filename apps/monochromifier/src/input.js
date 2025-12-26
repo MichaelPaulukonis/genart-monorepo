@@ -215,6 +215,10 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
       window.infoBoxControls.toggle()
     }
     return false
+  } else if (p.key === 'g') {
+    state.showGridControls = !state.showGridControls
+    state.dirty = true
+    return false
   } else if (p.key === 'h' || p.key === 'H') {
     state.modal.showUI = !state.modal.showUI
     state.dirty = true

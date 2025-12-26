@@ -129,3 +129,65 @@
   bottom: 20px;
   left: 20px;
 }
+
+/* Grid Controls Styling */
+.grid-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 220px;
+  padding: 15px;
+  background-color: rgba(30, 30, 30, 0.8);
+  color: #eeeeee;
+  border: 1px solid #555;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 500;
+  font-family: sans-serif;
+  cursor: move;
+  user-select: none;
+}
+
+.grid-controls.hidden {
+  display: none;
+}
+
+.grid-controls h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+  color: #aaaaff;
+  border-bottom: 1px solid #555;
+  padding-bottom: 5px;
+}
+
+.control-group {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.control-group label {
+  font-size: 0.9em;
+  margin-bottom: 4px;
+  color: #ccc;
+}
+
+.control-group input[type="checkbox"] {
+  align-self: flex-start;
+}
+
+.control-group select,
+.control-group input[type="color"],
+.control-group input[type="range"] {
+  background-color: #444;
+  border: 1px solid #666;
+  color: white;
+  border-radius: 4px;
+  padding: 4px;
+  width: 100%;
+}
+
+.control-group input[type="range"] {
+  padding: 0;
+}

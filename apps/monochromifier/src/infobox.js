@@ -3,6 +3,7 @@
 import { formatVersion } from './utils/version.js'
 
 const infoBox = document.getElementById('info-box')
+const gridControls = document.getElementById('grid-controls')
 const closeButton = document.getElementById('close-info-box')
 
 // Check for required DOM elements
@@ -10,99 +11,95 @@ if (!infoBox) {
   console.error('Info box element not found')
 }
 
-// Drag state
-let isDragging = false
-let currentX
-let currentY
-let initialX
-let initialY
-let xOffset = 0
-let yOffset = 0
-let hasBeenDragged = false
+// Draggable setup
+function makeDraggable(element, options = {}) {
+  if (!element) return
 
-// Set up accessibility attributes
+  let isDragging = false
+  let currentX
+  let currentY
+  let initialX
+  let initialY
+  let xOffset = 0
+  let yOffset = 0
+  
+  // Default options
+  const config = {
+    centered: false, // If true, maintains translate(-50%, -50%)
+    handleSelector: null, // If provided, only this child triggers drag
+    ...options
+  }
+
+  element.addEventListener('mousedown', startDragging)
+  document.addEventListener('mousemove', drag)
+  document.addEventListener('mouseup', stopDragging)
+
+  function startDragging(e) {
+    // Should we drag?
+    // If handleSelector is defined, check if target matches or is inside handle
+    if (config.handleSelector) {
+      if (!e.target.closest(config.handleSelector)) return
+    } else {
+      // Default behavior: specific check for inputs/buttons to avoid dragging when interacting
+      if (['INPUT', 'SELECT', 'BUTTON', 'LABEL', 'A'].includes(e.target.tagName)) return
+    }
+
+    // Special check for infoBox to allow dragging on box + headers (legacy logic preserved/adapted)
+    // The original logic was: if (e.target === infoBox || e.target.tagName === 'H2' || e.target.tagName === 'H3')
+    // We can generalize: don't drag if interacting with controls.
+    
+    initialX = e.clientX - xOffset
+    initialY = e.clientY - yOffset
+
+    if (e.target === element || element.contains(e.target)) {
+      isDragging = true
+    }
+  }
+
+  function drag(e) {
+    if (isDragging) {
+      e.preventDefault()
+
+      currentX = e.clientX - initialX
+      currentY = e.clientY - initialY
+
+      xOffset = currentX
+      yOffset = currentY
+
+      setTranslate(currentX, currentY, element, config.centered)
+    }
+  }
+
+  function stopDragging(e) {
+    initialX = currentX
+    initialY = currentY
+    isDragging = false
+  }
+}
+
+function setTranslate(xPos, yPos, el, centered) {
+  if (centered) {
+    el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`
+  } else {
+    el.style.transform = `translate(${xPos}px, ${yPos}px)`
+  }
+}
+
+// Initialize draggables
+makeDraggable(infoBox, { centered: true })
+makeDraggable(gridControls, { centered: false })
+
+
+// Set up accessibility attributes for infoBox
 if (infoBox) {
   infoBox.setAttribute('role', 'dialog')
   infoBox.setAttribute('aria-label', 'Keyboard shortcuts help')
   infoBox.setAttribute('aria-modal', 'false')
-
-  // Drag event listeners
-  infoBox.addEventListener('mousedown', startDragging)
 }
-
-document.addEventListener('mousemove', drag)
-document.addEventListener('mouseup', stopDragging)
 
 // Close button listener
 if (closeButton) {
   closeButton.addEventListener('click', hideInfoBox)
-}
-
-function startDragging (e) {
-  // Only drag if clicking on the box itself or headings
-  if (e.target === infoBox || e.target.tagName === 'H2' || e.target.tagName === 'H3') {
-    e.stopPropagation()
-
-    // On first drag, get the current position from computed style
-    if (!hasBeenDragged) {
-      const computedStyle = window.getComputedStyle(infoBox)
-      const transform = computedStyle.transform
-      if (transform && transform !== 'none') {
-        const matrix = transform.match(/matrix\((.+)\)/)
-        if (matrix) {
-          const values = matrix[1].split(', ')
-          // The matrix logic might need adjustment if using translate(-50%, -50%)
-          // But usually browsers report the computed matrix.
-          // Simpler: just start from 0 offsets relative to the initial click.
-          // However, to avoid jumping, we need to handle the initial transform.
-          // Let's stick to the crude-collage-painter logic which seemed to work or simplify.
-          // Since we center with CSS translate(-50%, -50%), dragging implementation needs care.
-          // A safer way is to switch to absolute positioning on first drag or use offsets.
-          // For now, let's just initialize xOffset/yOffset to 0 and rely on delta.
-          // But if we use translate(x,y) it overrides translate(-50%, -50%).
-          // So we might need to set initial position to computed pixels.
-          
-          // Let's rely on standard logic:
-          // We will use transform translate(x,y) but we need to account for the initial centering.
-          // Ideally, we remove the centering class/style on first drag and set absolute pixels.
-        }
-      }
-      hasBeenDragged = true
-    }
-
-    initialX = e.clientX - xOffset
-    initialY = e.clientY - yOffset
-    isDragging = true
-  }
-}
-
-function drag (e) {
-  if (isDragging) {
-    e.preventDefault()
-    e.stopPropagation()
-
-    currentX = e.clientX - initialX
-    currentY = e.clientY - initialY
-
-    xOffset = currentX
-    yOffset = currentY
-
-    setTranslate(currentX, currentY, infoBox)
-  }
-}
-
-function stopDragging (e) {
-  isDragging = false
-}
-
-function setTranslate (xPos, yPos, el) {
-  // We keep the -50% -50% to maintain relative centering logic + offset
-  // Or if we want to move freely, we might just append the translation.
-  // BUT: standard transform replacement overwrites.
-  // The crude-collage-painter css uses `transform: translate(-50%, -20%);`
-  // Here we used `transform: translate(-50%, -50%);`
-  // So we should maintain that.
-  el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`
 }
 
 function hideInfoBox () {

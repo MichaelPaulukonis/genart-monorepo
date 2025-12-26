@@ -1,7 +1,7 @@
 import { p5 } from 'p5js-wrapper'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
-import { displayUI, drawOSD, displayProcessingText } from './ui.js'
+import { displayUI, drawOSD, displayProcessingText, drawGrid } from './ui.js'
 import { mouseDragged, mouseReleased, mousePressed, specialKeys, handleKeys, keyReleased, handleFile } from './input.js'
 
 const sketch = function (p) {
@@ -34,6 +34,14 @@ const sketch = function (p) {
     cropEnd: { x: 0, y: 0 },
 
     undoStack: [],
+
+    // Grid State
+    showGrid: false,
+    showGridControls: true,
+    gridType: '1-split',
+    gridColor: '#000000',
+    gridOpacity: 150,
+    gridThickness: 1,
 
     transparencyThreshold: 128, // Threshold for gray pixels in transparency mode
     density: 1, // need to use density in size calculations for both w+h
@@ -72,7 +80,7 @@ const sketch = function (p) {
 
   p.preload = function () {
     state.img = p.loadImage(
-      './sample_images/mona.crosshairs.png'
+      './sample_images/mona_square.jpeg'
     )
   }
 
@@ -87,7 +95,66 @@ const sketch = function (p) {
     state.displayLayer = p.createGraphics(state.outputSize, state.outputSize)
     state.displayLayer.pixelDensity(state.density)
     state.displayLayer.imageMode(p.CENTER)
+
+    loadSettings()
+    initGridControls()
+
     processImage(state.img)
+  }
+
+  const loadSettings = () => {
+    try {
+      const saved = localStorage.getItem('monochromifier_grid_settings')
+      if (saved) {
+        const settings = JSON.parse(saved)
+        state.showGrid = settings.showGrid ?? state.showGrid
+        state.showGridControls = settings.showGridControls ?? state.showGridControls
+        state.gridType = settings.gridType ?? state.gridType
+        state.gridColor = settings.gridColor ?? state.gridColor
+        state.gridOpacity = settings.gridOpacity ?? state.gridOpacity
+        state.gridThickness = settings.gridThickness ?? state.gridThickness
+      }
+    } catch (e) {
+      console.error('Failed to load settings', e)
+    }
+  }
+
+  const saveSettings = () => {
+    try {
+      const settings = {
+        showGrid: state.showGrid,
+        showGridControls: state.showGridControls,
+        gridType: state.gridType,
+        gridColor: state.gridColor,
+        gridOpacity: state.gridOpacity,
+        gridThickness: state.gridThickness
+      }
+      localStorage.setItem('monochromifier_grid_settings', JSON.stringify(settings))
+    } catch (e) {
+      console.error('Failed to save settings', e)
+    }
+  }
+
+  const initGridControls = () => {
+    const gridToggle = document.getElementById('grid-toggle')
+    const gridType = document.getElementById('grid-type')
+    const gridColor = document.getElementById('grid-color')
+    const gridOpacity = document.getElementById('grid-opacity')
+    const gridThickness = document.getElementById('grid-thickness')
+
+    if (!gridToggle) return // Elements might not exist if HTML not updated
+
+    gridToggle.checked = state.showGrid
+    gridType.value = state.gridType
+    gridColor.value = state.gridColor
+    gridOpacity.value = state.gridOpacity
+    gridThickness.value = state.gridThickness
+
+    gridToggle.addEventListener('change', (e) => { state.showGrid = e.target.checked; state.dirty = true; saveSettings() })
+    gridType.addEventListener('change', (e) => { state.gridType = e.target.value; state.dirty = true; saveSettings() })
+    gridColor.addEventListener('input', (e) => { state.gridColor = e.target.value; state.dirty = true; saveSettings() })
+    gridOpacity.addEventListener('input', (e) => { state.gridOpacity = e.target.value; state.dirty = true; saveSettings() })
+    gridThickness.addEventListener('input', (e) => { state.gridThickness = e.target.value; state.dirty = true; saveSettings() })
   }
 
   const setupPaintBuffer = ({ width, height }) => {
@@ -151,7 +218,20 @@ const sketch = function (p) {
         state.dirty = true
       }
 
+      drawGrid(p, state)
+
       if (state.modal.showUI) displayUI(p, state)
+
+      // Update HTML UI visibility
+      const gridControls = document.getElementById('grid-controls')
+      if (gridControls) {
+        if (state.modal.showUI && state.showGridControls) {
+          gridControls.classList.remove('hidden')
+        } else {
+          gridControls.classList.add('hidden')
+        }
+      }
+
       if (state.showOSD && state.appMode === state.modes.ADJUST) drawOSD(p, state)
 
       // Visual feedback when dragging
