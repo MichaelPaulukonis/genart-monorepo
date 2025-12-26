@@ -7,10 +7,12 @@ Monochromifier implements selective key event prevention to ensure app-specific 
 ## Implementation Pattern
 
 ### Core Principle
+
 - **Prevent default behavior ONLY for keys the app actually handles**
 - **Allow browser defaults for all unhandled keys**
 
 ### Before (Problematic)
+
 ```javascript
 const handleKeys = () => {
   if (p.key === 'i') {
@@ -22,6 +24,7 @@ const handleKeys = () => {
 ```
 
 ### After (Selective)
+
 ```javascript
 const handleKeys = () => {
   if (p.key === 'i') {
@@ -41,6 +44,7 @@ const handleKeys = () => {
 ## Key Categories
 
 ### App-Handled Keys (Prevent Default)
+
 - `i` - Invert image
 - `t` - Toggle transparency mode
 - `r` - Reset (only when pressed alone)
@@ -55,6 +59,7 @@ const handleKeys = () => {
 - Backspace/Delete - Clear paint layer
 
 ### Browser-Handled Keys (Allow Default)
+
 - `CMD+R`/`Ctrl+R` - Refresh page
 - `CMD+T`/`Ctrl+T` - New tab
 - `CMD+W`/`Ctrl+W` - Close tab
@@ -65,6 +70,7 @@ const handleKeys = () => {
 ## Special Cases
 
 ### Modifier Key Conflicts
+
 Always check for modifier keys when app uses single letters that might conflict:
 
 ```javascript
@@ -76,6 +82,7 @@ if (p.key === 'r' && !p.keyIsDown(p.CONTROL) && !p.keyIsDown(91)) {
 ```
 
 ### Special Key Handling
+
 For keys like arrows that apps commonly use, use a tracking system:
 
 ```javascript
@@ -101,6 +108,7 @@ const specialKeys = () => {
 ## Future Improvements
 
 A comprehensive, reusable solution is planned (see `/docs/plans/03.reusable-key-handling-library.md`) that would:
+
 - Eliminate repetitive `return false` statements
 - Provide declarative key mapping API
 - Support context-sensitive handlers
