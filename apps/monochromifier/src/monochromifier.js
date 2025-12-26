@@ -40,9 +40,9 @@ const sketch = function (p) {
     showGrid: false,
     showGridControls: true,
     gridType: '1-split',
-    gridColor: '#000000',
+    gridColor: '#FF0000',
     gridOpacity: 150,
-    gridThickness: 1,
+    gridThickness: 2,
 
     transparencyThreshold: 128, // Threshold for gray pixels in transparency mode
     density: 1, // need to use density in size calculations for both w+h
