@@ -29,7 +29,8 @@ const sketch = function (p) {
     dragStartX: 0,
     dragStartY: 0,
 
-    isCropping: false,
+    cropState: 'idle', // 'idle', 'drawing', 'adjusting', 'dragging_handle', 'moving'
+    activeHandle: null,
     cropStart: { x: 0, y: 0 },
     cropEnd: { x: 0, y: 0 },
 
@@ -208,12 +209,57 @@ const sketch = function (p) {
         p.pop()
       }
 
-      if (state.isCropping) {
+      if (state.cropState !== 'idle') {
+        const x = Math.min(state.cropStart.x, state.cropEnd.x)
+        const y = Math.min(state.cropStart.y, state.cropEnd.y)
+        const w = Math.abs(state.cropEnd.x - state.cropStart.x)
+        const h = Math.abs(state.cropEnd.y - state.cropStart.y)
+
         p.push()
+        
+        // Scrim
+        p.fill(0, 150)
+        p.noStroke()
+        // Top
+        p.rect(0, 0, p.width, y)
+        // Bottom
+        p.rect(0, y + h, p.width, p.height - (y + h))
+        // Left
+        p.rect(0, y, x, h)
+        // Right
+        p.rect(x + w, y, p.width - (x + w), h)
+
+        // Crop Rect
         p.noFill()
-        p.stroke('red')
+        p.stroke(255)
         p.strokeWeight(1)
-        p.rect(state.cropStart.x, state.cropStart.y, state.cropEnd.x - state.cropStart.x, state.cropEnd.y - state.cropStart.y)
+        p.rect(x, y, w, h)
+
+        // Grid (Rule of Thirds)
+        p.stroke(255, 100)
+        p.line(x + w/3, y, x + w/3, y + h)
+        p.line(x + 2*w/3, y, x + 2*w/3, y + h)
+        p.line(x, y + h/3, x + w, y + h/3)
+        p.line(x, y + 2*h/3, x + w, y + 2*h/3)
+
+        // Handles
+        if (state.cropState === 'adjusting' || state.cropState === 'dragging_handle') {
+            const handleSize = 8
+            p.fill(255)
+            p.stroke(0)
+            p.strokeWeight(1)
+            // Corners
+            p.rect(x - handleSize/2, y - handleSize/2, handleSize, handleSize) // TL
+            p.rect(x + w - handleSize/2, y - handleSize/2, handleSize, handleSize) // TR
+            p.rect(x - handleSize/2, y + h - handleSize/2, handleSize, handleSize) // BL
+            p.rect(x + w - handleSize/2, y + h - handleSize/2, handleSize, handleSize) // BR
+            // Mids
+            p.rect(x + w/2 - handleSize/2, y - handleSize/2, handleSize, handleSize) // TM
+            p.rect(x + w/2 - handleSize/2, y + h - handleSize/2, handleSize, handleSize) // BM
+            p.rect(x - handleSize/2, y + h/2 - handleSize/2, handleSize, handleSize) // LM
+            p.rect(x + w - handleSize/2, y + h/2 - handleSize/2, handleSize, handleSize) // RM
+        }
+
         p.pop()
         state.dirty = true
       }
@@ -330,6 +376,7 @@ const sketch = function (p) {
     // Set fit mode to fitToCanvas after cropping (Feature 66.3) - This is now handled by fitBoth in switchToAdjustMode
 
     // 5. Reset state and switch to ADJUST mode
+    state.cropState = 'idle'
     switchToAdjustMode(true)
   }
 
@@ -365,7 +412,7 @@ const sketch = function (p) {
     }
   }
 
-  p.keyPressed = () => handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, switchToAdjustMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight })
+  p.keyPressed = () => handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, switchToAdjustMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop })
 
 
 

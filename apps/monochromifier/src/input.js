@@ -1,11 +1,92 @@
 import { validateImageFile, showErrorMessage } from '../../../libs/p5-utils/src/index.js'
 
+function normalizeCropRect(state) {
+  const x1 = Math.min(state.cropStart.x, state.cropEnd.x)
+  const y1 = Math.min(state.cropStart.y, state.cropEnd.y)
+  const x2 = Math.max(state.cropStart.x, state.cropEnd.x)
+  const y2 = Math.max(state.cropStart.y, state.cropEnd.y)
+  state.cropStart = { x: x1, y: y1 }
+  state.cropEnd = { x: x2, y: y2 }
+}
+
+function getHandleAtPosition(p, state, mx, my) {
+  const x = state.cropStart.x
+  const y = state.cropStart.y
+  const w = state.cropEnd.x - state.cropStart.x
+  const h = state.cropEnd.y - state.cropStart.y
+  const handleSize = 15 // Hit tolerance
+
+  const handles = {
+    tl: { x: x, y: y },
+    tr: { x: x + w, y: y },
+    bl: { x: x, y: y + h },
+    br: { x: x + w, y: y + h },
+    tm: { x: x + w / 2, y: y },
+    bm: { x: x + w / 2, y: y + h },
+    lm: { x: x, y: y + h / 2 },
+    rm: { x: x + w, y: y + h / 2 }
+  }
+
+  for (const [key, pos] of Object.entries(handles)) {
+    if (p.dist(mx, my, pos.x, pos.y) < handleSize) {
+      return key
+    }
+  }
+  return null
+}
+
+function isInsideRect(state, mx, my) {
+  const x = state.cropStart.x
+  const y = state.cropStart.y
+  const w = state.cropEnd.x - state.cropStart.x
+  const h = state.cropEnd.y - state.cropStart.y
+  return mx > x && mx < x + w && my > y && my < y + h
+}
+
 export function mouseDragged(p, state, { drawPaintLine, applyBoundaryConstraints, buildCombinedLayer }) {
   if (state.isDrawingLine) {
     state.endPoint = { x: p.mouseX, y: p.mouseY }
     state.dirty = true
-  } else if (state.isCropping) {
-    state.cropEnd = { x: p.mouseX, y: p.mouseY }
+  } else if (state.cropState === 'drawing') {
+    state.cropEnd = { x: p.constrain(p.mouseX, 0, p.width), y: p.constrain(p.mouseY, 0, p.height) }
+    state.dirty = true
+  } else if (state.cropState === 'dragging_handle') {
+    const mx = p.constrain(p.mouseX, 0, p.width)
+    const my = p.constrain(p.mouseY, 0, p.height)
+
+    if (state.activeHandle === 'br') state.cropEnd = { x: mx, y: my }
+    if (state.activeHandle === 'tl') state.cropStart = { x: mx, y: my }
+    if (state.activeHandle === 'tr') { state.cropEnd.x = mx; state.cropStart.y = my }
+    if (state.activeHandle === 'bl') { state.cropStart.x = mx; state.cropEnd.y = my }
+    
+    if (state.activeHandle === 'rm') state.cropEnd.x = mx
+    if (state.activeHandle === 'bm') state.cropEnd.y = my
+    if (state.activeHandle === 'lm') state.cropStart.x = mx
+    if (state.activeHandle === 'tm') state.cropStart.y = my
+
+    state.dirty = true
+  } else if (state.cropState === 'moving') {
+    const dx = p.mouseX - state.dragStartX
+    const dy = p.mouseY - state.dragStartY
+    
+    // Constrain movement to canvas bounds
+    const currentW = state.cropEnd.x - state.cropStart.x
+    const currentH = state.cropEnd.y - state.cropStart.y
+    
+    let newX = state.cropStart.x + dx
+    let newY = state.cropStart.y + dy
+    
+    // Simple constraint: keep TL and BR inside
+    if (newX < 0) newX = 0
+    if (newY < 0) newY = 0
+    if (newX + currentW > p.width) newX = p.width - currentW
+    if (newY + currentH > p.height) newY = p.height - currentH
+    
+    state.cropStart = { x: newX, y: newY }
+    state.cropEnd = { x: newX + currentW, y: newY + currentH }
+    
+    state.dragStartX = p.mouseX
+    state.dragStartY = p.mouseY
     state.dirty = true
   } else if (state.appMode === state.modes.EDIT && state.editTool === state.editTools.PAINT && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
     drawPaintLine()
@@ -26,9 +107,10 @@ export function mouseReleased(p, state, { drawLine, performCrop }) {
   if (state.isDrawingLine) {
     drawLine(state.startPoint, state.endPoint)
     state.isDrawingLine = false
-  } else if (state.isCropping) {
-    state.isCropping = false
-    performCrop()
+  } else if (state.cropState === 'drawing' || state.cropState === 'dragging_handle' || state.cropState === 'moving') {
+    normalizeCropRect(state)
+    state.cropState = 'adjusting'
+    state.activeHandle = null
     state.dirty = true
   } else if (state.isDragging) {
     state.isDragging = false
@@ -48,10 +130,30 @@ export function mousePressed(p, state, { drawPaintLine }) {
         drawPaintLine()
       }
     } else if (state.editTool === state.editTools.CROP) {
-      state.isCropping = true
-      state.cropStart = { x: p.mouseX, y: p.mouseY }
-      state.cropEnd = { x: p.mouseX, y: p.mouseY }
-      state.dirty = true
+      if (state.cropState === 'idle' || state.cropState === undefined) { // Start new crop
+        state.cropState = 'drawing'
+        state.cropStart = { x: p.mouseX, y: p.mouseY }
+        state.cropEnd = { x: p.mouseX, y: p.mouseY }
+        state.dirty = true
+      } else if (state.cropState === 'adjusting') {
+        const handle = getHandleAtPosition(p, state, p.mouseX, p.mouseY)
+        if (handle) {
+          state.cropState = 'dragging_handle'
+          state.activeHandle = handle
+          state.dirty = true
+        } else if (isInsideRect(state, p.mouseX, p.mouseY)) {
+          state.cropState = 'moving'
+          state.dragStartX = p.mouseX
+          state.dragStartY = p.mouseY
+          state.dirty = true
+        } else {
+          // Start new crop if clicked outside
+          state.cropState = 'drawing'
+          state.cropStart = { x: p.mouseX, y: p.mouseY }
+          state.cropEnd = { x: p.mouseX, y: p.mouseY }
+          state.dirty = true
+        }
+      }
     }
   }
   else if (state.appMode === state.modes.ADJUST && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
@@ -106,7 +208,19 @@ export function specialKeys(p, state, { buildPaintLayer, buildCombinedLayer }) {
   return handledKey ? false : undefined
 }
 
-export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, switchToAdjustMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight }) {
+export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, switchToAdjustMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop }) {
+  // Commit Crop on Enter
+  if (state.cropState === 'adjusting' && p.keyCode === p.ENTER) {
+    performCrop()
+    return false
+  }
+  // Cancel Crop on Escape
+  if (state.cropState === 'adjusting' && p.keyCode === p.ESCAPE) {
+    state.cropState = 'idle'
+    state.dirty = true
+    return false
+  }
+
   if (p.key === 'z' && (p.keyIsDown(p.CONTROL) || p.keyIsDown(91))) {
     undoCrop()
     return false
@@ -166,6 +280,8 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
   if (state.appMode === state.modes.EDIT) {
     if (p.key === 'p') {
       state.editTool = state.editTools.PAINT
+      // If switching away from crop, reset crop state
+      state.cropState = 'idle'
       state.dirty = true
       return false
     }

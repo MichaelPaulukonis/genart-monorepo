@@ -4,10 +4,6 @@
 
 - **monochromifier:** Redesign fit methods, zoom, and autocrop interaction ([#64](https://github.com/MichaelPaulukonis/genart-monorepo/issues/64))
 
-### ❤️ Thank You
-
-- MichaelPaulukonis
-
 ## 0.4.0 (2025-11-10)
 
 ### 🚀 Features
@@ -22,10 +18,6 @@
 - **monochromifier:** Enforce integer math for pixel calculations ([041879a4](https://github.com/MichaelPaulukonis/genart-monorepo/commit/041879a4))
 - **monochromifier:** apply fixes for post-crop preview and fit mode ([40009850](https://github.com/MichaelPaulukonis/genart-monorepo/commit/40009850))
 - **nx:** resolve release configuration conflicts across all apps ([22f7de53](https://github.com/MichaelPaulukonis/genart-monorepo/commit/22f7de53))
-
-### ❤️ Thank You
-
-- MichaelPaulukonis
 
 ## 0.3.0 (2025-11-04)
 
@@ -64,7 +56,3 @@
 - resolve nx release configuration conflicts for proper versioning ([0dbd2db0](https://github.com/MichaelPaulukonis/genart-monorepo/commit/0dbd2db0))
 - **monochromifier:** add missing version management to release-deploy target ([147b702c](https://github.com/MichaelPaulukonis/genart-monorepo/commit/147b702c))
 - **monochromifier:** resolve Nx Vite executor build issues and update documentation ([b430e3be](https://github.com/MichaelPaulukonis/genart-monorepo/commit/b430e3be))
-
-### ❤️ Thank You
-
-- MichaelPaulukonis

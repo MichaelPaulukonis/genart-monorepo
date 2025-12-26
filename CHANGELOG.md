@@ -6,6 +6,13 @@ This changelog aggregates infrastructure and shared-library changes across the w
 
 ### Infrastructure & Shared Libraries
 
+- **monochromifier:** Implement configurable grid overlay and enhanced crop tool
+  - Added n-split, crosshair, and golden ratio grid overlays
+  - Added draggable UI for grid controls
+  - Enhanced crop tool with adjustable handles, constraints, and commit/cancel actions
+  - Updated help documentation with HTML-based layout
+  - Fixed paint layer clearing and shortcuts
+
 - **nx:** fix release configuration to resolve granular git configuration conflicts
   - Consolidate git options to top-level `release.git` property in nx.json
   - Update all apps to use combined `nx release` command instead of separate version/changelog commands
