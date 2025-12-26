@@ -26,7 +26,6 @@ Computational Collage app showing a generated collage and UI
 <img src="./apps/crude-collage-painter/docs/screenshots/crude-collage-painter-main.png" alt="Screenshot of collage painter app with UI" style="width:auto; height:150px;">\
 Crude Collage Painter app with collage and UI
 
-
 ## Shared Libraries
 
 - **[@genart/p5-utils](./libs/p5-utils/)** - Common p5.js utilities and helper functions
@@ -101,6 +100,7 @@ See [docs/architecture/overview.md](./docs/architecture/overview.md) for technic
 This monorepo uses **Nx Release with independent versioning** - each app maintains its own version number and can be released independently.
 
 ### Quick Release and Deploy
+
 ```bash
 # Release and deploy a specific app (one command)
 nx run duo-chrome:release-deploy
@@ -112,7 +112,9 @@ nx release
 ```
 
 ### Changelog System
+
 The monorepo uses a **hybrid changelog approach**:
+
 - **App changelogs** (`apps/*/CHANGELOG.md`) - automatically generated for app-specific changes
 - **Workspace changelog** (`/CHANGELOG.md`) - manually aggregated for infrastructure changes
 
@@ -125,7 +127,9 @@ npm run gen:changelog:apply
 ```
 
 ### Conventional Commits
+
 Use conventional commit messages for automatic version bumping:
+
 ```bash
 # Feature (minor bump: 0.1.0 → 0.2.0)
 git commit -m "feat(duo-chrome): add new color blending mode"

@@ -169,6 +169,7 @@ playwright/.cache/
 
 # misc chats
 conversation/
+.specstory/ 
 
 # working images
 # duo-chrome/public/images has been committed - temp changes s/b ignored
