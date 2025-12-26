@@ -1,0 +1,131 @@
+/* Info box styling for monochromifier */
+
+.info-box {
+  position: absolute;
+  cursor: move;
+  user-select: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 650px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px;
+  padding-bottom: 60px; /* Space for close button */
+  background-color: rgba(30, 30, 30, 0.95);
+  color: #eeeeee;
+  border: 1px solid #555;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  text-align: left;
+}
+
+.info-box h2,
+.info-box h3 {
+  text-align: center;
+  margin-top: 0;
+}
+
+.info-box h2 {
+  color: #ffffff;
+  margin-bottom: 5px;
+}
+
+.info-box h3 {
+  color: #cccccc;
+  font-weight: normal;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.info-box.hidden {
+  display: none;
+}
+
+/* Prevent child elements from interfering with drag */
+.info-box * {
+  pointer-events: none;
+}
+
+/* Re-enable pointer events for interactive elements */
+.info-box a,
+.info-box button {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Two-column grid layout for shortcut sections */
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px 20px;
+  margin-bottom: 15px;
+}
+
+.shortcut-section {
+  margin-bottom: 0;
+}
+
+.shortcut-section h4 {
+  margin: 5px 0 5px 0;
+  color: #aaaaff;
+  font-size: 0.95em;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.shortcut-section ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+.shortcut-section li {
+  margin: 2px 0;
+  line-height: 1.5;
+  font-size: 0.9em;
+  color: #cccccc;
+}
+
+/* Full-width sections (Info Box at bottom) */
+.shortcut-section.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-box kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background-color: #444;
+  border: 1px solid #666;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #fff;
+}
+
+.close-button {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  padding: 8px 20px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: #777;
+}
+
+/* App-specific version display styling */
+.version-info {
+  --version-text-color: #888;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+}

@@ -1,5 +1,3 @@
-import { formatVersion } from './utils/version.js'
-
 export function displayUI(p, state) {
   const { view, invert, autoCrop, showOSD, appMode, modes, editTool, editTools, modal, brushSize, threshold, transparencyModeEnabled, transparencyThreshold } = state;
 
@@ -111,71 +109,6 @@ export function drawOSD(p, state) {
   p.stroke(255, 150)
   p.strokeWeight(1)
   p.rect(osdX, osdY, osdSize, osdSize)
-}
-
-export function displayHelpScreen(p) {
-  p.fill(50, 150)
-  p.rect(50, 50, p.width - 100, p.height - 100, 10)
-
-  p.fill(255)
-  p.textSize(16)
-  p.textAlign(p.LEFT, p.TOP)
-  p.text(
-    `
-      Help Screen:
-
-      ? - Show/Hide this help screen
-      h - Show/Hide UI
-      r - Reset view and threshold
-      i - Invert image
-      t - Toggle transparency mode
-      o - Toggle OSD (position overlay)
-      e - Toggle Edit Mode
-
-      ADJUST Mode:
-      d - Reset pan
-      → / ← - Zoom in/out
-      1 - Fit image to canvas (fit both)
-      2 - Fit image to canvas width
-      3 - Fit image to canvas height
-      CMD-s - Save image
-      Click + Drag - Pan image
-
-      EDIT Mode:
-      p - Activate PAINT tool
-      c - Activate CROP tool
-      x - Toggle erase mode (in PAINT tool)
-      → / ← - increase/decrease brush size (in PAINT tool)
-      CMD-click - Draw a line (in PAINT tool)
-
-      Global:
-      ↑ / ↓ - increase/decrease threshold
-      CMD-c - Toggle autocrop
-      `,
-    70,
-    70
-  )
-
-  // Display version information at the bottom of the help screen
-  p.textSize(12)
-  p.textAlign(p.CENTER, p.BOTTOM)
-  p.fill(200)
-  try {
-    formatVersion().then(version => {
-      // Store version for display
-      if (!p._versionText) {
-        p._versionText = version
-      }
-    }).catch(() => {
-      p._versionText = 'v0.2.0'
-    })
-  } catch (error) {
-    p._versionText = 'v0.2.0'
-  }
-
-  if (p._versionText) {
-    p.text(p._versionText, p.width / 2, p.height - 70)
-  }
 }
 
 export function displayProcessingText(p) {

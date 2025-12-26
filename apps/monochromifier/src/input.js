@@ -182,7 +182,7 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
   }
 
   if (p.key === 'e') {
-    state.modal.showHelp = false
+    if (window.infoBoxControls) window.infoBoxControls.hide()
     if (state.appMode === state.modes.ADJUST) {
       state.appMode = state.modes.EDIT
       state.editTool = state.editTools.PAINT // Default to paint
@@ -211,8 +211,9 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
   }
 
   if (p.key === '?') {
-    state.modal.showHelp = !state.modal.showHelp
-    state.dirty = true
+    if (window.infoBoxControls) {
+      window.infoBoxControls.toggle()
+    }
     return false
   } else if (p.key === 'h' || p.key === 'H') {
     state.modal.showUI = !state.modal.showUI

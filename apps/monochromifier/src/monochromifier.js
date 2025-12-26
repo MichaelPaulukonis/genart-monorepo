@@ -1,8 +1,7 @@
 import { p5 } from 'p5js-wrapper'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
-import { formatVersion } from './utils/version.js'
-import { displayUI, drawOSD, displayHelpScreen, displayProcessingText } from './ui.js'
+import { displayUI, drawOSD, displayProcessingText } from './ui.js'
 import { mouseDragged, mouseReleased, mousePressed, specialKeys, handleKeys, keyReleased, handleFile } from './input.js'
 
 const sketch = function (p) {
@@ -64,7 +63,6 @@ const sketch = function (p) {
     editTool: 'PAINT',
 
     modal: {
-      showHelp: false,
       showUI: true,
       processing: false,
       eraseMode: false,
@@ -112,10 +110,6 @@ const sketch = function (p) {
   }
 
   p.draw = function () {
-    if (state.modal.showHelp) {
-      displayHelpScreen(p)
-      return
-    }
     if (state.modal.processing) {
       displayProcessingText(p)
       return
