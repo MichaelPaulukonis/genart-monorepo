@@ -9,11 +9,11 @@ function normalizeCropRect(state) {
   state.cropEnd = { x: x2, y: y2 }
 }
 
-function getHandleAtPosition(p, state, mx, my) {
-  const x = state.cropStart.x
-  const y = state.cropStart.y
-  const w = state.cropEnd.x - state.cropStart.x
-  const h = state.cropEnd.y - state.cropStart.y
+export function getHandleAtPosition(p, state, mx, my) {
+  const x = Math.min(state.cropStart.x, state.cropEnd.x)
+  const y = Math.min(state.cropStart.y, state.cropEnd.y)
+  const w = Math.abs(state.cropEnd.x - state.cropStart.x)
+  const h = Math.abs(state.cropEnd.y - state.cropStart.y)
   const handleSize = 15 // Hit tolerance
 
   const handles = {
@@ -35,11 +35,11 @@ function getHandleAtPosition(p, state, mx, my) {
   return null
 }
 
-function isInsideRect(state, mx, my) {
-  const x = state.cropStart.x
-  const y = state.cropStart.y
-  const w = state.cropEnd.x - state.cropStart.x
-  const h = state.cropEnd.y - state.cropStart.y
+export function isInsideRect(state, mx, my) {
+  const x = Math.min(state.cropStart.x, state.cropEnd.x)
+  const y = Math.min(state.cropStart.y, state.cropEnd.y)
+  const w = Math.abs(state.cropEnd.x - state.cropStart.x)
+  const h = Math.abs(state.cropEnd.y - state.cropStart.y)
   return mx > x && mx < x + w && my > y && my < y + h
 }
 
@@ -58,7 +58,7 @@ export function mouseDragged(p, state, { drawPaintLine, applyBoundaryConstraints
     if (state.activeHandle === 'tl') state.cropStart = { x: mx, y: my }
     if (state.activeHandle === 'tr') { state.cropEnd.x = mx; state.cropStart.y = my }
     if (state.activeHandle === 'bl') { state.cropStart.x = mx; state.cropEnd.y = my }
-    
+
     if (state.activeHandle === 'rm') state.cropEnd.x = mx
     if (state.activeHandle === 'bm') state.cropEnd.y = my
     if (state.activeHandle === 'lm') state.cropStart.x = mx
@@ -68,23 +68,23 @@ export function mouseDragged(p, state, { drawPaintLine, applyBoundaryConstraints
   } else if (state.cropState === 'moving') {
     const dx = p.mouseX - state.dragStartX
     const dy = p.mouseY - state.dragStartY
-    
+
     // Constrain movement to canvas bounds
     const currentW = state.cropEnd.x - state.cropStart.x
     const currentH = state.cropEnd.y - state.cropStart.y
-    
+
     let newX = state.cropStart.x + dx
     let newY = state.cropStart.y + dy
-    
+
     // Simple constraint: keep TL and BR inside
     if (newX < 0) newX = 0
     if (newY < 0) newY = 0
     if (newX + currentW > p.width) newX = p.width - currentW
     if (newY + currentH > p.height) newY = p.height - currentH
-    
+
     state.cropStart = { x: newX, y: newY }
     state.cropEnd = { x: newX + currentW, y: newY + currentH }
-    
+
     state.dragStartX = p.mouseX
     state.dragStartY = p.mouseY
     state.dirty = true
@@ -208,7 +208,7 @@ export function specialKeys(p, state, { buildPaintLayer, buildCombinedLayer }) {
   return handledKey ? false : undefined
 }
 
-export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, switchToAdjustMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop }) {
+export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, setupAdjustMode, setupEditMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop }) {
   // Commit Crop on Enter
   if (state.cropState === 'adjusting' && p.keyCode === p.ENTER) {
     performCrop()
@@ -254,7 +254,7 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
     state.dirty = true
     return false
   }
-  if (p.key === 'r' && !p.keyIsDown(p.CONTROL) && !p.keyIsDown(91)) {
+  if (state.appMode === state.modes.ADJUST && p.key === 'r' && !p.keyIsDown(p.CONTROL) && !p.keyIsDown(91)) {
     // Only reset if 'r' is pressed alone (not CMD+R or Ctrl+R)
     state.threshold = 128
     fitBoth(state.img) // Re-run the initial fit
@@ -294,6 +294,8 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
       if (state.cropState !== 'idle') {
         state.cropState = 'idle'
         state.dirty = true
+      } else if (state.undoStack.length > 0) {
+        undoCrop()
       }
       return false
     }
@@ -307,19 +309,9 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
   if (p.key === 'e') {
     if (window.infoBoxControls) window.infoBoxControls.hide()
     if (state.appMode === state.modes.ADJUST) {
-      state.appMode = state.modes.EDIT
-      state.editTool = state.editTools.PAINT // Default to paint
-      p.resizeCanvas(state.img.width * state.paintScale, state.img.height * state.paintScale)
-      const tempBuff = p.createGraphics(state.img.width, state.img.height)
-      tempBuff.elt.id = `temp_edit_on.${p.frameCount}`
-      tempBuff.pixelDensity(state.density)
-      tempBuff.imageMode(p.CENTER)
-      state.displayLayer.remove()
-      state.displayLayer = tempBuff
-      buildPaintLayer(state.img)
-      state.previousMouse = { x: p.mouseX, y: p.mouseY }
+      setupEditMode(state, p, buildPaintLayer)
     } else {
-      switchToAdjustMode()
+      setupAdjustMode()
     }
     state.dirty = true
     return false

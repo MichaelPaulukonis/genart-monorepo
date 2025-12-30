@@ -2,7 +2,7 @@ import { p5 } from 'p5js-wrapper'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
 import { displayUI, drawOSD, displayProcessingText, drawGrid } from './ui.js'
-import { mouseDragged, mouseReleased, mousePressed, specialKeys, handleKeys, keyReleased, handleFile } from './input.js'
+import { mouseDragged, mouseReleased, mousePressed, specialKeys, handleKeys, keyReleased, handleFile, getHandleAtPosition, isInsideRect } from './input.js'
 
 const sketch = function (p) {
   const state = {
@@ -31,6 +31,7 @@ const sketch = function (p) {
 
     cropState: 'idle', // 'idle', 'drawing', 'adjusting', 'dragging_handle', 'moving'
     activeHandle: null,
+    hoveredHandle: null,
     cropStart: { x: 0, y: 0 },
     cropEnd: { x: 0, y: 0 },
 
@@ -158,9 +159,13 @@ const sketch = function (p) {
     gridThickness.addEventListener('input', (e) => { state.gridThickness = e.target.value; state.dirty = true; saveSettings() })
   }
 
-  const setupPaintBuffer = ({ width, height }) => {
-    const maxSize = Math.max(width, height)
+  const updatePaintScale = (w, h) => {
+    const maxSize = Math.max(w, h)
     state.paintScale = state.displaySize / maxSize
+  }
+
+  const setupPaintBuffer = ({ width, height }) => {
+    updatePaintScale(width, height)
     state.paintLayer && state.paintLayer.remove()
     state.paintLayer = p.createGraphics(width, height)
     state.paintLayer.elt.id = `paint.${p.frameCount}`
@@ -187,10 +192,13 @@ const sketch = function (p) {
       return
     }
     specialKeys(p, state, { buildPaintLayer, buildCombinedLayer })
-    if (state.displayLayer && state.dirty) {
-      p.background(state.backgroundColor)
+
+    // Always clear background
+    p.background(state.backgroundColor)
+
+    if (state.displayLayer) {
+      // Draw the display layer
       p.image(state.displayLayer, p.width / 2, p.height / 2, p.width, p.height)
-      state.dirty = false
 
       if (state.appMode === state.modes.EDIT && state.editTool === state.editTools.PAINT) {
         // draw brush
@@ -198,7 +206,6 @@ const sketch = function (p) {
         p.strokeWeight(1)
         p.fill(255)
         p.ellipse(p.mouseX, p.mouseY, state.brushSize * state.paintScale)
-        state.dirty = true
       }
 
       if (state.isDrawingLine) {
@@ -216,7 +223,7 @@ const sketch = function (p) {
         const h = Math.abs(state.cropEnd.y - state.cropStart.y)
 
         p.push()
-        
+
         // Scrim
         p.fill(0, 150)
         p.noStroke()
@@ -237,34 +244,61 @@ const sketch = function (p) {
 
         // Grid (Rule of Thirds)
         p.stroke(255, 100)
-        p.line(x + w/3, y, x + w/3, y + h)
-        p.line(x + 2*w/3, y, x + 2*w/3, y + h)
-        p.line(x, y + h/3, x + w, y + h/3)
-        p.line(x, y + 2*h/3, x + w, y + 2*h/3)
+        p.line(x + w / 3, y, x + w / 3, y + h)
+        p.line(x + 2 * w / 3, y, x + 2 * w / 3, y + h)
+        p.line(x, y + h / 3, x + w, y + h / 3)
+        p.line(x, y + 2 * h / 3, x + w, y + 2 * h / 3)
 
         // Handles
         if (state.cropState === 'adjusting' || state.cropState === 'dragging_handle') {
-            const handleSize = 8
-            p.fill(255)
+          const handles = {
+            tl: { x: x, y: y, cursor: 'nwse-resize' },
+            tr: { x: x + w, y: y, cursor: 'nesw-resize' },
+            bl: { x: x, y: y + h, cursor: 'nesw-resize' },
+            br: { x: x + w, y: y + h, cursor: 'nwse-resize' },
+            tm: { x: x + w / 2, y: y, cursor: 'ns-resize' },
+            bm: { x: x + w / 2, y: y + h, cursor: 'ns-resize' },
+            lm: { x: x, y: y + h / 2, cursor: 'ew-resize' },
+            rm: { x: x + w, y: y + h / 2, cursor: 'ew-resize' }
+          }
+
+          for (const [id, pos] of Object.entries(handles)) {
+            const isHovered = state.hoveredHandle === id
+            const isActive = state.activeHandle === id
+            const size = (isHovered || isActive) ? 12 : 8
+
+            p.fill(isActive ? '#FFD700' : (isHovered ? '#00BFFF' : 255)) // Gold if active, DeepSkyBlue if hovered, else white
             p.stroke(0)
             p.strokeWeight(1)
-            // Corners
-            p.rect(x - handleSize/2, y - handleSize/2, handleSize, handleSize) // TL
-            p.rect(x + w - handleSize/2, y - handleSize/2, handleSize, handleSize) // TR
-            p.rect(x - handleSize/2, y + h - handleSize/2, handleSize, handleSize) // BL
-            p.rect(x + w - handleSize/2, y + h - handleSize/2, handleSize, handleSize) // BR
-            // Mids
-            p.rect(x + w/2 - handleSize/2, y - handleSize/2, handleSize, handleSize) // TM
-            p.rect(x + w/2 - handleSize/2, y + h - handleSize/2, handleSize, handleSize) // BM
-            p.rect(x - handleSize/2, y + h/2 - handleSize/2, handleSize, handleSize) // LM
-            p.rect(x + w - handleSize/2, y + h/2 - handleSize/2, handleSize, handleSize) // RM
+            p.rect(pos.x - size / 2, pos.y - size / 2, size, size)
+
+            if (isHovered && state.cropState === 'adjusting') {
+              p.cursor(pos.cursor)
+            }
+          }
+
+          if (!state.hoveredHandle && isInsideRect(state, p.mouseX, p.mouseY) && state.cropState === 'adjusting') {
+            p.cursor('move')
+          } else if (!state.hoveredHandle && state.cropState === 'adjusting') {
+            p.cursor(p.CROSS)
+          }
         }
 
         p.pop()
-        state.dirty = true
       }
 
       drawGrid(p, state)
+
+      // Update hovered handle
+      if (state.appMode === state.modes.EDIT && state.editTool === state.editTools.CROP) {
+        if (state.cropState === 'adjusting' || state.cropState === 'dragging_handle') {
+          state.hoveredHandle = getHandleAtPosition(p, state, p.mouseX, p.mouseY)
+        } else {
+          state.hoveredHandle = null
+        }
+      } else {
+        state.hoveredHandle = null
+      }
 
       if (state.modal.showUI) displayUI(p, state)
 
@@ -298,7 +332,10 @@ const sketch = function (p) {
           // The brush ellipse is drawn, so a simple cursor is fine..
           p.cursor(p.CROSS)
         } else if (state.editTool === state.editTools.CROP) {
-          p.cursor(p.CROSS)
+          // Default cross for crop if not over handle
+          if (!state.hoveredHandle && state.cropState === 'idle') {
+            p.cursor(p.CROSS)
+          }
         }
       }
     }
@@ -355,12 +392,12 @@ const sketch = function (p) {
     state.undoStack.push(currentState)
 
     // 2. Calculate crop dimensions in image space
-    const x = Math.round(Math.min(state.cropStart.x, state.cropEnd.x) / state.paintScale)
-    const y = Math.round(Math.min(state.cropStart.y, state.cropEnd.y) / state.paintScale)
-    const w = Math.round(Math.abs(state.cropEnd.x - state.cropStart.x) / state.paintScale)
-    const h = Math.round(Math.abs(state.cropEnd.y - state.cropStart.y) / state.paintScale)
+    const x = p.constrain(Math.round(Math.min(state.cropStart.x, state.cropEnd.x) / state.paintScale), 0, state.img.width)
+    const y = p.constrain(Math.round(Math.min(state.cropStart.y, state.cropEnd.y) / state.paintScale), 0, state.img.height)
+    const w = p.constrain(Math.round(Math.abs(state.cropEnd.x - state.cropStart.x) / state.paintScale), 1, state.img.width - x)
+    const h = p.constrain(Math.round(Math.abs(state.cropEnd.y - state.cropStart.y) / state.paintScale), 1, state.img.height - y)
 
-    if (w < 1 || h < 1) return // Ignore tiny crops
+    if (w < 10 || h < 10) return // Ignore tiny crops
 
     // 3. Crop the main image
     const newImg = state.img.get(x, y, w, h)
@@ -372,12 +409,15 @@ const sketch = function (p) {
     state.paintLayer = newPaintLayer
 
     state.img = newImg
+    updatePaintScale(w, h)
 
-    // Set fit mode to fitToCanvas after cropping (Feature 66.3) - This is now handled by fitBoth in switchToAdjustMode
+    // Set fit mode to fitToCanvas after cropping (Feature 66.3) - This is now handled by fitBoth in setupAdjustMode
 
     // 5. Reset state and switch to ADJUST mode
     state.cropState = 'idle'
-    switchToAdjustMode(true)
+    // setupAdjustMode(true)
+    // adjustCanvas()
+    cropCleanup()
   }
 
   const undoCrop = () => {
@@ -387,12 +427,14 @@ const sketch = function (p) {
     state.img = lastState.img
     state.paintLayer.remove()
     state.paintLayer = lastState.paintLayer
+    updatePaintScale(state.img.width, state.img.height)
 
-    switchToAdjustMode(true)
+    // setupAdjustMode(true)
+    // adjustCanvas()
+    cropCleanup()
   }
 
-  const switchToAdjustMode = (fromCrop = false) => {
-    state.appMode = state.modes.ADJUST
+  const adjustCanvas = () => {
     p.resizeCanvas(state.displaySize, state.displaySize)
     const tempBuff = p.createGraphics(state.outputSize, state.outputSize)
     tempBuff.elt.id = `temp_adjust_on.${p.frameCount}`
@@ -400,21 +442,41 @@ const sketch = function (p) {
     tempBuff.imageMode(p.CENTER)
     state.displayLayer.remove()
     state.displayLayer = tempBuff
-
-    if (fromCrop) {
-      // Reset view parameters after a crop/undo and refit the new image
-      state.bwCachedImage = null
-      state.combinedLayer?.remove()
-      state.combinedLayer = null
-      fitBoth(state.img)
-    } else {
-      buildCombinedLayer(state.img)
-    }
   }
 
-  p.keyPressed = () => handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, switchToAdjustMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop })
+  const setupEditMode = () => {
+    state.appMode = state.modes.EDIT
+    state.editTool = state.editTools.PAINT // Default to paint
+    p.resizeCanvas(state.img.width * state.paintScale, state.img.height * state.paintScale)
+    const tempBuff = p.createGraphics(state.img.width, state.img.height)
+    tempBuff.elt.id = `temp_edit_on.${p.frameCount}`
+    tempBuff.pixelDensity(state.density)
+    tempBuff.imageMode(p.CENTER)
+    state.displayLayer.remove()
+    state.displayLayer = tempBuff
+    buildPaintLayer(state.img)
+    state.previousMouse = { x: p.mouseX, y: p.mouseY }
+  }
 
+  const cropCleanup = () => {
+    // Reset view parameters after a crop/undo and refit the new image
+    state.bwCachedImage = null
+    state.combinedLayer?.remove()
+    state.combinedLayer = null
+    fitBoth(state.img)
+    state.cropState = 'idle'
+    state.dirty = true
+    setupAdjustMode()
+    setupEditMode()
+  }
 
+  const setupAdjustMode = () => {
+    state.appMode = state.modes.ADJUST
+    adjustCanvas()
+    buildCombinedLayer(state.img)
+  }
+
+  p.keyPressed = () => handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, setupAdjustMode, setupEditMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop })
 
   p.keyReleased = function () { keyReleased(p, state, { drawLine }) }
 
@@ -490,68 +552,65 @@ const sketch = function (p) {
     newImg.copy(img, 0, 0, img.width, img.height, 0, 0, img.width, img.height)
 
     newImg.loadPixels()
-    for (let y = 0; y < img.height * state.density; y++) {
-      for (let x = 0; x < img.width * state.density; x++) {
-        const index = (x + y * img.width * state.density) * 4
-        const r = newImg.pixels[index]
-        const g = newImg.pixels[index + 1]
-        const b = newImg.pixels[index + 2]
-        const a = newImg.pixels[index + 3]
-        const avg = (r + g + b) / 3
+    for (let i = 0; i < newImg.pixels.length; i += 4) {
+      const r = newImg.pixels[i]
+      const g = newImg.pixels[i + 1]
+      const b = newImg.pixels[i + 2]
+      const a = newImg.pixels[i + 3]
+      const avg = (r + g + b) / 3
 
-        if (forSave && state.transparencyModeEnabled) {
-          // Transparency mode logic for saving
-          if (a === 0) {
-            // Already transparent pixels stay transparent
-            newImg.pixels[index] = 0
-            newImg.pixels[index + 1] = 0
-            newImg.pixels[index + 2] = 0
-            newImg.pixels[index + 3] = 0
-          } else {
-            // First convert to black/white like display mode
-            let bw = avg > threshold ? 255 : 0
-            if (state.invert) {
-              bw = 255 - bw
-            }
-
-            // Determine what should be transparent based on display values
-            // White pixels on screen (bw = 255) should be transparent
-            const shouldBeTransparent = bw >= 255 - state.transparencyThreshold
-
-            if (shouldBeTransparent) {
-              // Make transparent
-              newImg.pixels[index] = 0
-              newImg.pixels[index + 1] = 0
-              newImg.pixels[index + 2] = 0
-              newImg.pixels[index + 3] = 0
-            } else {
-              // Keep as black and opaque (always black in transparency mode)
-              newImg.pixels[index] = 0
-              newImg.pixels[index + 1] = 0
-              newImg.pixels[index + 2] = 0
-              newImg.pixels[index + 3] = 255
-            }
-          }
+      if (forSave && state.transparencyModeEnabled) {
+        // Transparency mode logic for saving
+        if (a === 0) {
+          // Already transparent pixels stay transparent
+          newImg.pixels[i] = 0
+          newImg.pixels[i + 1] = 0
+          newImg.pixels[i + 2] = 0
+          newImg.pixels[i + 3] = 0
         } else {
-          // Standard mode (for display or non-transparent save)
+          // First convert to black/white like display mode
           let bw = avg > threshold ? 255 : 0
-
           if (state.invert) {
             bw = 255 - bw
           }
 
-          if (a === 0 || bw === (state.invert ? 0 : 255)) {
-            // Transparent pixel (a = 0) sets to background color
-            newImg.pixels[index] = p.red(state.backgroundColor)
-            newImg.pixels[index + 1] = p.green(state.backgroundColor)
-            newImg.pixels[index + 2] = p.blue(state.backgroundColor)
+          // Determine what should be transparent based on display values
+          // White pixels on screen (bw = 255) should be transparent
+          const shouldBeTransparent = bw >= 255 - state.transparencyThreshold
+
+          if (shouldBeTransparent) {
+            // Make transparent
+            newImg.pixels[i] = 0
+            newImg.pixels[i + 1] = 0
+            newImg.pixels[i + 2] = 0
+            newImg.pixels[i + 3] = 0
           } else {
-            newImg.pixels[index] = state.invert ? 255 : 0 // Invert black to white
-            newImg.pixels[index + 1] = state.invert ? 255 : 0 // Invert black to white
-            newImg.pixels[index + 2] = state.invert ? 255 : 0 // Invert black to white
+            // Keep as black and opaque (always black in transparency mode)
+            newImg.pixels[i] = 0
+            newImg.pixels[i + 1] = 0
+            newImg.pixels[i + 2] = 0
+            newImg.pixels[i + 3] = 255
           }
-          newImg.pixels[index + 3] = 255 // Set alpha to fully opaque
         }
+      } else {
+        // Standard mode (for display or non-transparent save)
+        let bw = avg > threshold ? 255 : 0
+
+        if (state.invert) {
+          bw = 255 - bw
+        }
+
+        if (a === 0 || bw === (state.invert ? 0 : 255)) {
+          // Transparent pixel (a = 0) sets to background color
+          newImg.pixels[i] = p.red(state.backgroundColor)
+          newImg.pixels[i + 1] = p.green(state.backgroundColor)
+          newImg.pixels[i + 2] = p.blue(state.backgroundColor)
+        } else {
+          newImg.pixels[i] = state.invert ? 255 : 0 // Invert black to white
+          newImg.pixels[i + 1] = state.invert ? 255 : 0 // Invert black to white
+          newImg.pixels[i + 2] = state.invert ? 255 : 0 // Invert black to white
+        }
+        newImg.pixels[i + 3] = 255 // Set alpha to fully opaque
       }
     }
     newImg.updatePixels()
@@ -593,7 +652,10 @@ const sketch = function (p) {
     state.combinedLayer.push()
 
     // 1. Center the transform origin
-    state.combinedLayer.translate(state.combinedLayer.width / 2, state.combinedLayer.height / 2)
+    // Use Math.round to avoid sub-pixel offsets
+    const centerX = Math.round(state.combinedLayer.width / 2)
+    const centerY = Math.round(state.combinedLayer.height / 2)
+    state.combinedLayer.translate(centerX, centerY)
 
     // 2. Apply the unified view transform
     const finalScale = state.view.zoom * state.view.baseScale
@@ -609,28 +671,14 @@ const sketch = function (p) {
 
     // The result is directly displayed. No more cropping at the end of the pipe.
     state.displayLayer.background(state.backgroundColor)
+    state.displayLayer.imageMode(p.CENTER)
     state.displayLayer.image(
       state.combinedLayer,
-      state.displayLayer.width / 2,
-      state.displayLayer.height / 2,
+      Math.round(state.displayLayer.width / 2),
+      Math.round(state.displayLayer.height / 2),
       state.displayLayer.width,
       state.displayLayer.height
     )
-
-    // Force displayLayer to be monochrome for display
-    state.displayLayer.loadPixels()
-    for (let i = 0; i < state.displayLayer.pixels.length; i += 4) {
-      const r = state.displayLayer.pixels[i]
-      const g = state.displayLayer.pixels[i + 1]
-      const b = state.displayLayer.pixels[i + 2]
-      const avg = (r + g + b) / 3
-      const bw = avg > state.threshold ? 255 : 0 // Use actual threshold
-      state.displayLayer.pixels[i] = bw
-      state.displayLayer.pixels[i + 1] = bw
-      state.displayLayer.pixels[i + 2] = bw
-      state.displayLayer.pixels[i + 3] = 255 // Ensure opaque
-    }
-    state.displayLayer.updatePixels()
 
     state.dirty = true
   }
@@ -739,8 +787,11 @@ const sketch = function (p) {
     const scaleY = state.outputSize / contentBounds.height
     state.view.baseScale = Math.min(scaleX, scaleY)
     state.view.zoom = 1.0
-    state.view.x = 0 // Reset pan
-    state.view.y = 0 // Reset pan
+
+    // Center the content relative to the image center
+    state.view.x = (contentBounds.x + contentBounds.width / 2) - img.width / 2
+    state.view.y = (contentBounds.y + contentBounds.height / 2) - img.height / 2
+
     buildCombinedLayer(img)
   }
 
@@ -749,8 +800,11 @@ const sketch = function (p) {
     if (contentBounds.isEmpty) return
     state.view.baseScale = state.outputSize / contentBounds.width
     state.view.zoom = 1.0
-    state.view.x = 0 // Reset pan
-    state.view.y = 0 // Reset pan
+
+    // Center the content relative to the image center
+    state.view.x = (contentBounds.x + contentBounds.width / 2) - img.width / 2
+    state.view.y = (contentBounds.y + contentBounds.height / 2) - img.height / 2
+
     buildCombinedLayer(img)
   }
 
@@ -759,13 +813,13 @@ const sketch = function (p) {
     if (contentBounds.isEmpty) return
     state.view.baseScale = state.outputSize / contentBounds.height
     state.view.zoom = 1.0
-    state.view.x = 0 // Reset pan
-    state.view.y = 0 // Reset pan
+
+    // Center the content relative to the image center
+    state.view.x = (contentBounds.x + contentBounds.width / 2) - img.width / 2
+    state.view.y = (contentBounds.y + contentBounds.height / 2) - img.height / 2
+
     buildCombinedLayer(img)
   }
-
-
-
 }
 
 new p5(sketch) // eslint-disable-line no-new, new-cap
