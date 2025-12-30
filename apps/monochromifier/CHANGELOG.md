@@ -1,3 +1,21 @@
+## 0.6.0 (2025-12-30)
+
+### 🚀 Features
+
+- **monochromifier:** post-crop code cleanup + links added to help also updated a screenshot ([b619a15](https://github.com/MichaelPaulukonis/genart-monorepo/commit/b619a15))
+- **monochromifier:** exiting/resetting crop mode stays in edit mode Added some tasks. ([30c46d4](https://github.com/MichaelPaulukonis/genart-monorepo/commit/30c46d4))
+- **monochromifier:** add 'r' shortcut to reset crop selection ([67e006f](https://github.com/MichaelPaulukonis/genart-monorepo/commit/67e006f))
+- fix color and size, version update ([e9f5793](https://github.com/MichaelPaulukonis/genart-monorepo/commit/e9f5793))
+- **monochromifier:** enhance crop tool and grid overlay ([cd52bce](https://github.com/MichaelPaulukonis/genart-monorepo/commit/cd52bce))
+- **monochromifier:** implement configurable grid overlay with draggable controls ([5db4a8e](https://github.com/MichaelPaulukonis/genart-monorepo/commit/5db4a8e))
+- **monochromifier:** convert help screen to HTML ([22c08f0](https://github.com/MichaelPaulukonis/genart-monorepo/commit/22c08f0))
+- **duo-chrome:** add comprehensive history system with filmstrip navigation ([#35](https://github.com/MichaelPaulukonis/genart-monorepo/issues/35))
+- **testing:** Standardize Playwright E2E testing across apps ([#54](https://github.com/MichaelPaulukonis/genart-monorepo/issues/54), [#39](https://github.com/MichaelPaulukonis/genart-monorepo/issues/39))
+
+### ❤️ Thank You
+
+- MichaelPaulukonis
+
 ## 0.5.0 (2025-11-10)
 
 ### 🚀 Features
