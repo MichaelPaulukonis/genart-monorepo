@@ -11,7 +11,7 @@
   max-height: 80vh;
   overflow-y: auto;
   padding: 20px;
-  padding-bottom: 60px; /* Space for close button */
+  padding-bottom: 20px; /* Space for close button */
   background-color: rgba(30, 30, 30, 0.95);
   color: #eeeeee;
   border: 1px solid #555;
@@ -104,30 +104,75 @@
   color: #fff;
 }
 
+.info-footer {
+  margin-top: 25px;
+  padding-top: 15px;
+  border-top: 1px solid #444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.85em;
+  color: #888;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-links a {
+  color: #aaaaff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: #ccccff;
+  text-decoration: underline;
+}
+
+.separator {
+  color: #555;
+}
+
+.version-container {
+  font-family: monospace;
+  color: #666;
+  font-size: 0.9em;
+}
+
 .close-button {
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
-  padding: 8px 20px;
+  padding: 8px 24px;
   background-color: #555;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .close-button:hover {
   background-color: #777;
+  transform: translateY(-1px);
 }
 
-/* App-specific version display styling */
+.close-button:active {
+  transform: translateY(1px);
+}
+
+/* App-specific version display styling - kept for compatibility if needed elsewhere */
 .version-info {
   --version-text-color: #888;
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
 }
 
 /* Grid Controls Styling */

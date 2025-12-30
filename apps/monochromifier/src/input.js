@@ -309,7 +309,7 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
   if (p.key === 'e') {
     if (window.infoBoxControls) window.infoBoxControls.hide()
     if (state.appMode === state.modes.ADJUST) {
-      setupEditMode(state, p, buildPaintLayer)
+      setupEditMode()
     } else {
       setupAdjustMode()
     }

@@ -463,10 +463,10 @@ const sketch = function (p) {
     state.bwCachedImage = null
     state.combinedLayer?.remove()
     state.combinedLayer = null
-    fitBoth(state.img)
+    fitBoth(state.img, false)
     state.cropState = 'idle'
     state.dirty = true
-    setupAdjustMode()
+    // setupAdjustMode()
     setupEditMode()
   }
 
@@ -773,14 +773,14 @@ const sketch = function (p) {
     return { x: left, y: top, width: right - left + 1, height: bottom - top + 1, isEmpty: false }
   }
 
-  const fitBoth = (img) => {
+  const fitBoth = (img, render = true) => {
     const contentBounds = state.autoCrop ? getContentBounds(img) : { x: 0, y: 0, width: img.width, height: img.height, isEmpty: false }
     if (contentBounds.isEmpty) { // Don't fit an empty image
       state.view.baseScale = 1.0
       state.view.zoom = 1.0
       state.view.x = 0
       state.view.y = 0
-      buildCombinedLayer(img)
+      if (render) buildCombinedLayer(img)
       return
     }
     const scaleX = state.outputSize / contentBounds.width
@@ -792,7 +792,7 @@ const sketch = function (p) {
     state.view.x = (contentBounds.x + contentBounds.width / 2) - img.width / 2
     state.view.y = (contentBounds.y + contentBounds.height / 2) - img.height / 2
 
-    buildCombinedLayer(img)
+    if (render) buildCombinedLayer(img)
   }
 
   const fitWidth = (img) => {
