@@ -24,8 +24,7 @@
       "tag": true
     },
     "version": {
-      "conventionalCommits": true,
-      "preVersionCommand": "nx run {projectName}:build"
+      "conventionalCommits": true
     },
     "changelog": {
       "projectChangelogs": true,

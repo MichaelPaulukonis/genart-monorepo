@@ -65,11 +65,12 @@
       }
     },
     "release-deploy": {
-      "dependsOn": ["build", "validate-version"],
+      "dependsOn": ["validate-version"],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "nx release --projects=monochromifier",
+          "nx release --projects=monochromifier --skip-publish",
+          "nx run monochromifier:build",
           "npx gh-pages -d dist/apps/monochromifier --repo https://github.com/michaelpaulukonis/monochromifier.git"
         ],
         "parallel": false

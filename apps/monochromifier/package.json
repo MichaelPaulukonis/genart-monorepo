@@ -1,5 +1,6 @@
 {
   "name": "monochromifier",
+  "private": true,
   "version": "0.6.0",
   "scripts": {
     "clean": "standard --fix"
