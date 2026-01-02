@@ -64,6 +64,8 @@ Visit <http://localhost:5173> to view the app.
 | `b`          | Toggle background color (black/white) |
 | `c`          | Cycle through color palettes          |
 | `m`          | Cycle through blend modes             |
+| `f`          | Toggle Filmstrip                      |
+| `[` / `]`    | Navigate History                      |
 | `p` or Space | Pause/resume auto-generation          |
 | `S`          | Toggle auto-save mode                 |
 | `Cmd+S`      | Save current composition              |

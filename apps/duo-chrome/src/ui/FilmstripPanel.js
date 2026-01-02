@@ -221,11 +221,34 @@ export class FilmstripPanel {
     const info = document.createElement('div')
     info.className = 'filmstrip-thumbnail-info'
     const positionText = `#${position + 1}`
-    const filenameText = `${entry.imageA.filename.split('/').pop()} + ${entry.imageB.filename.split('/').pop()}`
-    info.textContent = `${positionText}: ${filenameText}`
+    
+    // Format names to preserve suffixes (essential for distinguishing similar files)
+    const nameA = this.formatThumbnailName(entry.imageA.filename)
+    const nameB = this.formatThumbnailName(entry.imageB.filename)
+    
+    info.textContent = `${positionText}: ${nameA} + ${nameB}`
+    // Add full title as tooltip
+    info.title = `${entry.imageA.filename} + ${entry.imageB.filename}`
+    
     thumbnail.appendChild(info)
 
     return thumbnail
+  }
+
+  /**
+   * Format filename for thumbnail display
+   * Strips extension and truncates start if too long to preserve suffix
+   */
+  formatThumbnailName (filename) {
+    if (!filename) return '?'
+    // Get basename and strip extension
+    const name = filename.split('/').pop().replace(/\.[^/.]+$/, '')
+    
+    // If too long, truncate start (preserve suffix like ..._001)
+    if (name.length > 15) {
+      return '...' + name.slice(-12)
+    }
+    return name
   }
 
   /**

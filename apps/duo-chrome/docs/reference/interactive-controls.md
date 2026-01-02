@@ -182,8 +182,8 @@ A draggable overlay showing current image information and settings.
 | `B` | Select Image B | Make Image B active for controls |
 | `↑` | Size Up | Increase active image size |
 | `↓` | Size Down | Decrease active image size |
-| `←` | Previous Image | Navigate to previous image |
-| `→` | Next Image | Navigate to next image |
+| `←` | Previous Image | Navigate to previous image (or History if Filmstrip open) |
+| `→` | Next Image | Navigate to next image (or History if Filmstrip open) |
 | `Cmd+←` | Previous Color | Cycle to previous color |
 | `Cmd+→` | Next Color | Cycle to next color |
 | `X` | Exchange | Swap all properties between A and B |

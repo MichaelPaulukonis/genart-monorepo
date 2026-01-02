@@ -104,6 +104,8 @@ Visual interface for browsing history thumbnails.
 |----------|--------|-------------|
 | `[` | Previous | Move back 1 composition |
 | `]` | Next | Move forward 1 composition |
+| `←` | Previous | Move back 1 composition (when Filmstrip is open) |
+| `→` | Next | Move forward 1 composition (when Filmstrip is open) |
 | `Shift+[` | Previous 10 | Move back 10 compositions |
 | `Shift+]` | Next 10 | Move forward 10 compositions |
 | `Cmd+[` | Jump to Beginning | Go to first entry |

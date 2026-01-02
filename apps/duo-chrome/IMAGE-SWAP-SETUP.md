@@ -3,6 +3,7 @@
 ## Current State
 
 You currently have:
+
 - `public/images/` - Your custom working images (active)
 - `public/images_original/` - Copy of official committed images
 
@@ -19,6 +20,7 @@ npm run images:commit
 ## Initial Setup (Already Done)
 
 Your folders are already set up correctly! You're in "work mode" with:
+
 - Custom images active in `public/images/`
 - Official images backed up in `public/images_original/`
 

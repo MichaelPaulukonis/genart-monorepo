@@ -1264,46 +1264,74 @@ const sketch = function (p) {
       showIndicatorsTemporarily()
       return false // Prevent default browser behavior
     } else if (p.keyCode === p.LEFT_ARROW) {
-      const activeIndex = getActiveImageIndex()
-      if (p.keyIsDown(p.CONTROL) || p.keyIsDown(91)) { // Cmd/Ctrl key
-        // Navigate to previous color for active image
-        navigateImageColor(activeIndex, 'previous')
-      } else {
-        // Navigate to previous image for active image
-        navigateImage(activeIndex, 'previous')
-      }
-      showIndicatorsTemporarily()
-      return false // Prevent default browser behavior
-    } else if (p.keyCode === p.RIGHT_ARROW) {
-      const activeIndex = getActiveImageIndex()
-      if (p.keyIsDown(p.CONTROL) || p.keyIsDown(91)) { // Cmd/Ctrl key
-        // Navigate to next color for active image
-        navigateImageColor(activeIndex, 'next')
-      } else {
-        // Navigate to next image for active image
-        navigateImage(activeIndex, 'next')
-      }
-      showIndicatorsTemporarily()
-      return false // Prevent default browser behavior
-    } else if (p.key === '[' || p.key === '{') {
-      // Navigate to previous composition in history
-      // Cmd+[ jumps to beginning, Shift+[ moves 10 steps, [ moves 1 step
-      if (IS_CMD) {
+      // History Navigation: Backward
+      // Cmd+Left jumps to beginning, Shift+Left moves 10 steps, Left moves 1 step
+      if (p.keyIsDown(p.CONTROL) || p.keyIsDown(91)) { // Cmd/Ctrl
         navigateHistoryToBeginning()
       } else {
-        const step = p.key === '{' ? 10 : 1
+        const step = IS_SHIFTED ? 10 : 1
         navigateHistoryBackward(step)
       }
       return false // Prevent default browser behavior
-    } else if (p.key === ']' || p.key === '}') {
-      // Navigate to next composition in history
-      // Cmd+] jumps to end, Shift+] moves 10 steps, ] moves 1 step
-      if (IS_CMD) {
+    } else if (p.keyCode === p.RIGHT_ARROW) {
+      // History Navigation: Forward
+      // Cmd+Right jumps to end, Shift+Right moves 10 steps, Right moves 1 step
+      if (p.keyIsDown(p.CONTROL) || p.keyIsDown(91)) { // Cmd/Ctrl
         navigateHistoryToEnd()
       } else {
-        const step = p.key === '}' ? 10 : 1
+        const step = IS_SHIFTED ? 10 : 1
         navigateHistoryForward(step)
       }
+      return false // Prevent default browser behavior
+    } else if (p.key === '[' || p.key === '{') {
+      // Image/Color Navigation: Previous
+      // Cmd+[ : Previous Color
+      // Shift+[: Previous Image (10 steps)
+      // [: Previous Image (1 step)
+      const activeIndex = getActiveImageIndex()
+      if (p.keyIsDown(p.CONTROL) || p.keyIsDown(91)) { // Cmd/Ctrl key
+        navigateImageColor(activeIndex, 'previous')
+      } else {
+        // Navigate previous image
+        // Check for Shift (key is '{') or explicit SHIFT modifier
+        const step = (p.key === '{' || IS_SHIFTED) ? 10 : 1
+        
+        // Navigate multiple steps if needed
+        for(let i=0; i<step; i++) {
+          // We only need to trigger the actual load on the last step to avoid flicker
+          // But navigateImage triggers load immediately.
+          // For now, we'll just loop the logical index if we implement a 'seek' function,
+          // but navigateImage is coupled to load. 
+          // Optimization: Just call it once with a loop internally? 
+          // For simplicity/safety in this refactor, we'll just call it 'step' times but that's inefficient.
+          // Better: navigateImage handles single steps. 
+          // Let's just do single step for now unless we refactor navigateImage to accept a delta.
+          // The previous history logic had a loop. navigateImage does not support 'step'.
+          // We will just do single step for standard '[' and color.
+          // For Shift, we can just call it once for now to keep it simple, or implement a loop.
+          // Let's stick to single step navigation for images for now to ensure stability, 
+          // or fast-loop if step > 1.
+          navigateImage(activeIndex, 'previous')
+        }
+      }
+      showIndicatorsTemporarily()
+      return false // Prevent default browser behavior
+    } else if (p.key === ']' || p.key === '}') {
+      // Image/Color Navigation: Next
+      // Cmd+] : Next Color
+      // Shift+]: Next Image (10 steps)
+      // ]: Next Image (1 step)
+      const activeIndex = getActiveImageIndex()
+      if (p.keyIsDown(p.CONTROL) || p.keyIsDown(91)) { // Cmd/Ctrl key
+        navigateImageColor(activeIndex, 'next')
+      } else {
+        // Navigate next image
+        const step = (p.key === '}' || IS_SHIFTED) ? 10 : 1
+        for(let i=0; i<step; i++) {
+          navigateImage(activeIndex, 'next')
+        }
+      }
+      showIndicatorsTemporarily()
       return false // Prevent default browser behavior
     } else if (p.key === 'f') {
       // Toggle filmstrip panel
@@ -1698,6 +1726,7 @@ const sketch = function (p) {
     currentBlendModeIndex = 0 // Reset to the first blend mode for the new background
     setBlendModeAndBackground()
     requestScreenUpdate()
+    showStatusDisplay()
 
     // Capture to history immediately (discrete action)
     captureHistoryImmediate('manual')
@@ -1729,6 +1758,7 @@ const sketch = function (p) {
       (currentBlendModeIndex + 1) % currentBackgroundMode.blendModes.length
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
     requestScreenUpdate()
+    showStatusDisplay()
 
     // Capture to history immediately (discrete action)
     captureHistoryImmediate('manual')
@@ -2028,20 +2058,27 @@ const sketch = function (p) {
     const statusOverlay = document.getElementById('status-overlay')
     if (!statusOverlay) return
 
+    // helper to format filenames
+    const formatName = (filename) => {
+      if (!filename) return '-'
+      // Remove extension
+      let name = filename.replace(/\.[^/.]+$/, '')
+      // Replace delimiters with spaces for natural wrapping
+      return name.replace(/[_-]/g, ' ')
+    }
+
     // Update filenames
     const filenameA = document.getElementById('status-filename-a')
     const filenameB = document.getElementById('status-filename-b')
 
     if (filenameA && imageColorPairs[0].img) {
-      // Extract just the filename without extension for cleaner display
-      const cleanName = imageColorPairs[0].img.replace(/\.[^/.]+$/, '')
-      filenameA.textContent = cleanName
+      filenameA.textContent = formatName(imageColorPairs[0].img)
+      filenameA.title = imageColorPairs[0].img // Tooltip
     }
 
     if (filenameB && imageColorPairs[1].img) {
-      // Extract just the filename without extension for cleaner display
-      const cleanName = imageColorPairs[1].img.replace(/\.[^/.]+$/, '')
-      filenameB.textContent = cleanName
+      filenameB.textContent = formatName(imageColorPairs[1].img)
+      filenameB.title = imageColorPairs[1].img // Tooltip
     }
 
     // Update color names
@@ -2075,6 +2112,14 @@ const sketch = function (p) {
     if (statusImageA && statusImageB) {
       statusImageA.classList.toggle('active', controlState.activeImageIndex === 0)
       statusImageB.classList.toggle('active', controlState.activeImageIndex === 1)
+    }
+
+    // Update Blend Mode
+    const blendModeVal = document.getElementById('status-blend-mode-value')
+    if (blendModeVal) {
+      const currentBgMode = backgroundModes[currentBackgroundModeIndex]
+      const modeName = currentBgMode.blendModes[currentBlendModeIndex]
+      blendModeVal.textContent = modeName
     }
   }
 

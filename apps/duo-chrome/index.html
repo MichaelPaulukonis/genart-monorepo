@@ -25,7 +25,7 @@
           <div class="shortcut-section">
             <h4>Image Navigation</h4>
             <ul>
-              <li><kbd>← / →</kbd> - Navigate through images</li>
+              <li><kbd>← / →</kbd> - Navigate images (or History if Filmstrip active)</li>
               <li><kbd>Cmd+← / Cmd+→</kbd> - Cycle colors</li>
               <li><kbd>Mouse Click</kbd> - Generate new pair</li>
             </ul>
@@ -58,8 +58,8 @@
           <div class="shortcut-section">
             <h4>History Navigation</h4>
             <ul>
-              <li><kbd>[</kbd> - Previous composition</li>
-              <li><kbd>]</kbd> - Next composition</li>
+              <li><kbd>[</kbd> or <kbd>←</kbd> - Previous composition</li>
+              <li><kbd>]</kbd> or <kbd>→</kbd> - Next composition</li>
               <li><kbd>Shift+[</kbd> - Previous 10 compositions</li>
               <li><kbd>Shift+]</kbd> - Next 10 compositions</li>
               <li><kbd>Cmd+[</kbd> - Jump to beginning</li>
@@ -109,6 +109,10 @@
             <div class="status-color" id="status-color-b">-</div>
             <div class="status-scale">Scale: <span id="status-scale-b">1.00</span></div>
           </div>
+        </div>
+        <div class="status-blend-mode">
+          <span class="status-label">Blend:</span>
+          <span id="status-blend-mode-value">-</span>
         </div>
       </div>
     </div>

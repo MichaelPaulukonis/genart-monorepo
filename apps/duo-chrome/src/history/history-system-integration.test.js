@@ -394,6 +394,18 @@ describe('History System Integration Tests', () => {
 
       expect(filmstripPanel.shouldUseVirtualScrolling()).toBe(false)
     })
+
+    it('should format long filenames by truncating the start', () => {
+      // Test the helper method directly
+      const longName = 'very_long_filename_with_suffix_001.jpg'
+      const formatted = filmstripPanel.formatThumbnailName(longName)
+      
+      expect(formatted).toBe('...h_suffix_001')
+      expect(formatted.length).toBe(15)
+      
+      const shortName = 'short.jpg'
+      expect(filmstripPanel.formatThumbnailName(shortName)).toBe('short')
+    })
   })
 
   describe('Keyboard Navigation Integration', () => {

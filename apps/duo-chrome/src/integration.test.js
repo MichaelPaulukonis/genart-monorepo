@@ -162,6 +162,11 @@ describe('Comprehensive Integration Tests', () => {
   let toggleIndicators
   let keyPressed
   let mousePressed
+  let filmstripPanel
+  let navigateHistoryBackward
+  let navigateHistoryForward
+  let navigateHistoryToBeginning
+  let navigateHistoryToEnd
 
   beforeEach(() => {
     // Reset all mocks
@@ -194,6 +199,21 @@ describe('Comprehensive Integration Tests', () => {
     currentBlendModeIndex = 0
     currentBackgroundModeIndex = 0
     colorIndex = 0
+
+    // Mock filmstrip panel
+    filmstripPanel = {
+      isVisible: false,
+      update: vi.fn(),
+      updateHighlight: vi.fn(),
+      updateCounter: vi.fn(),
+      scrollToCurrentPosition: vi.fn()
+    }
+
+    // Mock history navigation
+    navigateHistoryBackward = vi.fn((step) => console.log('History backward', step))
+    navigateHistoryForward = vi.fn((step) => console.log('History forward', step))
+    navigateHistoryToBeginning = vi.fn(() => console.log('History To Beginning'))
+    navigateHistoryToEnd = vi.fn(() => console.log('History To End'))
 
     // Mock core functions
     setActiveImage = vi.fn((imageIndex) => {
@@ -393,26 +413,60 @@ describe('Comprehensive Integration Tests', () => {
       } else if (keyCode === mockP5.UP_ARROW) {
         const activeIndex = controlState.activeImageIndex
         adjustImageSize(activeIndex, 0.1)
+        // Mock showIndicatorsTemporarily behavior
+        if (controlState.indicatorTimeout) clearTimeout(controlState.indicatorTimeout)
+        controlState.indicatorTimeout = 123
         return false
       } else if (keyCode === mockP5.DOWN_ARROW) {
         const activeIndex = controlState.activeImageIndex
         adjustImageSize(activeIndex, -0.1)
+        // Mock showIndicatorsTemporarily behavior
+        if (controlState.indicatorTimeout) clearTimeout(controlState.indicatorTimeout)
+        controlState.indicatorTimeout = 123
         return false
       } else if (keyCode === mockP5.LEFT_ARROW) {
+        // History Navigation: Backward
+        if (modifiers.ctrl || modifiers.cmd) {
+          navigateHistoryToBeginning()
+        } else {
+          const step = modifiers.shift ? 10 : 1
+          navigateHistoryBackward(step)
+        }
+        return false
+      } else if (keyCode === mockP5.RIGHT_ARROW) {
+        // History Navigation: Forward
+        if (modifiers.ctrl || modifiers.cmd) {
+          navigateHistoryToEnd()
+        } else {
+          const step = modifiers.shift ? 10 : 1
+          navigateHistoryForward(step)
+        }
+        return false
+      } else if (key === '[' || key === '{') {
+        // Image/Color Navigation: Previous
         const activeIndex = controlState.activeImageIndex
         if (modifiers.ctrl || modifiers.cmd) {
           navigateImageColor(activeIndex, 'previous')
         } else {
-          navigateImage(activeIndex, 'previous')
+          const step = (key === '{' || modifiers.shift) ? 10 : 1
+          for(let i=0; i<step; i++) navigateImage(activeIndex, 'previous')
         }
+        // Mock showIndicatorsTemporarily behavior
+        if (controlState.indicatorTimeout) clearTimeout(controlState.indicatorTimeout)
+        controlState.indicatorTimeout = 123
         return false
-      } else if (keyCode === mockP5.RIGHT_ARROW) {
+      } else if (key === ']' || key === '}') {
+        // Image/Color Navigation: Next
         const activeIndex = controlState.activeImageIndex
         if (modifiers.ctrl || modifiers.cmd) {
           navigateImageColor(activeIndex, 'next')
         } else {
-          navigateImage(activeIndex, 'next')
+          const step = (key === '}' || modifiers.shift) ? 10 : 1
+          for(let i=0; i<step; i++) navigateImage(activeIndex, 'next')
         }
+        // Mock showIndicatorsTemporarily behavior
+        if (controlState.indicatorTimeout) clearTimeout(controlState.indicatorTimeout)
+        controlState.indicatorTimeout = 123
         return false
       } else if (key === 'c') {
         colorIndex = (colorIndex + 1) % 3
@@ -577,33 +631,46 @@ describe('Comprehensive Integration Tests', () => {
       expect(adjustImageSize).toHaveBeenCalledWith(0, -0.1)
     })
 
-    it('should handle image navigation (arrow keys)', () => {
-      keyPressed('a') // Select image A
-      
+    it('should handle history navigation (arrow keys)', () => {
+      // Left/Right arrows now navigate history regardless of filmstrip visibility
       keyPressed(null, mockP5.LEFT_ARROW)
-      expect(navigateImage).toHaveBeenCalledWith(0, 'previous')
+      expect(navigateHistoryBackward).toHaveBeenCalledWith(1)
 
       keyPressed(null, mockP5.RIGHT_ARROW)
+      expect(navigateHistoryForward).toHaveBeenCalledWith(1)
+    })
+
+    it('should handle history jump (Cmd+arrow keys)', () => {
+      // Cmd+Left -> Start of history
+      keyPressed(null, mockP5.LEFT_ARROW, { cmd: true })
+      expect(navigateHistoryToBeginning).toHaveBeenCalled()
+
+      // Cmd+Right -> End of history
+      keyPressed(null, mockP5.RIGHT_ARROW, { cmd: true })
+      expect(navigateHistoryToEnd).toHaveBeenCalled()
+    })
+
+    it('should handle image navigation (bracket keys)', () => {
+      keyPressed('a') // Select image A
+      
+      // '[' -> Previous Image
+      keyPressed('[') 
+      expect(navigateImage).toHaveBeenCalledWith(0, 'previous')
+
+      // ']' -> Next Image
+      keyPressed(']')
       expect(navigateImage).toHaveBeenCalledWith(0, 'next')
     })
 
-    it('should handle color navigation (Cmd+arrow keys)', () => {
-      keyPressed('a') // Select image A
+    it('should handle color navigation (Cmd+bracket keys)', () => {
+      keyPressed('a')
       
-      keyPressed(null, mockP5.LEFT_ARROW, { cmd: true })
+      // Cmd+'[' -> Previous Color
+      keyPressed('[', 0, { cmd: true })
       expect(navigateImageColor).toHaveBeenCalledWith(0, 'previous')
 
-      keyPressed(null, mockP5.RIGHT_ARROW, { cmd: true })
-      expect(navigateImageColor).toHaveBeenCalledWith(0, 'next')
-    })
-
-    it('should handle color navigation (Ctrl+arrow keys)', () => {
-      keyPressed('a') // Select image A
-      
-      keyPressed(null, mockP5.LEFT_ARROW, { ctrl: true })
-      expect(navigateImageColor).toHaveBeenCalledWith(0, 'previous')
-
-      keyPressed(null, mockP5.RIGHT_ARROW, { ctrl: true })
+      // Cmd+']' -> Next Color
+      keyPressed(']', 0, { cmd: true })
       expect(navigateImageColor).toHaveBeenCalledWith(0, 'next')
     })
 
@@ -639,18 +706,32 @@ describe('Comprehensive Integration Tests', () => {
       expect(setActiveImage).not.toHaveBeenCalled()
     })
 
-    it('should handle modifier key combinations correctly', () => {
-      // Regular arrow key should navigate images
-      keyPressed(null, mockP5.LEFT_ARROW)
-      expect(navigateImage).toHaveBeenCalled()
+    it('should handle modifiers correctly on bracket keys', () => {
+      // Bracket -> Image
+      keyPressed('[')
+      expect(navigateImage).toHaveBeenCalledWith(0, 'previous')
       expect(navigateImageColor).not.toHaveBeenCalled()
 
       vi.clearAllMocks()
 
-      // Cmd+arrow key should navigate colors
-      keyPressed(null, mockP5.LEFT_ARROW, { cmd: true })
-      expect(navigateImageColor).toHaveBeenCalled()
+      // Cmd+Bracket -> Color
+      keyPressed('[', 0, { cmd: true })
+      expect(navigateImageColor).toHaveBeenCalledWith(0, 'previous')
       expect(navigateImage).not.toHaveBeenCalled()
+    })
+
+    it('should handle modifiers correctly on arrow keys', () => {
+      // Arrow -> History
+      keyPressed(null, mockP5.LEFT_ARROW)
+      expect(navigateHistoryBackward).toHaveBeenCalledWith(1)
+      expect(navigateHistoryToBeginning).not.toHaveBeenCalled()
+
+      vi.clearAllMocks()
+
+      // Cmd+Arrow -> History Jump
+      keyPressed(null, mockP5.LEFT_ARROW, { cmd: true })
+      expect(navigateHistoryToBeginning).toHaveBeenCalled()
+      expect(navigateHistoryBackward).not.toHaveBeenCalled()
     })
 
     it('should prevent default browser behavior for arrow keys', () => {
@@ -719,9 +800,16 @@ describe('Comprehensive Integration Tests', () => {
       // Use other features
       keyPressed('m') // Blend mode
       keyPressed('c') // Color palette
-      keyPressed('x') // Exchange images
-
-      // Manual control state should be preserved
+      
+      // Exchange images - this SWAPS manual control state
+      keyPressed('x') 
+      // Now [0] should be false (was [1]), and [1] should be true (was [0])
+      expect(controlState.manualSizeControl[1]).toBe(true)
+      
+      // Swap back to verify preservation
+      keyPressed('x')
+      
+      // Manual control state should be preserved and restored to [0]
       expect(controlState.manualSizeControl[0]).toBe(true)
     })
 

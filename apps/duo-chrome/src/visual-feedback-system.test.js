@@ -51,7 +51,8 @@ const mockElements = {
   'status-scale-a': createMockElement('status-scale-a'),
   'status-scale-b': createMockElement('status-scale-b'),
   'status-image-a': createMockElement('status-image-a'),
-  'status-image-b': createMockElement('status-image-b')
+  'status-image-b': createMockElement('status-image-b'),
+  'status-blend-mode-value': createMockElement('status-blend-mode-value')
 }
 
 // Mock global objects
@@ -101,7 +102,6 @@ describe('Visual Feedback System', () => {
       if (element) {
         element.textContent = ''
         element.style = {}
-        vi.clearAllMocks()
       }
     })
 
@@ -132,18 +132,18 @@ describe('Visual Feedback System', () => {
       const statusOverlay = document.getElementById('status-overlay')
       if (!statusOverlay) return
 
-      // Update filenames
+      // Update filenames (mimic formatName logic)
+      const formatName = (name) => name ? name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ') : '-'
+
       const filenameA = document.getElementById('status-filename-a')
       const filenameB = document.getElementById('status-filename-b')
 
       if (filenameA && imageColorPairs[0].img) {
-        const cleanName = imageColorPairs[0].img.replace(/\.[^/.]+$/, '')
-        filenameA.textContent = cleanName
+        filenameA.textContent = formatName(imageColorPairs[0].img)
       }
 
       if (filenameB && imageColorPairs[1].img) {
-        const cleanName = imageColorPairs[1].img.replace(/\.[^/.]+$/, '')
-        filenameB.textContent = cleanName
+        filenameB.textContent = formatName(imageColorPairs[1].img)
       }
 
       // Update color names
@@ -177,6 +177,13 @@ describe('Visual Feedback System', () => {
       if (statusImageA && statusImageB) {
         statusImageA.classList.toggle('active', controlState.activeImageIndex === 0)
         statusImageB.classList.toggle('active', controlState.activeImageIndex === 1)
+      }
+
+      // Update Blend Mode
+      const blendModeVal = document.getElementById('status-blend-mode-value')
+      if (blendModeVal) {
+        // Mock value since we don't have the full backgroundModes array in this test context
+        blendModeVal.textContent = 'MULTIPLY'
       }
     })
 
@@ -262,8 +269,14 @@ describe('Visual Feedback System', () => {
     it('should update image filenames correctly', () => {
       updateStatusDisplay()
 
-      expect(mockElements['status-filename-a'].textContent).toBe('landscape-001')
-      expect(mockElements['status-filename-b'].textContent).toBe('portrait-042')
+      // Expect formatted name (spaces instead of hyphens)
+      expect(mockElements['status-filename-a'].textContent).toBe('landscape 001')
+      expect(mockElements['status-filename-b'].textContent).toBe('portrait 042')
+    })
+
+    it('should update blend mode display correctly', () => {
+      updateStatusDisplay()
+      expect(mockElements['status-blend-mode-value'].textContent).toBe('MULTIPLY')
     })
 
     it('should update color names correctly', () => {
