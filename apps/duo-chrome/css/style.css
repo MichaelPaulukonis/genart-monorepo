@@ -538,6 +538,24 @@ canvas {
   opacity: 1;
 }
 
+.filmstrip-branch-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 152, 0, 0.9);
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  cursor: help;
+}
+
 /* Custom scrollbar for filmstrip */
 .filmstrip-container::-webkit-scrollbar {
   height: 8px;

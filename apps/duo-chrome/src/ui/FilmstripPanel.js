@@ -232,6 +232,15 @@ export class FilmstripPanel {
     
     thumbnail.appendChild(info)
 
+    // Add branch indicator if multiple paths exist
+    if (entry._branchCount && entry._branchCount > 1) {
+      const branchIndicator = document.createElement('div')
+      branchIndicator.className = 'filmstrip-branch-indicator'
+      branchIndicator.innerHTML = '&#9282;' // Fork symbol (⑂)
+      branchIndicator.title = `${entry._branchCount} versions available`
+      thumbnail.appendChild(branchIndicator)
+    }
+
     return thumbnail
   }
 

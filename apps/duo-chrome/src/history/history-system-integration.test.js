@@ -485,9 +485,11 @@ describe('History System Integration Tests', () => {
       // Get saved data
       const savedData = JSON.parse(localStorage.getItem('duo-chrome-history'))
 
-      expect(savedData.entries).toHaveLength(3)
-      expect(savedData.currentPosition).toBe(2)
-      expect(savedData.version).toBe(1)
+      // Updated for Graph Architecture (v2)
+      expect(savedData.nodes).toHaveLength(3)
+      expect(savedData.version).toBe(2)
+      expect(savedData.rootId).toBeTruthy()
+      expect(savedData.currentId).toBeTruthy()
     })
 
     it('should restore history after simulated page reload', () => {
@@ -546,9 +548,9 @@ describe('History System Integration Tests', () => {
       // Create new manager (should handle error)
       const newManager = new HistoryManager(mockP5, mockStateRefs)
 
-      // Should start with empty history
-      expect(newManager.history).toHaveLength(0)
-      expect(newManager.currentPosition).toBe(-1)
+      // Should start with fresh history (1 entry generated from current state)
+      expect(newManager.history).toHaveLength(1)
+      expect(newManager.currentPosition).toBe(0)
 
       // Should have cleared corrupted data
       expect(localStorage.removeItem).toHaveBeenCalledWith('duo-chrome-history')
