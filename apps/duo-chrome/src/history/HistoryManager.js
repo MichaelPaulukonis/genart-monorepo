@@ -248,6 +248,57 @@ export class HistoryManager {
   }
 
   /**
+   * Toggles the active branch for a specific node.
+   * Cycles through available children, changing the active path.
+   *
+   * @param {string} nodeId - ID of the node to toggle
+   * @returns {boolean} - True if branch was switched
+   */
+  toggleBranch (nodeId) {
+    const node = this.nodes.get(nodeId)
+    if (!node || node.children.length <= 1) {
+      return false
+    }
+
+    const currentChildIndex = node.children.indexOf(node.activeChildId)
+    if (currentChildIndex === -1) {
+      // Should not happen, but fallback to first child
+      node.activeChildId = node.children[0]
+    } else {
+      // Cycle to next child
+      const nextIndex = (currentChildIndex + 1) % node.children.length
+      node.activeChildId = node.children[nextIndex]
+    }
+
+    console.log(`Switched branch for node ${nodeId}. Active child: ${node.activeChildId}`)
+    
+    this._invalidateCache()
+    this.saveToStorage()
+    
+    // If we are currently "downstream" from this node, we might need to
+    // update currentId?
+    // Actually, if we switch the branch at a past node, our currentId
+    // (if we are at the tip) effectively becomes "disconnected" from the active path.
+    // The "Filmstrip" shows the active path.
+    // If currentId is NOT in the new active path, we should probably
+    // jump to the new tip? Or stay where we are (off-road)?
+    
+    // Standard behavior: If I switch a signpost 5 miles back, I am still where I am.
+    // But the "Map" (Filmstrip) will show the new route.
+    // If I want to "see" the other branch, I should probably navigate to it.
+    
+    // Let's check if currentId is still reachable from root.
+    // _rebuildActivePath will determine the new path.
+    // If currentId is not in it, it's confusing.
+    
+    // Better UX: When toggling a branch, typically one is AT the fork point.
+    // If the user clicks the fork icon on a thumbnail, they are modifying
+    // the path *leaving* that thumbnail.
+    
+    return true
+  }
+
+  /**
    * Navigates to a specific position in the *active* history stack.
    *
    * @param {number} position - Target position (0-based index in active path)

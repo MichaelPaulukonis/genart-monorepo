@@ -238,6 +238,17 @@ export class FilmstripPanel {
       branchIndicator.className = 'filmstrip-branch-indicator'
       branchIndicator.innerHTML = '&#9282;' // Fork symbol (⑂)
       branchIndicator.title = `${entry._branchCount} versions available`
+      
+      branchIndicator.addEventListener('click', (e) => {
+        e.stopPropagation()
+        this.historyManager.toggleBranch(entry.id)
+        // Force full re-render to update the active path
+        this.renderedCount = 0 
+        this.scrollContainer.innerHTML = ''
+        this.renderedThumbnails.clear()
+        this.render()
+      })
+      
       thumbnail.appendChild(branchIndicator)
     }
 
