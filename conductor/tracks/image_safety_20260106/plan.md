@@ -1,6 +1,6 @@
 # Track Plan: Revise Image Switching Workflow and Safety
 
-## Phase 1: Preparation & Analysis
+## Phase 1: Preparation & Analysis [checkpoint: 06153c0]
 - [x] Task: Analyze current script logic
     - [x] Subtask: Read `scripts/swap-duo-chrome-images.js` to understand current destructive behavior.
     - [x] Subtask: Identify where this script is called in `package.json` or `nx.json`.
