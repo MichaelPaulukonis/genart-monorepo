@@ -1,12 +1,12 @@
 # Track Plan: Revise Image Switching Workflow and Safety
 
 ## Phase 1: Preparation & Analysis
-- [ ] Task: Analyze current script logic
-    - [ ] Subtask: Read `scripts/swap-duo-chrome-images.js` to understand current destructive behavior.
-    - [ ] Subtask: Identify where this script is called in `package.json` or `nx.json`.
-- [ ] Task: Install dependencies
-    - [ ] Subtask: Add `commander` to `devDependencies` in `package.json`.
-    - [ ] Subtask: Run install command.
+- [x] Task: Analyze current script logic
+    - [x] Subtask: Read `scripts/swap-duo-chrome-images.js` to understand current destructive behavior.
+    - [x] Subtask: Identify where this script is called in `package.json` or `nx.json`.
+- [x] Task: Install dependencies [6240676]
+    - [x] Subtask: Add `commander` to `devDependencies` in `package.json`.
+    - [x] Subtask: Run install command.
 
 ## Phase 2: Refactoring `swap-duo-chrome-images.js`
 - [ ] Task: Create new script structure
