@@ -74,6 +74,75 @@ describe('swap-duo-chrome-images.js CLI Refactor', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
+  it('should NOT copy files when --dry-run is used', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'swap-test-dry-'));
+    const publicDir = path.join(tmpDir, 'public');
+    fs.mkdirSync(publicDir, { recursive: true });
+    
+    const sourceDirName = 'src_images';
+    const targetDirName = 'images';
+    const sourceDir = path.join(publicDir, sourceDirName);
+    const targetDir = path.join(publicDir, targetDirName);
+    fs.mkdirSync(sourceDir);
+    fs.writeFileSync(path.join(sourceDir, 'test.txt'), 'hello');
+
+    const result = spawnSync('node', [
+      SCRIPT_PATH,
+      '--source', sourceDirName,
+      '--target', targetDirName,
+      '--dry-run'
+    ], {
+      env: { ...process.env, DUO_CHROME_PUBLIC_DIR: publicDir }
+    });
+
+    expect(result.status).toBe(0);
+    expect(fs.existsSync(targetDir)).toBe(false);
+    
+    // Cleanup
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('should require --force to overwrite an existing target', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'swap-test-force-'));
+    const publicDir = path.join(tmpDir, 'public');
+    fs.mkdirSync(publicDir, { recursive: true });
+    
+    const sourceDirName = 'src_images';
+    const targetDirName = 'images';
+    const sourceDir = path.join(publicDir, sourceDirName);
+    const targetDir = path.join(publicDir, targetDirName);
+    fs.mkdirSync(sourceDir);
+    fs.mkdirSync(targetDir);
+    fs.writeFileSync(path.join(targetDir, 'existing.txt'), 'old');
+
+    // Should fail without --force
+    const resultNoForce = spawnSync('node', [
+      SCRIPT_PATH,
+      '--source', sourceDirName,
+      '--target', targetDirName
+    ], {
+      env: { ...process.env, DUO_CHROME_PUBLIC_DIR: publicDir }
+    });
+    expect(resultNoForce.status).toBe(1);
+    expect(resultNoForce.stderr.toString()).toContain('already exists');
+    expect(fs.existsSync(path.join(targetDir, 'existing.txt'))).toBe(true);
+
+    // Should succeed with --force
+    const resultForce = spawnSync('node', [
+      SCRIPT_PATH,
+      '--source', sourceDirName,
+      '--target', targetDirName,
+      '--force'
+    ], {
+      env: { ...process.env, DUO_CHROME_PUBLIC_DIR: publicDir }
+    });
+    expect(resultForce.status).toBe(0);
+    expect(fs.existsSync(path.join(targetDir, 'existing.txt'))).toBe(false);
+    
+    // Cleanup
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
   it('should still support legacy "work" mode (backward compatibility)', () => {
     const result = spawnSync('node', [SCRIPT_PATH, 'work', '--dry-run']);
     expect(result.status).toBe(0);
