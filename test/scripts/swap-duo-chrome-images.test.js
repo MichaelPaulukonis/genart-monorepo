@@ -102,8 +102,8 @@ describe('swap-duo-chrome-images.js CLI Refactor', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it('should require --force to overwrite an existing target', () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'swap-test-force-'));
+  it('should backup existing target with timestamp', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'swap-test-backup-'));
     const publicDir = path.join(tmpDir, 'public');
     fs.mkdirSync(publicDir, { recursive: true });
     
@@ -113,31 +113,31 @@ describe('swap-duo-chrome-images.js CLI Refactor', () => {
     const targetDir = path.join(publicDir, targetDirName);
     fs.mkdirSync(sourceDir);
     fs.mkdirSync(targetDir);
-    fs.writeFileSync(path.join(targetDir, 'existing.txt'), 'old');
+    fs.writeFileSync(path.join(sourceDir, 'new.txt'), 'new');
+    fs.writeFileSync(path.join(targetDir, 'old.txt'), 'old');
 
-    // Should fail without --force
-    const resultNoForce = spawnSync('node', [
+    // Should succeed and create a backup
+    const result = spawnSync('node', [
       SCRIPT_PATH,
       '--source', sourceDirName,
       '--target', targetDirName
     ], {
       env: { ...process.env, DUO_CHROME_PUBLIC_DIR: publicDir }
     });
-    expect(resultNoForce.status).toBe(1);
-    expect(resultNoForce.stderr.toString()).toContain('already exists');
-    expect(fs.existsSync(path.join(targetDir, 'existing.txt'))).toBe(true);
 
-    // Should succeed with --force
-    const resultForce = spawnSync('node', [
-      SCRIPT_PATH,
-      '--source', sourceDirName,
-      '--target', targetDirName,
-      '--force'
-    ], {
-      env: { ...process.env, DUO_CHROME_PUBLIC_DIR: publicDir }
-    });
-    expect(resultForce.status).toBe(0);
-    expect(fs.existsSync(path.join(targetDir, 'existing.txt'))).toBe(false);
+    if (result.status !== 0) {
+      console.error(result.stderr.toString());
+    }
+
+    expect(result.status).toBe(0);
+    // Target should now have new content
+    expect(fs.existsSync(path.join(targetDir, 'new.txt'))).toBe(true);
+    
+    // Backup should exist
+    const files = fs.readdirSync(publicDir);
+    const backupDir = files.find(f => f.startsWith(`${targetDirName}_`) && f !== targetDirName && f !== sourceDirName);
+    expect(backupDir).toBeDefined();
+    expect(fs.existsSync(path.join(publicDir, backupDir, 'old.txt'))).toBe(true);
     
     // Cleanup
     fs.rmSync(tmpDir, { recursive: true, force: true });

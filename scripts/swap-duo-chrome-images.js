@@ -114,9 +114,21 @@ function handleExplicitCopy(source, target, dryRun, force) {
   }
 
   if (dirExists(targetPath) && !force && !dryRun) {
-    console.error(`❌ Error: Target directory "${target}" already exists.`);
-    console.log('   Use --force to overwrite it.');
-    process.exit(1);
+    // Backup existing target
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupName = `${target}_${timestamp}`;
+    const backupPath = path.join(PUBLIC_DIR, backupName);
+    
+    console.log(`ℹ️  Target directory "${target}" exists.`);
+    console.log(`📦 Creating backup at "${backupName}"...`);
+    
+    try {
+      fs.renameSync(targetPath, backupPath);
+      console.log(`✓ Backup created: ${backupName}`);
+    } catch (err) {
+      console.error(`❌ Error creating backup: ${err.message}`);
+      process.exit(1);
+    }
   }
 
   console.log(`Copying "${source}" to "${target}"...`);
@@ -124,7 +136,7 @@ function handleExplicitCopy(source, target, dryRun, force) {
   if (dryRun) {
     console.log(`[Dry run] Would copy ${sourcePath} to ${targetPath}`);
     if (dirExists(targetPath)) {
-      console.log(`[Dry run] Target "${target}" exists and would be replaced (since --force is used or would be required)`);
+      console.log(`[Dry run] Target "${target}" exists and would be backed up`);
     }
   } else {
     try {
