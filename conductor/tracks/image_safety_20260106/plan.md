@@ -16,10 +16,10 @@
     - [x] Subtask: Write Test: Verify that "source" directory remains untouched.
     - [x] Subtask: Implement logic to `cp -r` (or node equivalent) from source to `public/images`, replacing the old swap logic.
     - [x] Subtask: Add error handling for missing source directories.
-- [~] Task: Add Safety Flags
-    - [ ] Subtask: Write Test: Verify `--dry-run` logs actions without performing them.
-    - [ ] Subtask: Implement `--dry-run` flag.
-    - [ ] Subtask: Implement `--force` flag for overwriting existing `public/images` content.
+- [x] Task: Add Safety Flags [aa1f757]
+    - [x] Subtask: Write Test: Verify `--dry-run` logs actions without performing them.
+    - [x] Subtask: Implement `--dry-run` flag.
+    - [x] Subtask: Implement `--force` flag for overwriting existing `public/images` content.
 
 ## Phase 3: Integration & Documentation
 - [ ] Task: Update Project Configuration
