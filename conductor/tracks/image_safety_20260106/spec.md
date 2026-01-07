@@ -18,7 +18,8 @@ This track focuses on refactoring the `swap-duo-chrome-images.js` script to impr
     - Implementing a "dry-run" flag is highly recommended.
 - **Safety Checks:**
     - Verify source directory exists.
-    - Warn before overwriting/deleting the current `public/images` (or require a `--force` flag).
+    - If target directory exists, **rename it with a timestamp** (e.g., `images_YYYY-MM-DD_HH-MM-SS`) before copying the new source.
+    - Do NOT require `--force` for this; backup should be the default safe behavior.
 
 ## Success Criteria
 - [ ] `swap-duo-chrome-images.js` accepts named arguments (e.g., `--source`, `--target`).

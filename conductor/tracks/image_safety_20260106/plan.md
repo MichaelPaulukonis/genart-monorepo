@@ -20,6 +20,9 @@
     - [x] Subtask: Write Test: Verify `--dry-run` logs actions without performing them.
     - [x] Subtask: Implement `--dry-run` flag.
     - [x] Subtask: Implement `--force` flag for overwriting existing `public/images` content.
+- [ ] Task: Implement Timestamp Backup for Existing Target
+    - [ ] Subtask: Write Test: Verify target is renamed with timestamp if it exists.
+    - [ ] Subtask: Implement backup logic using ISO timestamp.
 
 ## Phase 3: Integration & Documentation
 - [ ] Task: Update Project Configuration
