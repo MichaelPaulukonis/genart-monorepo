@@ -12,11 +12,11 @@
 - [x] Task: Create new script structure [1b41603]
     - [x] Subtask: Write Test: Create a test file `test/scripts/swap-images.test.js` (or similar) to mock filesystem operations.
     - [x] Subtask: Implement basic `commander` setup with `--help` and version.
-- [~] Task: Implement Safe Copy Logic
-    - [ ] Subtask: Write Test: Verify that "source" directory remains untouched.
-    - [ ] Subtask: Implement logic to `cp -r` (or node equivalent) from source to `public/images`, replacing the old swap logic.
-    - [ ] Subtask: Add error handling for missing source directories.
-- [ ] Task: Add Safety Flags
+- [x] Task: Implement Safe Copy Logic [d1af46c]
+    - [x] Subtask: Write Test: Verify that "source" directory remains untouched.
+    - [x] Subtask: Implement logic to `cp -r` (or node equivalent) from source to `public/images`, replacing the old swap logic.
+    - [x] Subtask: Add error handling for missing source directories.
+- [~] Task: Add Safety Flags
     - [ ] Subtask: Write Test: Verify `--dry-run` logs actions without performing them.
     - [ ] Subtask: Implement `--dry-run` flag.
     - [ ] Subtask: Implement `--force` flag for overwriting existing `public/images` content.
