@@ -9,10 +9,10 @@
     - [x] Subtask: Run install command.
 
 ## Phase 2: Refactoring `swap-duo-chrome-images.js`
-- [ ] Task: Create new script structure
-    - [ ] Subtask: Write Test: Create a test file `test/scripts/swap-images.test.js` (or similar) to mock filesystem operations.
-    - [ ] Subtask: Implement basic `commander` setup with `--help` and version.
-- [ ] Task: Implement Safe Copy Logic
+- [x] Task: Create new script structure [1b41603]
+    - [x] Subtask: Write Test: Create a test file `test/scripts/swap-images.test.js` (or similar) to mock filesystem operations.
+    - [x] Subtask: Implement basic `commander` setup with `--help` and version.
+- [~] Task: Implement Safe Copy Logic
     - [ ] Subtask: Write Test: Verify that "source" directory remains untouched.
     - [ ] Subtask: Implement logic to `cp -r` (or node equivalent) from source to `public/images`, replacing the old swap logic.
     - [ ] Subtask: Add error handling for missing source directories.
