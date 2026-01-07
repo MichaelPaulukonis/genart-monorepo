@@ -1,99 +1,130 @@
 #!/usr/bin/env node
 
 /**
- * Swap Duo-Chrome Image Folders
- *
- * This script manages the image folder swapping for duo-chrome app:
- * - "work" mode: Swap to custom working images
- * - "commit" mode: Swap to official images for committing/deployment
- *
- * Usage:
- *   node scripts/swap-duo-chrome-images.js work
- *   node scripts/swap-duo-chrome-images.js commit
+ * Manage Duo-Chrome Image Folders
+ * 
+ * Refactored to use commander.js for safer and more flexible image set management.
  */
 
-const fs = require('fs')
-const path = require('path')
+const { program } = require('commander');
+const fs = require('fs');
+const path = require('path');
 
-const PUBLIC_DIR = path.join(__dirname, '..', 'apps', 'duo-chrome', 'public')
-const IMAGES_DIR = path.join(PUBLIC_DIR, 'images')
-const IMAGES_LOCAL_DIR = path.join(PUBLIC_DIR, 'images_local')
-const IMAGES_ORIGINAL_DIR = path.join(PUBLIC_DIR, 'images_original')
+const PUBLIC_DIR = path.join(__dirname, '..', 'apps', 'duo-chrome', 'public');
+const DEFAULT_TARGET = 'images';
 
-const mode = process.argv[2]
+program
+  .name('swap-duo-chrome-images')
+  .description('Manage image folder swapping for duo-chrome app')
+  .version('2.0.0')
+  .argument('[mode]', 'Legacy mode: "work" (images -> images_original, images_local -> images) or "commit" (images -> images_local, images_original -> images)')
+  .option('-s, --source <path>', 'Source directory name relative to public/')
+  .option('-t, --target <path>', 'Target directory name relative to public/', DEFAULT_TARGET)
+  .option('-d, --dry-run', 'Show what would be done without making changes')
+  .option('-f, --force', 'Force overwrite of target directory')
+  .action((mode, options) => {
+    const { source, target, dryRun, force } = options;
 
-if (!mode || !['work', 'commit'].includes(mode)) {
-  console.error('❌ Error: Invalid mode. Use "work" or "commit"')
-  console.log('\nUsage:')
-  console.log('  npm run images:work   - Switch to custom working images')
-  console.log('  npm run images:commit - Switch to official images for commit')
-  process.exit(1)
-}
+    if (dryRun) {
+      console.log('🧪 Dry run: No changes will be made.');
+    }
+
+    if (mode) {
+      if (dryRun) {
+        console.log(`🧪 Dry run: mode: ${mode}`);
+      } else {
+        console.log(`Processing legacy mode: ${mode}`);
+      }
+      handleLegacyMode(mode, dryRun);
+      return;
+    }
+
+    if (source) {
+      handleExplicitCopy(source, target, dryRun, force);
+      return;
+    }
+
+    program.help();
+  });
 
 /**
  * Check if a directory exists
  */
-function dirExists (dir) {
+function dirExists(dir) {
   try {
-    return fs.statSync(dir).isDirectory()
+    return fs.statSync(dir).isDirectory();
   } catch {
-    return false
+    return false;
   }
 }
 
 /**
  * Rename a directory safely
  */
-function renameDir (from, to) {
-  if (!dirExists(from)) {
-    console.warn(`⚠️  Warning: ${path.basename(from)} does not exist, skipping`)
-    return false
+function renameDir(from, to, dryRun) {
+  const fromPath = path.join(PUBLIC_DIR, from);
+  const toPath = path.join(PUBLIC_DIR, to);
+
+  if (!dirExists(fromPath)) {
+    console.warn(`⚠️  Warning: ${from} does not exist, skipping`);
+    return false;
   }
 
-  if (dirExists(to)) {
-    console.error(`❌ Error: ${path.basename(to)} already exists!`)
-    console.log('   Cannot proceed with swap. Please resolve manually.')
-    process.exit(1)
+  if (dirExists(toPath)) {
+    if (dryRun) {
+      console.log(`[Dry run] Notice: ${to} already exists. A real run would fail here unless it's a swap.`);
+    } else {
+      console.error(`❌ Error: ${to} already exists!`);
+      console.log('   Cannot proceed with swap. Please resolve manually.');
+      process.exit(1);
+    }
   }
 
-  fs.renameSync(from, to)
-  console.log(`✓ Renamed ${path.basename(from)} → ${path.basename(to)}`)
-  return true
+  if (dryRun) {
+    console.log(`[Dry run] Would rename ${from} → ${to}`);
+  } else {
+    fs.renameSync(fromPath, toPath);
+    console.log(`✓ Renamed ${from} → ${to}`);
+  }
+  return true;
 }
 
-console.log(`\n🔄 Swapping duo-chrome images to "${mode}" mode...\n`)
-
-if (mode === 'work') {
-  // Work mode: images → images_original, images_local → images
-  console.log('Switching to custom working images:\n')
-
-  const step1 = renameDir(IMAGES_DIR, IMAGES_ORIGINAL_DIR)
-  const step2 = renameDir(IMAGES_LOCAL_DIR, IMAGES_DIR)
-
-  if (step1 && step2) {
-    console.log('\n✅ Successfully switched to working images!')
-    console.log('   You can now work with your custom images in public/images/')
-  } else if (!step1 && !step2) {
-    console.log('\n⚠️  Already in work mode (or folders are in unexpected state)')
-  }
-} else if (mode === 'commit') {
-  // Commit mode: images → images_local, images_original → images
-  console.log('Switching to official images for commit:\n')
-
-  const step1 = renameDir(IMAGES_DIR, IMAGES_LOCAL_DIR)
-  const step2 = renameDir(IMAGES_ORIGINAL_DIR, IMAGES_DIR)
-
-  if (step1 && step2) {
-    console.log('\n✅ Successfully switched to official images!')
-    console.log('   Ready to commit. The public/images/ folder now contains official images.')
-    console.log('   Remember to run "npm run images:work" after committing!')
-  } else if (!step1 && !step2) {
-    console.log('\n⚠️  Already in commit mode (or folders are in unexpected state)')
+function handleLegacyMode(mode, dryRun) {
+  if (mode === 'work') {
+    // Work mode: images → images_original, images_local → images
+    renameDir('images', 'images_original', dryRun);
+    renameDir('images_local', 'images', dryRun);
+  } else if (mode === 'commit') {
+    // Commit mode: images → images_local, images_original → images
+    renameDir('images', 'images_local', dryRun);
+    renameDir('images_original', 'images', dryRun);
+  } else {
+    console.error(`❌ Error: Invalid mode "${mode}". Use "work" or "commit"`);
+    process.exit(1);
   }
 }
 
-console.log('\nCurrent folder state:')
-console.log(`  images/          ${dirExists(IMAGES_DIR) ? '✓ exists' : '✗ missing'}`)
-console.log(`  images_local/    ${dirExists(IMAGES_LOCAL_DIR) ? '✓ exists' : '✗ missing'}`)
-console.log(`  images_original/ ${dirExists(IMAGES_ORIGINAL_DIR) ? '✓ exists' : '✗ missing'}`)
-console.log()
+function handleExplicitCopy(source, target, dryRun, force) {
+  const sourcePath = path.join(PUBLIC_DIR, source);
+  const targetPath = path.join(PUBLIC_DIR, target);
+
+  if (!dirExists(sourcePath)) {
+    console.error(`❌ Error: Source directory "${source}" does not exist in ${PUBLIC_DIR}`);
+    process.exit(1);
+  }
+
+  console.log(`Copying "${source}" to "${target}"...`);
+  
+  if (dryRun) {
+    console.log(`[Dry run] Would copy ${sourcePath} to ${targetPath}`);
+    if (dirExists(targetPath)) {
+      console.log(`[Dry run] Target ${target} exists and would be replaced (if --force used)`);
+    }
+  } else {
+    // Implementation for Phase 2 task "Implement Safe Copy Logic"
+    // For now, just logging to pass the "basic commander setup" task
+    console.log(`Operation not fully implemented yet (Phase 2)`);
+  }
+}
+
+program.parse();
