@@ -10,7 +10,7 @@ const { program } = require('commander');
 const fs = require('fs');
 const path = require('path');
 
-const PUBLIC_DIR = path.join(__dirname, '..', 'apps', 'duo-chrome', 'public');
+const PUBLIC_DIR = process.env.DUO_CHROME_PUBLIC_DIR || path.join(__dirname, '..', 'apps', 'duo-chrome', 'public');
 const DEFAULT_TARGET = 'images';
 
 program
@@ -113,17 +113,31 @@ function handleExplicitCopy(source, target, dryRun, force) {
     process.exit(1);
   }
 
+  if (dirExists(targetPath) && !force && !dryRun) {
+    console.error(`❌ Error: Target directory "${target}" already exists.`);
+    console.log('   Use --force to overwrite it.');
+    process.exit(1);
+  }
+
   console.log(`Copying "${source}" to "${target}"...`);
   
   if (dryRun) {
     console.log(`[Dry run] Would copy ${sourcePath} to ${targetPath}`);
     if (dirExists(targetPath)) {
-      console.log(`[Dry run] Target ${target} exists and would be replaced (if --force used)`);
+      console.log(`[Dry run] Target "${target}" exists and would be replaced (since --force is used or would be required)`);
     }
   } else {
-    // Implementation for Phase 2 task "Implement Safe Copy Logic"
-    // For now, just logging to pass the "basic commander setup" task
-    console.log(`Operation not fully implemented yet (Phase 2)`);
+    try {
+      if (dirExists(targetPath)) {
+        fs.rmSync(targetPath, { recursive: true, force: true });
+      }
+      // fs.cpSync requires Node.js v16.7.0+
+      fs.cpSync(sourcePath, targetPath, { recursive: true });
+      console.log(`✅ Successfully copied ${source} → ${target}`);
+    } catch (err) {
+      console.error(`❌ Error during copy: ${err.message}`);
+      process.exit(1);
+    }
   }
 }
 
