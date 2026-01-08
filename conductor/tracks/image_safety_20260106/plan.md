@@ -8,7 +8,7 @@
     - [x] Subtask: Add `commander` to `devDependencies` in `package.json`.
     - [x] Subtask: Run install command.
 
-## Phase 2: Refactoring `swap-duo-chrome-images.js`
+## Phase 2: Refactoring `swap-duo-chrome-images.js` [checkpoint: 35f2720]
 - [x] Task: Create new script structure [1b41603]
     - [x] Subtask: Write Test: Create a test file `test/scripts/swap-images.test.js` (or similar) to mock filesystem operations.
     - [x] Subtask: Implement basic `commander` setup with `--help` and version.
