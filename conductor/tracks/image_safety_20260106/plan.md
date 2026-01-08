@@ -24,7 +24,7 @@
     - [x] Subtask: Write Test: Verify target is renamed with timestamp if it exists.
     - [x] Subtask: Implement backup logic using ISO timestamp.
 
-## Phase 3: Integration & Documentation
+## Phase 3: Integration & Documentation [checkpoint: 0a12770]
 - [x] Task: Update Project Configuration [e00bc87]
     - [x] Subtask: Update `package.json` scripts to use the new flags (e.g., `npm run images:work` might become `node scripts/swap.js --source images_main`).
     - [x] Subtask: Verify `nx` targets calling this script still work.
