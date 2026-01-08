@@ -28,7 +28,7 @@
 - [x] Task: Update Project Configuration [e00bc87]
     - [x] Subtask: Update `package.json` scripts to use the new flags (e.g., `npm run images:work` might become `node scripts/swap.js --source images_main`).
     - [x] Subtask: Verify `nx` targets calling this script still work.
-- [~] Task: Update Documentation
-    - [ ] Subtask: Update `AGENTS.md` with strict rules about image handling.
-    - [ ] Subtask: Update `apps/duo-chrome/README.md` (or relevant doc) with new command usage.
-- [ ] Task: Conductor - User Manual Verification 'Integration & Documentation' (Protocol in workflow.md)
+- [x] Task: Update Documentation [869ae12]
+    - [x] Subtask: Update `AGENTS.md` with strict rules about image handling.
+    - [x] Subtask: Update `apps/duo-chrome/README.md` (or relevant doc) with new command usage.
+- [~] Task: Conductor - User Manual Verification 'Integration & Documentation' (Protocol in workflow.md)
