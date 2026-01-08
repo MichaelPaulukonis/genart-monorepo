@@ -11,3 +11,23 @@
 - If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
 
 <!-- nx configuration end-->
+
+# Duo-Chrome Image Management Guidelines
+
+
+
+**Use Safe Image Swapping**
+
+
+
+- The `scripts/swap-duo-chrome-images.js` script has been refactored to be safe and use timestamped backups.
+
+- **ALWAYS** use the script with explicit flags or standard npm commands:
+
+  - `npm run images:work`: Safely switches to working images (renames current to backup).
+
+  - `npm run images:commit`: Safely switches to official images (renames current to backup).
+
+- **DO NOT** manually rename or delete folders in `apps/duo-chrome/public/` unless you are cleaning up backups.
+
+- The script automatically creates timestamped backups (e.g., `images_2026...`) when switching targets. This prevents data loss.

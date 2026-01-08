@@ -1,12 +1,5 @@
 # Image Swap Setup Guide
 
-## Current State
-
-You currently have:
-
-- `public/images/` - Your custom working images (active)
-- `public/images_original/` - Copy of official committed images
-
 ## Quick Reference
 
 ```bash
@@ -17,28 +10,31 @@ npm run images:work
 npm run images:commit
 ```
 
-## Initial Setup (Already Done)
+**New Safety Features:**
+The swap script now automatically creates timestamped backups (e.g., `images_2026-01-08...`) when switching. It will NEVER overwrite your `images` folder without backing it up first.
 
-Your folders are already set up correctly! You're in "work mode" with:
+## Advanced Usage
 
-- Custom images active in `public/images/`
-- Official images backed up in `public/images_original/`
+You can now explicitly swap any folder:
+
+```bash
+# Load specific images
+node ../../scripts/swap-duo-chrome-images.js --source my_special_images --target images
+```
 
 ## Before Your Next Commit
 
-1. Run `npm run images:commit` to swap to official images
-2. Commit your changes
-3. Run `npm run images:work` to swap back to your custom images
+1. Run `npm run images:commit` to load official images.
+2. Commit your changes.
+3. Run `npm run images:work` to restore your custom images.
 
 ## Checking Current State
 
-Run the script without swapping to see current folder status:
+Run the script help to see available options:
 
 ```bash
-node ../../scripts/swap-duo-chrome-images.js
+node ../../scripts/swap-duo-chrome-images.js --help
 ```
-
-This will show which folders exist and help you determine which mode you're in.
 
 ## Full Documentation
 

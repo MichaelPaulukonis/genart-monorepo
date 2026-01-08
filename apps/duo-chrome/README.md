@@ -100,15 +100,33 @@ The help overlay can be closed by pressing `H`, `I`, or `ESC`.
 
 ### Managing Images
 
-**For Local Development with Custom Images:**
+**Safe Image Switching:**
+
+This project includes a safe script for switching between "official" (committed) images and local "work" images.
 
 ```bash
-# Switch to your custom working images
+# Switch to your custom working images (source: images_local)
 npm run images:work
 
-# Switch back to official images (before committing)
+# Switch back to official images (source: images_original)
 npm run images:commit
 ```
+
+**Advanced Usage:**
+
+The script supports explicit source/target definitions and a dry-run mode:
+
+```bash
+# Preview what would happen
+node ../../scripts/swap-duo-chrome-images.js --source my_images --target images --dry-run
+
+# Explicitly load a specific folder
+node ../../scripts/swap-duo-chrome-images.js --source my_images --target images
+```
+
+**Safety Features:**
+- **Automatic Backups:** The script automatically renames the existing `images` folder with a timestamp before replacing it (e.g., `images_2026-01-01...`). It does NOT overwrite or delete data.
+- **Source Protection:** Source directories are never modified or moved.
 
 See [Image Management Guide](../../docs/guides/duo-chrome-image-management.md) for details.
 
