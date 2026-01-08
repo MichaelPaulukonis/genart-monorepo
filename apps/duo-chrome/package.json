@@ -7,8 +7,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:size-control": "node src/size-control.test.js",
-    "images:work": "node ../../scripts/swap-duo-chrome-images.js work",
-    "images:commit": "node ../../scripts/swap-duo-chrome-images.js commit"
+    "images:work": "node ../../scripts/swap-duo-chrome-images.js --source images_local --target images",
+    "images:commit": "node ../../scripts/swap-duo-chrome-images.js --source images_original --target images"
   },
   "devDependencies": {
     "eslint": "^8.57.1",
