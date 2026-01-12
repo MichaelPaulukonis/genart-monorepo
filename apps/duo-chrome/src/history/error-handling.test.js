@@ -8,6 +8,25 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { HistoryManager } from './HistoryManager.js'
 
+// Mock localStorage
+const localStorageMock = (() => {
+  let store = {}
+  return {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => {
+      store[key] = value.toString()
+    },
+    removeItem: (key) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    }
+  }
+})()
+
+global.localStorage = localStorageMock
+
 describe('HistoryManager Error Handling', () => {
   let mockP5
   let mockStateRefs
@@ -94,35 +113,26 @@ describe('HistoryManager Error Handling', () => {
     })
 
     it('should handle localStorage quota exceeded', () => {
-      // Mock localStorage.setItem to throw QuotaExceededError on first call, succeed on second
-      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
-      let callCount = 0
+      // Mock localStorage.setItem to throw QuotaExceededError
+      const setItemSpy = vi.spyOn(global.localStorage, 'setItem')
       setItemSpy.mockImplementation(() => {
-        callCount++
-        if (callCount === 1) {
-          // First call (full save) throws quota error
-          const error = new Error('QuotaExceededError')
-          error.name = 'QuotaExceededError'
-          throw error
-        }
-        // Second call (minimal save) succeeds
-        return undefined
+        const error = new Error('QuotaExceededError')
+        error.name = 'QuotaExceededError'
+        throw error
       })
 
       // Add some entries to history
       historyManager.captureCurrentState('manual')
-      historyManager.captureCurrentState('manual')
 
       const result = historyManager.saveToStorage()
 
-      // Should attempt minimal save and succeed
-      expect(result).toBe(true)
+      expect(result).toBe(false)
 
       setItemSpy.mockRestore()
     })
 
     it('should handle SecurityError (private browsing)', () => {
-      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
+      const setItemSpy = vi.spyOn(global.localStorage, 'setItem')
       setItemSpy.mockImplementation(() => {
         const error = new Error('SecurityError')
         error.name = 'SecurityError'
@@ -144,14 +154,17 @@ describe('HistoryManager Error Handling', () => {
       const result = historyManager.loadFromStorage()
 
       expect(result).toBe(false)
-      // Should have cleared corrupted data
-      expect(localStorage.getItem('duo-chrome-history')).toBeNull()
+      // Should have cleared corrupted data and re-seeded with fresh state
+      const stored = localStorage.getItem('duo-chrome-history')
+      expect(stored).not.toBeNull()
+      const data = JSON.parse(stored)
+      expect(data.nodes).toHaveLength(1)
     })
 
-    it('should handle missing required fields', () => {
+    it('should handle missing required graph fields', () => {
       localStorage.setItem('duo-chrome-history', JSON.stringify({
-        version: 1
-        // Missing entries and currentPosition
+        version: 2
+        // Missing nodes, rootId, currentId
       }))
 
       const result = historyManager.loadFromStorage()
@@ -159,57 +172,37 @@ describe('HistoryManager Error Handling', () => {
       expect(result).toBe(false)
     })
 
-    it('should handle invalid entry structure', () => {
+    it('should handle invalid nodes structure', () => {
       localStorage.setItem('duo-chrome-history', JSON.stringify({
-        version: 1,
-        currentPosition: 0,
-        entries: [
-          { invalid: 'entry' } // Missing required fields
-        ]
+        version: 2,
+        rootId: 'test-1',
+        currentId: 'test-1',
+        nodes: 'not an array'
       }))
 
       const result = historyManager.loadFromStorage()
 
-      // Should skip invalid entries
       expect(result).toBe(false)
     })
 
-    it('should recover partially valid entries', () => {
-      const validEntry = {
-        id: 'test-1',
-        timestamp: Date.now(),
-        imageA: {
-          index: 0,
-          filename: 'test1.jpg',
-          colorName: 'Red',
-          scale: 1.0
-        },
-        imageB: {
-          index: 1,
-          filename: 'test2.jpg',
-          colorName: 'Blue',
-          scale: 1.0
-        },
-        paletteIndex: 0,
-        blendModeIndex: 0,
-        backgroundModeIndex: 0,
-        activeImageIndex: 0,
-        source: 'manual'
-      }
-
+    it('should reject graph with invalid pointers', () => {
       localStorage.setItem('duo-chrome-history', JSON.stringify({
-        version: 1,
-        currentPosition: 0,
-        entries: [
-          validEntry,
-          { invalid: 'entry' }
+        version: 2,
+        rootId: 'root-id',
+        currentId: 'missing-id',
+        nodes: [
+          { id: 'root-id', entry: {}, children: [] }
         ]
       }))
 
       const result = historyManager.loadFromStorage()
 
-      expect(result).toBe(true)
-      expect(historyManager.history.length).toBe(1)
+      expect(result).toBe(false)
+      // Should have cleared history and re-seeded with fresh state
+      const stored = localStorage.getItem('duo-chrome-history')
+      expect(stored).not.toBeNull()
+      const data = JSON.parse(stored)
+      expect(data.nodes).toHaveLength(1)
     })
   })
 
@@ -290,9 +283,9 @@ describe('HistoryManager Error Handling', () => {
 
       const errorLog = historyManager.getErrorLog()
       expect(errorLog.length).toBe(1)
-      expect(errorLog[0].operation).toBe('testOperation')
+      expect(errorLog[0].context).toBe('testOperation')
       expect(errorLog[0].message).toBe('Test error')
-      expect(errorLog[0].context).toEqual(context)
+      expect(errorLog[0].data).toEqual(context)
     })
 
     it('should maintain error counts by category', () => {
@@ -349,12 +342,14 @@ describe('HistoryManager Error Handling', () => {
     })
 
     it('should detect invalid current position', () => {
-      historyManager.currentPosition = 999 // Invalid position
+      // Add an entry to ensure we have nodes
+      historyManager.captureCurrentState('manual')
+      historyManager.currentId = 'invalid-id' // Set invalid ID directly
 
       const health = historyManager.healthCheck()
 
       expect(health.healthy).toBe(false)
-      expect(health.issues.some(issue => issue.includes('position'))).toBe(true)
+      expect(health.issues.some(issue => issue.includes('pointer is invalid'))).toBe(true)
     })
 
     it('should warn about high error counts', () => {

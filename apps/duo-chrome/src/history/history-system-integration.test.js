@@ -1,13 +1,13 @@
 /**
  * Integration Tests for History System
- * 
+ *
  * Tests the complete history system including:
  * - End-to-end history capture and navigation flow
  * - Filmstrip UI interactions
  * - Keyboard navigation integration
  * - Storage persistence across simulated page reloads
  * - Random mode integration
- * 
+ *
  * Requirements: All (comprehensive integration testing)
  */
 
@@ -399,10 +399,10 @@ describe('History System Integration Tests', () => {
       // Test the helper method directly
       const longName = 'very_long_filename_with_suffix_001.jpg'
       const formatted = filmstripPanel.formatThumbnailName(longName)
-      
+
       expect(formatted).toBe('...h_suffix_001')
       expect(formatted.length).toBe(15)
-      
+
       const shortName = 'short.jpg'
       expect(filmstripPanel.formatThumbnailName(shortName)).toBe('short')
     })

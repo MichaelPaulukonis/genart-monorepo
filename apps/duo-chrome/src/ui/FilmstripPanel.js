@@ -28,16 +28,21 @@ export class FilmstripPanel {
     })
 
     // Add scroll listener for virtual scrolling
-    this.scrollContainer.addEventListener('scroll', () => {
-      if (this.virtualScrollEnabled && this.shouldUseVirtualScrolling()) {
-        this.updateVisibleRange()
-        this.renderVisibleThumbnails()
-      }
-    })
+    this.scrollContainer.addEventListener('scroll', (event) => this.handleScroll(event))
 
     // Track rendered thumbnails to avoid re-rendering
     this.renderedCount = 0
     this.renderedThumbnails = new Map() // Track which thumbnails are currently rendered
+  }
+
+  /**
+   * Handle scroll events for virtual scrolling
+   */
+  handleScroll (event) {
+    if (this.virtualScrollEnabled && this.shouldUseVirtualScrolling()) {
+      this.updateVisibleRange()
+      this.renderVisibleThumbnails()
+    }
   }
 
   /**
@@ -221,15 +226,15 @@ export class FilmstripPanel {
     const info = document.createElement('div')
     info.className = 'filmstrip-thumbnail-info'
     const positionText = `#${position + 1}`
-    
+
     // Format names to preserve suffixes (essential for distinguishing similar files)
     const nameA = this.formatThumbnailName(entry.imageA.filename)
     const nameB = this.formatThumbnailName(entry.imageB.filename)
-    
+
     info.textContent = `${positionText}: ${nameA} + ${nameB}`
     // Add full title as tooltip
     info.title = `${entry.imageA.filename} + ${entry.imageB.filename}`
-    
+
     thumbnail.appendChild(info)
 
     // Add branch indicator if multiple paths exist
@@ -238,17 +243,17 @@ export class FilmstripPanel {
       branchIndicator.className = 'filmstrip-branch-indicator'
       branchIndicator.innerHTML = '&#9282;' // Fork symbol (⑂)
       branchIndicator.title = `${entry._branchCount} versions available`
-      
+
       branchIndicator.addEventListener('click', (e) => {
         e.stopPropagation()
         this.historyManager.toggleBranch(entry.id)
         // Force full re-render to update the active path
-        this.renderedCount = 0 
+        this.renderedCount = 0
         this.scrollContainer.innerHTML = ''
         this.renderedThumbnails.clear()
         this.render()
       })
-      
+
       thumbnail.appendChild(branchIndicator)
     }
 
@@ -263,7 +268,7 @@ export class FilmstripPanel {
     if (!filename) return '?'
     // Get basename and strip extension
     const name = filename.split('/').pop().replace(/\.[^/.]+$/, '')
-    
+
     // If too long, truncate start (preserve suffix like ..._001)
     if (name.length > 15) {
       return '...' + name.slice(-12)

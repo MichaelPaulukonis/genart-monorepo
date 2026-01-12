@@ -19,7 +19,7 @@ let controlState
 let imgs
 
 // Initialize test environment
-function initializeTestEnvironment() {
+function initializeTestEnvironment () {
   // Create a smaller test image array for predictable testing
   imgs = [
     'test1.jpg',
@@ -43,14 +43,14 @@ function initializeTestEnvironment() {
 }
 
 // Navigation system functions (extracted from duo-chrome.js for testing)
-function setImageIndex(imageIndex, arrayIndex) {
+function setImageIndex (imageIndex, arrayIndex) {
   if (imageIndex === 0 || imageIndex === 1) {
     controlState.imageIndices[imageIndex] = arrayIndex
     mockConsole.log(`Image ${imageIndex === 0 ? 'A' : 'B'} array index set to: ${arrayIndex}`)
   }
 }
 
-function navigateImage(imageIndex, direction) {
+function navigateImage (imageIndex, direction) {
   if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
     mockConsole.warn('Invalid image index:', imageIndex)
     return false
@@ -113,7 +113,7 @@ function navigateImage(imageIndex, direction) {
   return true
 }
 
-function setImageByIndex(imageIndex, arrayIndex) {
+function setImageByIndex (imageIndex, arrayIndex) {
   if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
     mockConsole.warn('Invalid image index:', imageIndex)
     return false
@@ -138,30 +138,30 @@ function setImageByIndex(imageIndex, arrayIndex) {
 }
 
 // Test utilities
-function assertEqual(actual, expected, message) {
+function assertEqual (actual, expected, message) {
   if (actual !== expected) {
     throw new Error(`${message}: Expected ${expected}, got ${actual}`)
   }
 }
 
-function assertTrue(condition, message) {
+function assertTrue (condition, message) {
   if (!condition) {
     throw new Error(message)
   }
 }
 
-function assertFalse(condition, message) {
+function assertFalse (condition, message) {
   if (condition) {
     throw new Error(message)
   }
 }
 
 // Test Suite
-function runTests() {
+function runTests () {
   let testsPassed = 0
   let testsFailed = 0
 
-  function runTest(testName, testFunction) {
+  function runTest (testName, testFunction) {
     try {
       initializeTestEnvironment()
       testFunction()
@@ -394,7 +394,7 @@ function runTests() {
   })
 
   // Summary
-  console.log(`\nTest Results:`)
+  console.log('\nTest Results:')
   console.log(`✓ Passed: ${testsPassed}`)
   console.log(`✗ Failed: ${testsFailed}`)
   console.log(`Total: ${testsPassed + testsFailed}`)

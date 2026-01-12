@@ -1,9 +1,9 @@
 /**
  * Duo-Chrome Interactive Controls System
- * 
+ *
  * An interactive duotone image composition tool with comprehensive user controls.
  * Allows independent control of two images (A and B) including size, color, and navigation.
- * 
+ *
  * Key Features:
  * - Active image selection (A/B) with visual feedback
  * - Individual size control with bounds enforcement (0.05x to 5.0x)
@@ -13,7 +13,7 @@
  * - Image exchange (swap A and B completely)
  * - Draggable status display with session persistence
  * - Comprehensive keyboard shortcuts and visual indicators
- * 
+ *
  * Keyboard Controls:
  * - A/B: Select active image
  * - Arrow keys: Size (↑↓) and navigation (←→)
@@ -29,7 +29,7 @@
  * - Modular function groups for different control systems
  * - Event-driven updates with visual feedback
  * - Session persistence for UI preferences
- * 
+ *
  * Inspired by: https://bsky.app/profile/leedoughty.bsky.social/post/3ldh2esstd22h
  * Original concept: https://leedoughty.com/
  */
@@ -38,13 +38,15 @@ import { p5 } from 'p5js-wrapper'
 import { ALL_PALETTES } from './risocolors'
 import { imgs } from './generated/images.js'
 import { getFormattedVersion } from './utils/version.js'
+import { filterImages } from './utils/image-filtering.js'
+import { FilterModal } from './ui/FilterModal.js'
 import { HistoryManager } from './history/HistoryManager.js'
 import { ThumbnailGenerator } from './history/ThumbnailGenerator.js'
 import { FilmstripPanel } from './ui/FilmstripPanel.js'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
 
-function getRandomUniqueItem(arr, excludeItems) {
+function getRandomUniqueItem (arr, excludeItems) {
   const filteredArr = arr.filter(item => !excludeItems.includes(item))
   if (filteredArr.length === 0) {
     throw new RangeError('getRandomUniqueItem: no available items to select')
@@ -76,10 +78,11 @@ const sketch = function (p) {
   let colorIndex = 0
   const imgSource = './images/'
 
-  // History management
+  // UI Components
   let historyManager = null
   let thumbnailGenerator = null
   let filmstripPanel = null
+  let filterModal = null
   let captureDebounceTimer = null
   const CAPTURE_DEBOUNCE_DELAY = 300 // ms - wait for rapid changes to settle
 
@@ -90,7 +93,7 @@ const sketch = function (p) {
 
   /**
    * Control State Management System
-   * 
+   *
    * Centralized state management for the interactive control system.
    * Tracks active image selection, manual adjustments, visual feedback,
    * and UI component states across the application.
@@ -101,6 +104,8 @@ const sketch = function (p) {
     imageIndices: [0, 1], // Current position in imgs array for each image (for navigation)
     isManualMode: false, // has user taken manual control (affects automatic cycling)
     showIndicators: false, // Whether to show visual indicators (active image highlighting)
+    activeFilter: { searchString: '' }, // Current image filter definition
+    filteredImgs: [...imgs], // List of images matching current filter
     indicatorTimeout: null, // Timeout for auto-hiding visual indicators
     statusTimeout: null, // Timeout for auto-hiding status display
     statusPosition: { x: 20, y: 20 }, // Position of draggable status display (session persistent)
@@ -113,7 +118,7 @@ const sketch = function (p) {
 
   /**
    * State Management Functions
-   * 
+   *
    * Functions for managing the active image selection and control state.
    * These functions handle switching between Image A and B, showing visual
    * feedback, and maintaining the control state consistency.
@@ -122,10 +127,10 @@ const sketch = function (p) {
   /**
    * Sets the active image (A or B) that will respond to user controls.
    * Shows visual indicators and status display when changed.
-   * 
+   *
    * @param {number} imageIndex - 0 for Image A, 1 for Image B
    */
-  function setActiveImage(imageIndex) {
+  function setActiveImage (imageIndex) {
     if (imageIndex === 0 || imageIndex === 1) {
       controlState.activeImageIndex = imageIndex
       // Show indicators temporarily
@@ -135,7 +140,7 @@ const sketch = function (p) {
     }
   }
 
-  function showIndicatorsTemporarily(duration = 2000) {
+  function showIndicatorsTemporarily (duration = 2000) {
     controlState.showIndicators = true
 
     // Clear existing timeout
@@ -152,7 +157,7 @@ const sketch = function (p) {
     requestScreenUpdate()
   }
 
-  function toggleIndicators() {
+  function toggleIndicators () {
     controlState.showIndicators = !controlState.showIndicators
 
     // Clear timeout if manually toggling
@@ -164,7 +169,7 @@ const sketch = function (p) {
     updateScreen()
   }
 
-  function setManualSizeControl(imageIndex, isManual) {
+  function setManualSizeControl (imageIndex, isManual) {
     if (imageIndex === 0 || imageIndex === 1) {
       controlState.manualSizeControl[imageIndex] = isManual
       if (isManual) {
@@ -173,29 +178,29 @@ const sketch = function (p) {
     }
   }
 
-  function setImageIndex(imageIndex, arrayIndex) {
+  function setImageIndex (imageIndex, arrayIndex) {
     if (imageIndex === 0 || imageIndex === 1) {
       controlState.imageIndices[imageIndex] = arrayIndex
     }
   }
 
-  function resetManualControls() {
+  function resetManualControls () {
     controlState.manualSizeControl = [false, false]
     controlState.isManualMode = false
     console.log('Manual controls reset to automatic mode')
   }
 
-  function getActiveImageIndex() {
+  function getActiveImageIndex () {
     return controlState.activeImageIndex
   }
 
-  function isManualControlActive(imageIndex) {
+  function isManualControlActive (imageIndex) {
     return controlState.manualSizeControl[imageIndex]
   }
 
   /**
    * History Capture System
-   * 
+   *
    * Functions for capturing composition state to history with debouncing.
    * Debouncing prevents excessive history entries during rapid parameter changes.
    */
@@ -203,10 +208,10 @@ const sketch = function (p) {
   /**
    * Captures current state to history with debouncing.
    * Delays capture to allow rapid changes to settle before creating entry.
-   * 
+   *
    * @param {string} source - How the entry was created: 'manual', 'random', 'url', 'modified'
    */
-  function debouncedCaptureHistory(source = 'manual') {
+  function debouncedCaptureHistory (source = 'manual') {
     if (!historyManager) {
       return
     }
@@ -231,10 +236,10 @@ const sketch = function (p) {
   /**
    * Captures current state to history immediately without debouncing.
    * Use for discrete actions like image exchange or blend mode changes.
-   * 
+   *
    * @param {string} source - How the entry was created: 'manual', 'random', 'url', 'modified'
    */
-  function captureHistoryImmediate(source = 'manual') {
+  function captureHistoryImmediate (source = 'manual') {
     if (!historyManager) {
       return
     }
@@ -255,7 +260,7 @@ const sketch = function (p) {
 
   /**
    * History Navigation System
-   * 
+   *
    * Functions for navigating through the history stack using keyboard shortcuts.
    * Provides visual and status feedback when navigating or reaching boundaries.
    */
@@ -264,10 +269,10 @@ const sketch = function (p) {
    * Navigates to the previous composition in history.
    * Shows temporary status message with feedback.
    * Provides boundary feedback when at the beginning of history.
-   * 
+   *
    * @param {number} step - Number of positions to move backward (default: 1)
    */
-  function navigateHistoryBackward(step = 1) {
+  function navigateHistoryBackward (step = 1) {
     if (!historyManager) {
       console.warn('History manager not initialized')
       return
@@ -307,10 +312,10 @@ const sketch = function (p) {
    * Navigates to the next composition in history.
    * Shows temporary status message with feedback.
    * Provides boundary feedback when at the end of history.
-   * 
+   *
    * @param {number} step - Number of positions to move forward (default: 1)
    */
-  function navigateHistoryForward(step = 1) {
+  function navigateHistoryForward (step = 1) {
     if (!historyManager) {
       console.warn('History manager not initialized')
       return
@@ -350,7 +355,7 @@ const sketch = function (p) {
    * Jumps to the beginning of history (first entry).
    * Shows feedback with current position.
    */
-  function navigateHistoryToBeginning() {
+  function navigateHistoryToBeginning () {
     if (!historyManager) {
       console.warn('History manager not initialized')
       return
@@ -381,7 +386,7 @@ const sketch = function (p) {
    * Jumps to the end of history (last entry).
    * Shows feedback with current position.
    */
-  function navigateHistoryToEnd() {
+  function navigateHistoryToEnd () {
     if (!historyManager) {
       console.warn('History manager not initialized')
       return
@@ -413,7 +418,7 @@ const sketch = function (p) {
    * Toggles the filmstrip panel visibility.
    * Updates the filmstrip when shown to reflect current history state.
    */
-  function toggleFilmstrip() {
+  function toggleFilmstrip () {
     if (!filmstripPanel) {
       console.warn('Filmstrip panel not initialized')
       return
@@ -429,7 +434,7 @@ const sketch = function (p) {
 
   /**
    * Clear History System
-   * 
+   *
    * Functions for clearing the history stack with user confirmation.
    * Provides a confirmation dialog to prevent accidental deletion.
    */
@@ -467,7 +472,7 @@ const sketch = function (p) {
    * Shows the clear history confirmation dialog.
    * Prompts user to confirm before clearing history.
    */
-  function showClearHistoryDialog() {
+  function showClearHistoryDialog () {
     if (!historyManager) {
       console.warn('History manager not initialized')
       return
@@ -549,7 +554,7 @@ const sketch = function (p) {
    * Keeps the current composition as the first entry in new history.
    * Provides visual feedback for the clear operation.
    */
-  function clearHistory() {
+  function clearHistory () {
     if (!historyManager) {
       console.warn('History manager not initialized')
       return
@@ -585,11 +590,11 @@ const sketch = function (p) {
 
   /**
    * Shows visual feedback for clear history operation.
-   * 
+   *
    * @param {string} message - Message to display
    * @param {string} type - 'success' or 'error'
    */
-  function showClearHistoryFeedback(message, type = 'success') {
+  function showClearHistoryFeedback (message, type = 'success') {
     // Create or update feedback element
     let feedback = document.getElementById('clear-history-feedback')
 
@@ -639,11 +644,11 @@ const sketch = function (p) {
 
   /**
    * Shows temporary status message for history navigation.
-   * 
+   *
    * @param {string} message - Message to display
    * @param {string} type - 'normal' or 'boundary' for styling
    */
-  function showHistoryNavigationFeedback(message, type = 'normal') {
+  function showHistoryNavigationFeedback (message, type = 'normal') {
     // Create or update feedback element
     let feedback = document.getElementById('history-navigation-feedback')
 
@@ -693,10 +698,10 @@ const sketch = function (p) {
 
   /**
    * Provides visual and audio feedback when reaching history boundaries.
-   * 
+   *
    * @param {string} boundType - 'beginning' or 'end'
    */
-  function provideHistoryBoundsFeedback(boundType) {
+  function provideHistoryBoundsFeedback (boundType) {
     // Visual feedback - briefly flash the canvas border
     const canvas = p.canvas
     const originalStyle = canvas.style.border
@@ -736,7 +741,7 @@ const sketch = function (p) {
 
   /**
    * Size Control System
-   * 
+   *
    * Functions for adjusting image scale with bounds enforcement and visual feedback.
    * Supports manual size control with scale limits (0.05 to 5.0) and provides
    * audio/visual feedback when bounds are reached.
@@ -746,12 +751,12 @@ const sketch = function (p) {
    * Adjusts the scale of a specific image by a delta amount.
    * Enforces minimum (0.05) and maximum (5.0) scale limits with feedback.
    * Activates manual size control mode and updates status display.
-   * 
+   *
    * @param {number} imageIndex - 0 for Image A, 1 for Image B
    * @param {number} delta - Amount to change scale (positive = larger, negative = smaller)
    * @returns {boolean} - true if adjustment succeeded, false if bounds reached
    */
-  function adjustImageSize(imageIndex, delta) {
+  function adjustImageSize (imageIndex, delta) {
     if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
       console.warn('Invalid image index:', imageIndex)
       return false
@@ -784,7 +789,7 @@ const sketch = function (p) {
     }
   }
 
-  function provideBoundsFeedback(boundType) {
+  function provideBoundsFeedback (boundType) {
     // Visual feedback - briefly flash the canvas border
     const canvas = p.canvas
     const originalStyle = canvas.style.border
@@ -824,7 +829,7 @@ const sketch = function (p) {
     }
   }
 
-  function resetImageSize(imageIndex) {
+  function resetImageSize (imageIndex) {
     if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
       console.warn('Invalid image index:', imageIndex)
       return
@@ -837,7 +842,7 @@ const sketch = function (p) {
 
   /**
    * Image Exchange System
-   * 
+   *
    * Provides functionality to swap the complete state between Image A and B.
    * This includes filename, color, layer, scale, array position, and manual control state.
    * Useful for experimenting with different layering arrangements and blend mode effects.
@@ -848,7 +853,7 @@ const sketch = function (p) {
    * Swaps: filename, color, rendered layer, scale, array index, and manual control state.
    * Updates display and status immediately after exchange.
    */
-  function exchangeImages() {
+  function exchangeImages () {
     // Swap all properties between image A and B
     const tempImg = imageColorPairs[0].img
     const tempColor = imageColorPairs[0].color
@@ -883,7 +888,7 @@ const sketch = function (p) {
 
   /**
    * Color Navigation System
-   * 
+   *
    * Allows cycling through colors in the current palette for individual images.
    * Maintains uniqueness between images and provides wraparound navigation.
    * Regenerates image layers with new colors and updates visual feedback.
@@ -893,12 +898,12 @@ const sketch = function (p) {
    * Cycles through colors in the current palette for a specific image.
    * Ensures uniqueness (prevents both images from having the same color).
    * Supports wraparound navigation and conflict resolution.
-   * 
+   *
    * @param {number} imageIndex - 0 for Image A, 1 for Image B
    * @param {string|number} direction - 'next'/'previous' or 1/-1
    * @returns {boolean} - true if navigation succeeded, false if failed
    */
-  function navigateImageColor(imageIndex, direction) {
+  function navigateImageColor (imageIndex, direction) {
     if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
       console.warn('Invalid image index:', imageIndex)
       return false
@@ -994,7 +999,7 @@ const sketch = function (p) {
 
   /**
    * Image Navigation System
-   * 
+   *
    * Provides navigation through the image array for individual images.
    * Maintains uniqueness between images and supports wraparound navigation.
    * Preserves manual size adjustments when switching to new images.
@@ -1004,25 +1009,34 @@ const sketch = function (p) {
    * Navigates through the image array for a specific image.
    * Ensures uniqueness (prevents both images from showing the same content).
    * Supports wraparound navigation and preserves manual size adjustments.
-   * 
+   *
    * @param {number} imageIndex - 0 for Image A, 1 for Image B
    * @param {string|number} direction - 'next'/'previous' or 1/-1
    * @returns {boolean} - true if navigation succeeded, false if failed
    */
-  function navigateImage(imageIndex, direction) {
+  function navigateImage (imageIndex, direction) {
     if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
       console.warn('Invalid image index:', imageIndex)
       return false
     }
 
-    const currentArrayIndex = controlState.imageIndices[imageIndex]
-    let newArrayIndex
+    const currentFilename = imageColorPairs[imageIndex].img
+    const listToUse = controlState.filteredImgs.length > 0 ? controlState.filteredImgs : imgs
 
-    // Calculate new index with wraparound logic
+    // Find current position in the list we are using
+    let currentPos = listToUse.indexOf(currentFilename)
+
+    // Fallback if current image is not in the filtered list
+    if (currentPos === -1) {
+      currentPos = 0
+    }
+
+    let newPos
+    // Calculate new position with wraparound logic
     if (direction === 'next' || direction === 1) {
-      newArrayIndex = (currentArrayIndex + 1) % imgs.length
+      newPos = (currentPos + 1) % listToUse.length
     } else if (direction === 'previous' || direction === -1) {
-      newArrayIndex = (currentArrayIndex - 1 + imgs.length) % imgs.length
+      newPos = (currentPos - 1 + listToUse.length) % listToUse.length
     } else {
       console.warn('Invalid direction:', direction)
       return false
@@ -1030,41 +1044,24 @@ const sketch = function (p) {
 
     // Ensure uniqueness - prevent both images from showing the same content
     const otherImageIndex = imageIndex === 0 ? 1 : 0
-    const otherArrayIndex = controlState.imageIndices[otherImageIndex]
+    const otherFilename = imageColorPairs[otherImageIndex].img
 
-    // If the new index would conflict with the other image, skip to the next available
-    if (newArrayIndex === otherArrayIndex) {
-      // Continue in the same direction to find the next unique image
+    // If the new filename would conflict with the other image, skip to the next available
+    if (listToUse[newPos] === otherFilename && listToUse.length > 1) {
       if (direction === 'next' || direction === 1) {
-        newArrayIndex = (newArrayIndex + 1) % imgs.length
+        newPos = (newPos + 1) % listToUse.length
       } else {
-        newArrayIndex = (newArrayIndex - 1 + imgs.length) % imgs.length
-      }
-
-      // Safety check to prevent infinite loop (though unlikely with current image count)
-      let attempts = 0
-      while (newArrayIndex === otherArrayIndex && attempts < imgs.length) {
-        if (direction === 'next' || direction === 1) {
-          newArrayIndex = (newArrayIndex + 1) % imgs.length
-        } else {
-          newArrayIndex = (newArrayIndex - 1 + imgs.length) % imgs.length
-        }
-        attempts++
-      }
-
-      if (attempts >= imgs.length) {
-        console.warn('Could not find unique image - all images may be in use')
-        return false
+        newPos = (newPos - 1 + listToUse.length) % listToUse.length
       }
     }
+
+    const newImageFilename = listToUse[newPos]
+    const newArrayIndex = imgs.indexOf(newImageFilename)
 
     // Update the control state with new array index
     setImageIndex(imageIndex, newArrayIndex)
 
-    // Get the new image filename
-    const newImageFilename = imgs[newArrayIndex]
-
-    console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} navigated ${direction} to: ${newImageFilename} (index ${newArrayIndex})`)
+    console.log(`Image ${imageIndex === 0 ? 'A' : 'B'} navigated ${direction} to: ${newImageFilename} (index ${newArrayIndex} in original imgs)`)
 
     // Load and update the image
     setImageByIndex(imageIndex, newArrayIndex)
@@ -1078,7 +1075,7 @@ const sketch = function (p) {
     return true
   }
 
-  function setImageByIndex(imageIndex, arrayIndex) {
+  function setImageByIndex (imageIndex, arrayIndex) {
     if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
       console.warn('Invalid image index:', imageIndex)
       return
@@ -1130,7 +1127,7 @@ const sketch = function (p) {
   /**
    * Pre-processes the color arrays into Maps for faster lookups.
    */
-  function initializeColorMaps() {
+  function initializeColorMaps () {
     COLOR_MAPS = ALL_PALETTES.map(palette => {
       const map = new Map()
       palette.forEach(color => map.set(color.name, color))
@@ -1169,12 +1166,12 @@ const sketch = function (p) {
     historyManager = new HistoryManager(p, {
       imageColorPairs,
       controlState,
-      get colorIndex() { return colorIndex },
-      set colorIndex(value) { colorIndex = value },
-      get currentBlendModeIndex() { return currentBlendModeIndex },
-      set currentBlendModeIndex(value) { currentBlendModeIndex = value },
-      get currentBackgroundModeIndex() { return currentBackgroundModeIndex },
-      set currentBackgroundModeIndex(value) { currentBackgroundModeIndex = value },
+      get colorIndex () { return colorIndex },
+      set colorIndex (value) { colorIndex = value },
+      get currentBlendModeIndex () { return currentBlendModeIndex },
+      set currentBlendModeIndex (value) { currentBlendModeIndex = value },
+      get currentBackgroundModeIndex () { return currentBackgroundModeIndex },
+      set currentBackgroundModeIndex (value) { currentBackgroundModeIndex = value },
       imgs,
       ALL_PALETTES,
       COLOR_MAPS,
@@ -1185,9 +1182,9 @@ const sketch = function (p) {
     // Initialize ThumbnailGenerator
     thumbnailGenerator = new ThumbnailGenerator(p, {
       imageColorPairs,
-      get colorIndex() { return colorIndex },
-      get currentBlendModeIndex() { return currentBlendModeIndex },
-      get currentBackgroundModeIndex() { return currentBackgroundModeIndex },
+      get colorIndex () { return colorIndex },
+      get currentBlendModeIndex () { return currentBlendModeIndex },
+      get currentBackgroundModeIndex () { return currentBackgroundModeIndex },
       imgs,
       ALL_PALETTES,
       COLOR_MAPS,
@@ -1196,6 +1193,55 @@ const sketch = function (p) {
 
     // Initialize FilmstripPanel
     filmstripPanel = new FilmstripPanel(historyManager, thumbnailGenerator)
+
+    // Initialize FilterModal
+    filterModal = new FilterModal({
+      totalImages: imgs.length,
+      onFilterChange: (searchString) => {
+        controlState.activeFilter.searchString = searchString
+        controlState.filteredImgs = filterImages(imgs, controlState.activeFilter)
+        filterModal.updateStats(controlState.filteredImgs.length)
+        filterModal.updateList(controlState.filteredImgs)
+
+        // Persist to localStorage
+        localStorage.setItem('duochrome-filter', JSON.stringify(controlState.activeFilter))
+
+        // Update visual indicator
+        const filterOpenBtn = document.getElementById('filter-open-btn')
+        if (filterOpenBtn) {
+          if (searchString.trim() !== '') {
+            filterOpenBtn.classList.add('active')
+          } else {
+            filterOpenBtn.classList.remove('active')
+          }
+        }
+      }
+    })
+
+    // If we restored a filter from localStorage, we need to sync the UI
+    if (controlState.activeFilter.searchString) {
+      filterModal.currentFilter = controlState.activeFilter.searchString
+      filterModal.input.value = controlState.activeFilter.searchString
+      filterModal.updateStats(controlState.filteredImgs.length)
+      filterModal.updateList(controlState.filteredImgs)
+
+      const filterOpenBtn = document.getElementById('filter-open-btn')
+      if (filterOpenBtn) {
+        filterOpenBtn.classList.add('active')
+      }
+    } else {
+      // Initial populate with all images
+      filterModal.updateList(imgs)
+    }
+    const filterOpenBtn = document.getElementById('filter-open-btn')
+    if (filterOpenBtn) {
+      filterOpenBtn.addEventListener('click', (e) => {
+        e.stopPropagation() // Prevent triggering p.mousePressed
+        if (filterModal) {
+          filterModal.show()
+        }
+      })
+    }
 
     // Try to restore composition from URL, otherwise initialize random pairs
     if (!restoreCompositionFromURL()) {
@@ -1225,6 +1271,22 @@ const sketch = function (p) {
         if (filmstripElement.contains(event.target)) {
           return
         }
+      }
+    }
+
+    // Don't update images if clicking on filter button or modal
+    if (event && event.target) {
+      const filterBtn = document.getElementById('filter-open-btn')
+      const filterModal = document.getElementById('filter-modal')
+      
+      // Check filter button
+      if (filterBtn && (filterBtn === event.target || filterBtn.contains(event.target))) {
+        return
+      }
+
+      // Check filter modal (if visible)
+      if (filterModal && !filterModal.classList.contains('hidden') && filterModal.contains(event.target)) {
+        return
       }
     }
 
@@ -1295,21 +1357,21 @@ const sketch = function (p) {
         // Navigate previous image
         // Check for Shift (key is '{') or explicit SHIFT modifier
         const step = (p.key === '{' || IS_SHIFTED) ? 10 : 1
-        
+
         // Navigate multiple steps if needed
-        for(let i=0; i<step; i++) {
+        for (let i = 0; i < step; i++) {
           // We only need to trigger the actual load on the last step to avoid flicker
           // But navigateImage triggers load immediately.
           // For now, we'll just loop the logical index if we implement a 'seek' function,
-          // but navigateImage is coupled to load. 
-          // Optimization: Just call it once with a loop internally? 
+          // but navigateImage is coupled to load.
+          // Optimization: Just call it once with a loop internally?
           // For simplicity/safety in this refactor, we'll just call it 'step' times but that's inefficient.
-          // Better: navigateImage handles single steps. 
+          // Better: navigateImage handles single steps.
           // Let's just do single step for now unless we refactor navigateImage to accept a delta.
           // The previous history logic had a loop. navigateImage does not support 'step'.
           // We will just do single step for standard '[' and color.
           // For Shift, we can just call it once for now to keep it simple, or implement a loop.
-          // Let's stick to single step navigation for images for now to ensure stability, 
+          // Let's stick to single step navigation for images for now to ensure stability,
           // or fast-loop if step > 1.
           navigateImage(activeIndex, 'previous')
         }
@@ -1327,7 +1389,7 @@ const sketch = function (p) {
       } else {
         // Navigate next image
         const step = (p.key === '}' || IS_SHIFTED) ? 10 : 1
-        for(let i=0; i<step; i++) {
+        for (let i = 0; i < step; i++) {
           navigateImage(activeIndex, 'next')
         }
       }
@@ -1336,6 +1398,12 @@ const sketch = function (p) {
     } else if (p.key === 'f') {
       // Toggle filmstrip panel
       toggleFilmstrip()
+      return false // Prevent default browser behavior
+    } else if (p.key === 'l' || p.key === 'L') {
+      // Toggle filter modal
+      if (filterModal) {
+        filterModal.toggle()
+      }
       return false // Prevent default browser behavior
     } else if (p.key === 'C' && IS_SHIFTED) {
       // Clear history (Shift+C)
@@ -1392,7 +1460,7 @@ const sketch = function (p) {
    * Generates a shareable URL and uses the Web Share API if available.
    * Falls back to copying the URL to the clipboard.
    */
-  async function generateShareURL() {
+  async function generateShareURL () {
     try {
       const params = serializeCompositionState()
       const baseURL = `${window.location.origin}${window.location.pathname}`
@@ -1435,7 +1503,7 @@ const sketch = function (p) {
    * Serializes the current composition state into URL parameters.
    * @returns {URLSearchParams} - Encoded composition parameters
    */
-  function serializeCompositionState() {
+  function serializeCompositionState () {
     const params = new URLSearchParams()
 
     // Image indices
@@ -1472,7 +1540,7 @@ const sketch = function (p) {
    * Restores composition state from URL parameters.
    * Called on page load to recreate shared compositions.
    */
-  function restoreCompositionFromURL() {
+  function restoreCompositionFromURL () {
     const params = new URLSearchParams(window.location.search)
 
     const imageA = params.get('imageA')
@@ -1599,7 +1667,6 @@ const sketch = function (p) {
 
       console.log('Composition restored successfully')
       return true
-
     } catch (error) {
       console.error('Failed to restore composition from URL:', error)
       showShareFeedback('Failed to load composition from URL', 'error')
@@ -1611,7 +1678,7 @@ const sketch = function (p) {
    * Loads images for restored composition state.
    * Creates monochrome layers with the restored colors and scales.
    */
-  function loadRestoredImages() {
+  function loadRestoredImages () {
     let loadedCount = 0
     const totalImages = imageColorPairs.filter(pair => pair.img && pair.color).length
 
@@ -1645,7 +1712,7 @@ const sketch = function (p) {
    * Copies text to clipboard with fallback for older browsers.
    * @param {string} text - Text to copy to clipboard
    */
-  async function copyToClipboard(text) {
+  async function copyToClipboard (text) {
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(text)
@@ -1672,7 +1739,7 @@ const sketch = function (p) {
    * @param {string} message - Message to display
    * @param {string} type - 'success' or 'error'
    */
-  function showShareFeedback(message, type = 'success') {
+  function showShareFeedback (message, type = 'success') {
     // Create or update feedback element
     let feedback = document.getElementById('share-feedback')
 
@@ -1714,13 +1781,13 @@ const sketch = function (p) {
     }, 3000)
   }
 
-  function setBlendModeAndBackground() {
+  function setBlendModeAndBackground () {
     const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
     p.blendMode(p[currentBackgroundMode.blendModes[currentBlendModeIndex]])
     p.background(p.color(...currentBackgroundMode.color))
   }
 
-  function toggleBackgroundColor() {
+  function toggleBackgroundColor () {
     currentBackgroundModeIndex =
       (currentBackgroundModeIndex + 1) % backgroundModes.length
     currentBlendModeIndex = 0 // Reset to the first blend mode for the new background
@@ -1732,7 +1799,7 @@ const sketch = function (p) {
     captureHistoryImmediate('manual')
   }
 
-  function regenerateLayers() {
+  function regenerateLayers () {
     imageColorPairs.forEach((pair, index) => {
       if (pair.img && pair.color) {
         p.loadImage(imgSource + pair.img, function (img) {
@@ -1752,7 +1819,7 @@ const sketch = function (p) {
     })
   }
 
-  function cycleBlendMode() {
+  function cycleBlendMode () {
     const currentBackgroundMode = backgroundModes[currentBackgroundModeIndex]
     currentBlendModeIndex =
       (currentBlendModeIndex + 1) % currentBackgroundMode.blendModes.length
@@ -1764,13 +1831,13 @@ const sketch = function (p) {
     captureHistoryImmediate('manual')
   }
 
-  function generateFilename() {
+  function generateFilename () {
     const d = new Date()
     return `duo_chrome_image.${d.getFullYear()}.${d.getMonth() + 1
       }.${d.getDate()}.${d.getHours()}${d.getMinutes()}${d.getSeconds()}.png`
   }
 
-  async function toggleHelpOverlay() {
+  async function toggleHelpOverlay () {
     const helpOverlay = document.getElementById('help-overlay')
     if (helpOverlay) {
       // If showing the overlay, populate version info
@@ -1790,7 +1857,7 @@ const sketch = function (p) {
     }
   }
 
-  function initializeHelpSystem() {
+  function initializeHelpSystem () {
     // Add close button functionality
     const closeButton = document.getElementById('close-help')
     if (closeButton) {
@@ -1814,7 +1881,7 @@ const sketch = function (p) {
     })
   }
 
-  function initializeControlState() {
+  function initializeControlState () {
     // Set default active image to Image A (index 0)
     controlState.activeImageIndex = 0
 
@@ -1828,10 +1895,23 @@ const sketch = function (p) {
     // Start in automatic mode
     controlState.isManualMode = false
 
+    // Load filter from localStorage if available
+    const savedFilter = localStorage.getItem('duochrome-filter')
+    if (savedFilter) {
+      try {
+        controlState.activeFilter = JSON.parse(savedFilter)
+        controlState.filteredImgs = filterImages(imgs, controlState.activeFilter)
+      } catch (e) {
+        console.warn('Failed to parse saved filter:', e)
+        controlState.activeFilter = { searchString: '' }
+        controlState.filteredImgs = [...imgs]
+      }
+    }
+
     console.log('Control state initialized:', controlState)
   }
 
-  function initializeImageColorPairs() {
+  function initializeImageColorPairs () {
     imageColorPairs[0].img = getRandomUniqueItem(imgs, [])
     imageColorPairs[0].color = getRandomUniqueItem(ALL_PALETTES[colorIndex], [])
     imageColorPairs[1].img = getRandomUniqueItem(imgs, [imageColorPairs[0].img])
@@ -1844,12 +1924,12 @@ const sketch = function (p) {
     controlState.imageIndices[1] = imgs.indexOf(imageColorPairs[1].img)
   }
 
-  function loadNewImagesAndColors() {
+  function loadNewImagesAndColors () {
     updateImageColorPair(currentPair)
     currentPair = (currentPair + 1) % 2 // Toggle between 0 and 1
   }
 
-  function updateImageColorPair(pairIndex, specificArrayIndex = null) {
+  function updateImageColorPair (pairIndex, specificArrayIndex = null) {
     let selectedImage
 
     if (specificArrayIndex !== null) {
@@ -1870,8 +1950,13 @@ const sketch = function (p) {
       }
     } else {
       // Use random selection for automatic cycling (existing behavior)
+      // Respect active filter if it has results
+      const listToUse = (controlState.activeFilter.searchString && controlState.filteredImgs.length > 0)
+        ? controlState.filteredImgs
+        : imgs
+
       selectedImage = getRandomUniqueItem(
-        imgs,
+        listToUse,
         imageColorPairs.map(pair => pair.img)
       )
     }
@@ -1925,7 +2010,7 @@ const sketch = function (p) {
   }
 
   // Visual Feedback System
-  function drawActiveImageIndicator() {
+  function drawActiveImageIndicator () {
     const activeIndex = controlState.activeImageIndex
     const activePair = imageColorPairs[activeIndex]
 
@@ -2043,7 +2128,7 @@ const sketch = function (p) {
 
   /**
    * Status Display System
-   * 
+   *
    * Manages the draggable status overlay that shows current image information.
    * Displays image filenames, colors, scale factors, and active image highlighting.
    * Supports temporary and permanent display modes with session-persistent positioning.
@@ -2054,7 +2139,7 @@ const sketch = function (p) {
    * Shows filenames, color names, scale factors, and active image highlighting.
    * Called automatically when image properties change.
    */
-  function updateStatusDisplay() {
+  function updateStatusDisplay () {
     const statusOverlay = document.getElementById('status-overlay')
     if (!statusOverlay) return
 
@@ -2062,7 +2147,7 @@ const sketch = function (p) {
     const formatName = (filename) => {
       if (!filename) return '-'
       // Remove extension
-      let name = filename.replace(/\.[^/.]+$/, '')
+      const name = filename.replace(/\.[^/.]+$/, '')
       // Replace delimiters with spaces for natural wrapping
       return name.replace(/[_-]/g, ' ')
     }
@@ -2123,7 +2208,7 @@ const sketch = function (p) {
     }
   }
 
-  function showStatusDisplay(duration = 3000) {
+  function showStatusDisplay (duration = 3000) {
     const statusOverlay = document.getElementById('status-overlay')
     if (!statusOverlay) return
 
@@ -2150,7 +2235,7 @@ const sketch = function (p) {
     }
   }
 
-  function hideStatusDisplay() {
+  function hideStatusDisplay () {
     const statusOverlay = document.getElementById('status-overlay')
     if (!statusOverlay) return
 
@@ -2171,7 +2256,7 @@ const sketch = function (p) {
     }, 300)
   }
 
-  function toggleStatusDisplay() {
+  function toggleStatusDisplay () {
     const statusOverlay = document.getElementById('status-overlay')
     if (!statusOverlay) return
 
@@ -2183,12 +2268,12 @@ const sketch = function (p) {
   }
 
   // Status Display Dragging System
-  function initializeStatusDragging() {
+  function initializeStatusDragging () {
     const statusOverlay = document.getElementById('status-overlay')
     if (!statusOverlay) return
 
     let isDragging = false
-    let dragOffset = { x: 0, y: 0 }
+    const dragOffset = { x: 0, y: 0 }
 
     // Load saved position from session storage
     const savedPosition = sessionStorage.getItem('duo-chrome-status-position')
@@ -2330,7 +2415,7 @@ const sketch = function (p) {
     })
   }
 
-  function updateStatusPosition() {
+  function updateStatusPosition () {
     const statusOverlay = document.getElementById('status-overlay')
     if (!statusOverlay) return
 
@@ -2342,7 +2427,7 @@ const sketch = function (p) {
    * Performance-optimized screen update function.
    * Only redraws when necessary and uses cached scaled images when possible.
    */
-  function updateScreen() {
+  function updateScreen () {
     // Skip unnecessary redraws for performance
     if (!controlState.needsRedraw) {
       return
@@ -2398,7 +2483,7 @@ const sketch = function (p) {
    * Marks the screen as needing a redraw.
    * Call this instead of updateScreen() directly to enable performance optimizations.
    */
-  function requestScreenUpdate() {
+  function requestScreenUpdate () {
     controlState.needsRedraw = true
 
     // Use requestAnimationFrame for smooth 60fps updates
@@ -2414,19 +2499,20 @@ const sketch = function (p) {
   /**
    * Performance monitoring and optimization utilities
    */
-  function getPerformanceStats() {
+  function getPerformanceStats () {
     return {
       lastFrameTime: controlState.lastFrameTime,
       frameCount: controlState.frameCount,
-      averageFrameTime: controlState.frameCount > 0 ?
-        (controlState.totalFrameTime || controlState.lastFrameTime) / controlState.frameCount : 0
+      averageFrameTime: controlState.frameCount > 0
+        ? (controlState.totalFrameTime || controlState.lastFrameTime) / controlState.frameCount
+        : 0
     }
   }
 
   /**
    * Cleanup function to remove all graphics objects and prevent memory leaks
    */
-  function cleanupGraphicsObjects() {
+  function cleanupGraphicsObjects () {
     console.log('Cleaning up graphics objects...')
 
     // Clean up image layers
@@ -2452,7 +2538,7 @@ const sketch = function (p) {
    * Debug function to count canvas elements in the DOM
    * Useful for monitoring memory leaks
    */
-  function debugCanvasCount() {
+  function debugCanvasCount () {
     const canvases = document.querySelectorAll('canvas')
     console.log(`Total canvas elements in DOM: ${canvases.length}`)
 
@@ -2474,7 +2560,7 @@ const sketch = function (p) {
   /**
    * Optimized layer creation with caching considerations
    */
-  function createOptimizedMonochromeImage(img, monoColor, cacheKey = null) {
+  function createOptimizedMonochromeImage (img, monoColor, cacheKey = null) {
     // Use existing createMonochromeImage but with performance monitoring
     const startTime = performance.now()
     const layer = createMonochromeImage(img, monoColor)

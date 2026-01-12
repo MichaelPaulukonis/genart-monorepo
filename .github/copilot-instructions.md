@@ -272,15 +272,16 @@ Automated version display components:
 
 When you are asked to create a commit, you **MUST** follow these steps in order:
 
-1.  **Analyze Changes:** Run `git status` and `git diff --staged` to understand the modifications.
+1.  **Analyze Changes:** Run `git status` and `git diff --staged` to understand the modifications (unless `status` output provided by user).
 2.  **Evaluate for Changelog:** Review the changes against the criteria in `.github/changelog-management.md`.
 3.  **Determine Changelog Type:** Classify changes using the hybrid changelog system:
     - **Monorepo Changelog** (`/CHANGELOG.md`): Infrastructure, shared libraries, Nx config, build tools, cross-app changes
     - **App Changelog** (`apps/[app]/CHANGELOG.md`): App-specific features, fixes, UI changes
 4.  **Ask About Changelog:** If the changes meet the criteria (e.g., new features, UI changes, bug fixes), you **MUST** ask the user: "Should I create a changelog entry for these changes?" You may also provide advice on whether an entry seems warranted and which changelog it should go to.
 5.  **Create Changelog (if approved):** If the user agrees, update the appropriate changelog(s) according to the hybrid system.
-6.  **Propose Commit Message:** After handling the changelog, draft a commit message that follows the Conventional Commits specification with proper scope for changelog routing.
-7.  **Commit Changes:** After the user approves the message, stage any modified changelog files and run `git commit`.
+6.  **Propose Commit Message:** After handling the changelog, draft a commit message that follows the Conventional Commits specification. **STOP HERE and wait for explicit user approval.**
+7.  **Wait for Manual Approval:** You **MUST** wait for the user to explicitly approve the commit message and confirm they have tested the changes. **DO NOT proceed to commit without this explicit approval.** The user may need to manually test, review, or modify the code before committing.
+8.  **Commit Changes (only after approval):** **ONLY AFTER** the user has given explicit approval, stage the `CHANGELOG.md` file (if modified) and run `git commit` with the approved message. **NEVER commit autonomously.**
 
 ### See `./changelog-management.md` for detailed instructions on pre-commit changelog rules.
 

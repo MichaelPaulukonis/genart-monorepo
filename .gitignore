@@ -173,6 +173,7 @@ conversation/
 
 # working images
 # duo-chrome/public/images has been committed - temp changes s/b ignored
+apps/duo-chrome/public/
 apps/duo-chrome/public/images/
 apps/duo-chrome/public/images_original
 apps/duo-chrome/public/images_local

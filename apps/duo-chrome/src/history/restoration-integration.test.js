@@ -18,15 +18,16 @@ describe('Task 4: Composition State Restoration Integration', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks()
-    
+
     // Mock localStorage to prevent test pollution
+    const storage = {}
     global.localStorage = {
-      getItem: vi.fn(() => null),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn()
+      getItem: vi.fn((key) => storage[key] || null),
+      setItem: vi.fn((key, value) => { storage[key] = value }),
+      removeItem: vi.fn((key) => { delete storage[key] }),
+      clear: vi.fn(() => { Object.keys(storage).forEach(key => delete storage[key]) })
     }
-    
+
     // Track loadImage callbacks for testing
     loadImageCallbacks = []
 
@@ -42,11 +43,18 @@ describe('Task 4: Composition State Restoration Integration', () => {
         height,
         background: vi.fn(),
         image: vi.fn(),
+        imageMode: vi.fn(),
+        blendMode: vi.fn(),
+        remove: vi.fn(),
         drawingContext: { globalCompositeOperation: '' }
       })),
       color: vi.fn((colorValue) => colorValue),
       width: 1000,
-      height: 1000
+      height: 1000,
+      CENTER: 'center',
+      ADD: 'add',
+      MULTIPLY: 'multiply',
+      SCREEN: 'screen'
     }
 
     // Create mock state references
@@ -88,79 +96,74 @@ describe('Task 4: Composition State Restoration Integration', () => {
           ['Green', { name: 'Green', color: '#00FF00' }]
         ])
       ],
+      backgroundModes: [
+        { name: 'White', color: [255, 255, 255], blendModes: ['ADD'] },
+        { name: 'Black', color: [0, 0, 0], blendModes: ['MULTIPLY'] }
+      ],
       requestScreenUpdate: vi.fn(),
       updateStatusDisplay: vi.fn()
     }
 
     // Create history manager
     historyManager = new HistoryManager(mockP5, mockStateRefs)
+    
+    // Capture initial state
+    historyManager.captureCurrentState('initial')
+    loadImageCallbacks = [] // Reset for tests
   })
 
   it('should call loadImage for both images when restoring from history', () => {
-    // Create a history entry
-    const entry = createHistoryEntry({
-      imageA: {
-        index: 1,
-        filename: 'image2.jpg',
-        colorName: 'Green',
-        scale: 1.5
-      },
-      imageB: {
-        index: 2,
-        filename: 'image3.jpg',
-        colorName: 'Red',
-        scale: 0.8
-      },
-      paletteIndex: 0,
-      blendModeIndex: 1,
-      backgroundModeIndex: 0,
-      activeImageIndex: 1,
-      source: 'manual'
-    })
+    // Set state to capture
+    mockStateRefs.imageColorPairs[0].img = 'image2.jpg'
+    mockStateRefs.imageColorPairs[0].scale = 1.5
+    mockStateRefs.imageColorPairs[0].color = { name: 'Green', color: '#00FF00' }
+    mockStateRefs.controlState.imageIndices[0] = 1
 
-    // Add entry to history
-    historyManager.history.push(entry)
-    historyManager.currentPosition = 0
+    mockStateRefs.imageColorPairs[1].img = 'image3.jpg'
+    mockStateRefs.imageColorPairs[1].scale = 0.8
+    mockStateRefs.imageColorPairs[1].color = { name: 'Red', color: '#FF0000' }
+    mockStateRefs.controlState.imageIndices[1] = 2
+
+    mockStateRefs.currentBlendModeIndex = 1
+    mockStateRefs.controlState.activeImageIndex = 1
+
+    // Capture entry (will be the second entry, root was first)
+    historyManager.captureCurrentState('manual')
 
     // Navigate to the entry (which should trigger restoration)
-    historyManager.navigateTo(0)
+    historyManager.navigateTo(1)
 
     // Verify loadImage was called twice (once for each image)
     expect(mockP5.loadImage).toHaveBeenCalledTimes(2)
 
     // Verify correct image paths were loaded
-    expect(loadImageCallbacks[0].path).toBe('./images/image2.jpg')
-    expect(loadImageCallbacks[1].path).toBe('./images/image3.jpg')
+    // Note: index might be different if root also loaded images
+    const lastCalls = loadImageCallbacks.slice(-2)
+    expect(lastCalls[0].path).toBe('./images/image2.jpg')
+    expect(lastCalls[1].path).toBe('./images/image3.jpg')
   })
 
   it('should restore state before loading images', () => {
-    // Create a history entry with different state
-    const entry = createHistoryEntry({
-      imageA: {
-        index: 1,
-        filename: 'image2.jpg',
-        colorName: 'Green',
-        scale: 1.5
-      },
-      imageB: {
-        index: 2,
-        filename: 'image3.jpg',
-        colorName: 'Red',
-        scale: 0.8
-      },
-      paletteIndex: 0,
-      blendModeIndex: 2,
-      backgroundModeIndex: 1,
-      activeImageIndex: 1,
-      source: 'manual'
-    })
+    // Set state to capture
+    mockStateRefs.imageColorPairs[0].img = 'image2.jpg'
+    mockStateRefs.imageColorPairs[0].scale = 1.5
+    mockStateRefs.imageColorPairs[0].color = { name: 'Green', color: '#00FF00' }
+    mockStateRefs.controlState.imageIndices[0] = 1
 
-    // Add entry to history
-    historyManager.history.push(entry)
-    historyManager.currentPosition = 0
+    mockStateRefs.imageColorPairs[1].img = 'image3.jpg'
+    mockStateRefs.imageColorPairs[1].scale = 0.8
+    mockStateRefs.imageColorPairs[1].color = { name: 'Red', color: '#FF0000' }
+    mockStateRefs.controlState.imageIndices[1] = 2
+
+    mockStateRefs.currentBlendModeIndex = 2
+    mockStateRefs.currentBackgroundModeIndex = 1
+    mockStateRefs.controlState.activeImageIndex = 1
+
+    // Capture entry
+    historyManager.captureCurrentState('manual')
 
     // Navigate to the entry
-    historyManager.navigateTo(0)
+    historyManager.navigateTo(1)
 
     // Verify state was restored
     expect(mockStateRefs.imageColorPairs[0].img).toBe('image2.jpg')
@@ -177,32 +180,10 @@ describe('Task 4: Composition State Restoration Integration', () => {
   })
 
   it('should call requestScreenUpdate after both images are loaded', () => {
-    // Create a history entry
-    const entry = createHistoryEntry({
-      imageA: {
-        index: 0,
-        filename: 'image1.jpg',
-        colorName: 'Red',
-        scale: 1.0
-      },
-      imageB: {
-        index: 1,
-        filename: 'image2.jpg',
-        colorName: 'Blue',
-        scale: 1.0
-      },
-      paletteIndex: 0,
-      blendModeIndex: 0,
-      backgroundModeIndex: 0,
-      activeImageIndex: 0,
-      source: 'manual'
-    })
+    // Capture root entry
+    const entry = historyManager.history[0]
 
-    // Add entry to history
-    historyManager.history.push(entry)
-    historyManager.currentPosition = 0
-
-    // Navigate to the entry
+    // Navigate to the entry (triggers image loading)
     historyManager.navigateTo(0)
 
     // Verify requestScreenUpdate was not called yet (images not loaded)
@@ -210,90 +191,44 @@ describe('Task 4: Composition State Restoration Integration', () => {
 
     // Simulate first image loading
     const mockImg1 = { width: 100, height: 100 }
-    loadImageCallbacks[0].successCallback(mockImg1)
+    const firstCallback = loadImageCallbacks[loadImageCallbacks.length - 2]
+    firstCallback.successCallback(mockImg1)
 
     // Still should not be called (only 1 of 2 images loaded)
     expect(mockStateRefs.requestScreenUpdate).not.toHaveBeenCalled()
 
     // Simulate second image loading
     const mockImg2 = { width: 100, height: 100 }
-    loadImageCallbacks[1].successCallback(mockImg2)
+    const secondCallback = loadImageCallbacks[loadImageCallbacks.length - 1]
+    secondCallback.successCallback(mockImg2)
 
     // Now requestScreenUpdate should be called
     expect(mockStateRefs.requestScreenUpdate).toHaveBeenCalledTimes(1)
   })
 
   it('should call updateStatusDisplay after both images are loaded', () => {
-    // Create a history entry
-    const entry = createHistoryEntry({
-      imageA: {
-        index: 0,
-        filename: 'image1.jpg',
-        colorName: 'Red',
-        scale: 1.0
-      },
-      imageB: {
-        index: 1,
-        filename: 'image2.jpg',
-        colorName: 'Blue',
-        scale: 1.0
-      },
-      paletteIndex: 0,
-      blendModeIndex: 0,
-      backgroundModeIndex: 0,
-      activeImageIndex: 0,
-      source: 'manual'
-    })
-
-    // Add entry to history
-    historyManager.history.push(entry)
-    historyManager.currentPosition = 0
-
-    // Navigate to the entry
+    // Navigate to root entry
     historyManager.navigateTo(0)
 
     // Simulate both images loading
     const mockImg = { width: 100, height: 100 }
-    loadImageCallbacks[0].successCallback(mockImg)
-    loadImageCallbacks[1].successCallback(mockImg)
+    const lastCalls = loadImageCallbacks.slice(-2)
+    lastCalls[0].successCallback(mockImg)
+    lastCalls[1].successCallback(mockImg)
 
     // Verify updateStatusDisplay was called
     expect(mockStateRefs.updateStatusDisplay).toHaveBeenCalledTimes(1)
   })
 
   it('should regenerate layers with correct colors when images load', () => {
-    // Create a history entry with specific colors
-    const entry = createHistoryEntry({
-      imageA: {
-        index: 0,
-        filename: 'image1.jpg',
-        colorName: 'Green',
-        scale: 1.2
-      },
-      imageB: {
-        index: 1,
-        filename: 'image2.jpg',
-        colorName: 'Red',
-        scale: 0.9
-      },
-      paletteIndex: 0,
-      blendModeIndex: 0,
-      backgroundModeIndex: 0,
-      activeImageIndex: 0,
-      source: 'manual'
-    })
-
-    // Add entry to history
-    historyManager.history.push(entry)
-    historyManager.currentPosition = 0
-
-    // Navigate to the entry
+    // Navigate to root entry
     historyManager.navigateTo(0)
 
     // Simulate images loading
     const mockImg = { width: 100, height: 100 }
-    loadImageCallbacks[0].successCallback(mockImg)
-    loadImageCallbacks[1].successCallback(mockImg)
+    const lastCalls = loadImageCallbacks.slice(-2)
+    lastCalls[0].successCallback(mockImg)
+    lastCalls[1].successCallback(mockImg)
 
     // Verify createGraphics was called (for layer creation)
     expect(mockP5.createGraphics).toHaveBeenCalled()
@@ -304,40 +239,16 @@ describe('Task 4: Composition State Restoration Integration', () => {
   })
 
   it('should handle image loading errors gracefully', () => {
-    // Create a history entry
-    const entry = createHistoryEntry({
-      imageA: {
-        index: 0,
-        filename: 'missing1.jpg',
-        colorName: 'Red',
-        scale: 1.0
-      },
-      imageB: {
-        index: 1,
-        filename: 'missing2.jpg',
-        colorName: 'Blue',
-        scale: 1.0
-      },
-      paletteIndex: 0,
-      blendModeIndex: 0,
-      backgroundModeIndex: 0,
-      activeImageIndex: 0,
-      source: 'manual'
-    })
-
-    // Add entry to history
-    historyManager.history.push(entry)
-    historyManager.currentPosition = 0
-
-    // Navigate to the entry
+    // Navigate to root entry
     historyManager.navigateTo(0)
 
     // Simulate first image failing to load
-    loadImageCallbacks[0].errorCallback(new Error('Image not found'))
+    const lastCalls = loadImageCallbacks.slice(-2)
+    lastCalls[0].errorCallback(new Error('Image not found'))
 
     // Simulate second image loading successfully
     const mockImg = { width: 100, height: 100 }
-    loadImageCallbacks[1].successCallback(mockImg)
+    lastCalls[1].successCallback(mockImg)
 
     // Should still call requestScreenUpdate after both complete (even with error)
     expect(mockStateRefs.requestScreenUpdate).toHaveBeenCalledTimes(1)
@@ -372,33 +283,18 @@ describe('Task 4: Composition State Restoration Integration', () => {
       mockStateRefs.requestScreenUpdate.mockClear()
       loadImageCallbacks = []
 
-      // Create entry with test case parameters
-      const entry = createHistoryEntry({
-        imageA: {
-          index: 0,
-          filename: 'image1.jpg',
-          colorName: 'Red',
-          scale: testCase.scaleA
-        },
-        imageB: {
-          index: 1,
-          filename: 'image2.jpg',
-          colorName: 'Blue',
-          scale: testCase.scaleB
-        },
-        paletteIndex: 0,
-        blendModeIndex: testCase.blendModeIndex,
-        backgroundModeIndex: testCase.backgroundModeIndex,
-        activeImageIndex: 0,
-        source: 'manual'
-      })
+      // Set state to capture
+      mockStateRefs.imageColorPairs[0].scale = testCase.scaleA
+      mockStateRefs.imageColorPairs[1].scale = testCase.scaleB
+      mockStateRefs.currentBlendModeIndex = testCase.blendModeIndex
+      mockStateRefs.currentBackgroundModeIndex = testCase.backgroundModeIndex
 
-      // Add entry to history
-      historyManager.history = [entry]
-      historyManager.currentPosition = 0
+      // Capture entry (will be entry at index 1+)
+      historyManager.captureCurrentState('manual')
+      const targetPos = historyManager.currentPosition
 
       // Navigate to the entry
-      historyManager.navigateTo(0)
+      historyManager.navigateTo(targetPos)
 
       // Verify state was restored correctly
       expect(mockStateRefs.imageColorPairs[0].scale).toBe(testCase.scaleA)
@@ -408,8 +304,9 @@ describe('Task 4: Composition State Restoration Integration', () => {
 
       // Simulate images loading
       const mockImg = { width: 100, height: 100 }
-      loadImageCallbacks[0].successCallback(mockImg)
-      loadImageCallbacks[1].successCallback(mockImg)
+      const lastCalls = loadImageCallbacks.slice(-2)
+      lastCalls[0].successCallback(mockImg)
+      lastCalls[1].successCallback(mockImg)
 
       // Verify screen update was called
       expect(mockStateRefs.requestScreenUpdate).toHaveBeenCalled()

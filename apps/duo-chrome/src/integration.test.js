@@ -1,6 +1,6 @@
 /**
  * Comprehensive Integration Tests
- * 
+ *
  * Tests for the integration between manual and automatic modes,
  * existing keyboard shortcuts, and overall system functionality.
  * Ensures new controls don't interfere with existing functionality.
@@ -10,7 +10,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 // Mock p5.js instance
 const mockP5 = {
-  canvas: { 
+  canvas: {
     style: {},
     focus: vi.fn()
   },
@@ -53,7 +53,7 @@ const mockP5 = {
 // Mock image list
 const mockImgs = [
   'image1.jpg',
-  'image2.jpg', 
+  'image2.jpg',
   'image3.jpg',
   'image4.jpg',
   'image5.jpg'
@@ -171,7 +171,7 @@ describe('Comprehensive Integration Tests', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks()
-    
+
     // Initialize state
     controlState = {
       activeImageIndex: 0,
@@ -449,7 +449,7 @@ describe('Comprehensive Integration Tests', () => {
           navigateImageColor(activeIndex, 'previous')
         } else {
           const step = (key === '{' || modifiers.shift) ? 10 : 1
-          for(let i=0; i<step; i++) navigateImage(activeIndex, 'previous')
+          for (let i = 0; i < step; i++) navigateImage(activeIndex, 'previous')
         }
         // Mock showIndicatorsTemporarily behavior
         if (controlState.indicatorTimeout) clearTimeout(controlState.indicatorTimeout)
@@ -462,7 +462,7 @@ describe('Comprehensive Integration Tests', () => {
           navigateImageColor(activeIndex, 'next')
         } else {
           const step = (key === '}' || modifiers.shift) ? 10 : 1
-          for(let i=0; i<step; i++) navigateImage(activeIndex, 'next')
+          for (let i = 0; i < step; i++) navigateImage(activeIndex, 'next')
         }
         // Mock showIndicatorsTemporarily behavior
         if (controlState.indicatorTimeout) clearTimeout(controlState.indicatorTimeout)
@@ -539,7 +539,7 @@ describe('Comprehensive Integration Tests', () => {
     it('should handle mixed manual/automatic state correctly', () => {
       // Manually adjust only image A
       adjustImageSize(0, 0.2)
-      
+
       expect(controlState.manualSizeControl[0]).toBe(true)
       expect(controlState.manualSizeControl[1]).toBe(false)
       expect(controlState.isManualMode).toBe(true)
@@ -623,7 +623,7 @@ describe('Comprehensive Integration Tests', () => {
 
     it('should handle size controls (arrow keys)', () => {
       keyPressed('a') // Select image A
-      
+
       keyPressed(null, mockP5.UP_ARROW)
       expect(adjustImageSize).toHaveBeenCalledWith(0, 0.1)
 
@@ -652,9 +652,9 @@ describe('Comprehensive Integration Tests', () => {
 
     it('should handle image navigation (bracket keys)', () => {
       keyPressed('a') // Select image A
-      
+
       // '[' -> Previous Image
-      keyPressed('[') 
+      keyPressed('[')
       expect(navigateImage).toHaveBeenCalledWith(0, 'previous')
 
       // ']' -> Next Image
@@ -664,7 +664,7 @@ describe('Comprehensive Integration Tests', () => {
 
     it('should handle color navigation (Cmd+bracket keys)', () => {
       keyPressed('a')
-      
+
       // Cmd+'[' -> Previous Color
       keyPressed('[', 0, { cmd: true })
       expect(navigateImageColor).toHaveBeenCalledWith(0, 'previous')
@@ -763,7 +763,7 @@ describe('Comprehensive Integration Tests', () => {
 
     it('should not trigger cycling when dragging status display', () => {
       controlState.isDraggingStatus = true
-      
+
       mousePressed()
 
       expect(loadNewImagesAndColors).not.toHaveBeenCalled()
@@ -800,15 +800,15 @@ describe('Comprehensive Integration Tests', () => {
       // Use other features
       keyPressed('m') // Blend mode
       keyPressed('c') // Color palette
-      
+
       // Exchange images - this SWAPS manual control state
-      keyPressed('x') 
+      keyPressed('x')
       // Now [0] should be false (was [1]), and [1] should be true (was [0])
       expect(controlState.manualSizeControl[1]).toBe(true)
-      
+
       // Swap back to verify preservation
       keyPressed('x')
-      
+
       // Manual control state should be preserved and restored to [0]
       expect(controlState.manualSizeControl[0]).toBe(true)
     })

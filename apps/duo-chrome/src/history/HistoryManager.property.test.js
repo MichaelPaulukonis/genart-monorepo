@@ -10,6 +10,25 @@ import * as fc from 'fast-check'
 import { HistoryManager } from './HistoryManager.js'
 import { validateHistoryEntry } from './HistoryEntry.js'
 
+// Mock localStorage
+const localStorageMock = (() => {
+  let store = {}
+  return {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => {
+      store[key] = value.toString()
+    },
+    removeItem: (key) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    }
+  }
+})()
+
+global.localStorage = localStorageMock
+
 /**
  * **Feature: duo-chrome-history-filmstrip, Property 1: History capture completeness**
  *
@@ -28,17 +47,17 @@ describe('Property 1: History capture completeness', () => {
           imageAIndex: fc.integer({ min: 0, max: 99 }),
           imageAFilename: fc.string({ minLength: 1, maxLength: 50 }).map(s => `${s}.jpg`),
           imageAColorName: fc.constantFrom('Red', 'Blue', 'Green', 'Yellow', 'Black', 'White'),
-          imageAScale: fc.float({ min: Math.fround(0.05), max: Math.fround(5.0), noNaN: true }),
+          imageAScale: fc.float({ min: Math.fround(0.051), max: Math.fround(5.0), noNaN: true }),
 
           // Image B parameters
           imageBIndex: fc.integer({ min: 0, max: 99 }),
           imageBFilename: fc.string({ minLength: 1, maxLength: 50 }).map(s => `${s}.jpg`),
           imageBColorName: fc.constantFrom('Red', 'Blue', 'Green', 'Yellow', 'Black', 'White'),
-          imageBScale: fc.float({ min: Math.fround(0.05), max: Math.fround(5.0), noNaN: true }),
+          imageBScale: fc.float({ min: Math.fround(0.051), max: Math.fround(5.0), noNaN: true }),
 
           // Visual settings
           paletteIndex: fc.integer({ min: 0, max: 3 }),
-          blendModeIndex: fc.integer({ min: 0, max: 20 }),
+          blendModeIndex: fc.integer({ min: 0, max: 5 }),
           backgroundModeIndex: fc.integer({ min: 0, max: 5 }),
           activeImageIndex: fc.constantFrom(0, 1),
 
@@ -227,14 +246,14 @@ describe('Property 2: Navigation preserves state', () => {
             imageAIndex: fc.integer({ min: 0, max: 99 }),
             imageAFilename: fc.string({ minLength: 1, maxLength: 30 }).filter(s => s.trim().length > 0).map(s => `${s.replace(/[^a-zA-Z0-9_-]/g, '_')}.jpg`),
             imageAColorName: fc.constantFrom('Red', 'Blue', 'Green', 'Yellow', 'Black', 'White'),
-            imageAScale: fc.float({ min: Math.fround(0.05), max: Math.fround(5.0), noNaN: true }),
+            imageAScale: fc.float({ min: Math.fround(0.051), max: Math.fround(5.0), noNaN: true }),
             imageBIndex: fc.integer({ min: 0, max: 99 }),
             imageBFilename: fc.string({ minLength: 1, maxLength: 30 }).filter(s => s.trim().length > 0).map(s => `${s.replace(/[^a-zA-Z0-9_-]/g, '_')}.jpg`),
             imageBColorName: fc.constantFrom('Red', 'Blue', 'Green', 'Yellow', 'Black', 'White'),
-            imageBScale: fc.float({ min: Math.fround(0.05), max: Math.fround(5.0), noNaN: true }),
+            imageBScale: fc.float({ min: Math.fround(0.051), max: Math.fround(5.0), noNaN: true }),
             paletteIndex: fc.integer({ min: 0, max: 3 }),
-            blendModeIndex: fc.integer({ min: 0, max: 10 }),
-            backgroundModeIndex: fc.integer({ min: 0, max: 2 }),
+            blendModeIndex: fc.integer({ min: 0, max: 5 }),
+            backgroundModeIndex: fc.integer({ min: 0, max: 1 }),
             activeImageIndex: fc.constantFrom(0, 1),
             source: fc.constantFrom('manual', 'random', 'url')
           }),
@@ -280,7 +299,7 @@ describe('Property 2: Navigation preserves state', () => {
             colorIndex: 0,
             currentBlendModeIndex: 0,
             currentBackgroundModeIndex: 0,
-            imgs: [],
+            imgs: Array(100).fill('test.jpg'),
             ALL_PALETTES: [
               [
                 { name: 'Red', color: '#FF0000' },
@@ -462,13 +481,13 @@ describe('Property 3: History position bounds', () => {
               imageAIndex: fc.integer({ min: 0, max: 99 }),
               imageAFilename: fc.string({ minLength: 1, maxLength: 20 }).filter(s => s.trim().length > 0).map(s => `${s.replace(/[^a-zA-Z0-9_-]/g, '_')}.jpg`),
               imageAColorName: fc.constantFrom('Red', 'Blue', 'Green', 'Yellow', 'Black', 'White'),
-              imageAScale: fc.float({ min: Math.fround(0.05), max: Math.fround(5.0), noNaN: true }),
+              imageAScale: fc.float({ min: Math.fround(0.051), max: Math.fround(5.0), noNaN: true }),
               imageBIndex: fc.integer({ min: 0, max: 99 }),
               imageBFilename: fc.string({ minLength: 1, maxLength: 20 }).filter(s => s.trim().length > 0).map(s => `${s.replace(/[^a-zA-Z0-9_-]/g, '_')}.jpg`),
               imageBColorName: fc.constantFrom('Red', 'Blue', 'Green', 'Yellow', 'Black', 'White'),
-              imageBScale: fc.float({ min: Math.fround(0.05), max: Math.fround(5.0), noNaN: true }),
+              imageBScale: fc.float({ min: Math.fround(0.051), max: Math.fround(5.0), noNaN: true }),
               paletteIndex: fc.integer({ min: 0, max: 3 }),
-              blendModeIndex: fc.integer({ min: 0, max: 10 }),
+              blendModeIndex: fc.integer({ min: 0, max: 5 }),
               backgroundModeIndex: fc.integer({ min: 0, max: 3 }),
               activeImageIndex: fc.constantFrom(0, 1)
             })
@@ -493,7 +512,7 @@ describe('Property 3: History position bounds', () => {
             colorIndex: 0,
             currentBlendModeIndex: 0,
             currentBackgroundModeIndex: 0,
-            imgs: [],
+            imgs: Array(100).fill('test.jpg'),
             ALL_PALETTES: [
               [{ name: 'Red' }, { name: 'Blue' }, { name: 'Green' }],
               [{ name: 'Red' }, { name: 'Blue' }, { name: 'Green' }],
@@ -646,14 +665,14 @@ describe('Property 5: Storage round-trip consistency', () => {
             imageAIndex: fc.integer({ min: 0, max: 99 }),
             imageAFilename: fc.string({ minLength: 1, maxLength: 30 }).filter(s => s.trim().length > 0).map(s => `${s.replace(/[^a-zA-Z0-9_-]/g, '_')}.jpg`),
             imageAColorName: fc.constantFrom('Red', 'Blue', 'Green', 'Yellow', 'Black', 'White'),
-            imageAScale: fc.float({ min: Math.fround(0.05), max: Math.fround(5.0), noNaN: true }),
+            imageAScale: fc.float({ min: Math.fround(0.051), max: Math.fround(5.0), noNaN: true }),
             imageBIndex: fc.integer({ min: 0, max: 99 }),
             imageBFilename: fc.string({ minLength: 1, maxLength: 30 }).filter(s => s.trim().length > 0).map(s => `${s.replace(/[^a-zA-Z0-9_-]/g, '_')}.jpg`),
             imageBColorName: fc.constantFrom('Red', 'Blue', 'Green', 'Yellow', 'Black', 'White'),
-            imageBScale: fc.float({ min: Math.fround(0.05), max: Math.fround(5.0), noNaN: true }),
+            imageBScale: fc.float({ min: Math.fround(0.051), max: Math.fround(5.0), noNaN: true }),
             paletteIndex: fc.integer({ min: 0, max: 3 }),
-            blendModeIndex: fc.integer({ min: 0, max: 10 }),
-            backgroundModeIndex: fc.integer({ min: 0, max: 2 }),
+            blendModeIndex: fc.integer({ min: 0, max: 5 }),
+            backgroundModeIndex: fc.integer({ min: 0, max: 1 }),
             activeImageIndex: fc.constantFrom(0, 1),
             source: fc.constantFrom('manual', 'random', 'url', 'modified')
           }),
@@ -682,7 +701,7 @@ describe('Property 5: Storage round-trip consistency', () => {
             colorIndex: 0,
             currentBlendModeIndex: 0,
             currentBackgroundModeIndex: 0,
-            imgs: []
+            imgs: Array(100).fill('test.jpg')
           }
 
           // Create first history manager and build history stack

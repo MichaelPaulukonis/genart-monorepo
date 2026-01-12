@@ -1,6 +1,6 @@
 // placeholder test
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('@playwright/test')
 
 test('placeholder', async ({ page }) => {
-  expect(true).toBe(true);
-});
+  expect(true).toBe(true)
+})

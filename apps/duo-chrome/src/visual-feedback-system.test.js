@@ -1,6 +1,6 @@
 /**
  * Visual Feedback System Tests
- * 
+ *
  * Tests for the visual feedback system including:
  * - Status display updates with control actions
  * - Active image highlighting behavior
@@ -96,7 +96,10 @@ describe('Visual Feedback System', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks()
-    
+
+    // Ensure document.getElementById is restored to default behavior
+    document.getElementById = vi.fn((id) => mockElements[id] || null)
+
     // Reset mock element states
     Object.values(mockElements).forEach(element => {
       if (element) {
@@ -115,15 +118,15 @@ describe('Visual Feedback System', () => {
     }
 
     imageColorPairs = [
-      { 
-        img: 'landscape-001.jpg', 
-        color: { name: 'Bright Red' }, 
-        scale: 1.25 
+      {
+        img: 'landscape-001.jpg',
+        color: { name: 'Bright Red' },
+        scale: 1.25
       },
-      { 
-        img: 'portrait-042.jpg', 
-        color: { name: 'Forest Green' }, 
-        scale: 0.8 
+      {
+        img: 'portrait-042.jpg',
+        color: { name: 'Forest Green' },
+        scale: 0.8
       }
     ]
 
@@ -295,7 +298,7 @@ describe('Visual Feedback System', () => {
 
     it('should handle missing image data gracefully', () => {
       imageColorPairs[0] = { img: null, color: null, scale: 1.0 }
-      
+
       expect(() => {
         updateStatusDisplay()
       }).not.toThrow()
@@ -303,7 +306,7 @@ describe('Visual Feedback System', () => {
 
     it('should handle missing DOM elements gracefully', () => {
       document.getElementById = vi.fn(() => null)
-      
+
       expect(() => {
         updateStatusDisplay()
       }).not.toThrow()
@@ -331,7 +334,7 @@ describe('Visual Feedback System', () => {
       // Start with A active
       controlState.activeImageIndex = 0
       updateStatusDisplay()
-      
+
       // Switch to B active
       controlState.activeImageIndex = 1
       updateStatusDisplay()
@@ -359,7 +362,7 @@ describe('Visual Feedback System', () => {
     it('should toggle status display visibility', () => {
       // Mock as hidden initially
       mockStatusOverlay.classList.contains = vi.fn((className) => className === 'hidden')
-      
+
       toggleStatusDisplay()
 
       expect(showStatusDisplay).toHaveBeenCalledWith(0) // Permanent display
@@ -381,7 +384,7 @@ describe('Visual Feedback System', () => {
 
     it('should clear existing timeout when showing again', () => {
       controlState.statusTimeout = 456
-      
+
       showStatusDisplay()
 
       expect(clearTimeout).toHaveBeenCalledWith(456)
@@ -391,7 +394,7 @@ describe('Visual Feedback System', () => {
   describe('Status Overlay Positioning', () => {
     it('should update position with CSS styles', () => {
       controlState.statusPosition = { x: 100, y: 200 }
-      
+
       updateStatusPosition()
 
       expect(mockStatusOverlay.style.left).toBe('100px')
@@ -401,7 +404,7 @@ describe('Visual Feedback System', () => {
     it('should load saved position from session storage', () => {
       const savedPosition = { x: 150, y: 250 }
       sessionStorage.getItem = vi.fn(() => JSON.stringify(savedPosition))
-      
+
       initializeStatusDragging()
 
       expect(controlState.statusPosition).toEqual(savedPosition)
@@ -410,17 +413,17 @@ describe('Visual Feedback System', () => {
 
     it('should handle invalid saved position gracefully', () => {
       sessionStorage.getItem = vi.fn(() => 'invalid-json')
-      
+
       expect(() => {
         initializeStatusDragging()
       }).not.toThrow()
-      
+
       expect(console.warn).toHaveBeenCalledWith('Failed to load status position:', expect.any(Error))
     })
 
     it('should use default position when no saved position exists', () => {
       sessionStorage.getItem = vi.fn(() => null)
-      
+
       initializeStatusDragging()
 
       expect(updateStatusPosition).toHaveBeenCalled()
@@ -431,7 +434,7 @@ describe('Visual Feedback System', () => {
     it('should update display when image properties change', () => {
       // Simulate image scale change
       imageColorPairs[0].scale = 1.5
-      
+
       updateStatusDisplay()
 
       expect(mockElements['status-scale-a'].textContent).toBe('1.50')
@@ -441,17 +444,17 @@ describe('Visual Feedback System', () => {
       // Simulate image navigation
       imageColorPairs[1].img = 'new-image.jpg'
       imageColorPairs[1].color = { name: 'Ocean Blue' }
-      
+
       updateStatusDisplay()
 
-      expect(mockElements['status-filename-b'].textContent).toBe('new-image')
+      expect(mockElements['status-filename-b'].textContent).toBe('new image')
       expect(mockElements['status-color-b'].textContent).toBe('Ocean Blue')
     })
 
     it('should update display when color cycling occurs', () => {
       // Simulate color change
       imageColorPairs[0].color = { name: 'Sunset Orange' }
-      
+
       updateStatusDisplay()
 
       expect(mockElements['status-color-a'].textContent).toBe('Sunset Orange')
@@ -492,7 +495,7 @@ describe('Visual Feedback System', () => {
 
     it('should prevent memory leaks by clearing timeouts', () => {
       controlState.statusTimeout = 789
-      
+
       hideStatusDisplay()
 
       expect(clearTimeout).toHaveBeenCalledWith(789)
@@ -513,7 +516,7 @@ describe('Visual Feedback System', () => {
   describe('Session Persistence', () => {
     it('should save position to session storage', () => {
       controlState.statusPosition = { x: 300, y: 400 }
-      
+
       // Simulate drag end (would normally be called in drag handler)
       sessionStorage.setItem('duo-chrome-status-position', JSON.stringify(controlState.statusPosition))
 
@@ -526,7 +529,7 @@ describe('Visual Feedback System', () => {
     it('should restore position on initialization', () => {
       const savedPosition = { x: 500, y: 600 }
       sessionStorage.getItem = vi.fn(() => JSON.stringify(savedPosition))
-      
+
       initializeStatusDragging()
 
       expect(sessionStorage.getItem).toHaveBeenCalledWith('duo-chrome-status-position')

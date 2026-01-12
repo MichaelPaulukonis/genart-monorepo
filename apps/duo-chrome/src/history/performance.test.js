@@ -1,6 +1,6 @@
 /**
  * Performance Optimization Tests
- * 
+ *
  * Tests for performance features including:
  * - Debouncing
  * - Cache management
@@ -19,22 +19,47 @@ describe('Performance Optimizations', () => {
     let mockStateRefs
 
     beforeEach(() => {
+      // Mock localStorage
+      const storage = {}
+      global.localStorage = {
+        getItem: vi.fn((key) => storage[key] || null),
+        setItem: vi.fn((key, value) => { storage[key] = value }),
+        removeItem: vi.fn((key) => { delete storage[key] }),
+        clear: vi.fn(() => { Object.keys(storage).forEach(key => delete storage[key]) })
+      }
+
       // Mock p5 instance
       mockP5 = {
         createGraphics: vi.fn(() => ({
           background: vi.fn(),
           image: vi.fn(),
+          imageMode: vi.fn(),
+          blendMode: vi.fn(),
+          fill: vi.fn(),
+          noStroke: vi.fn(),
+          textAlign: vi.fn(),
+          textSize: vi.fn(),
+          text: vi.fn(),
           remove: vi.fn(),
+          drawingContext: {
+            globalCompositeOperation: ''
+          },
           canvas: {
             toDataURL: vi.fn(() => 'data:image/png;base64,mock')
           }
         })),
         loadImage: vi.fn((path, success) => {
-          setTimeout(() => success({ width: 100, height: 100 }), 0)
+          if (success) {
+            setTimeout(() => success({ width: 100, height: 100 }), 0)
+          }
+          return { width: 100, height: 100 }
         }),
         color: vi.fn((c) => c),
         width: 800,
-        height: 600
+        height: 600,
+        CENTER: 'center',
+        ADD: 'add',
+        MULTIPLY: 'multiply'
       }
 
       // Mock state refs
@@ -155,6 +180,12 @@ describe('Performance Optimizations', () => {
           background: vi.fn(),
           image: vi.fn(),
           imageMode: vi.fn(),
+          blendMode: vi.fn(),
+          fill: vi.fn(),
+          noStroke: vi.fn(),
+          textAlign: vi.fn(),
+          textSize: vi.fn(),
+          text: vi.fn(),
           remove: vi.fn(),
           canvas: {
             toDataURL: vi.fn(() => 'data:image/png;base64,mock')
@@ -164,7 +195,10 @@ describe('Performance Optimizations', () => {
           }
         })),
         loadImage: vi.fn((path, success) => {
-          setTimeout(() => success({ width: 100, height: 100 }), 0)
+          if (success) {
+            setTimeout(() => success({ width: 100, height: 100 }), 0)
+          }
+          return { width: 100, height: 100 }
         }),
         color: vi.fn((c) => c),
         CENTER: 'center',
@@ -210,12 +244,12 @@ describe('Performance Optimizations', () => {
 
       // First call - miss
       await thumbnailGenerator.generateThumbnail(entry, renderContext)
-      
+
       // Second call - hit
       await thumbnailGenerator.generateThumbnail(entry, renderContext)
 
       const stats = thumbnailGenerator.getCacheStats()
-      
+
       expect(stats.hits).toBeGreaterThan(0)
       expect(stats.hitRate).not.toBe('0%')
     })
@@ -223,14 +257,14 @@ describe('Performance Optimizations', () => {
     it('should cleanup old cache entries', () => {
       // Manually add entries to cache
       const cache = thumbnailGenerator.cache
-      
+
       cache.set('old-1', 'data:image/png;base64,old1')
       cache.set('old-2', 'data:image/png;base64,old2')
 
       expect(cache.cache.size).toBe(2)
 
-      // Cleanup entries older than 0ms (all entries)
-      const result = thumbnailGenerator.cleanupCache(0)
+      // Cleanup entries older than -1ms (all entries)
+      const result = thumbnailGenerator.cleanupCache(-1)
 
       expect(result.removedCount).toBe(2)
       expect(cache.cache.size).toBe(0)
@@ -255,7 +289,7 @@ describe('Performance Optimizations', () => {
 
     it('should not optimize if already below target', () => {
       const cache = thumbnailGenerator.cache
-      
+
       cache.set('entry-1', 'data:image/png;base64,entry1')
       cache.set('entry-2', 'data:image/png;base64,entry2')
 

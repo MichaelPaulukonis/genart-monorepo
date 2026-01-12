@@ -88,16 +88,16 @@ describe('HistoryManager - localStorage Persistence', () => {
       const savedData = JSON.parse(localStorage.getItem('duo-chrome-history'))
 
       // Verify schema
-      expect(savedData).toHaveProperty('version', 1)
-      expect(savedData).toHaveProperty('currentPosition')
-      expect(savedData).toHaveProperty('entries')
+      expect(savedData).toHaveProperty('version', 2)
+      expect(savedData).toHaveProperty('rootId')
+      expect(savedData).toHaveProperty('currentId')
+      expect(savedData).toHaveProperty('nodes')
       expect(savedData).toHaveProperty('lastModified')
-      expect(savedData).toHaveProperty('maxEntries')
 
       // Verify data
-      expect(savedData.entries).toHaveLength(2)
-      expect(savedData.currentPosition).toBe(1)
-      expect(savedData.maxEntries).toBe(500)
+      expect(savedData.nodes).toHaveLength(2)
+      expect(savedData.rootId).toBeTruthy()
+      expect(savedData.currentId).toBeTruthy()
     })
 
     it('should handle storage quota exceeded error', () => {
@@ -126,36 +126,53 @@ describe('HistoryManager - localStorage Persistence', () => {
 
   describe('loadFromStorage', () => {
     it('should load history from localStorage on initialization', () => {
-      // Pre-populate localStorage
+      const entry1 = {
+        id: 'test-1',
+        timestamp: Date.now(),
+        imageA: { index: 0, filename: 'test1.jpg', colorName: 'Red', scale: 1.0 },
+        imageB: { index: 1, filename: 'test2.jpg', colorName: 'Blue', scale: 1.5 },
+        paletteIndex: 0,
+        blendModeIndex: 2,
+        backgroundModeIndex: 1,
+        activeImageIndex: 0,
+        source: 'manual'
+      }
+      const entry2 = {
+        id: 'test-2',
+        timestamp: Date.now(),
+        imageA: { index: 0, filename: 'test1.jpg', colorName: 'Red', scale: 1.2 },
+        imageB: { index: 1, filename: 'test2.jpg', colorName: 'Blue', scale: 1.8 },
+        paletteIndex: 0,
+        blendModeIndex: 3,
+        backgroundModeIndex: 0,
+        activeImageIndex: 1,
+        source: 'random'
+      }
+
+      // Construct v2 graph data
       const testData = {
-        version: 1,
-        currentPosition: 1,
-        entries: [
+        version: 2,
+        rootId: 'test-1',
+        currentId: 'test-2',
+        nodes: [
           {
             id: 'test-1',
-            timestamp: Date.now(),
-            imageA: { index: 0, filename: 'test1.jpg', colorName: 'Red', scale: 1.0 },
-            imageB: { index: 1, filename: 'test2.jpg', colorName: 'Blue', scale: 1.5 },
-            paletteIndex: 0,
-            blendModeIndex: 2,
-            backgroundModeIndex: 1,
-            activeImageIndex: 0,
-            source: 'manual'
+            entry: entry1,
+            parentId: null,
+            children: ['test-2'],
+            activeChildId: 'test-2',
+            timestamp: entry1.timestamp
           },
           {
             id: 'test-2',
-            timestamp: Date.now(),
-            imageA: { index: 0, filename: 'test1.jpg', colorName: 'Red', scale: 1.2 },
-            imageB: { index: 1, filename: 'test2.jpg', colorName: 'Blue', scale: 1.8 },
-            paletteIndex: 0,
-            blendModeIndex: 3,
-            backgroundModeIndex: 0,
-            activeImageIndex: 1,
-            source: 'random'
+            entry: entry2,
+            parentId: 'test-1',
+            children: [],
+            activeChildId: null,
+            timestamp: entry2.timestamp
           }
         ],
-        lastModified: Date.now(),
-        maxEntries: 500
+        lastModified: Date.now()
       }
 
       localStorage.setItem('duo-chrome-history', JSON.stringify(testData))
@@ -164,8 +181,9 @@ describe('HistoryManager - localStorage Persistence', () => {
       const newManager = new HistoryManager(mockP5, mockStateRefs)
 
       // Verify history was loaded
+      expect(newManager.nodes.size).toBe(2)
+      expect(newManager.currentId).toBe('test-2')
       expect(newManager.history).toHaveLength(2)
-      expect(newManager.currentPosition).toBe(1)
       expect(newManager.getCurrentEntry().id).toBe('test-2')
     })
 
@@ -177,8 +195,7 @@ describe('HistoryManager - localStorage Persistence', () => {
       const newManager = new HistoryManager(mockP5, mockStateRefs)
 
       // Should have empty history
-      expect(newManager.history).toHaveLength(0)
-      expect(newManager.currentPosition).toBe(-1)
+      expect(newManager.nodes.size).toBe(0)
     })
 
     it('should handle corrupted storage data', () => {
@@ -188,90 +205,29 @@ describe('HistoryManager - localStorage Persistence', () => {
       // Create new history manager (should handle error)
       const newManager = new HistoryManager(mockP5, mockStateRefs)
 
-      // Should have empty history
-      expect(newManager.history).toHaveLength(0)
-      expect(newManager.currentPosition).toBe(-1)
+      // Should have default history
+      expect(newManager.nodes.size).toBe(1)
 
       // Should have cleared corrupted data
       expect(localStorage.removeItem).toHaveBeenCalledWith('duo-chrome-history')
     })
 
-    it('should validate entries and skip invalid ones', () => {
+    it('should reject invalid graph structure (missing root/current)', () => {
       const testData = {
-        version: 1,
-        currentPosition: 0,
-        entries: [
-          {
-            id: 'valid-1',
-            timestamp: Date.now(),
-            imageA: { index: 0, filename: 'test1.jpg', colorName: 'Red', scale: 1.0 },
-            imageB: { index: 1, filename: 'test2.jpg', colorName: 'Blue', scale: 1.5 },
-            paletteIndex: 0,
-            blendModeIndex: 2,
-            backgroundModeIndex: 1,
-            activeImageIndex: 0,
-            source: 'manual'
-          },
-          {
-            // Invalid entry - missing required fields
-            id: 'invalid-1',
-            timestamp: Date.now()
-          },
-          {
-            id: 'valid-2',
-            timestamp: Date.now(),
-            imageA: { index: 0, filename: 'test1.jpg', colorName: 'Red', scale: 1.2 },
-            imageB: { index: 1, filename: 'test2.jpg', colorName: 'Blue', scale: 1.8 },
-            paletteIndex: 0,
-            blendModeIndex: 3,
-            backgroundModeIndex: 0,
-            activeImageIndex: 1,
-            source: 'random'
-          }
-        ],
-        lastModified: Date.now(),
-        maxEntries: 500
+        version: 2,
+        rootId: 'missing-node',
+        currentId: 'test-1',
+        nodes: [
+          { id: 'test-1', entry: {}, parentId: null, children: [] }
+        ]
       }
 
       localStorage.setItem('duo-chrome-history', JSON.stringify(testData))
 
-      // Create new history manager
       const newManager = new HistoryManager(mockP5, mockStateRefs)
 
-      // Should have loaded only valid entries
-      expect(newManager.history).toHaveLength(2)
-      expect(newManager.history[0].id).toBe('valid-1')
-      expect(newManager.history[1].id).toBe('valid-2')
-    })
-
-    it('should handle schema version mismatch', () => {
-      const testData = {
-        version: 999, // Future version
-        currentPosition: 0,
-        entries: [
-          {
-            id: 'test-1',
-            timestamp: Date.now(),
-            imageA: { index: 0, filename: 'test1.jpg', colorName: 'Red', scale: 1.0 },
-            imageB: { index: 1, filename: 'test2.jpg', colorName: 'Blue', scale: 1.5 },
-            paletteIndex: 0,
-            blendModeIndex: 2,
-            backgroundModeIndex: 1,
-            activeImageIndex: 0,
-            source: 'manual'
-          }
-        ],
-        lastModified: Date.now(),
-        maxEntries: 500
-      }
-
-      localStorage.setItem('duo-chrome-history', JSON.stringify(testData))
-
-      // Create new history manager (should still try to load)
-      const newManager = new HistoryManager(mockP5, mockStateRefs)
-
-      // Should have loaded the entry despite version mismatch
-      expect(newManager.history).toHaveLength(1)
+      // Should have failed validation and cleared history
+      expect(newManager.nodes.size).toBe(1) // clearHistory creates one initial entry
     })
   })
 
@@ -286,6 +242,7 @@ describe('HistoryManager - localStorage Persistence', () => {
 
       expect(result).toBe(true)
       expect(localStorage.removeItem).toHaveBeenCalledWith('duo-chrome-history')
+      expect(historyManager.nodes.size).toBe(1) // Creates new initial entry
     })
 
     it('should keep current composition as first entry', () => {
@@ -300,16 +257,10 @@ describe('HistoryManager - localStorage Persistence', () => {
       // Should have one entry (the current one)
       expect(historyManager.history).toHaveLength(1)
       expect(historyManager.currentPosition).toBe(0)
-      expect(historyManager.getCurrentEntry().id).toBe(currentEntry.id)
-    })
-
-    it('should handle empty history', () => {
-      // Clear empty history
-      const result = historyManager.clearHistory()
-
-      expect(result).toBe(true)
-      expect(historyManager.history).toHaveLength(0)
-      expect(historyManager.currentPosition).toBe(-1)
+      // New entry ID will be different, but state should match
+      const newEntry = historyManager.getCurrentEntry()
+      expect(newEntry.imageA.filename).toBe(currentEntry.imageA.filename)
+      expect(newEntry.imageB.filename).toBe(currentEntry.imageB.filename)
     })
   })
 
@@ -325,10 +276,12 @@ describe('HistoryManager - localStorage Persistence', () => {
       const newManager = new HistoryManager(mockP5, mockStateRefs)
 
       // Verify history was restored
-      expect(newManager.history).toHaveLength(2)
-      expect(newManager.currentPosition).toBe(1)
-      expect(newManager.history[0].id).toBe(firstEntry.id)
-      expect(newManager.history[1].id).toBe(secondEntry.id)
+      expect(newManager.nodes.size).toBeGreaterThanOrEqual(2)
+      expect(newManager.currentId).toBe(secondEntry.id)
+      
+      // Check that the reloaded graph contains the original entries
+      const loadedEntry1 = newManager.nodes.get(firstEntry.id).entry
+      expect(loadedEntry1.imageA.filename).toBe(firstEntry.imageA.filename)
     })
 
     it('should maintain position after reload', () => {
@@ -338,13 +291,13 @@ describe('HistoryManager - localStorage Persistence', () => {
       historyManager.captureCurrentState('url')
       historyManager.navigateBackward()
 
-      const position = historyManager.currentPosition
+      const currentId = historyManager.currentId
 
       // Create new manager
       const newManager = new HistoryManager(mockP5, mockStateRefs)
 
       // Position should be restored
-      expect(newManager.currentPosition).toBe(position)
+      expect(newManager.currentId).toBe(currentId)
     })
   })
 })

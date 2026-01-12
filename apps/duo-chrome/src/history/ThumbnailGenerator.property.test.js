@@ -36,7 +36,7 @@ describe('Property 6: Thumbnail caching consistency', () => {
     // Mock p5 instance with deterministic behavior
     // Global counter to ensure each graphics object gets a unique but deterministic ID
     let graphicsCounter = 0
-    
+
     mockP5 = {
       createGraphics: function (width, height) {
         // Each graphics object gets a unique ID for deterministic toDataURL
@@ -84,12 +84,12 @@ describe('Property 6: Thumbnail caching consistency', () => {
     }
   })
 
-  it('should cache thumbnails and return the same result for the same entry', () => {
-    fc.assert(
-      fc.property(
+  it('should cache thumbnails and return the same result for the same entry', async () => {
+    await fc.assert(
+      fc.asyncProperty(
         // Generate random history entries
         fc.record({
-          id: fc.string({ minLength: 5, maxLength: 20 }),
+          id: fc.string({ minLength: 5, maxLength: 20 }).map(s => s.replace(/[^a-zA-Z0-9-]/g, 'x')),
           imageA: fc.record({
             filename: fc.string({ minLength: 1, maxLength: 30 })
               .filter(s => s.trim().length > 0)
@@ -231,12 +231,12 @@ describe('Property 6: Thumbnail caching consistency', () => {
     )
   })
 
-  it('should maintain separate caches across different generator instances', () => {
-    fc.assert(
-      fc.property(
+  it('should maintain separate caches across different generator instances', async () => {
+    await fc.assert(
+      fc.asyncProperty(
         // Generate random history entries
         fc.record({
-          id: fc.string({ minLength: 5, maxLength: 20 }),
+          id: fc.string({ minLength: 5, maxLength: 20 }).map(s => s.replace(/[^a-zA-Z0-9-]/g, 'x')),
           imageA: fc.record({
             filename: fc.string({ minLength: 1, maxLength: 30 })
               .filter(s => s.trim().length > 0)

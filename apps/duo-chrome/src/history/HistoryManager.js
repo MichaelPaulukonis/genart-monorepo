@@ -23,9 +23,9 @@ class HistoryNode {
   constructor (entry) {
     this.id = entry.id
     this.parentId = null
-    this.children = []        // IDs of all children (branches)
+    this.children = [] // IDs of all children (branches)
     this.activeChildId = null // The currently selected "forward" path
-    this.entry = entry        // The actual composition data
+    this.entry = entry // The actual composition data
     this.timestamp = entry.timestamp || Date.now()
   }
 }
@@ -128,11 +128,11 @@ export class HistoryManager {
 
     while (currentNodeId && this.nodes.has(currentNodeId)) {
       const node = this.nodes.get(currentNodeId)
-      
+
       // Attach metadata for UI (non-persistent)
       // This allows the filmstrip to show branch indicators
       node.entry._branchCount = node.children.length
-      
+
       path.push(node.entry)
 
       if (node.id === this.currentId) {
@@ -186,7 +186,7 @@ export class HistoryManager {
       if (currentNode) {
         newNode.parentId = currentNode.id
         currentNode.children.push(newNode.id)
-        
+
         // **Branching Logic:**
         // Always set the new node as the active child, effectively
         // "switching" the active path to this new branch.
@@ -271,10 +271,10 @@ export class HistoryManager {
     }
 
     console.log(`Switched branch for node ${nodeId}. Active child: ${node.activeChildId}`)
-    
+
     this._invalidateCache()
     this.saveToStorage()
-    
+
     // If we are currently "downstream" from this node, we might need to
     // update currentId?
     // Actually, if we switch the branch at a past node, our currentId
@@ -282,19 +282,19 @@ export class HistoryManager {
     // The "Filmstrip" shows the active path.
     // If currentId is NOT in the new active path, we should probably
     // jump to the new tip? Or stay where we are (off-road)?
-    
+
     // Standard behavior: If I switch a signpost 5 miles back, I am still where I am.
     // But the "Map" (Filmstrip) will show the new route.
     // If I want to "see" the other branch, I should probably navigate to it.
-    
+
     // Let's check if currentId is still reachable from root.
     // _rebuildActivePath will determine the new path.
     // If currentId is not in it, it's confusing.
-    
+
     // Better UX: When toggling a branch, typically one is AT the fork point.
     // If the user clicks the fork icon on a thumbnail, they are modifying
     // the path *leaving* that thumbnail.
-    
+
     return true
   }
 
@@ -322,7 +322,7 @@ export class HistoryManager {
 
       this._restoreCompositionFromEntry(entry)
       console.log(`Navigated to position ${position + 1}/${path.length} (${entry.id})`)
-      
+
       this.saveToStorage()
       return true
     } catch (error) {
@@ -346,14 +346,14 @@ export class HistoryManager {
     // We can't just subtract 1 from currentPosition because we might be
     // navigating *up* a tree that isn't the active path?
     // Actually, parent is always "back".
-    
+
     // We can just set currentId to parentId.
     // However, we need to call navigateTo to trigger the restore logic.
     // But navigateTo takes an *index* in the active path.
     // Since parent is always in the active path of the child,
     // we can just decrement currentPosition IF we are on the active path.
     // If we are disjointed, this logic holds: Parent is always index-1.
-    
+
     return this.navigateTo(this.currentPosition - 1)
   }
 
@@ -411,6 +411,100 @@ export class HistoryManager {
     return this.currentPosition + 1
   }
 
+  _logError (context, error, data = {}) {
+    console.error(`Error in ${context}:`, error)
+
+    // Update counts
+    // We might want to categorize errors, but 'other' is safe default if we don't infer category
+    const category = this._categorizeError(context, error)
+    if (this.errorCounts[category] !== undefined) {
+      this.errorCounts[category]++
+    } else {
+      this.errorCounts.other++
+    }
+
+    // Add to log
+    const entry = {
+      timestamp: Date.now(),
+      context, // Maps to 'operation' in tests
+      message: error.message || String(error),
+      stack: error.stack,
+      data // Maps to 'context' in tests
+    }
+    this.errorLog.unshift(entry)
+    if (this.errorLog.length > this.maxErrorLogSize) {
+      this.errorLog.pop()
+    }
+  }
+
+  _categorizeError (context, error) {
+    if (context.includes('Storage') || error.name?.includes('Quota') || error.name?.includes('Security')) return 'storage'
+    if (context.includes('Image') || context.includes('load')) return 'imageLoad'
+    if (context.includes('navigat')) return 'navigation'
+    if (context.includes('Thumbnail')) return 'thumbnail'
+    if (context.includes('validat')) return 'validation'
+    return 'other'
+  }
+
+  getErrorLog () {
+    return this.errorLog
+  }
+
+  getErrorStats () {
+    return {
+      errorCounts: { ...this.errorCounts },
+      totalErrors: Object.values(this.errorCounts).reduce((a, b) => a + b, 0)
+    }
+  }
+
+  exportErrorLog () {
+    return JSON.stringify({
+      timestamp: Date.now(),
+      errors: this.errorLog,
+      errorStats: this.getErrorStats(),
+      historySize: this.nodes.size,
+      storageUsage: this._estimateStorageUsage()
+    }, null, 2)
+  }
+
+  _estimateStorageUsage () {
+    if (typeof localStorage === 'undefined') return 0
+    const stored = localStorage.getItem(this.storageKey)
+    return stored ? stored.length : 0
+  }
+
+  healthCheck () {
+    const issues = []
+    const warnings = []
+
+    // Check storage
+    if (typeof localStorage === 'undefined') {
+      issues.push('localStorage is not available')
+    }
+
+    // Check consistency
+    if (this.nodes.size > 0) {
+      if (!this.rootId || !this.nodes.has(this.rootId)) {
+        issues.push('Graph root is missing')
+      }
+      if (!this.currentId || !this.nodes.has(this.currentId)) {
+        issues.push('Current pointer is invalid')
+      }
+    }
+
+    // Check error rates
+    const stats = this.getErrorStats()
+    if (stats.totalErrors > 50) {
+      warnings.push(`High error count: ${stats.totalErrors}`)
+    }
+
+    return {
+      healthy: issues.length === 0,
+      issues,
+      warnings
+    }
+  }
+
   // --- Restoration Logic (Same as before) ---
 
   _restoreCompositionFromEntry (entry) {
@@ -455,7 +549,7 @@ export class HistoryManager {
   }
 
   // --- Validation Helpers (Preserved from original) ---
-  
+
   _validatePaletteIndex (index, palettes) {
     if (typeof index !== 'number' || index < 0 || index >= palettes.length) return 0
     return index
@@ -596,7 +690,7 @@ export class HistoryManager {
 
       // Serialize Graph: Convert Map to array of nodes
       const nodesArray = Array.from(this.nodes.values())
-      
+
       const storageData = {
         version: this.storageVersion,
         rootId: this.rootId,
@@ -607,12 +701,12 @@ export class HistoryManager {
 
       const serialized = JSON.stringify(storageData)
       localStorage.setItem(this.storageKey, serialized)
-      
+
       // Auto-optimize if too large
       if (serialized.length > 4 * 1024 * 1024) { // 4MB
         this.optimizeHistory()
       }
-      
+
       return true
     } catch (error) {
       console.error('Failed to save history:', error)
@@ -626,15 +720,9 @@ export class HistoryManager {
       const serialized = localStorage.getItem(this.storageKey)
       if (!serialized) return false
 
-      let data = JSON.parse(serialized)
+      const data = JSON.parse(serialized)
 
-      // Migration Strategy
-      if (!data.version || data.version < 2) {
-        console.log('Migrating history from v1 (Linear) to v2 (Graph)...')
-        data = this._migrateV1ToV2(data)
-      }
-
-      if (!data || !data.nodes) return false
+      if (!data || !data.nodes || !Array.isArray(data.nodes)) return false
 
       // Rehydrate Graph
       this.nodes = new Map()
@@ -661,62 +749,9 @@ export class HistoryManager {
     }
   }
 
-  /**
-   * Migrates v1 linear history array to v2 graph structure
-   */
-  _migrateV1ToV2 (v1Data) {
-    if (!v1Data.entries || v1Data.entries.length === 0) return null
-
-    const nodes = []
-    let rootId = null
-    let prevId = null
-
-    v1Data.entries.forEach((entry, index) => {
-      const node = new HistoryNode(entry)
-      
-      if (index === 0) {
-        rootId = node.id
-      }
-
-      if (prevId) {
-        node.parentId = prevId
-        // Find previous node in array (not efficient but runs once)
-        const prevNode = nodes.find(n => n.id === prevId)
-        if (prevNode) {
-          prevNode.children.push(node.id)
-          prevNode.activeChildId = node.id
-        }
-      }
-
-      nodes.push(node)
-      prevId = node.id
-    })
-
-    // Determine currentId based on v1 currentPosition
-    let currentId = null
-    const targetIndex = v1Data.currentPosition !== undefined ? v1Data.currentPosition : nodes.length - 1
-    if (nodes[targetIndex]) {
-      currentId = nodes[targetIndex].id
-    } else {
-      currentId = nodes[nodes.length - 1].id
-    }
-
-    return {
-      version: 2,
-      rootId,
-      currentId,
-      nodes
-    }
-  }
-
   _enforceSizeLimits () {
     if (this.nodes.size > this.maxEntries) {
-      // Simple pruning: Remove oldest nodes?
-      // Pruning a graph is hard. You can't just remove the root.
-      // For now, we will just warn. Implementing tree pruning is complex.
-      // Or we can prune branches that are not on the active path?
-      // MVP: Warning only.
-      console.warn(`History graph size (${this.nodes.size}) exceeds limit (${this.maxEntries})`)
+      this.optimizeHistory(this.maxEntries)
     }
   }
 
@@ -727,7 +762,7 @@ export class HistoryManager {
     this._invalidateCache()
     localStorage.removeItem(this.storageKey)
     if (this.thumbnailGenerator) this.thumbnailGenerator.clearCache()
-    
+
     // Preserve current state as new root
     const entry = this._createEntryFromState('manual')
     if (entry) {
@@ -737,7 +772,7 @@ export class HistoryManager {
       this.nodes.set(node.id, node)
       this.saveToStorage()
     }
-    
+
     return true
   }
 
@@ -747,21 +782,111 @@ export class HistoryManager {
     if (!entry) return null
     // ... context generation logic ...
     // Simplifying for refactor: reuse generic generator
-    // Note: The original method had complex context setup. 
+    // Note: The original method had complex context setup.
     // We rely on ThumbnailGenerator generic methods.
     return null // Placeholder, actual implementation requires refactoring context logic from original
   }
-  
-  // NOTE: Some methods like optimizeHistory, getPerformanceStats, etc., 
-  // need to be updated for Graph but are non-critical for MVP.
-  // I have included minimal versions or placeholders.
-  
-  optimizeHistory () {
-    // Graph optimization is complex. Skipping for MVP.
-    return 0
+
+  // --- Performance Monitoring ---
+
+  getPerformanceStats () {
+    return {
+      historySize: this.nodes.size,
+      activePathLength: this.history.length,
+      currentPosition: this.currentPosition,
+      maxEntries: this.maxEntries,
+      memoryUsage: {
+        estimatedKB: (this._estimateStorageUsage() / 1024).toFixed(2)
+      },
+      errorStats: this.getErrorStats(),
+      thumbnailCache: this.thumbnailGenerator ? this.thumbnailGenerator.getCacheStats() : null
+    }
   }
-  
+
+  async profileOperation (name, operation) {
+    const start = performance.now()
+    try {
+      const result = await operation()
+      const duration = performance.now() - start
+      // We could log this if we had a performance log
+      return result
+    } catch (error) {
+      const duration = performance.now() - start
+      throw error
+    }
+  }
+
+  optimizeHistory (targetSize = 50) {
+    // Basic graph pruning: Keep root, current path, and up to targetSize recent nodes
+    if (this.nodes.size <= targetSize) return 0
+
+    const keepIds = new Set()
+    
+    // 1. Prune Active Path
+    const path = this.history
+    let startIndex = 0
+    if (path.length > targetSize) {
+      startIndex = path.length - targetSize
+      // Update root to the new start
+      this.rootId = path[startIndex].id
+      const newRoot = this.nodes.get(this.rootId)
+      if (newRoot) newRoot.parentId = null
+    }
+    
+    // Keep nodes in the (possibly truncated) active path
+    for (let i = startIndex; i < path.length; i++) {
+      keepIds.add(path[i].id)
+    }
+
+    // 2. Keep currentId (should be in path usually, but safety check)
+    if (this.currentId) keepIds.add(this.currentId)
+
+    // If we still have room, keep some recent nodes (by timestamp)
+    if (keepIds.size < targetSize) {
+      const sortedNodes = Array.from(this.nodes.values())
+        .sort((a, b) => b.timestamp - a.timestamp)
+      
+      for (const node of sortedNodes) {
+        if (keepIds.size >= targetSize) break
+        keepIds.add(node.id)
+      }
+    }
+
+    // Remove nodes not in keepIds
+    let removedCount = 0
+    for (const [id, node] of this.nodes) {
+      if (!keepIds.has(id)) {
+        this.nodes.delete(id)
+        // Also verify parent references? 
+        // In a graph, removing a node might break parent's children array.
+        // We should cleanup parent references.
+        if (node.parentId && this.nodes.has(node.parentId)) {
+          const parent = this.nodes.get(node.parentId)
+          parent.children = parent.children.filter(childId => childId !== id)
+          if (parent.activeChildId === id) {
+            parent.activeChildId = parent.children.length > 0 ? parent.children[0] : null
+          }
+        }
+        removedCount++
+      }
+    }
+
+    this._invalidateCache()
+    
+    // Clear thumbnail cache for removed entries if possible
+    // (ThumbnailGenerator doesn't expose delete yet, but we can clear all if drastic)
+    if (removedCount > 0 && this.thumbnailGenerator) {
+       // Ideally we'd remove specific IDs. 
+       // For now, assume ThumbnailGenerator manages its own LRU or we let it be.
+    }
+
+    this.saveToStorage()
+    console.log(`Optimized history: removed ${removedCount} nodes`)
+    return removedCount
+  }
+
   logPerformanceStats () {
     console.log(`History Graph: ${this.nodes.size} nodes`)
+    console.log(`Storage Usage: ${this._estimateStorageUsage()} bytes`)
   }
 }

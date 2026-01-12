@@ -18,7 +18,7 @@ let imageColorPairs
 let controlState
 
 // Initialize test environment
-function initializeTestEnvironment() {
+function initializeTestEnvironment () {
   imageColorPairs = [
     { img: 'test1.jpg', color: { color: [255, 0, 0] }, layer: null, scale: 1.0 },
     { img: 'test2.jpg', color: { color: [0, 255, 0] }, layer: null, scale: 1.0 }
@@ -33,7 +33,7 @@ function initializeTestEnvironment() {
 }
 
 // Size control functions (extracted from duo-chrome.js for testing)
-function setManualSizeControl(imageIndex, isManual) {
+function setManualSizeControl (imageIndex, isManual) {
   if (imageIndex === 0 || imageIndex === 1) {
     controlState.manualSizeControl[imageIndex] = isManual
     if (isManual) {
@@ -42,12 +42,12 @@ function setManualSizeControl(imageIndex, isManual) {
   }
 }
 
-function provideBoundsFeedback(boundType) {
+function provideBoundsFeedback (boundType) {
   // Simplified feedback for testing (no DOM manipulation)
   mockConsole.log(`Bounds feedback: ${boundType}`)
 }
 
-function adjustImageSize(imageIndex, delta) {
+function adjustImageSize (imageIndex, delta) {
   if (imageIndex < 0 || imageIndex >= imageColorPairs.length) {
     mockConsole.warn('Invalid image index:', imageIndex)
     return false
@@ -80,36 +80,36 @@ function adjustImageSize(imageIndex, delta) {
 }
 
 // Test utilities
-function assertEqual(actual, expected, message) {
+function assertEqual (actual, expected, message) {
   if (actual !== expected) {
     throw new Error(`${message}: Expected ${expected}, got ${actual}`)
   }
 }
 
-function assertAlmostEqual(actual, expected, tolerance, message) {
+function assertAlmostEqual (actual, expected, tolerance, message) {
   if (Math.abs(actual - expected) > tolerance) {
     throw new Error(`${message}: Expected ${expected} ± ${tolerance}, got ${actual}`)
   }
 }
 
-function assertTrue(condition, message) {
+function assertTrue (condition, message) {
   if (!condition) {
     throw new Error(message)
   }
 }
 
-function assertFalse(condition, message) {
+function assertFalse (condition, message) {
   if (condition) {
     throw new Error(message)
   }
 }
 
 // Test Suite
-function runTests() {
+function runTests () {
   let testsPassed = 0
   let testsFailed = 0
 
-  function runTest(testName, testFunction) {
+  function runTest (testName, testFunction) {
     try {
       initializeTestEnvironment()
       testFunction()
@@ -271,7 +271,7 @@ function runTests() {
   })
 
   // Summary
-  console.log(`\nTest Results:`)
+  console.log('\nTest Results:')
   console.log(`✓ Passed: ${testsPassed}`)
   console.log(`✗ Failed: ${testsFailed}`)
   console.log(`Total: ${testsPassed + testsFailed}`)

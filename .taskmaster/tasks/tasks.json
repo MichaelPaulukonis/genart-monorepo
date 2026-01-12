@@ -2122,7 +2122,7 @@
         "testStrategy": "1. Blend Mode Display Testing:\n   - Verify blend mode indicator appears in the correct location\n   - Confirm all available blend modes are displayed correctly\n   - Test real-time updates when blend mode is changed\n   - Check visibility and clarity across different screen sizes and resolutions\n\n2. Filename Display Testing:\n   - Test with various filename lengths and formats, especially with 'tagged-name' format\n   - Verify proper line breaking at underscores and hyphens\n   - Confirm hover functionality shows complete filename when implemented\n   - Test with extreme cases (very long filenames, unusual characters)\n   - Verify truncation preserves the most important parts of the filename\n\n3. Cross-browser Testing:\n   - Verify consistent display across Chrome, Firefox, Safari, and Edge\n   - Test on different operating systems to ensure consistent font rendering\n\n4. Accessibility Testing:\n   - Verify screen readers can access the full filename information\n   - Test keyboard navigation for any new interactive elements\n   - Check color contrast for text readability",
         "status": "done",
         "dependencies": [
-          1
+          "1"
         ],
         "priority": "medium",
         "subtasks": []
@@ -2135,7 +2135,7 @@
         "testStrategy": "1. Test basic history preservation:\n   - Create a sequence of image modifications\n   - Navigate to a middle point in history\n   - Make a modification\n   - Verify that subsequent history points are preserved in a new branch\n\n2. Test navigation through branched history:\n   - Create multiple branches at different points\n   - Verify that navigation controls correctly move between and within branches\n   - Test keyboard shortcuts for navigation (including arrow keys in filmstrip mode)\n\n3. Test UI representation:\n   - Verify that the UI clearly shows the branched structure\n   - Confirm that the active node/branch is clearly indicated\n   - Test with complex history trees to ensure readability\n\n4. Test edge cases:\n   - Very deep history trees\n   - Branches with only minor changes\n   - Branches from branches (multiple levels)\n   - Very large images with significant memory requirements\n\n5. If implemented, test branch pruning:\n   - Verify that pruning a branch removes only the intended nodes\n   - Confirm that pruning doesn't affect other branches\n   - Test that the UI updates correctly after pruning\n\n6. Regression testing:\n   - Verify that existing functionality still works with the new history structure\n   - Check that history-dependent features (like undo/redo) function correctly",
         "status": "done",
         "dependencies": [
-          1
+          "1"
         ],
         "priority": "medium",
         "subtasks": []
@@ -2143,15 +2143,52 @@
       {
         "id": 4,
         "title": "Add Facility to Filter Image List by One or More Filters",
-        "description": "Implement functionality to filter the displayed image list based on multiple criteria, allowing users to quickly find and focus on specific images in their collection.",
-        "details": "1. Identify filterable attributes:\n   - Filename/tags (text search)\n   - Date created/modified\n   - Image dimensions\n   - File size\n   - Image type/format\n   - Custom tags or metadata\n\n2. Design filter UI:\n   - Create a filter panel with appropriate controls for each filter type\n   - Implement text input for name/tag filtering\n   - Add dropdown menus or sliders for range-based filters\n   - Design clear visual indicators for active filters\n   - Include a \"Clear All Filters\" button\n\n3. Implement filtering logic:\n   - Build a filtering system that can combine multiple filter criteria\n   - Ensure filters can be applied incrementally and removed individually\n   - Optimize filter performance for large image lists\n   - Implement debouncing for text-based filters to prevent excessive re-filtering\n\n4. Update image list display:\n   - Modify the image list component to respond to filter changes\n   - Implement smooth transitions when the list is filtered\n   - Show count of filtered results and total images\n   - Consider showing a message when no images match the filters\n\n5. Persist filter state:\n   - Save current filters between sessions\n   - Consider implementing saved/preset filters for common user queries",
-        "testStrategy": "1. Test individual filters:\n   - Verify each filter type correctly filters the image list\n   - Test boundary values for range filters\n   - Check case sensitivity and partial matching for text filters\n\n2. Test multiple filters:\n   - Apply various combinations of filters and verify results\n   - Ensure filters combine logically (AND operation between different filters)\n   - Test adding and removing filters in different orders\n\n3. Test edge cases:\n   - Empty image list\n   - Filters that match no images\n   - Very large image lists (performance)\n   - All images filtered out\n\n4. Test UI interactions:\n   - Verify filter controls are intuitive and responsive\n   - Test keyboard navigation through filter controls\n   - Check that active filters are clearly indicated\n   - Verify \"Clear All Filters\" button works correctly\n\n5. Test persistence:\n   - Confirm filters are saved and restored between sessions\n   - Test filter behavior when an image list is refreshed or updated",
-        "status": "pending",
+        "description": "Implement functionality to filter the displayed image list based on multiple criteria, allowing users to quickly find and focus on specific images in their collection. Includes a Filter Modal with interactive filename list for direct file selection and management.",
+        "status": "in-progress",
         "dependencies": [
-          2
+          "2"
         ],
         "priority": "medium",
-        "subtasks": []
+        "details": "1. Identify filterable attributes:\n   - Filename/tags (text search)\n   - Date created/modified\n   - Image dimensions\n   - File size\n   - Image type/format\n   - Custom tags or metadata\n\n2. Design filter UI:\n   - Create a filter panel with appropriate controls for each filter type\n   - Implement text input for name/tag filtering\n   - Add dropdown menus or sliders for range-based filters\n   - Design clear visual indicators for active filters\n   - Include a \"Clear All Filters\" button\n   - Create a Filter Modal with filename list display for direct file selection and filtering\n\n3. Implement filtering logic:\n   - Build a filtering system that can combine multiple filter criteria\n   - Ensure filters can be applied incrementally and removed individually\n   - Optimize filter performance for large image lists\n   - Implement debouncing for text-based filters to prevent excessive re-filtering\n\n4. Update image list display:\n   - Modify the image list component to respond to filter changes\n   - Implement smooth transitions when the list is filtered\n   - Show count of filtered results and total images\n   - Consider showing a message when no images match the filters\n\n5. Persist filter state:\n   - Save current filters between sessions\n   - Consider implementing saved/preset filters for common user queries",
+        "testStrategy": "1. Test individual filters:\n   - Verify each filter type correctly filters the image list\n   - Test boundary values for range filters\n   - Check case sensitivity and partial matching for text filters\n\n2. Test multiple filters:\n   - Apply various combinations of filters and verify results\n   - Ensure filters combine logically (AND operation between different filters)\n   - Test adding and removing filters in different orders\n\n3. Test edge cases:\n   - Empty image list\n   - Filters that match no images\n   - Very large image lists (performance)\n   - All images filtered out\n\n4. Test UI interactions:\n   - Verify filter controls are intuitive and responsive\n   - Test keyboard navigation through filter controls\n   - Check that active filters are clearly indicated\n   - Verify \"Clear All Filters\" button works correctly\n\n5. Test persistence:\n   - Confirm filters are saved and restored between sessions\n   - Test filter behavior when an image list is refreshed or updated\n\n6. Test filename list modal:\n   - Verify filename list displays correctly in Filter Modal\n   - Test responsive multi-column layout at different modal sizes\n   - Confirm click-to-select functionality works for individual files\n   - Validate styling of long filenames and modal resizing behavior",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add filename list display to Filter Modal",
+            "description": "Integrate a comprehensive filename list display within the Filter Modal to show all available images that can be filtered.",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement responsive multi-column grid layout for file list",
+            "description": "Create a responsive grid layout that adapts to modal size and displays filenames in multiple columns for better space utilization.",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add click-to-select functionality for file list items",
+            "description": "Enable users to click on filename items in the list to select/deselect them, allowing for quick individual file filtering.",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Style enhancements for long filenames and modal resizing",
+            "description": "Implement CSS styling to handle long filenames with ellipsis or wrapping, and ensure the modal resizes gracefully while maintaining layout integrity.",
+            "status": "done",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 5,
@@ -2161,7 +2198,7 @@
         "testStrategy": "1. Theme creation and management testing:\n   - Verify filters can be saved as named themes\n   - Test that saved themes correctly preserve all filter criteria\n   - Confirm themes persist between application sessions\n   - Test editing and deleting themes\n\n2. Theme assignment testing:\n   - Verify themes can be assigned to A/B positions through all provided UI methods\n   - Test that visual indicators correctly reflect current theme assignments\n   - Confirm assignments are preserved during application usage\n   - Test changing assignments and verify immediate updates to displayed images\n\n3. Image display verification:\n   - Confirm that displayed images always come from their assigned themes\n   - Test with various combinations of theme assignments\n   - Verify behavior when switching between images maintains theme assignments\n   - Test that history navigation preserves theme assignments\n\n4. Edge case testing:\n   - Test behavior when an assigned theme contains no images\n   - Verify handling when a theme becomes empty due to filter changes\n   - Test with very large themes and very small themes\n   - Confirm proper behavior when the same theme is assigned to both positions",
         "status": "pending",
         "dependencies": [
-          4
+          "4"
         ],
         "priority": "medium",
         "subtasks": []
@@ -2174,8 +2211,8 @@
         "testStrategy": "1. Connection testing:\n   - Verify successful connection to local fileservers\n   - Test connection error handling and user feedback\n   - If implemented, verify remote server connections and authentication\n\n2. File operation testing:\n   - Test browsing and listing files from connected servers\n   - Verify loading images from remote sources\n   - Confirm saving files to specified locations works correctly\n   - Test error handling for file operations (permissions, disconnections)\n\n3. Integration testing:\n   - Verify history system correctly tracks remote images\n   - Test that filtering system works with remote image sources\n   - Ensure all existing image manipulation features work with remote images\n\n4. Performance testing:\n   - Measure and optimize load times for remote images\n   - Test application behavior with large remote directories\n   - Verify application responsiveness during file operations\n\n5. Security testing:\n   - Verify proper handling of connection credentials\n   - Test for potential security vulnerabilities in file handling\n   - Ensure user permissions are respected",
         "status": "pending",
         "dependencies": [
-          3,
-          4
+          "3",
+          "4"
         ],
         "priority": "medium",
         "subtasks": []
@@ -2188,17 +2225,140 @@
         "testStrategy": "1. Functional equivalence testing:\n   - Create a comprehensive test suite covering all duo-chrome.js functionality before refactoring\n   - Run the same tests against the refactored implementation\n   - Verify all tests pass with the new implementation\n   - Perform side-by-side comparisons of outputs for complex operations\n\n2. Integration testing:\n   - Test all features that depend on duo-chrome.js functionality\n   - Verify that the application still works correctly with the refactored modules\n   - Check for any regressions in functionality\n\n3. Performance testing:\n   - Measure and compare load times before and after refactoring\n   - Profile CPU and memory usage during typical operations\n   - Verify that the refactored code doesn't introduce performance penalties\n\n4. Code quality metrics:\n   - Calculate complexity metrics for the new modules\n   - Verify improved maintainability scores\n   - Ensure code coverage of tests remains high\n\n5. Browser compatibility testing:\n   - Test the refactored code across all supported browsers\n   - Verify that module loading works correctly in all environments",
         "status": "pending",
         "dependencies": [
-          2,
-          3
+          "2",
+          "3"
         ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Revise Image Switching Workflow and Safety",
+        "description": "Revise image-switching workflow and agent guidance. The \"real original\" images were deleted, indicating a flaw in the current swapping logic. Image swapping should only be necessary for publishing (deployment), and agents should not manipulate image folders during standard development tasks. Restore the original images if possible or document recovery steps. Update `AGENTS.md` or relevant documentation to explicitly forbid agents from running `images:commit` or modifying image directories unless specifically performing a release/deploy task. Refactor the `swap-duo-chrome-images.js` script to be safer or less destructive, including adding commander.js to allow for optional directory parameters.",
+        "details": "The `swap-duo-chrome-images.js` script needs to be refactored to prevent accidental loss of original images. Using commander.js will make the script more configurable by allowing users to specify which directories to swap rather than using hard-coded values. This flexibility helps prevent accidental changes to unintended directories. The refactored script should implement proper error handling, validation of directory parameters, and potentially include safeguards like dry-run mode or backup creation before performing swaps.",
+        "testStrategy": "1. Test the refactored script with valid directory parameters\n2. Test with missing parameters to ensure defaults work correctly\n3. Test with invalid directory paths to verify appropriate error handling\n4. Verify that documentation accurately describes the new command-line options\n5. Test that the script maintains backward compatibility when run without parameters\n6. Ensure the script includes safety measures to prevent data loss",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Investigate original image deletion incident",
+            "description": "Determine how the \"real original\" images were deleted and identify flaws in the current swapping logic to prevent future occurrences.",
+            "status": "done",
+            "dependencies": [],
+            "parentId": "undefined",
+            "updatedAt": "2026-01-06T19:51:21.177Z"
+          },
+          {
+            "id": 2,
+            "title": "Document recovery steps for lost original images",
+            "description": "Create documentation on how to recover or recreate the deleted original images.",
+            "status": "done",
+            "dependencies": [],
+            "parentId": "undefined",
+            "updatedAt": "2026-01-06T19:51:21.183Z"
+          },
+          {
+            "id": 3,
+            "title": "Update AGENTS.md with image handling guidelines",
+            "description": "Add explicit instructions forbidding agents from running `images:commit` or modifying image directories unless performing a release/deployment task.",
+            "status": "done",
+            "dependencies": [],
+            "updatedAt": "2026-01-06T19:50:53.594Z",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Integrate commander.js into swap-duo-chrome-images.js",
+            "description": "Refactor the script to use commander.js, allowing for optional parameters that specify which directories to swap instead of using hard-coded values.",
+            "status": "to-do",
+            "dependencies": [],
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Add safety features to the image swapping script",
+            "description": "Implement safety measures such as validation checks, backup creation, confirmation prompts, or dry-run mode to prevent accidental data loss during image swapping.",
+            "status": "to-do",
+            "dependencies": [],
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Create documentation for the revised image swapping workflow",
+            "description": "Document the proper use of the refactored script, including the new commander.js parameters and when image swapping should be performed in the development lifecycle.",
+            "status": "to-do",
+            "dependencies": [],
+            "parentId": "undefined"
+          },
+          {
+            "id": 7,
+            "title": "Test the refactored script thoroughly",
+            "description": "Test the script with various parameter combinations, edge cases, and error conditions to ensure it behaves safely and predictably.",
+            "status": "to-do",
+            "dependencies": [],
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2026-01-09T14:47:45.659Z"
+      },
+      {
+        "id": 9,
+        "title": "Restructure Duo-Chrome Image Deployment",
+        "description": "Restructure image management to decouple the active development folder from the deployment source. \n1. Make `apps/duo-chrome/public/images` git-ignored so developers can swap content freely without git status noise.\n2. Establish `apps/duo-chrome/public/images_production` (or similar) as the tracked, official source for deployment images.\n3. Update build/deploy scripts to copy from `images_production` to the build output `dist/.../images` (or `public/images` temporarily during build), ensuring only official images are deployed.\n4. Verify that swapping images in dev does not affect git status.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Fix Critical Duo-Chrome Test Failures",
+        "description": "Investigate and fix critical test failures in duo-chrome.\n- HistoryManager.js: Fix _logError related crashes.\n- vitest.config.js: Exclude standalone test scripts (navigation-system.test.js, size-control.test.js) from Vitest execution.\n- Goal: Reduce failing tests (50+) and ensure robust error handling.",
+        "details": "1. Verify HistoryManager.js has _logError (it does).\n2. Check if tests are mocking it incorrectly or if it's not being found during execution.\n3. Update vitest configuration to ignore .test.js files that are not actually Vitest suites.\n4. Run tests and verify improvement.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-01-12T14:47:32.876Z"
+      },
+      {
+        "id": 11,
+        "title": "Establish Test File Organization Strategy",
+        "description": "Evaluate and implement a new test organization strategy by either moving tests to a standalone tests folder or documenting why they should remain co-located with source code, ensuring alignment with the project's testing approach and build configuration.",
+        "details": "## Objective\nMake a final decision on test file organization and implement the chosen approach consistently across the codebase.\n\n## Current State Analysis\n1. **Mixed Organization**: The project currently has tests in multiple locations:\n   - Some tests are co-located with source files (e.g., `duo-chrome.js` might have `duo-chrome.test.js` in the same directory)\n   - Some standalone test scripts exist that are not Vitest suites (e.g., `navigation-system.test.js`, `size-control.test.js`)\n   - Task 10 mentions excluding standalone test scripts from Vitest execution\n\n2. **Build Configuration Impact**: The `vitest.config.js` already needs to exclude certain test files, indicating organization issues\n\n3. **Project Structure Context**: \n   - Duo-chrome is being actively refactored (Task 7, 8, 9, 10)\n   - Image deployment and build scripts are being restructured (Task 9)\n   - Module boundaries are changing (Task 7)\n\n## Decision Framework\n\n### Option A: Move to Standalone Tests Folder\n**Pros:**\n- Cleaner separation of source and test code\n- Easier to configure test runners with single glob pattern\n- Simplifies build/deployment scripts (no need to exclude test files)\n- Better for large codebases with many test files\n- Aligns with many industry standards\n\n**Cons:**\n- Harder to see tests when working on source files\n- Requires more navigation during development\n- Import paths may become more complex\n- Larger refactoring effort\n\n**Implementation Steps:**\n1. Create `tests/` directory structure mirroring source structure (e.g., `tests/unit/`, `tests/integration/`)\n2. Move all `*.test.js` and `*.spec.js` files to corresponding locations\n3. Update import paths in test files to correctly reference source modules\n4. Update `vitest.config.js`:\n   - Remove exclusions for standalone test scripts\n   - Update test file glob patterns to point to `tests/` directory\n   - Ensure coverage configuration still works correctly\n5. Update build scripts to ensure test files are not bundled\n6. Update `.gitignore` if needed\n7. Update documentation (AGENTS.md, README.md) with new testing conventions\n8. Verify CI/CD pipelines still work correctly\n\n### Option B: Keep Tests Next to Code\n**Pros:**\n- Tests are immediately visible when editing source\n- Simpler import paths (often just `./module`)\n- Easier to maintain 1:1 mapping between source and test\n- Less disruptive to current workflow\n\n**Cons:**\n- Requires careful build configuration to exclude tests\n- Can clutter source directories\n- May complicate deployment scripts\n- Harder to run tests separately from source\n\n**Implementation Steps:**\n1. Document the decision rationale in `TESTING.md` or similar\n2. Establish clear naming conventions (e.g., `*.test.js` only for Vitest, `*.e2e.js` for end-to-end)\n3. Update `vitest.config.js` with clear, maintainable exclusion patterns\n4. Create a script to validate that no test files are included in production builds\n5. Update `AGENTS.md` to clarify when and how to create test files\n6. Ensure all standalone test scripts are properly excluded from Vitest\n7. Add linting rules to enforce test file naming conventions\n\n## Hybrid Approach Recommendation\nConsider a hybrid approach based on test type:\n- **Unit tests**: Co-located with source files (`*.test.js`)\n- **Integration/E2E tests**: In standalone `tests/` folder\n- **Standalone test scripts**: In `tests/scripts/` or `tools/` directory\n\n## Key Considerations\n1. **Task 10 Impact**: The vitest.config.js changes in Task 10 must align with this decision\n2. **Build Process**: Task 9's deployment restructuring should not package test files\n3. **Refactoring Impact**: Task 7's module refactoring will be easier with clear test organization\n4. **Agent Guidance**: Whichever approach is chosen must be clearly documented in AGENTS.md\n5. **CI/CD**: Ensure GitHub Actions or other CI scripts are updated accordingly\n\n## Deliverables\n- Decision document (if keeping current approach)\n- OR fully migrated test suite with updated configuration\n- Updated documentation\n- Validation script to ensure tests are excluded from production builds\n- Updated CI/CD configuration if needed",
+        "testStrategy": "## Decision Validation\n1. **If moving to standalone folder:**\n   - Verify all test files are moved and no `*.test.js` files remain in source directories\n   - Run full test suite and confirm all tests pass\n   - Check that coverage reporting still works correctly\n   - Build production bundle and verify no test code is included\n   - Test that `vitest --run` works from project root\n   - Verify that test file imports correctly resolve source modules\n\n2. **If keeping co-located:**\n   - Verify vitest.config.js correctly excludes all non-test files\n   - Build production bundle and confirm no test files are included\n   - Run a script that checks for any test files in the production build output\n   - Ensure all team members can run tests locally without issues\n   - Validate that new test files follow the established naming convention\n\n## Testing the Test Organization\n1. **File Structure Validation:**\n   - Create a script that validates test file locations match the chosen strategy\n   - Check for any orphaned test files or source files without tests\n   - Verify no test files are present in production builds\n\n2. **Configuration Testing:**\n   - Test vitest configuration with various commands (`vitest`, `vitest --run`, `vitest --coverage`)\n   - Verify watch mode works correctly and doesn't pick up non-test files\n   - Test that test timeouts and other settings still apply correctly\n\n3. **Build Process Testing:**\n   - Run full build pipeline and check output for any test artifacts\n   - Verify deployment scripts (Task 9) correctly ignore test directories\n   - Test that image deployment (Task 8, 9) is not affected by test organization\n\n4. **Documentation Testing:**\n   - Have a team member follow the updated documentation to create a new test\n   - Verify they can run the new test successfully\n   - Check that they understand where to place different types of tests\n\n5. **Regression Testing:**\n   - Run all existing tests after reorganization\n   - Compare test run times before and after changes\n   - Verify code coverage metrics remain consistent\n   - Ensure no tests are accidentally skipped or duplicated\n\n## Success Criteria\n- All tests pass with the new organization\n- Build process excludes all test files from production bundles\n- Documentation is clear and accurate\n- Team can create and run tests without confusion\n- No regression in test performance or coverage\n- CI/CD pipeline works without modification or is appropriately updated",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Migrate Duo-Chrome from StandardJS to ESLint with Pre-commit Enforcement",
+        "description": "Migrate duo-chrome from StandardJS to ESLint with a stricter, more modern configuration, establishing it as the linting standard for all files with pre-commit enforcement.",
+        "details": "## Objective\nReplace StandardJS with a more configurable and modern ESLint setup in duo-chrome, using it as a pilot project to establish a new linting standard across all applications with automated enforcement on commits.\n\n## Implementation Steps\n\n### 1. Evaluate and Select Linting Standard\n- Research modern ESLint configurations (Airbnb, Google, custom)\n- Consider TypeScript support if migration is planned\n- Evaluate rule strictness vs. developer productivity\n- Document rationale for chosen standard\n- Create `.eslintrc.js` or `eslint.config.js` configuration file\n- Ensure compatibility with existing codebase style where appropriate\n\n### 2. Install and Configure ESLint\n- Remove StandardJS dependencies: `npm uninstall standard`\n- Install ESLint and chosen config: `npm install --save-dev eslint eslint-config-airbnb-base` (or alternative)\n- Install necessary plugins: `@typescript-eslint/eslint-plugin` (if TS), `eslint-plugin-import`, `eslint-plugin-node`\n- Add linting scripts to `package.json`:\n  ```json\n  {\n    \"scripts\": {\n      \"lint\": \"eslint .\",\n      \"lint:fix\": \"eslint . --fix\"\n    }\n  }\n  ```\n\n### 3. Configure Pre-commit Hooks\n- Install Husky: `npm install --save-dev husky`\n- Enable Git hooks: `npx husky install`\n- Install lint-staged: `npm install --save-dev lint-staged`\n- Configure `lint-staged` in `package.json`:\n  ```json\n  {\n    \"lint-staged\": {\n      \"*.js\": [\"eslint --fix\", \"git add\"]\n    }\n  }\n  ```\n- Add pre-commit hook: `npx husky add .husky/pre-commit \"npx lint-staged\"`\n\n### 4. Apply Linting to All Files\n- Run initial linting pass: `npm run lint:fix`\n- Manually fix any remaining linting errors that can't be auto-fixed\n- Address any architectural issues revealed by stricter linting rules\n- Update code to comply with new standards (e.g., explicit return types, stricter variable declarations)\n\n### 5. Update Documentation\n- Document the new linting standard in `README.md` or `CONTRIBUTING.md`\n- Explain how to run linting locally\n- Describe the pre-commit hook behavior\n- Create a migration guide for other apps\n\n### 6. Verify Build Integration\n- Ensure linting runs in CI/CD pipeline\n- Update GitHub Actions or other CI configurations\n- Verify linting doesn't break production builds\n- Consider adding linting as a prerequisite for PR merging\n\n## Special Considerations\n- **Task 7 (Refactor duo-chrome.js)**: If Task 7 is completed first, apply linting to the new modular structure. If not, lint the monolithic file first, then refactor.\n- **Task 10 (Fix Critical Tests)**: Coordinate with test fixes to avoid merge conflicts\n- **Task 11 (Test Organization)**: Align linting rules with test file locations and patterns\n- Gradual migration approach: Consider using ESLint with StandardJS rules initially, then progressively enabling stricter rules\n- Editor integration: Ensure VS Code or other editor configurations are updated\n- Ignore patterns: Configure `.eslintignore` for build artifacts, node_modules, and generated files",
+        "testStrategy": "## Verification Steps\n\n### 1. Pre-Migration Baseline\n- Record current StandardJS linting results (should be clean)\n- Document any existing StandardJS suppressions or workarounds\n- Create a feature branch for the migration\n\n### 2. ESLint Configuration Validation\n- Verify ESLint installation: `npx eslint --version`\n- Test configuration validity: `npx eslint --print-config .eslintrc.js > config-test.json`\n- Ensure no configuration conflicts or missing plugins\n\n### 3. Linting Execution Tests\n- Run linting on entire codebase: `npm run lint`\n- Verify auto-fix functionality: `npm run lint:fix`\n- Confirm all files are processed (check coverage report)\n- Test with intentionally malformed code to ensure errors are caught\n\n### 4. Pre-commit Hook Validation\n- Make a minor change to a JavaScript file\n- Stage the file: `git add .`\n- Attempt to commit: `git commit -m \"test commit\"`\n- Verify ESLint runs automatically and fixes issues\n- Test with linting errors that can't be auto-fixed:\n  - Commit should be blocked\n  - Error messages should be clear and actionable\n\n### 5. Functional Regression Testing\n- Run full test suite: `npm test`\n- Verify all tests still pass after linting changes\n- Perform manual smoke tests of duo-chrome functionality\n- Check that no runtime behavior has changed (linting should be style-only)\n\n### 6. Cross-Application Compatibility\n- Test that the chosen ESLint config works with:\n  - Module imports/exports (Task 7 refactoring)\n  - Test files (Task 11 organization)\n  - Build scripts and configuration files\n\n### 7. Documentation Accuracy\n- Follow documentation steps on a clean machine\n- Verify all commands work as documented\n- Ensure new contributors can set up linting easily\n\n### 8. CI/CD Integration Test\n- Push feature branch and create PR\n- Verify linting runs in CI pipeline\n- Confirm PR is blocked if linting fails\n- Check that linting reports are visible in CI logs\n\n### Success Criteria\n- Zero StandardJS dependencies remain\n- ESLint runs without configuration errors\n- All files pass linting (with no suppressions needed)\n- Pre-commit hooks block commits with unfixable linting errors\n- Full test suite passes\n- CI pipeline enforces linting\n- Documentation is clear and accurate",
+        "status": "pending",
+        "dependencies": [],
         "priority": "medium",
         "subtasks": []
       }
     ],
     "metadata": {
-      "created": "2026-01-01T14:57:09.607Z",
-      "updated": "2026-01-02T04:36:51.613Z",
-      "description": "Tag created on 1/1/2026"
+      "version": "1.0.0",
+      "lastModified": "2026-01-12T14:47:32.879Z",
+      "taskCount": 12,
+      "completedCount": 5,
+      "tags": [
+        "duochrome"
+      ],
+      "created": "2026-01-12T15:20:41.328Z",
+      "description": "Tasks for duochrome context"
     }
   }
 }

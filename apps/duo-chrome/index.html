@@ -26,7 +26,7 @@
             <h4>Image Navigation</h4>
             <ul>
               <li><kbd>← / →</kbd> - Navigate images (or History if Filmstrip active)</li>
-              <li><kbd>Cmd+← / Cmd+→</kbd> - Cycle colors</li>
+              <li><kbd>Cmd+[ / Cmd+]</kbd> - Cycle colors in palette</li>
               <li><kbd>Mouse Click</kbd> - Generate new pair</li>
             </ul>
           </div>
@@ -52,6 +52,7 @@
             <ul>
               <li><kbd>V</kbd> - Toggle visual indicators</li>
               <li><kbd>I</kbd> - Toggle status display</li>
+              <li><kbd>L</kbd> - Filter Images</li>
             </ul>
           </div>
           
@@ -130,17 +131,70 @@
       </div>
     </div>
 
-    <div id="clear-history-dialog" class="confirmation-dialog hidden">
-      <div class="confirmation-content">
-        <h3>Clear History?</h3>
-        <p>This will permanently delete all history entries except the current composition.</p>
-        <p class="confirmation-warning">This action cannot be undone.</p>
-        <div class="confirmation-buttons">
-          <button id="clear-history-cancel" class="confirmation-btn confirmation-btn-cancel">Cancel</button>
-          <button id="clear-history-confirm" class="confirmation-btn confirmation-btn-confirm">Clear History</button>
+            <div id="clear-history-dialog" class="confirmation-dialog hidden">
+
+              <div class="confirmation-content">
+
+                <h3>Clear History?</h3>
+
+                <p>This will permanently delete all history entries except the current composition.</p>
+
+                <p class="confirmation-warning">This action cannot be undone.</p>
+
+                <div class="confirmation-buttons">
+
+                  <button id="clear-history-cancel" class="confirmation-btn confirmation-btn-cancel">Cancel</button>
+
+                  <button id="clear-history-confirm" class="confirmation-btn confirmation-btn-confirm">Clear History</button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+        
+
+            <button id="filter-open-btn" class="filter-open-btn" title="Filter Images (L)">
+
+              <span class="icon">🔍</span> Filter
+
+            </button>
+
+        
+
+            <div id="filter-modal" class="filter-modal hidden">
+
+          <div class="filter-content">
+
+            <h3>Filter Images</h3>
+
+            <div class="filter-input-group">
+
+              <input type="text" id="filter-input" placeholder="Search by filename..." aria-label="Search by filename">
+
+              <button id="filter-clear-btn" class="filter-clear-btn" title="Clear filter">×</button>
+
+            </div>
+
+            <div class="filter-stats" id="filter-stats">
+
+              Showing all images
+
+            </div>
+
+            <div class="filter-actions">
+
+              <button id="filter-close" class="filter-btn">Close</button>
+
+            </div>
+
+          </div>
+
         </div>
-      </div>
-    </div>
-    <script type="module" src="/src/duo-chrome.js"></script>
+
+    
+
+        <script type="module" src="/src/duo-chrome.js"></script>
   </body>
 </html>

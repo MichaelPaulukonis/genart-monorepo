@@ -1,6 +1,6 @@
 /**
  * Active Image Selection System Tests
- * 
+ *
  * Tests for the active image selection functionality including:
  * - Active image switching between A and B
  * - Visual feedback updates
@@ -105,7 +105,7 @@ describe('Active Image Selection System', () => {
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks()
-    
+
     // Initialize test state
     controlState = {
       activeImageIndex: 0,
@@ -207,40 +207,40 @@ describe('Active Image Selection System', () => {
   describe('Active Image Switching', () => {
     it('should switch to Image A when setActiveImage(0) is called', () => {
       controlState.activeImageIndex = 1 // Start with B active
-      
+
       setActiveImage(0)
-      
+
       expect(controlState.activeImageIndex).toBe(0)
       expect(console.log).toHaveBeenCalledWith('Active image set to: A')
     })
 
     it('should switch to Image B when setActiveImage(1) is called', () => {
       controlState.activeImageIndex = 0 // Start with A active
-      
+
       setActiveImage(1)
-      
+
       expect(controlState.activeImageIndex).toBe(1)
       expect(console.log).toHaveBeenCalledWith('Active image set to: B')
     })
 
     it('should ignore invalid image indices', () => {
       const originalIndex = controlState.activeImageIndex
-      
+
       setActiveImage(2) // Invalid index
       setActiveImage(-1) // Invalid index
-      
+
       expect(controlState.activeImageIndex).toBe(originalIndex)
     })
 
     it('should trigger visual indicators when switching active image', () => {
       setActiveImage(1)
-      
+
       expect(showIndicatorsTemporarily).toHaveBeenCalled()
     })
 
     it('should trigger status display when switching active image', () => {
       setActiveImage(1)
-      
+
       expect(showStatusDisplay).toHaveBeenCalled()
     })
   })
@@ -248,37 +248,37 @@ describe('Active Image Selection System', () => {
   describe('Visual Feedback Updates', () => {
     it('should enable indicators temporarily when switching active image', () => {
       controlState.showIndicators = false
-      
+
       setActiveImage(1)
-      
+
       expect(controlState.showIndicators).toBe(true)
       expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 2000)
     })
 
     it('should clear existing indicator timeout when switching', () => {
       controlState.indicatorTimeout = 456
-      
+
       setActiveImage(1)
-      
+
       expect(clearTimeout).toHaveBeenCalledWith(456)
     })
 
     it('should request screen update when showing indicators', () => {
       setActiveImage(1)
-      
+
       expect(requestScreenUpdate).toHaveBeenCalled()
     })
 
     it('should update status display highlighting for active image', () => {
       controlState.activeImageIndex = 0
       updateStatusDisplay()
-      
+
       expect(mockStatusImageA.classList.toggle).toHaveBeenCalledWith('active', true)
       expect(mockStatusImageB.classList.toggle).toHaveBeenCalledWith('active', false)
-      
+
       controlState.activeImageIndex = 1
       updateStatusDisplay()
-      
+
       expect(mockStatusImageA.classList.toggle).toHaveBeenCalledWith('active', false)
       expect(mockStatusImageB.classList.toggle).toHaveBeenCalledWith('active', true)
     })
@@ -289,11 +289,11 @@ describe('Active Image Selection System', () => {
       // Switch to B
       setActiveImage(1)
       expect(controlState.activeImageIndex).toBe(1)
-      
+
       // Switch back to A
       setActiveImage(0)
       expect(controlState.activeImageIndex).toBe(0)
-      
+
       // Verify other state remains intact
       expect(controlState.manualSizeControl).toEqual([false, false])
       expect(controlState.imageIndices).toEqual([0, 1])
@@ -305,7 +305,7 @@ describe('Active Image Selection System', () => {
       setActiveImage(0)
       setActiveImage(1)
       setActiveImage(0)
-      
+
       expect(controlState.activeImageIndex).toBe(0)
       expect(console.log).toHaveBeenCalledTimes(4)
     })
@@ -313,10 +313,10 @@ describe('Active Image Selection System', () => {
     it('should preserve image data when switching active selection', () => {
       const originalImageA = imageColorPairs[0]
       const originalImageB = imageColorPairs[1]
-      
+
       setActiveImage(1)
       setActiveImage(0)
-      
+
       expect(imageColorPairs[0]).toEqual(originalImageA)
       expect(imageColorPairs[1]).toEqual(originalImageB)
     })
@@ -325,21 +325,21 @@ describe('Active Image Selection System', () => {
   describe('Integration with Status Display', () => {
     it('should show status display when active image changes', () => {
       setActiveImage(1)
-      
+
       expect(showStatusDisplay).toHaveBeenCalled()
       expect(updateStatusDisplay).toHaveBeenCalled()
     })
 
     it('should remove hidden and fade-out classes from status overlay', () => {
       setActiveImage(1)
-      
+
       expect(mockStatusOverlay.classList.remove).toHaveBeenCalledWith('hidden', 'fade-out')
     })
 
     it('should handle missing status overlay gracefully', () => {
       // Mock getElementById to return null for status-overlay
       document.getElementById = vi.fn(() => null)
-      
+
       expect(() => {
         setActiveImage(1)
       }).not.toThrow()
@@ -349,24 +349,24 @@ describe('Active Image Selection System', () => {
   describe('Performance Considerations', () => {
     it('should use requestAnimationFrame for screen updates', () => {
       setActiveImage(1)
-      
+
       expect(requestAnimationFrame).toHaveBeenCalled()
     })
 
     it('should prevent duplicate animation frame requests', () => {
       controlState.animationFrameRequested = true
-      
+
       requestScreenUpdate()
-      
+
       // Should not call requestAnimationFrame again
       expect(requestAnimationFrame).toHaveBeenCalledTimes(0)
     })
 
     it('should set needsRedraw flag when requesting screen update', () => {
       controlState.needsRedraw = false
-      
+
       requestScreenUpdate()
-      
+
       expect(controlState.needsRedraw).toBe(true)
     })
   })
