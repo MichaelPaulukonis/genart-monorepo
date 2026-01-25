@@ -118,10 +118,10 @@ function handleExplicitCopy(source, target, dryRun, force) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupName = `${target}_${timestamp}`;
     const backupPath = path.join(PUBLIC_DIR, backupName);
-    
+
     console.log(`ℹ️  Target directory "${target}" exists.`);
     console.log(`📦 Creating backup at "${backupName}"...`);
-    
+
     try {
       fs.renameSync(targetPath, backupPath);
       console.log(`✓ Backup created: ${backupName}`);
@@ -132,7 +132,7 @@ function handleExplicitCopy(source, target, dryRun, force) {
   }
 
   console.log(`Copying "${source}" to "${target}"...`);
-  
+
   if (dryRun) {
     console.log(`[Dry run] Would copy ${sourcePath} to ${targetPath}`);
     if (dirExists(targetPath)) {

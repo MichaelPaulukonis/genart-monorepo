@@ -5,7 +5,7 @@
  * for the history management system.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { HistoryManager } from './HistoryManager.js'
 
 // Mock localStorage
@@ -96,6 +96,13 @@ describe('HistoryManager Error Handling', () => {
     localStorage.clear()
 
     historyManager = new HistoryManager(mockP5, mockStateRefs)
+
+    // Spy on console.error to prevent test noise
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   describe('localStorage Error Handling', () => {

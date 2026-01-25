@@ -39,6 +39,7 @@ import { ALL_PALETTES } from './risocolors'
 import { imgs } from './generated/images.js'
 import { getFormattedVersion } from './utils/version.js'
 import { filterImages } from './utils/image-filtering.js'
+import { getAssignments, getThemeById } from './utils/theme-management.js'
 import { FilterModal } from './ui/FilterModal.js'
 import { HistoryManager } from './history/HistoryManager.js'
 import { ThumbnailGenerator } from './history/ThumbnailGenerator.js'
@@ -1215,6 +1216,16 @@ const sketch = function (p) {
             filterOpenBtn.classList.remove('active')
           }
         }
+      },
+      onThemeAssign: (position, themeId) => {
+        // Update control state
+        controlState.themeAssignments[position] = themeId
+        
+        // Refresh the image for this position immediately to reflect the new theme
+        // We pass the current array index as null to trigger a random selection from the new theme
+        updateImageColorPair(position, null)
+        
+        console.log(`Assigned theme ${themeId} to position ${position}`)
       }
     })
 
@@ -1895,6 +1906,9 @@ const sketch = function (p) {
     // Start in automatic mode
     controlState.isManualMode = false
 
+    // Load theme assignments
+    controlState.themeAssignments = getAssignments()
+
     // Load filter from localStorage if available
     const savedFilter = localStorage.getItem('duochrome-filter')
     if (savedFilter) {
@@ -1950,10 +1964,24 @@ const sketch = function (p) {
       }
     } else {
       // Use random selection for automatic cycling (existing behavior)
-      // Respect active filter if it has results
-      const listToUse = (controlState.activeFilter.searchString && controlState.filteredImgs.length > 0)
-        ? controlState.filteredImgs
-        : imgs
+      // Determine which list to use based on theme assignment or active filter
+      let listToUse = imgs
+      const assignedThemeId = controlState.themeAssignments[pairIndex]
+      
+      if (assignedThemeId) {
+        const theme = getThemeById(assignedThemeId)
+        if (theme) {
+          const themeImages = filterImages(imgs, theme.filter)
+          if (themeImages.length > 0) {
+            listToUse = themeImages
+            // Optional: Log that we used a theme?
+            // console.log(`Using theme "${theme.name}" for position ${pairIndex}`)
+          }
+        }
+      } else if (controlState.activeFilter.searchString && controlState.filteredImgs.length > 0) {
+        // Fallback to global active filter if no theme assigned
+        listToUse = controlState.filteredImgs
+      }
 
       selectedImage = getRandomUniqueItem(
         listToUse,
@@ -2176,6 +2204,45 @@ const sketch = function (p) {
 
     if (colorB && imageColorPairs[1].color) {
       colorB.textContent = imageColorPairs[1].color.name
+    }
+
+    // Update Theme Assignments
+    const themeA = document.getElementById('status-theme-a')
+    const themeB = document.getElementById('status-theme-b')
+    const assignments = controlState.themeAssignments || [null, null]
+
+    if (themeA) {
+      if (assignments[0]) {
+        const theme = getThemeById(assignments[0])
+        if (theme) {
+          const count = filterImages(imgs, theme.filter).length
+          themeA.textContent = `Theme: ${theme.name}${count === 0 ? ' (Empty)' : ''}`
+          themeA.style.color = count === 0 ? '#ff9800' : '#4CAF50'
+        } else {
+          themeA.textContent = 'Theme: Unknown'
+          themeA.style.color = '#aaa'
+        }
+      } else {
+        themeA.textContent = 'Theme: None'
+        themeA.style.color = '#aaa'
+      }
+    }
+
+    if (themeB) {
+      if (assignments[1]) {
+        const theme = getThemeById(assignments[1])
+        if (theme) {
+          const count = filterImages(imgs, theme.filter).length
+          themeB.textContent = `Theme: ${theme.name}${count === 0 ? ' (Empty)' : ''}`
+          themeB.style.color = count === 0 ? '#ff9800' : '#4CAF50'
+        } else {
+          themeB.textContent = 'Theme: Unknown'
+          themeB.style.color = '#aaa'
+        }
+      } else {
+        themeB.textContent = 'Theme: None'
+        themeB.style.color = '#aaa'
+      }
     }
 
     // Update scale factors

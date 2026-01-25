@@ -141,6 +141,7 @@ logs
 # Temporary files
 tmp/
 temp/
+docs/screenshots/
 
 # Editor directories and files
 .cursor/rules/nx-rules.mdc
