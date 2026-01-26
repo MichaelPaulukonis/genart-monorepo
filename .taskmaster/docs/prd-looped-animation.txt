@@ -1,0 +1,77 @@
+# Looped Animation Generation for Duo-Chrome
+
+## Overview
+Implement functionality to generate loopable animations from duo-chrome image compositions. The system should create seamless video loops by generating a closed walk through a state graph of image pairs.
+
+## Problem Statement
+Users want to create smooth, looping animations from duo-chrome compositions for use in video projects, social media, and digital art installations. Current functionality only supports static image generation.
+
+## Mathematical Model
+The animation is modeled as a closed walk in a state graph where:
+- Each state is an ordered pair of distinct image indices `(a, b)` representing the two images displayed
+- Two states are adjacent if they share exactly one image and differ in the other
+- A closed walk of length `loopLength` is generated starting and ending at the same state
+- At frame `t`, display images `states[t].a` and `states[t].b`
+
+## Requirements
+
+### Core Functionality
+1. Generate a random closed walk through valid image pairs
+2. Ensure the walk forms a seamless loop (starts and ends at same state)
+3. Respect adjacency constraints (states must share exactly one image)
+4. Allow user-specified loop length (number of frames)
+
+### UI Controls
+1. Toggle switch to enable/disable loop mode
+2. Numeric input for loop length (number of image pairs/frames)
+3. Start/Stop button for animation playback
+4. Frame rate control (frames per second)
+5. Display current frame number and total frames
+6. Preview of current frame in the animation sequence
+
+### Export Options
+1. Generate frame sequence as individual images
+2. Support common video export formats (if feasible in browser)
+3. Provide metadata file with frame sequence information
+
+## Technical Considerations
+
+### Graph Generation
+- Validate that a closed walk of requested length exists
+- Handle edge cases where loop cannot be formed
+- Optimize walk generation for smooth visual transitions
+- Consider image similarity metrics for better transitions
+
+### Performance
+- Pre-calculate walk sequence before animation starts
+- Optimize rendering for smooth playback
+- Handle large image collections efficiently
+- Consider memory constraints for long loops
+
+### Integration
+- Work with existing theme assignment system
+- Respect active filters when selecting images
+- Integrate with history system (should animations be saved?)
+- Maintain compatibility with other features (blend modes, etc.)
+
+## User Experience
+
+### Workflow
+1. User enables loop mode via toggle
+2. Sets desired loop length (e.g., 60 frames)
+3. Optionally sets frame rate (e.g., 30 fps = 2 second loop)
+4. Clicks "Generate Loop" to create the closed walk
+5. Previews animation with play/pause controls
+6. Exports as image sequence or video
+
+### Error Handling
+- Warn if requested loop length is too long for available images
+- Provide fallback if closed walk cannot be generated
+- Show clear error messages with suggestions
+
+## Success Criteria
+- Successfully generates valid closed walks for various loop lengths
+- Animations loop seamlessly without visible jump
+- UI is intuitive and responsive
+- Export functionality works reliably
+- Performance remains smooth even with large image sets

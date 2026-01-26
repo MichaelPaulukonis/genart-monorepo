@@ -1,3 +1,8 @@
+---
+description: AI rules derived by SpecStory from the project AI interaction history
+globs: *
+---
+
 # GitHub Copilot Instructions for GenArt Monorepo
 
 ## Project Context
@@ -383,6 +388,138 @@ docs(monorepo): update app integration workflow and examples
 - Static assets go in `apps/[app-name]/public/`
 - Generated screenshots and exports are typically excluded from version control
 - Use `.gitignore` appropriately for build artifacts and generated content
+
+## 13. Duo-Chrome Specific Rules and Guidelines
+
+### 13.1. Image Management
+- The `swap-duo-chrome-images.js` script is used to manage image sets for development and deployment.
+- It now includes safety features such as automatic timestamped backups and flexible directory management using commander.js.
+- Agents should **NEVER** run `images:commit` or modify image directories unless specifically performing a release/deploy task.
+
+#### 13.1.1. Folder Structure
+
+- `public/images/` - Active images used by the app
+- `public/images_local/` - Your custom working images (not committed)
+- `public/images_original/` - Official images that match what's in git
+- `public/images_YYYY-MM-DDTHH-MM-SS/` - Automatic timestamped backups
+
+#### 13.1.2. Workflow
+
+##### 13.1.2.1. Working with Custom Images
+
+```bash
+cd apps/duo-chrome
+npm run images:work
+```
+
+This swaps the folders so:
+- Your custom images are now in `public/images/` (active)
+- Official images are saved in `public/images_original/`
+
+##### 13.1.2.2. Preparing to Commit
+
+```bash
+cd apps/duo-chrome
+npm run images:commit
+```
+
+This swaps the folders so:
+- Official images are now in `public/images/` (ready to commit)
+- Your custom images are saved in `public/images_local/`
+
+**Important:** Remember to run `npm run images:work` after committing to switch back to your working images!
+
+##### 13.1.2.3. Safety Features
+
+The script now includes automatic backup creation:
+- When swapping directories, if the target exists, it's automatically backed up with a timestamp
+- Backup format: `images_YYYY-MM-DDTHH-MM-SS-sssZ` (e.g., `images_2026-01-25T15-30-45-123Z`)
+- Backups are preserved and not overwritten by subsequent swaps
+- This prevents data loss if you forget which mode you're in
+
+##### 13.1.2.4. Custom Directory Swapping
+
+The script supports flexible directory management using commander.js:
+
+```bash
+# Copy a specific image set to the active images folder
+node scripts/swap-duo-chrome-images.js --source images_experimental
+
+# Specify both source and target
+node scripts/swap-duo-chrome-images.js --source images_set_a --target images_set_b
+
+# Dry run to preview changes without executing
+node scripts/swap-duo-chrome-images.js --source images_test --dry-run
+
+# Force overwrite without creating backup (use with caution!)
+node scripts/swap-duo-chrome-images.js --source images_local --force
+```
+
+##### 13.1.2.5. Command-Line Options
+
+- `--source, -s <path>`: Source directory name (relative to `public/`)
+- `--target, -t <path>`: Target directory name (default: `images`)
+- `--dry-run, -d`: Preview changes without making them
+- `--force, -f`: Force overwrite without creating backup
+- Legacy mode arguments: `work` or `commit` (maintains backward compatibility)
+
+##### 13.1.2.6. Safety Notes
+
+- The script automatically creates timestamped backups before overwriting existing folders
+- Backups are never automatically deleted—clean them up manually when no longer needed
+- Use `--dry-run` to preview changes before executing
+- Always check which mode you're in before committing
+
+##### 13.1.2.7. Recovering from Timestamped Backups
+
+If you need to restore from a backup:
+
+```bash
+# List available backups
+ls -la apps/duo-chrome/public/ | grep images_
+
+# Copy a backup to become the active images
+node scripts/swap-duo-chrome-images.js --source images_2026-01-25T15-30-45-123Z
+```
+
+##### 13.1.2.8. Cleaning Up Old Backups
+
+Timestamped backups accumulate over time. Clean them up periodically:
+
+```bash
+# Review backups
+ls -lat apps/duo-chrome/public/images_*
+
+# Remove old backups (adjust date pattern as needed)
+rm -rf apps/duo-chrome/public/images_2025-*
+```
+
+---
+### 13.2 Task 14 Subtask Breakdown
+
+**14.1**: Implement Graph State Model and Adjacency Graph Construction
+- Generate n*(n-1) ordered state pairs
+
+**14.2**: Implement Core Adjacency Validation Logic
+- Determine if states share exactly one image index
+
+**14.3**: Implement Closed Walk Generation with Backtracking
+- Build random walk sequences using backtracking
+
+**14.4**: Implement Public API and Integration Layer
+- validateLoopLength(), regenerateWalk(), standardized output formatting
+
+**14.5**: Implement Performance Optimization and State Management
+- Caching, Web Worker support, fallback generation
+
+**14.6**: Implement UI Controls for Loop Animation Mode
+- Toggle switch for loop mode
+- Loop length input with validation
+- Play/Pause/Stop playback controls
+- Frame counter and FPS slider
+- Image pair preview panel
+- Visual indicators and help text
+- Integration with status display window
 
 ---
 *These instructions should be followed to ensure consistency, maintainability, and quality across the GenArt monorepo codebase.*
