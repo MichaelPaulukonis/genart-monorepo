@@ -1,0 +1,72 @@
+# Product Requirements Document: Modularized Panel Repositioning System
+
+## Overview
+Extract the ability to reposition and drag UI panels into a reusable, modularized system that can be used across all projects in the monorepo. This pattern has been reimplemented repeatedly in duo-chrome and other projects.
+
+## Problem Statement
+- Panel repositioning code is being duplicated across multiple projects
+- Each implementation varies slightly, making maintenance difficult
+- Developers waste time reimplementing the same functionality
+- No consistent approach to panel positioning, persistence, or z-index management
+
+## Requirements
+
+### Core Features
+1. **Draggable Header**
+   - Make panel headers draggable to move panels around the screen
+   - Visual feedback during dragging (cursor change, highlight)
+   - Smooth movement with no lag
+
+2. **Position Persistence**
+   - Store panel positions in localStorage
+   - Auto-restore previous positions on page reload
+   - Use unique identifiers for each panel
+   - Clear storage option for reset
+
+3. **Z-Index Management**
+   - Auto-raise panel to top when clicked/focused
+   - Maintain stacking order properly
+   - Handle modal dialogs appropriately
+
+4. **Boundary Detection**
+   - Keep panels within viewport (no dragging off-screen)
+   - Respect window resizing
+   - Handle edge cases gracefully
+
+5. **API Design**
+   - Simple initialization: `new DraggablePanel(element, options)`
+   - Options: `{ storageKey, minWidth, minHeight, bounds }`
+   - Methods: `enable()`, `disable()`, `reset()`, `getPosition()`
+
+## Integration Strategy
+
+### Step 1: Create Module
+- Create `libs/draggable-panel/` or `src/utils/draggable-panel.js`
+- Implement core dragging logic (mouse events)
+- Add position persistence via localStorage
+- Document API and usage
+
+### Step 2: Apply to Existing Panels
+- Loop Animation Panel (duo-chrome)
+- Filter Modal (duo-chrome, if applicable)
+- Any other repositionable panels in projects
+
+### Step 3: Document for Future
+- Add to coding standards/guidelines
+- Include in component patterns documentation
+- Provide initialization examples
+
+## Technical Considerations
+- Use vanilla JavaScript (no framework dependency)
+- Support touch events for mobile
+- Handle transform vs. position CSS carefully
+- Consider performance with many panels
+- Ensure accessibility (keyboard navigation)
+
+## Success Criteria
+- Reusable module created and documented
+- Applied to at least 2 panels in duo-chrome
+- All panels can be freely repositioned
+- Positions persist across page reloads
+- Proper z-index stacking behavior
+- No performance degradation
