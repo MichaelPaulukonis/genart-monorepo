@@ -44,6 +44,8 @@ import { FilterModal } from './ui/FilterModal.js'
 import { HistoryManager } from './history/HistoryManager.js'
 import { ThumbnailGenerator } from './history/ThumbnailGenerator.js'
 import { FilmstripPanel } from './ui/FilmstripPanel.js'
+import { LoopAnimationController } from './utils/loop-animation-controller.js'
+import { LoopAnimationPanel } from './ui/LoopAnimationPanel.js'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
 
@@ -84,6 +86,8 @@ const sketch = function (p) {
   let thumbnailGenerator = null
   let filmstripPanel = null
   let filterModal = null
+  let loopAnimationController = null
+  let loopAnimationPanel = null
   let captureDebounceTimer = null
   const CAPTURE_DEBOUNCE_DELAY = 300 // ms - wait for rapid changes to settle
 
@@ -1195,6 +1199,92 @@ const sketch = function (p) {
     // Initialize FilmstripPanel
     filmstripPanel = new FilmstripPanel(historyManager, thumbnailGenerator)
 
+    // Initialize Loop Animation Controller
+    loopAnimationController = new LoopAnimationController({
+      fps: 12,
+      onFrameChange: (frame) => {
+        console.log('[LoopAnimation Draw] onFrameChange called with frame:', frame)
+        if (frame && loopAnimationPanel) {
+          // frame.pair.a and frame.pair.b are filenames
+          const filenameA = frame.pair.a
+          const filenameB = frame.pair.b
+          
+          console.log('[LoopAnimation Draw] Loading new images:', filenameA, filenameB)
+
+          // Load image A and update layer
+          p.loadImage(imgSource + filenameA, (imgA) => {
+            console.log('[LoopAnimation Draw] Image A loaded:', filenameA)
+            imageColorPairs[0].img = filenameA
+            const colorA = Array.isArray(imageColorPairs[0].color) 
+              ? imageColorPairs[0].color 
+              : imageColorPairs[0].color.color || imageColorPairs[0].color
+            imageColorPairs[0].layer = createMonochromeImage(imgA, colorA)
+            requestScreenUpdate()
+          })
+
+          // Load image B and update layer
+          p.loadImage(imgSource + filenameB, (imgB) => {
+            console.log('[LoopAnimation Draw] Image B loaded:', filenameB)
+            imageColorPairs[1].img = filenameB
+            const colorB = Array.isArray(imageColorPairs[1].color) 
+              ? imageColorPairs[1].color 
+              : imageColorPairs[1].color.color || imageColorPairs[1].color
+            imageColorPairs[1].layer = createMonochromeImage(imgB, colorB)
+            requestScreenUpdate()
+          })
+
+          loopAnimationPanel.updateFrame(frame)
+        }
+      },
+      onPlayStateChange: (state) => {
+        if (loopAnimationPanel) {
+          loopAnimationPanel.updatePlaybackButtons()
+        }
+      },
+      onGenerationProgress: (phase) => {
+        console.log('[LoopAnimation UI] Progress phase:', phase)
+        if (loopAnimationPanel) {
+          if (phase === 'building-graph' || phase === 'preparing') {
+            console.log('[LoopAnimation UI] Showing loading spinner')
+            loopAnimationPanel.setLoading(true)
+          } else if (phase === 'complete' || phase === 'error') {
+            console.log('[LoopAnimation UI] Hiding loading spinner, updating UI')
+            loopAnimationPanel.setLoading(false)
+            loopAnimationPanel.updateAll()
+          }
+        }
+      }
+    })
+
+    // Initialize Loop Animation Panel
+    loopAnimationPanel = new LoopAnimationPanel(loopAnimationController)
+    loopAnimationPanel.mount()
+    loopAnimationPanel.updateAll()
+
+    // Helper function to update loop controller image sets
+    function updateLoopControllerImageSets () {
+      const imageSetA = controlState.themeAssignments?.[0] ? filterImages(imgs, getThemeById(controlState.themeAssignments[0])?.filter || {}) : imgs
+      const imageSetB = controlState.themeAssignments?.[1] ? filterImages(imgs, getThemeById(controlState.themeAssignments[1])?.filter || {}) : imgs
+
+      console.log('[LoopAnimation] Updating image sets:', {
+        imageSetA: imageSetA.length,
+        imageSetB: imageSetB.length,
+        totalImgs: imgs.length
+      })
+
+      loopAnimationController.setImageSets(imageSetA, imageSetB)
+      if (loopAnimationPanel) {
+        loopAnimationPanel.updateLoopLengthInput()
+        loopAnimationPanel.updateAll()
+      }
+    }
+
+    // Update image sets on initialization
+    updateLoopControllerImageSets()
+
+    // Store reference for later updates
+    window.updateLoopControllerImageSets = updateLoopControllerImageSets
+
     // Initialize FilterModal
     filterModal = new FilterModal({
       totalImages: imgs.length,
@@ -1297,6 +1387,14 @@ const sketch = function (p) {
 
       // Check filter modal (if visible)
       if (filterModal && !filterModal.classList.contains('hidden') && filterModal.contains(event.target)) {
+        return
+      }
+    }
+
+    // Don't update images if clicking on loop animation panel
+    if (event && event.target) {
+      const loopPanel = document.getElementById('loop-animation-panel')
+      if (loopPanel && loopPanel.contains(event.target)) {
         return
       }
     }

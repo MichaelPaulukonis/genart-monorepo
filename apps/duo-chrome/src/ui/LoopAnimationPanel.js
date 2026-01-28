@@ -1,0 +1,585 @@
+/**
+ * Loop Animation UI Panel
+ *
+ * Provides UI controls for the looped animation feature.
+ * Includes toggle, loop length input, playback controls, FPS slider, and frame counter.
+ */
+
+export class LoopAnimationPanel {
+  constructor (controller) {
+    this.controller = controller
+    this.panel = null
+    this.elements = {}
+  }
+
+  /**
+   * Create and mount the control panel
+   */
+  mount (containerId = 'loop-animation-panel') {
+    let container = document.getElementById(containerId)
+    if (!container) {
+      container = document.createElement('div')
+      container.id = containerId
+      document.body.appendChild(container)
+    }
+
+    container.innerHTML = this.getHTML()
+    this.panel = container
+    this.cacheElements()
+    this.attachEventListeners()
+
+    return this.panel
+  }
+
+  /**
+   * Cache references to frequently used elements
+   */
+  cacheElements () {
+    this.panelElement = this.panel.querySelector('.loop-animation-panel')
+    this.elements = {
+      toggleBtn: this.panel.querySelector('[data-action="toggle"]'),
+      loopLengthInput: this.panel.querySelector('[data-input="loop-length"]'),
+      loopLengthMax: this.panel.querySelector('[data-display="loop-length-max"]'),
+      playBtn: this.panel.querySelector('[data-action="play"]'),
+      pauseBtn: this.panel.querySelector('[data-action="pause"]'),
+      stopBtn: this.panel.querySelector('[data-action="stop"]'),
+      frameCounter: this.panel.querySelector('[data-display="frame-counter"]'),
+      frameSlider: this.panel.querySelector('[data-input="frame-slider"]'),
+      fpsSlider: this.panel.querySelector('[data-input="fps"]'),
+      fpsValue: this.panel.querySelector('[data-display="fps-value"]'),
+      previewPair: this.panel.querySelector('[data-display="preview-pair"]'),
+      loadingSpinner: this.panel.querySelector('[data-display="loading"]'),
+      helpText: this.panel.querySelector('[data-display="help-text"]')
+    }
+  }
+
+  /**
+   * Attach event listeners to controls
+   */
+  attachEventListeners () {
+    // Stop click propagation on the entire panel
+    if (this.panelElement) {
+      this.panelElement.addEventListener('click', (e) => {
+        e.stopPropagation()
+      })
+    }
+
+    // Toggle button
+    if (this.elements.toggleBtn) {
+      this.elements.toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        if (this.controller.enabled) {
+          this.controller.disable()
+        } else {
+          this.controller.enable()
+        }
+        this.updateToggleButton()
+      })
+    }
+
+    // Loop length input
+    if (this.elements.loopLengthInput) {
+      this.elements.loopLengthInput.addEventListener('change', (e) => {
+        e.stopPropagation()
+        const length = parseInt(e.target.value, 10)
+        if (this.controller.setLoopLength(length)) {
+          this.controller.generateWalk()
+        } else {
+          this.updateLoopLengthInput()
+        }
+      })
+    }
+
+    // Playback controls
+    if (this.elements.playBtn) {
+      this.elements.playBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        this.controller.play()
+        this.updatePlaybackButtons()
+      })
+    }
+
+    if (this.elements.pauseBtn) {
+      this.elements.pauseBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        this.controller.pause()
+        this.updatePlaybackButtons()
+      })
+    }
+
+    if (this.elements.stopBtn) {
+      this.elements.stopBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        this.controller.stop()
+        this.updatePlaybackButtons()
+      })
+    }
+
+    // Frame slider
+    if (this.elements.frameSlider) {
+      this.elements.frameSlider.addEventListener('input', (e) => {
+        e.stopPropagation()
+        const frame = parseInt(e.target.value, 10)
+        this.controller.setFrame(frame)
+      })
+    }
+
+    // FPS slider
+    if (this.elements.fpsSlider) {
+      this.elements.fpsSlider.addEventListener('input', (e) => {
+        e.stopPropagation()
+        const fps = parseInt(e.target.value, 10)
+        this.controller.setFPS(fps)
+        this.updateFPSDisplay()
+      })
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (!this.controller.enabled) return
+
+      switch (e.key) {
+        case ' ': // Space to play/pause
+          e.preventDefault()
+          if (this.controller.isPlaying) {
+            this.controller.pause()
+          } else {
+            this.controller.play()
+          }
+          this.updatePlaybackButtons()
+          break
+        case 'Escape': // Escape to stop
+          e.preventDefault()
+          this.controller.stop()
+          this.updatePlaybackButtons()
+          break
+      }
+    })
+  }
+
+  /**
+   * Update UI when frame changes
+   */
+  updateFrame (frame) {
+    if (!frame) return
+
+    // Update frame counter
+    if (this.elements.frameCounter) {
+      const total = this.controller.walk ? this.controller.walk.length : 0
+      this.elements.frameCounter.textContent = `Frame ${this.controller.currentFrameIndex + 1} / ${total}`
+    }
+
+    // Update frame slider
+    if (this.elements.frameSlider && this.controller.walk) {
+      this.elements.frameSlider.max = this.controller.walk.length - 1
+      this.elements.frameSlider.value = this.controller.currentFrameIndex
+    }
+
+    // Update preview
+    this.updatePreview(frame)
+  }
+
+  /**
+   * Update preview panel with current frame's image pair
+   */
+  updatePreview (frame) {
+    if (!this.elements.previewPair || !frame) return
+
+    const { a, b } = frame.pair
+    const aImg = this.controller.imageSetA[a] || '?'
+    const bImg = this.controller.imageSetB[b] || '?'
+
+    const formatName = (name) => {
+      if (!name) return '?'
+      return String(name).replace(/\.[^/.]+$/, '').substring(0, 20)
+    }
+
+    this.elements.previewPair.innerHTML = `
+      <div class="preview-item">
+        <strong>A:</strong> ${formatName(aImg)}
+      </div>
+      <div class="preview-item">
+        <strong>B:</strong> ${formatName(bImg)}
+      </div>
+    `
+  }
+
+  /**
+   * Update toggle button state
+   */
+  updateToggleButton () {
+    if (!this.elements.toggleBtn) return
+
+    if (this.controller.enabled) {
+      this.elements.toggleBtn.textContent = '✓ Loop Enabled'
+      this.elements.toggleBtn.classList.add('active')
+      if (this.panelElement) this.panelElement.classList.add('enabled')
+      this.updateLoopLengthInput()
+    } else {
+      this.elements.toggleBtn.textContent = 'Enable Loop Mode'
+      this.elements.toggleBtn.classList.remove('active')
+      if (this.panelElement) this.panelElement.classList.remove('enabled')
+    }
+  }
+
+  /**
+   * Update loop length input and max value display
+   */
+  updateLoopLengthInput () {
+    if (!this.elements.loopLengthInput) return
+
+    const range = this.controller.getLoopLengthRange()
+    this.elements.loopLengthInput.min = range.min
+    this.elements.loopLengthInput.max = range.max
+    this.elements.loopLengthInput.value = range.current
+
+    if (this.elements.loopLengthMax) {
+      this.elements.loopLengthMax.textContent = `(max: ${range.max})`
+    }
+
+    // Disable if not enough images
+    const canGenerate = this.controller.imageSetA.length >= 2 && this.controller.imageSetB.length >= 2
+    this.elements.loopLengthInput.disabled = !canGenerate
+  }
+
+  /**
+   * Update play/pause button states
+   */
+  updatePlaybackButtons () {
+    if (this.elements.playBtn) {
+      this.elements.playBtn.disabled = !this.controller.walk
+      this.elements.playBtn.classList.toggle('disabled', !this.controller.walk)
+    }
+
+    if (this.elements.pauseBtn) {
+      this.elements.pauseBtn.disabled = !this.controller.isPlaying
+      this.elements.pauseBtn.classList.toggle('disabled', !this.controller.isPlaying)
+    }
+
+    if (this.elements.stopBtn) {
+      this.elements.stopBtn.disabled = !this.controller.walk
+      this.elements.stopBtn.classList.toggle('disabled', !this.controller.walk)
+    }
+  }
+
+  /**
+   * Update FPS display
+   */
+  updateFPSDisplay () {
+    if (this.elements.fpsValue) {
+      this.elements.fpsValue.textContent = `${this.controller.fps} FPS`
+    }
+  }
+
+  /**
+   * Show/hide loading spinner
+   */
+  setLoading (isLoading) {
+    if (this.elements.loadingSpinner) {
+      this.elements.loadingSpinner.style.display = isLoading ? 'block' : 'none'
+    }
+
+    // Disable controls during generation
+    if (this.elements.loopLengthInput) {
+      this.elements.loopLengthInput.disabled = isLoading
+    }
+    if (this.elements.playBtn) {
+      this.elements.playBtn.disabled = isLoading
+    }
+  }
+
+  /**
+   * Update help text based on current state
+   */
+  updateHelp () {
+    if (!this.elements.helpText) return
+
+    let newText = ''
+    if (!this.controller.enabled) {
+      newText = 'Enable loop mode to create seamless animated sequences from image pairs.'
+    } else if (this.controller.isGenerating) {
+      newText = 'Generating animation sequence...'
+    } else if (!this.controller.walk) {
+      newText = 'Set loop length and generate the animation.'
+    } else if (this.controller.isPlaying) {
+      newText = 'Space: pause | Esc: stop | Drag slider to scrub'
+    } else {
+      newText = 'Space: play | Esc: stop | Adjust FPS or loop length to regenerate'
+    }
+
+    console.log('[LoopPanel] updateHelp setting text:', newText, 'isGenerating:', this.controller.isGenerating)
+    this.elements.helpText.textContent = newText
+  }
+
+  /**
+   * Update all UI elements based on controller state
+   */
+  updateAll () {
+    console.log('[LoopPanel] updateAll called. Controller state:', {
+      enabled: this.controller.enabled,
+      walk: this.controller.walk ? this.controller.walk.length : null,
+      isGenerating: this.controller.isGenerating
+    })
+    this.updateToggleButton()
+    this.updateLoopLengthInput()
+    this.updatePlaybackButtons()
+    this.updateFPSDisplay()
+    this.updateHelp()
+
+    if (this.controller.walk) {
+      this.updateFrame(this.controller.getCurrentFrame())
+    }
+  }
+
+  /**
+   * Get HTML for the control panel
+   */
+  getHTML () {
+    return `
+      <div class="loop-animation-panel">
+        <style>
+          .loop-animation-panel {
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(100, 100, 100, 0.5);
+            border-radius: 8px;
+            padding: 16px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-width: 320px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+          }
+
+          .loop-animation-panel.enabled {
+            border-color: rgba(76, 175, 80, 0.5);
+          }
+
+          .loop-panel-section {
+            margin-bottom: 16px;
+            display: none;
+          }
+
+          .loop-animation-panel.enabled .loop-panel-section {
+            display: block;
+          }
+
+          .loop-panel-section:first-of-type {
+            display: block;
+          }
+
+          .loop-panel-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 1px;
+          }
+
+          [data-action="toggle"] {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+          }
+
+          [data-action="toggle"]:hover {
+            background: linear-gradient(135deg, #3d3d3d, #2a2a2a);
+            border-color: #666;
+          }
+
+          [data-action="toggle"].active {
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+            border-color: #4CAF50;
+          }
+
+          .loop-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+          }
+
+          .loop-controls button {
+            padding: 8px 6px;
+            background: #2d2d2d;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s ease;
+          }
+
+          .loop-controls button:hover:not(:disabled) {
+            background: #3d3d3d;
+            border-color: #666;
+          }
+
+          .loop-controls button:disabled,
+          .loop-controls button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+
+          .loop-controls button.active {
+            background: #4CAF50;
+            border-color: #4CAF50;
+          }
+
+          input[type="range"] {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+          }
+
+          input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 6px;
+            background: #4CAF50;
+            cursor: pointer;
+          }
+
+          input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 6px;
+            background: #4CAF50;
+            cursor: pointer;
+            border: none;
+          }
+
+          input[type="number"] {
+            width: 100%;
+            padding: 6px;
+            background: #2d2d2d;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+          }
+
+          input[type="number"]:disabled {
+            opacity: 0.5;
+          }
+
+          .loop-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 3px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            line-height: 1.5;
+          }
+
+          .preview-item {
+            padding: 4px 0;
+            border-bottom: 1px solid #333;
+          }
+
+          .preview-item:last-child {
+            border-bottom: none;
+          }
+
+          [data-display="loading"] {
+            display: none;
+            text-align: center;
+            color: #4CAF50;
+            margin: 8px 0;
+            font-size: 11px;
+          }
+
+          [data-display="help-text"] {
+            display: block;
+            color: #999;
+            font-size: 10px;
+            line-height: 1.4;
+            font-style: italic;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #333;
+          }
+
+          .loop-animation-panel {
+            pointer-events: auto !important;
+          }
+
+          .loop-animation-panel * {
+            pointer-events: auto !important;
+          }
+        </style>
+
+        <div class="loop-panel-section">
+          <button data-action="toggle">Enable Loop Mode</button>
+        </div>
+
+        <div class="loop-panel-section">
+          <label class="loop-panel-label">Loop Length</label>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <input type="number" data-input="loop-length" min="3" max="100" value="5" style="flex: 1;">
+            <span data-display="loop-length-max" style="align-self: center; color: #999; font-size: 10px;"></span>
+          </div>
+        </div>
+
+        <div class="loop-panel-section">
+          <label class="loop-panel-label">Playback</label>
+          <div class="loop-controls">
+            <button data-action="play" title="Space">▶ Play</button>
+            <button data-action="pause" title="Pause">⏸ Pause</button>
+            <button data-action="stop" title="Escape">⏹ Stop</button>
+            <div style="grid-column: 1 / -1;"></div>
+            <input type="range" data-input="frame-slider" min="0" max="100" value="0" style="grid-column: 1 / -1;">
+          </div>
+          <div class="loop-info">
+            <strong>Frame:</strong> <span data-display="frame-counter">—</span>
+          </div>
+        </div>
+
+        <div class="loop-panel-section">
+          <label class="loop-panel-label">Speed</label>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <input type="range" data-input="fps" min="1" max="60" value="12" style="flex: 1;">
+            <span data-display="fps-value">12 FPS</span>
+          </div>
+        </div>
+
+        <div class="loop-panel-section">
+          <label class="loop-panel-label">Current Pair</label>
+          <div class="loop-info" data-display="preview-pair">
+            <div class="preview-item"><strong>A:</strong> —</div>
+            <div class="preview-item"><strong>B:</strong> —</div>
+          </div>
+        </div>
+
+        <div data-display="loading">⏳ Generating...</div>
+        <span data-display="help-text"></span>
+      </div>
+    `
+  }
+
+  /**
+   * Destroy the panel and cleanup
+   */
+  destroy () {
+    if (this.panel) {
+      this.panel.remove()
+    }
+  }
+}
