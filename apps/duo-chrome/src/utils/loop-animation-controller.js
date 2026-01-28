@@ -29,6 +29,11 @@ export class LoopAnimationController {
 
     this.animationFrameId = null
     this.isGenerating = false
+
+    // Calculate max loop length if image sets were provided in options
+    if (this.imageSetA.length > 0 && this.imageSetB.length > 0) {
+      this.setImageSets(this.imageSetA, this.imageSetB)
+    }
   }
 
   /**
