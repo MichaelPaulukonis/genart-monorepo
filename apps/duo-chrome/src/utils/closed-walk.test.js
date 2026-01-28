@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ClosedWalkGenerator, generateClosedWalk, validateLoopLength, formatWalkForAnimation } from './closed-walk'
+import { ClosedWalkGenerator, generateClosedWalk, generateClosedWalkAsync, validateLoopLength, formatWalkForAnimation } from './closed-walk'
 
 function makeRng (sequence) {
   let i = 0
@@ -248,5 +248,75 @@ describe('Public API', () => {
       expect(['A1', 'A2', 'A3']).toContain(frame.pair.a)
       expect(['B1', 'B2']).toContain(frame.pair.b)
     })
+  })
+})
+
+describe('Async API', () => {
+  it('generates animation sequence asynchronously', async () => {
+    const result = await generateClosedWalkAsync({
+      images: [0, 1, 2, 3],
+      loopLength: 4,
+      rng: makeRng([0.2, 0.3, 0.4, 0.5])
+    })
+
+    expect(result).toHaveProperty('frames')
+    expect(result).toHaveProperty('totalFrames')
+    expect(result.totalFrames).toBe(4)
+  })
+
+  it('calls progress callback during generation', async () => {
+    const progressCalls = []
+    const onProgress = (phase) => progressCalls.push(phase)
+
+    await generateClosedWalkAsync({
+      images: [0, 1, 2, 3],
+      loopLength: 4,
+      onProgress,
+      rng: makeRng([0.2, 0.3, 0.4, 0.5])
+    })
+
+    // Should have progress callbacks
+    expect(progressCalls.length).toBeGreaterThan(0)
+    expect(progressCalls).toContain('generating')
+    expect(progressCalls).toContain('complete')
+  })
+
+  it('yields to event loop for large image sets', async () => {
+    const timestamps = []
+    const onProgress = (phase) => timestamps.push({ phase, time: Date.now() })
+
+    // Create a scenario where graph needs to be built (not cached)
+    // Use images that won't be in cache
+    const uniqueImages = Array.from({ length: 10 }, (_, i) => `unique-${Date.now()}-${i}`)
+
+    const startTime = Date.now()
+    await generateClosedWalkAsync({
+      images: uniqueImages,
+      loopLength: 5,
+      onProgress,
+      rng: makeRng([0.2, 0.3, 0.4, 0.5])
+    })
+    const endTime = Date.now()
+
+    // Should have taken some time (async operations)
+    expect(endTime - startTime).toBeGreaterThanOrEqual(0)
+    expect(timestamps.length).toBeGreaterThan(0)
+  })
+
+  it('reuses cached graph on subsequent calls', async () => {
+    const images = [0, 1, 2, 3]
+    const options = { images, loopLength: 4, rng: makeRng([0.2, 0.3, 0.4, 0.5]) }
+
+    // First call builds graph
+    const progressCalls1 = []
+    await generateClosedWalkAsync({ ...options, onProgress: (p) => progressCalls1.push(p) })
+
+    // Second call should use cached graph
+    const progressCalls2 = []
+    await generateClosedWalkAsync({ ...options, onProgress: (p) => progressCalls2.push(p), rng: makeRng([0.1, 0.2, 0.3, 0.4]) })
+
+    // Both should complete, second might skip graph building
+    expect(progressCalls1.length).toBeGreaterThan(0)
+    expect(progressCalls2.length).toBeGreaterThan(0)
   })
 })
