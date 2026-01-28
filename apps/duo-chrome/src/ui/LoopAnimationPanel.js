@@ -40,8 +40,7 @@ export class LoopAnimationPanel {
       toggleBtn: this.panel.querySelector('[data-action="toggle"]'),
       loopLengthInput: this.panel.querySelector('[data-input="loop-length"]'),
       loopLengthMax: this.panel.querySelector('[data-display="loop-length-max"]'),
-      playBtn: this.panel.querySelector('[data-action="play"]'),
-      pauseBtn: this.panel.querySelector('[data-action="pause"]'),
+      playPauseBtn: this.panel.querySelector('[data-action="play-pause"]'),
       stopBtn: this.panel.querySelector('[data-action="stop"]'),
       frameCounter: this.panel.querySelector('[data-display="frame-counter"]'),
       frameSlider: this.panel.querySelector('[data-input="frame-slider"]'),
@@ -91,18 +90,14 @@ export class LoopAnimationPanel {
     }
 
     // Playback controls
-    if (this.elements.playBtn) {
-      this.elements.playBtn.addEventListener('click', (e) => {
+    if (this.elements.playPauseBtn) {
+      this.elements.playPauseBtn.addEventListener('click', (e) => {
         e.stopPropagation()
-        this.controller.play()
-        this.updatePlaybackButtons()
-      })
-    }
-
-    if (this.elements.pauseBtn) {
-      this.elements.pauseBtn.addEventListener('click', (e) => {
-        e.stopPropagation()
-        this.controller.pause()
+        if (this.controller.isPlaying) {
+          this.controller.pause()
+        } else {
+          this.controller.play()
+        }
         this.updatePlaybackButtons()
       })
     }
@@ -243,17 +238,22 @@ export class LoopAnimationPanel {
   }
 
   /**
-   * Update play/pause button states
+   * Update playback button states
    */
   updatePlaybackButtons () {
-    if (this.elements.playBtn) {
-      this.elements.playBtn.disabled = !this.controller.walk
-      this.elements.playBtn.classList.toggle('disabled', !this.controller.walk)
-    }
-
-    if (this.elements.pauseBtn) {
-      this.elements.pauseBtn.disabled = !this.controller.isPlaying
-      this.elements.pauseBtn.classList.toggle('disabled', !this.controller.isPlaying)
+    if (this.elements.playPauseBtn) {
+      const isDisabled = !this.controller.walk
+      this.elements.playPauseBtn.disabled = isDisabled
+      this.elements.playPauseBtn.classList.toggle('disabled', isDisabled)
+      
+      // Update text based on playing state
+      if (this.controller.isPlaying) {
+        this.elements.playPauseBtn.textContent = '⏸ Pause'
+        this.elements.playPauseBtn.title = 'Pause (Space)'
+      } else {
+        this.elements.playPauseBtn.textContent = '▶ Play'
+        this.elements.playPauseBtn.title = 'Play (Space)'
+      }
     }
 
     if (this.elements.stopBtn) {
@@ -541,9 +541,8 @@ export class LoopAnimationPanel {
         <div class="loop-panel-section">
           <label class="loop-panel-label">Playback</label>
           <div class="loop-controls">
-            <button data-action="play" title="Space">▶ Play</button>
-            <button data-action="pause" title="Pause">⏸ Pause</button>
-            <button data-action="stop" title="Escape">⏹ Stop</button>
+            <button data-action="play-pause" title="Play / Pause (Space)">▶ Play</button>
+            <button data-action="stop" title="Stop (Escape)">⏹ Stop</button>
             <div style="grid-column: 1 / -1;"></div>
             <input type="range" data-input="frame-slider" min="0" max="100" value="0" style="grid-column: 1 / -1;">
           </div>
