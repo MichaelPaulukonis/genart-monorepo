@@ -6,7 +6,7 @@
  */
 
 export class LoopAnimationPanel {
-  constructor (controller) {
+  constructor(controller) {
     this.controller = controller
     this.panel = null
     this.elements = {}
@@ -15,7 +15,7 @@ export class LoopAnimationPanel {
   /**
    * Create and mount the control panel
    */
-  mount (containerId = 'loop-animation-panel') {
+  mount(containerId = 'loop-animation-panel') {
     let container = document.getElementById(containerId)
     if (!container) {
       container = document.createElement('div')
@@ -34,7 +34,7 @@ export class LoopAnimationPanel {
   /**
    * Cache references to frequently used elements
    */
-  cacheElements () {
+  cacheElements() {
     this.panelElement = this.panel.querySelector('.loop-animation-panel')
     this.elements = {
       toggleBtn: this.panel.querySelector('[data-action="toggle"]'),
@@ -55,7 +55,7 @@ export class LoopAnimationPanel {
   /**
    * Attach event listeners to controls
    */
-  attachEventListeners () {
+  attachEventListeners() {
     // Panel-level bubble handler: block events from propagating OUTSIDE the panel
     // Uses bubble phase so child elements get the event first
     if (this.panelElement) {
@@ -179,7 +179,7 @@ export class LoopAnimationPanel {
   /**
    * Update UI when frame changes
    */
-  updateFrame (frame) {
+  updateFrame(frame) {
     if (!frame) return
 
     console.log('[LoopPanel] updateFrame called with frame:', frame)
@@ -203,14 +203,14 @@ export class LoopAnimationPanel {
   /**
    * Update preview panel with current frame's image pair
    */
-  updatePreview (frame) {
+  updatePreview(frame) {
     if (!this.elements.previewPair || !frame) return
 
     const { a, b } = frame.pair
-    
+
     // Handle both index-based and filename-based pair values
     let aImg, bImg
-    
+
     // If a and b are numbers (indices), look them up in imageSetA/B
     if (typeof a === 'number' && typeof b === 'number') {
       aImg = this.controller.imageSetA[a]
@@ -220,7 +220,7 @@ export class LoopAnimationPanel {
       aImg = a
       bImg = b
     }
-    
+
     aImg = aImg || '?'
     bImg = bImg || '?'
 
@@ -242,7 +242,7 @@ export class LoopAnimationPanel {
   /**
    * Update toggle button state
    */
-  updateToggleButton () {
+  updateToggleButton() {
     if (!this.elements.toggleBtn) return
 
     if (this.controller.enabled) {
@@ -260,7 +260,7 @@ export class LoopAnimationPanel {
   /**
    * Update loop length input and max value display
    */
-  updateLoopLengthInput () {
+  updateLoopLengthInput() {
     if (!this.elements.loopLengthInput) return
 
     const range = this.controller.getLoopLengthRange()
@@ -280,12 +280,12 @@ export class LoopAnimationPanel {
   /**
    * Update playback button states
    */
-  updatePlaybackButtons () {
+  updatePlaybackButtons() {
     if (this.elements.playPauseBtn) {
       const isDisabled = !this.controller.walk
       this.elements.playPauseBtn.disabled = isDisabled
       this.elements.playPauseBtn.classList.toggle('disabled', isDisabled)
-      
+
       // Update text based on playing state
       if (this.controller.isPlaying) {
         this.elements.playPauseBtn.textContent = '⏸ Pause'
@@ -306,7 +306,7 @@ export class LoopAnimationPanel {
   /**
    * Update FPS display
    */
-  updateFPSDisplay () {
+  updateFPSDisplay() {
     if (this.elements.fpsValue) {
       this.elements.fpsValue.textContent = `${this.controller.fps} FPS`
     }
@@ -315,7 +315,7 @@ export class LoopAnimationPanel {
   /**
    * Show/hide loading spinner
    */
-  setLoading (isLoading) {
+  setLoading(isLoading) {
     if (this.elements.loadingSpinner) {
       this.elements.loadingSpinner.style.display = isLoading ? 'block' : 'none'
     }
@@ -332,7 +332,7 @@ export class LoopAnimationPanel {
   /**
    * Update help text based on current state
    */
-  updateHelp () {
+  updateHelp() {
     if (!this.elements.helpText) return
 
     let newText = ''
@@ -355,7 +355,7 @@ export class LoopAnimationPanel {
   /**
    * Update all UI elements based on controller state
    */
-  updateAll () {
+  updateAll() {
     console.log('[LoopPanel] updateAll called. Controller state:', {
       enabled: this.controller.enabled,
       walk: this.controller.walk ? this.controller.walk.length : null,
@@ -375,7 +375,7 @@ export class LoopAnimationPanel {
   /**
    * Get HTML for the control panel
    */
-  getHTML () {
+  getHTML() {
     return `
       <div class="loop-animation-panel">
         <style>
@@ -617,7 +617,7 @@ export class LoopAnimationPanel {
   /**
    * Destroy the panel and cleanup
    */
-  destroy () {
+  destroy() {
     if (this.panel) {
       this.panel.remove()
     }

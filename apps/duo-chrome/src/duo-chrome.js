@@ -1201,7 +1201,7 @@ const sketch = function (p) {
 
     // Initialize Loop Animation Controller
     loopAnimationController = new LoopAnimationController({
-      fps: 12,
+      fps: 4,
       onFrameChange: (frame) => {
         console.log('[LoopAnimation Draw] onFrameChange called with frame:', frame)
         if (frame && loopAnimationPanel) {

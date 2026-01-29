@@ -2460,6 +2460,19 @@
             "testStrategy": "Test toggle enable/disable behavior and state persistence across sessions. Verify numeric input validation with edge cases (invalid lengths, non-numeric input). Test playback controls with animation frame sequencing and keyboard shortcuts. Validate frame counter accuracy throughout animation cycle. Test FPS control changes animation speed correctly. Verify preview displays correct image pair from generated walk. Test help text visibility and accuracy. Test disabled state behavior with filtered/themed image sets.",
             "parentId": "undefined",
             "updatedAt": "2026-01-28T02:14:55.840Z"
+          },
+          {
+            "id": 7,
+            "title": "Fix Loop Mode Image Set Initialization Fallback",
+            "description": "Resolve bug where loop mode fails if theme-assigned image sets are empty. Loop mode should fall back to using the complete available image list rather than requiring theme-based assignments.",
+            "status": "done",
+            "dependencies": [
+              6
+            ],
+            "details": "When entering loop mode, if imageSetA and imageSetB are empty (due to missing themes or unavailable theme images), the loop generator has no images to work with even though images are available in the application.\n\nThe issue occurred in duo-chrome.js in the updateLoopControllerImageSets() helper function around line 1270. The solution added a secondary fallback mechanism that uses the complete image list if theme-based filtering produces zero results.\n\nImplementation completed:\n1. Modified updateLoopControllerImageSets() to check if filtered imageSetA is empty - if so, use full imgs array\n2. Modified updateLoopControllerImageSets() to check if filtered imageSetB is empty - if so, use full imgs array\n3. Maintained current behavior when themes DO have images\n4. Added diagnostic logging to help debug when fallback is triggered\n5. Enhanced debug output to show whether themes are being used\n\nCommit: e86c7dc\nFix ensures loop mode is always usable when images are available, regardless of theme state.",
+            "testStrategy": "Test coverage completed:\n- Tested with no themes assigned (uses full imgs)\n- Tested with valid theme (uses filtered results)\n- Verified fallback triggers when theme filter returns 0 images\n- Verified logging shows correct counts and fallback status",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-29T15:45:00.000Z"
           }
         ],
         "updatedAt": "2026-01-28T02:14:55.840Z"

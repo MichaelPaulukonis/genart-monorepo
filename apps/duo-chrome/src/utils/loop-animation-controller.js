@@ -12,7 +12,7 @@ export class LoopAnimationController {
     this.enabled = false
     this.isPlaying = false
     this.currentFrameIndex = 0
-    this.fps = options.fps || 12
+    this.fps = options.fps || 4
     this.frameDelay = 1000 / this.fps // milliseconds between frames
     this.lastFrameTime = 0
 
@@ -20,7 +20,7 @@ export class LoopAnimationController {
     this.imageSetA = options.imageSetA || []
     this.imageSetB = options.imageSetB || []
 
-    this.requestedLoopLength = 5 // Default loop length
+    this.requestedLoopLength = 20 // Default loop length
     this.maxLoopLength = 0 // Will be calculated based on image sets
 
     this.onFrameChange = options.onFrameChange || (() => {}) // Callback when frame changes
