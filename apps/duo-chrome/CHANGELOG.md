@@ -1,3 +1,19 @@
+# 0.5.0 (2026-01-29)
+
+Version corrected from previous mismatch. This release includes:
+- Interactive controls system with A/B image selection
+- Individual size control and image navigation
+- Comprehensive user interface improvements
+- Performance optimizations and testing infrastructure
+
+# 0.4.0 (2026-01-29)
+
+Version corrected from previous mismatch. This release includes:
+- Interactive controls system with A/B image selection
+- Individual size control and image navigation
+- Comprehensive user interface improvements
+- Performance optimizations and testing infrastructure
+
 # Unreleased
 
 ## Features
