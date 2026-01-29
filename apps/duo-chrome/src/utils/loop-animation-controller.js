@@ -94,6 +94,14 @@ export class LoopAnimationController {
     if (this.enabled || this.isGenerating) return
 
     this.enabled = true
+    console.log('[LoopAnimation] Enable called, isPlaying:', this.isPlaying)
+    // Pause playback when enabling loop mode so user can configure settings
+    if (this.isPlaying) {
+      console.log('[LoopAnimation] Pausing playback before generating walk')
+      this.pause()
+      // Notify UI of pause state
+      this.onPlayStateChange({ playing: false, frameIndex: this.currentFrameIndex })
+    }
     console.log('[LoopAnimation] Enabled. Image sets:', {
       imageSetA: this.imageSetA.length,
       imageSetB: this.imageSetB.length

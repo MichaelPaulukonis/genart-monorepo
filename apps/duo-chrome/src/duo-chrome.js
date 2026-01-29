@@ -1205,35 +1205,40 @@ const sketch = function (p) {
       onFrameChange: (frame) => {
         console.log('[LoopAnimation Draw] onFrameChange called with frame:', frame)
         if (frame && loopAnimationPanel) {
-          // frame.pair.a and frame.pair.b are filenames
-          const filenameA = frame.pair.a
-          const filenameB = frame.pair.b
-          
-          console.log('[LoopAnimation Draw] Loading new images:', filenameA, filenameB)
-
-          // Load image A and update layer
-          p.loadImage(imgSource + filenameA, (imgA) => {
-            console.log('[LoopAnimation Draw] Image A loaded:', filenameA)
-            imageColorPairs[0].img = filenameA
-            const colorA = Array.isArray(imageColorPairs[0].color) 
-              ? imageColorPairs[0].color 
-              : imageColorPairs[0].color.color || imageColorPairs[0].color
-            imageColorPairs[0].layer = createMonochromeImage(imgA, colorA)
-            requestScreenUpdate()
-          })
-
-          // Load image B and update layer
-          p.loadImage(imgSource + filenameB, (imgB) => {
-            console.log('[LoopAnimation Draw] Image B loaded:', filenameB)
-            imageColorPairs[1].img = filenameB
-            const colorB = Array.isArray(imageColorPairs[1].color) 
-              ? imageColorPairs[1].color 
-              : imageColorPairs[1].color.color || imageColorPairs[1].color
-            imageColorPairs[1].layer = createMonochromeImage(imgB, colorB)
-            requestScreenUpdate()
-          })
-
+          // Update the panel UI
           loopAnimationPanel.updateFrame(frame)
+          
+          // Only load and display images if loop is actually playing
+          // Don't change the canvas when just enabling loop mode or scrubbing
+          if (loopAnimationController.isPlaying) {
+            // frame.pair.a and frame.pair.b are already the filenames
+            const filenameA = frame.pair.a
+            const filenameB = frame.pair.b
+            
+            console.log('[LoopAnimation Draw] Loading new images:', filenameA, filenameB)
+
+            // Load image A and update layer
+            p.loadImage(imgSource + filenameA, (imgA) => {
+              console.log('[LoopAnimation Draw] Image A loaded:', filenameA)
+              imageColorPairs[0].img = filenameA
+              const colorA = Array.isArray(imageColorPairs[0].color) 
+                ? imageColorPairs[0].color 
+                : imageColorPairs[0].color.color || imageColorPairs[0].color
+              imageColorPairs[0].layer = createMonochromeImage(imgA, colorA)
+              requestScreenUpdate()
+            })
+
+            // Load image B and update layer
+            p.loadImage(imgSource + filenameB, (imgB) => {
+              console.log('[LoopAnimation Draw] Image B loaded:', filenameB)
+              imageColorPairs[1].img = filenameB
+              const colorB = Array.isArray(imageColorPairs[1].color) 
+                ? imageColorPairs[1].color 
+                : imageColorPairs[1].color.color || imageColorPairs[1].color
+              imageColorPairs[1].layer = createMonochromeImage(imgB, colorB)
+              requestScreenUpdate()
+            })
+          }
         }
       },
       onPlayStateChange: (state) => {

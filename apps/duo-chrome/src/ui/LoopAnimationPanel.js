@@ -56,16 +56,31 @@ export class LoopAnimationPanel {
    * Attach event listeners to controls
    */
   attachEventListeners () {
-    // Stop click propagation on the entire panel
+    // Panel-level bubble handler: block events from propagating OUTSIDE the panel
+    // Uses bubble phase so child elements get the event first
     if (this.panelElement) {
-      this.panelElement.addEventListener('click', (e) => {
-        e.stopPropagation()
+      ['mousedown', 'mouseup', 'click'].forEach(eventType => {
+        this.panelElement.addEventListener(eventType, (e) => {
+          // Stop propagation in bubble phase - event has already reached target
+          e.stopPropagation()
+          console.log('[LoopPanel] Panel bubble handler stopping propagation for:', eventType)
+        }, false) // bubble phase (false or omitted) - fires AFTER child handlers
       })
     }
 
     // Toggle button
     if (this.elements.toggleBtn) {
+      this.elements.toggleBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+      })
+      this.elements.toggleBtn.addEventListener('mouseup', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+      })
       this.elements.toggleBtn.addEventListener('click', (e) => {
+        console.log('[LoopPanel] Toggle button clicked')
+        e.preventDefault()
         e.stopPropagation()
         if (this.controller.enabled) {
           this.controller.disable()
@@ -76,8 +91,17 @@ export class LoopAnimationPanel {
       })
     }
 
-    // Loop length input
+    // Loop length input - removed because panel handler now covers it
     if (this.elements.loopLengthInput) {
+      this.elements.loopLengthInput.addEventListener('change', (e) => {
+        e.stopPropagation()
+        const length = parseInt(e.target.value, 10)
+        if (this.controller.setLoopLength(length)) {
+          this.controller.generateWalk()
+        } else {
+          this.updateLoopLengthInput()
+        }
+      })
       this.elements.loopLengthInput.addEventListener('change', (e) => {
         e.stopPropagation()
         const length = parseInt(e.target.value, 10)
@@ -158,6 +182,8 @@ export class LoopAnimationPanel {
   updateFrame (frame) {
     if (!frame) return
 
+    console.log('[LoopPanel] updateFrame called with frame:', frame)
+
     // Update frame counter
     if (this.elements.frameCounter) {
       const total = this.controller.walk ? this.controller.walk.length : 0
@@ -181,11 +207,25 @@ export class LoopAnimationPanel {
     if (!this.elements.previewPair || !frame) return
 
     const { a, b } = frame.pair
-    const aImg = this.controller.imageSetA[a] || '?'
-    const bImg = this.controller.imageSetB[b] || '?'
+    
+    // Handle both index-based and filename-based pair values
+    let aImg, bImg
+    
+    // If a and b are numbers (indices), look them up in imageSetA/B
+    if (typeof a === 'number' && typeof b === 'number') {
+      aImg = this.controller.imageSetA[a]
+      bImg = this.controller.imageSetB[b]
+    } else {
+      // If a and b are already filenames, use them directly
+      aImg = a
+      bImg = b
+    }
+    
+    aImg = aImg || '?'
+    bImg = bImg || '?'
 
     const formatName = (name) => {
-      if (!name) return '?'
+      if (!name || name === '?') return '?'
       return String(name).replace(/\.[^/.]+$/, '').substring(0, 20)
     }
 
@@ -254,6 +294,7 @@ export class LoopAnimationPanel {
         this.elements.playPauseBtn.textContent = '▶ Play'
         this.elements.playPauseBtn.title = 'Play (Space)'
       }
+      console.log('[LoopPanel] updatePlaybackButtons:', { isDisabled, isPlaying: this.controller.isPlaying, hasWalk: !!this.controller.walk })
     }
 
     if (this.elements.stopBtn) {
