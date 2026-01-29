@@ -6,6 +6,20 @@ This changelog aggregates infrastructure and shared-library changes across the w
 
 ### Infrastructure & Shared Libraries
 
+- **duo-chrome:** Implement seamless loop animation mode with export capability
+  - Added LoopAnimationController with closed-walk algorithm for creating seamless loops
+  - Interactive loop animation UI with playback controls (play/pause/stop with keyboard shortcuts)
+  - Frame-by-frame export functionality to save loop sequences as individual PNG files
+  - Color cycling through palette independent of image pairs for visual variety
+  - Theme-based image set filtering for controlled composition
+  - Full test suite for loop algorithm including edge cases and adjacency validation
+
+- **duo-chrome:** Restructure image management for dev/production separation
+  - Created `public/images_production/` as tracked official image source
+  - Made `public/images/` git-ignored for local development without git noise
+  - Vite plugin auto-copies production images during build if needed
+  - Clean separation of development workflow from production deployments
+
 - **monochromifier:** Implement configurable grid overlay and enhanced crop tool
   - Added n-split, crosshair, and golden ratio grid overlays
   - Added draggable UI for grid controls
