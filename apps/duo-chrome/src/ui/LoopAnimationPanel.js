@@ -6,8 +6,9 @@
  */
 
 export class LoopAnimationPanel {
-  constructor(controller) {
+  constructor(controller, callbacks = {}) {
     this.controller = controller
+    this.callbacks = callbacks
     this.panel = null
     this.elements = {}
   }
@@ -42,6 +43,7 @@ export class LoopAnimationPanel {
       loopLengthMax: this.panel.querySelector('[data-display="loop-length-max"]'),
       playPauseBtn: this.panel.querySelector('[data-action="play-pause"]'),
       stopBtn: this.panel.querySelector('[data-action="stop"]'),
+      saveLoopBtn: this.panel.querySelector('[data-action="save-loop"]'),
       frameCounter: this.panel.querySelector('[data-display="frame-counter"]'),
       frameSlider: this.panel.querySelector('[data-input="frame-slider"]'),
       fpsSlider: this.panel.querySelector('[data-input="fps"]'),
@@ -129,8 +131,22 @@ export class LoopAnimationPanel {
     if (this.elements.stopBtn) {
       this.elements.stopBtn.addEventListener('click', (e) => {
         e.stopPropagation()
-        this.controller.stop()
+        // If saving, interrupt the save
+        if (this.controller.isSavingLoop) {
+          this.controller.interruptSave()
+        } else {
+          this.controller.stop()
+        }
         this.updatePlaybackButtons()
+      })
+    }
+
+    // Save Loop button
+    if (this.elements.saveLoopBtn) {
+      this.elements.saveLoopBtn.addEventListener('click', async (e) => {
+        e.stopPropagation()
+        console.log('[LoopPanel] Save Loop button clicked')
+        await this.handleSaveLoop()
       })
     }
 
@@ -298,8 +314,78 @@ export class LoopAnimationPanel {
     }
 
     if (this.elements.stopBtn) {
-      this.elements.stopBtn.disabled = !this.controller.walk
-      this.elements.stopBtn.classList.toggle('disabled', !this.controller.walk)
+      // Stop button stays enabled during save to allow interruption
+      const isDisabled = !this.controller.walk && !this.controller.isSavingLoop
+      this.elements.stopBtn.disabled = isDisabled
+      this.elements.stopBtn.classList.toggle('disabled', isDisabled)
+      
+      // Update text during save
+      if (this.controller.isSavingLoop) {
+        this.elements.stopBtn.textContent = '⏹ Cancel Save'
+        this.elements.stopBtn.title = 'Cancel saving loop'
+      } else {
+        this.elements.stopBtn.textContent = '⏹ Stop'
+        this.elements.stopBtn.title = 'Stop (Escape)'
+      }
+    }
+
+    if (this.elements.saveLoopBtn) {
+      // Enable when walk exists and not playing/saving
+      const isDisabled = !this.controller.walk || this.controller.isPlaying || this.controller.isSavingLoop
+      this.elements.saveLoopBtn.disabled = isDisabled
+      this.elements.saveLoopBtn.classList.toggle('disabled', isDisabled)
+      
+      // Update text during save
+      if (this.controller.isSavingLoop) {
+        this.elements.saveLoopBtn.textContent = '⏳ Saving...'
+      } else {
+        this.elements.saveLoopBtn.textContent = '💾 Save Loop'
+      }
+    }
+  }
+
+  /**
+   * Handle save loop button click
+   */
+  async handleSaveLoop() {
+    if (!this.controller.walk || this.controller.walk.length === 0) {
+      console.warn('[LoopPanel] No walk to save')
+      return
+    }
+
+    if (this.controller.isSavingLoop) {
+      console.warn('[LoopPanel] Save already in progress')
+      return
+    }
+
+    console.log('[LoopPanel] Starting loop save...')
+    
+    // Generate timestamp once for all frames
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+    
+    try {
+      await this.controller.saveLoop(
+        async (frameIndex, frame) => {
+          // Call the save callback from duo-chrome
+          if (this.callbacks.onSaveFrame) {
+            const filename = `loop-${timestamp}-frame-${(frameIndex + 1).toString().padStart(3, '0')}`
+            console.log(`[LoopPanel] Saving frame ${frameIndex + 1}/${this.controller.walk.length}: ${filename}`)
+            await this.callbacks.onSaveFrame(filename)
+          }
+        },
+        (current, total) => {
+          // Update progress in frame counter
+          console.log(`[LoopPanel] Progress: ${current}/${total}`)
+          this.updateFrame()
+          this.updatePlaybackButtons()
+        }
+      )
+      
+      console.log('[LoopPanel] Loop save complete')
+    } catch (error) {
+      console.error('[LoopPanel] Error saving loop:', error)
+    } finally {
+      this.updatePlaybackButtons()
     }
   }
 
@@ -584,6 +670,7 @@ export class LoopAnimationPanel {
           <div class="loop-controls">
             <button data-action="play-pause" title="Play / Pause (Space)">▶ Play</button>
             <button data-action="stop" title="Stop (Escape)">⏹ Stop</button>
+            <button data-action="save-loop" title="Save all frames as individual images">💾 Save Loop</button>
             <div style="grid-column: 1 / -1;"></div>
             <input type="range" data-input="frame-slider" min="0" max="100" value="0" style="grid-column: 1 / -1;">
           </div>

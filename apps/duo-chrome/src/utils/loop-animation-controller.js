@@ -29,6 +29,7 @@ export class LoopAnimationController {
 
     this.animationFrameId = null
     this.isGenerating = false
+    this.isSavingLoop = false
 
     // Calculate max loop length if image sets were provided in options
     if (this.imageSetA.length > 0 && this.imageSetB.length > 0) {
@@ -266,6 +267,7 @@ export class LoopAnimationController {
       enabled: this.enabled,
       playing: this.isPlaying,
       generating: this.isGenerating,
+      savingLoop: this.isSavingLoop,
       currentFrame: this.currentFrameIndex,
       totalFrames: this.walk ? this.walk.length : 0,
       fps: this.fps,
@@ -277,10 +279,76 @@ export class LoopAnimationController {
   }
 
   /**
+   * Save entire loop as individual frames
+   * @param {Function} saveFrameCallback - Callback to save current frame (index, frame) => void
+   * @param {Function} onProgress - Progress callback (current, total) => void
+   * @returns {Promise} Resolves when save completes or is interrupted
+   */
+  async saveLoop (saveFrameCallback, onProgress = () => {}) {
+    if (!this.walk || this.walk.length === 0) {
+      throw new Error('No walk to save')
+    }
+
+    this.isSavingLoop = true
+    const wasPlaying = this.isPlaying
+    
+    // Don't pause playback - we need isPlaying=true for onFrameChange to load images
+    // Instead, we'll manually load frames by calling onFrameChange
+    if (wasPlaying) {
+      this.pause()
+    }
+
+    try {
+      for (let i = 0; i < this.walk.length; i++) {
+        // Check if save was interrupted
+        if (!this.isSavingLoop) {
+          console.log('[LoopAnimation] Save interrupted at frame', i)
+          break
+        }
+
+        // Update to this frame
+        this.currentFrameIndex = i
+        const frame = this.getCurrentFrame()
+        
+        // Trigger frame change - this starts loading the images
+        // But we need to ensure images load even when not playing
+        this.onFrameChange(frame)
+
+        // Report progress
+        onProgress(i + 1, this.walk.length)
+
+        // Wait for images to load and render before saving
+        // This delay allows p5.js to complete the draw cycle with new images
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        // Call the save callback AFTER the delay
+        await saveFrameCallback(i, frame)
+      }
+
+      console.log('[LoopAnimation] Save complete')
+    } finally {
+      this.isSavingLoop = false
+      
+      // Resume playback if it was playing before
+      if (wasPlaying) {
+        this.play()
+      }
+    }
+  }
+
+  /**
+   * Interrupt ongoing loop save
+   */
+  interruptSave () {
+    this.isSavingLoop = false
+  }
+
+  /**
    * Cleanup resources
    */
   destroy () {
     this.stop()
+    this.interruptSave()
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId)
     }

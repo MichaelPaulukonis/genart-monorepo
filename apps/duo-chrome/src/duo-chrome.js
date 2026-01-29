@@ -1208,9 +1208,9 @@ const sketch = function (p) {
           // Update the panel UI
           loopAnimationPanel.updateFrame(frame)
           
-          // Only load and display images if loop is actually playing
-          // Don't change the canvas when just enabling loop mode or scrubbing
-          if (loopAnimationController.isPlaying) {
+          // Load and display images if loop is playing OR if we're saving the loop
+          // This ensures frames render correctly during save operations
+          if (loopAnimationController.isPlaying || loopAnimationController.isSavingLoop) {
             // frame.pair.a and frame.pair.b are already the filenames
             const filenameA = frame.pair.a
             const filenameB = frame.pair.b
@@ -1262,7 +1262,14 @@ const sketch = function (p) {
     })
 
     // Initialize Loop Animation Panel
-    loopAnimationPanel = new LoopAnimationPanel(loopAnimationController)
+    loopAnimationPanel = new LoopAnimationPanel(loopAnimationController, {
+      onSaveFrame: async (filename) => {
+        // Save the current canvas frame
+        p.saveCanvas(filename)
+        // Small delay to ensure save completes
+        await new Promise(resolve => setTimeout(resolve, 50))
+      }
+    })
     loopAnimationPanel.mount()
     loopAnimationPanel.updateAll()
 
