@@ -1,8 +1,32 @@
 // vite.config.js
 const { resolve } = require('path')
 const { defineConfig } = require('vite')
-const { readFileSync, writeFileSync, mkdirSync } = require('fs')
+const { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync } = require('fs')
 const { imageListPlugin } = require('../../tools/vite-plugin-image-list.js')
+
+// Vite plugin to copy production images before build
+function copyProductionImages () {
+  return {
+    name: 'copy-production-images',
+    configResolved () {
+      const appRoot = __dirname
+      const sourceDir = resolve(appRoot, 'public/images_production')
+      const targetDir = resolve(appRoot, 'public/images')
+
+      // Only copy if images_production exists and images doesn't exist or is different
+      if (existsSync(sourceDir) && !existsSync(targetDir)) {
+        console.log('ℹ️  public/images not found, copying from images_production...')
+        try {
+          cpSync(sourceDir, targetDir, { recursive: true })
+          console.log('✓ Copied production images to public/images for build')
+        } catch (error) {
+          console.warn('⚠️  Could not copy production images:', error.message)
+          console.warn('    Development will use existing images or fail if none exist')
+        }
+      }
+    }
+  }
+}
 
 // Vite plugin to generate version constants from package.json
 function generateVersionConstants () {
@@ -88,6 +112,7 @@ module.exports = defineConfig({
     }
   },
   plugins: [
+    copyProductionImages(),
     generateVersionConstants(),
     imageListPlugin({
       scanDir: 'public/images',

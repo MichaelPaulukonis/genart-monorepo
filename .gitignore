@@ -172,10 +172,15 @@ playwright/.cache/
 conversation/
 .specstory/ 
 
-# working images
-# duo-chrome/public/images has been committed - temp changes s/b ignored
-apps/duo-chrome/public/
+# Image management for duo-chrome
+# Production images are in images_production/ (tracked)
+# Development images are in images/ (ignored via app .gitignore)
 apps/duo-chrome/public/images/
 apps/duo-chrome/public/images_original
 apps/duo-chrome/public/images_local
-# images.bak are b&w non-transparent files saved for potential future use
+apps/duo-chrome/public/images_alt
+apps/duo-chrome/public/images_main
+apps/duo-chrome/public/images.bak
+apps/duo-chrome/public/images_*/
+# Allow images_production (contains official images for deployment)
+!apps/duo-chrome/public/images_production/
