@@ -1215,16 +1215,19 @@ const sketch = function (p) {
             const filenameA = frame.pair.a
             const filenameB = frame.pair.b
             
-            console.log('[LoopAnimation Draw] Loading new images:', filenameA, filenameB)
+            // Get colors from the current palette, cycling by frame index
+            const currentPalette = ALL_PALETTES[colorIndex]
+            const colorA = currentPalette[loopAnimationController.currentFrameIndex % currentPalette.length]
+            const colorB = currentPalette[(loopAnimationController.currentFrameIndex + 1) % currentPalette.length]
+            
+            console.log('[LoopAnimation Draw] Loading new images:', filenameA, filenameB, 'with colors:', colorA.name, colorB.name)
 
             // Load image A and update layer
             p.loadImage(imgSource + filenameA, (imgA) => {
               console.log('[LoopAnimation Draw] Image A loaded:', filenameA)
               imageColorPairs[0].img = filenameA
-              const colorA = Array.isArray(imageColorPairs[0].color) 
-                ? imageColorPairs[0].color 
-                : imageColorPairs[0].color.color || imageColorPairs[0].color
-              imageColorPairs[0].layer = createMonochromeImage(imgA, colorA)
+              imageColorPairs[0].color = colorA
+              imageColorPairs[0].layer = createMonochromeImage(imgA, colorA.color)
               requestScreenUpdate()
             })
 
@@ -1232,10 +1235,8 @@ const sketch = function (p) {
             p.loadImage(imgSource + filenameB, (imgB) => {
               console.log('[LoopAnimation Draw] Image B loaded:', filenameB)
               imageColorPairs[1].img = filenameB
-              const colorB = Array.isArray(imageColorPairs[1].color) 
-                ? imageColorPairs[1].color 
-                : imageColorPairs[1].color.color || imageColorPairs[1].color
-              imageColorPairs[1].layer = createMonochromeImage(imgB, colorB)
+              imageColorPairs[1].color = colorB
+              imageColorPairs[1].layer = createMonochromeImage(imgB, colorB.color)
               requestScreenUpdate()
             })
           }
