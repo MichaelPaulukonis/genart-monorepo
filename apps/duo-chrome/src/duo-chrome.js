@@ -1268,13 +1268,33 @@ const sketch = function (p) {
 
     // Helper function to update loop controller image sets
     function updateLoopControllerImageSets () {
-      const imageSetA = controlState.themeAssignments?.[0] ? filterImages(imgs, getThemeById(controlState.themeAssignments[0])?.filter || {}) : imgs
-      const imageSetB = controlState.themeAssignments?.[1] ? filterImages(imgs, getThemeById(controlState.themeAssignments[1])?.filter || {}) : imgs
+      // Get theme-based sets or full imgs as primary fallback
+      let imageSetA = controlState.themeAssignments?.[0]
+        ? filterImages(imgs, getThemeById(controlState.themeAssignments[0])?.filter || {})
+        : imgs
+
+      let imageSetB = controlState.themeAssignments?.[1]
+        ? filterImages(imgs, getThemeById(controlState.themeAssignments[1])?.filter || {})
+        : imgs
+
+      // Secondary fallback: if filtered result is empty, use full imgs
+      // This handles cases where theme filters match zero images or theme no longer exists
+      if (imageSetA.length === 0) {
+        console.log('[LoopAnimation] ImageSetA was empty (filtered theme returned 0 results), falling back to full image list')
+        imageSetA = imgs
+      }
+
+      if (imageSetB.length === 0) {
+        console.log('[LoopAnimation] ImageSetB was empty (filtered theme returned 0 results), falling back to full image list')
+        imageSetB = imgs
+      }
 
       console.log('[LoopAnimation] Updating image sets:', {
         imageSetA: imageSetA.length,
         imageSetB: imageSetB.length,
-        totalImgs: imgs.length
+        totalImgs: imgs.length,
+        usingThemeA: controlState.themeAssignments?.[0] && imageSetA !== imgs,
+        usingThemeB: controlState.themeAssignments?.[1] && imageSetB !== imgs
       })
 
       loopAnimationController.setImageSets(imageSetA, imageSetB)
