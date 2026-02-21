@@ -30,6 +30,10 @@ export class ClosedWalkGenerator {
     this.maxAttempts = maxAttempts
     this.rng = rng
 
+    // State persistence
+    this.currentState = null // Stores current generated walk state
+    this.stateHistory = [] // History of generated walks for regeneration
+
     this.validateLoopLength(this.loopLength)
     const cacheKey = signature(this.imagesA, this.imagesB)
     if (!ClosedWalkGenerator.graphCache.has(cacheKey)) {
@@ -268,6 +272,77 @@ export class ClosedWalkGenerator {
     // If we get here, no viable walk exists at any length
     throw new Error(`Could not generate any closed walk between lengths 3 and ${requestedLength}: ${lastError?.message || 'Unknown error'}`)
   }
+
+  /**
+   * Save the current walk state to the instance for later retrieval
+   * @param {Object} walkResult - Result from generate() or generateWithFallback()
+   * @returns {Object} The saved state
+   */
+  saveState (walkResult) {
+    const state = {
+      walk: walkResult.walk,
+      metadata: { ...walkResult.metadata },
+      savedAt: new Date().toISOString(),
+      imageSetA: [...this.imagesA],
+      imageSetB: [...this.imagesB]
+    }
+
+    this.currentState = state
+    this.stateHistory.push(state)
+
+    // Keep history limited to last 10 states
+    if (this.stateHistory.length > 10) {
+      this.stateHistory.shift()
+    }
+
+    return state
+  }
+
+  /**
+   * Get the current saved walk state
+   * @returns {Object|null} Current state or null if no state saved
+   */
+  getCurrentState () {
+    return this.currentState
+  }
+
+  /**
+   * Get the history of saved states
+   * @returns {Array} Array of previous states
+   */
+  getStateHistory () {
+    return this.stateHistory
+  }
+
+  /**
+   * Clear the current state
+   */
+  clearCurrentState () {
+    this.currentState = null
+  }
+
+  /**
+   * Clear all state history
+   */
+  clearStateHistory () {
+    this.currentState = null
+    this.stateHistory = []
+  }
+
+  /**
+   * Restore a previous state from history
+   * @param {number} index - Index in history (0 = oldest, length-1 = newest)
+   * @returns {Object} The restored state
+   * @throws If index is out of bounds
+   */
+  restoreState (index) {
+    if (index < 0 || index >= this.stateHistory.length) {
+      throw new Error(`Invalid state history index: ${index}. Valid range: 0-${this.stateHistory.length - 1}`)
+    }
+    this.currentState = this.stateHistory[index]
+    return this.currentState
+  }
+
 
   /**
    * Clear the adjacency graph cache

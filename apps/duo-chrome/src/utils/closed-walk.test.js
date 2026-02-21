@@ -574,5 +574,188 @@ describe('ClosedWalkGenerator - Fallback Generation', () => {
   })
 })
 
+describe('ClosedWalkGenerator - State Persistence', () => {
+  beforeEach(() => {
+    ClosedWalkGenerator.clearCache()
+  })
+
+  it('saves and retrieves walk state', () => {
+    const generator = new ClosedWalkGenerator({
+      images: [0, 1, 2, 3, 4],
+      loopLength: 6
+    })
+
+    const walkResult = generator.generate()
+    const savedState = generator.saveState(walkResult)
+
+    expect(savedState).toHaveProperty('walk')
+    expect(savedState).toHaveProperty('metadata')
+    expect(savedState).toHaveProperty('savedAt')
+    expect(savedState).toHaveProperty('imageSetA')
+    expect(savedState).toHaveProperty('imageSetB')
+
+    const currentState = generator.getCurrentState()
+    expect(currentState).toEqual(savedState)
+    expect(currentState.walk).toEqual(walkResult.walk)
+  })
+
+  it('maintains state after multiple generations', () => {
+    const generator = new ClosedWalkGenerator({
+      images: [0, 1, 2, 3, 4, 5, 6],
+      loopLength: 6,
+      rng: makeRng([0.1, 0.2])
+    })
+
+    const result1 = generator.generate()
+    generator.saveState(result1)
+    const state1 = generator.getCurrentState()
+
+    // Generate another walk, save it
+    const result2 = generator.generate()
+    generator.saveState(result2)
+    const state2 = generator.getCurrentState()
+
+    // States should both be saved, and current should be the later one
+    const history = generator.getStateHistory()
+    expect(history.length).toBe(2)
+    expect(state2).toEqual(history[1])
+    expect(state1).toEqual(history[0])
+  })
+
+  it('maintains history of saved states', () => {
+    const generator = new ClosedWalkGenerator({
+      images: [0, 1, 2, 3, 4],
+      loopLength: 6
+    })
+
+    // Save multiple states
+    for (let i = 0; i < 3; i++) {
+      const result = generator.generate()
+      generator.saveState(result)
+    }
+
+    const history = generator.getStateHistory()
+    expect(history.length).toBe(3)
+    expect(history[history.length - 1]).toEqual(generator.getCurrentState())
+  })
+
+  it('limits history to 10 states', () => {
+    const generator = new ClosedWalkGenerator({
+      images: [0, 1, 2, 3, 4],
+      loopLength: 6
+    })
+
+    // Save 15 states
+    for (let i = 0; i < 15; i++) {
+      const result = generator.generate()
+      generator.saveState(result)
+    }
+
+    const history = generator.getStateHistory()
+    expect(history.length).toBe(10) // Should be limited to 10
+  })
+
+  it('restores state from history', () => {
+    const generator = new ClosedWalkGenerator({
+      images: [0, 1, 2, 3, 4],
+      loopLength: 6,
+      rng: makeRng([0.2, 0.3])
+    })
+
+    const result = generator.generate()
+    generator.saveState(result)
+
+    const history = generator.getStateHistory()
+    expect(history.length).toBe(1)
+
+    // Restore the state
+    const restoredState = generator.restoreState(0)
+    expect(restoredState.walk).toEqual(result.walk)
+    expect(restoredState.metadata).toEqual(result.metadata)
+  })
+
+  it('throws when restoring invalid state index', () => {
+    const generator = new ClosedWalkGenerator({
+      images: [0, 1, 2, 3, 4],
+      loopLength: 6
+    })
+
+    const result = generator.generate()
+    generator.saveState(result)
+
+    expect(() => generator.restoreState(-1)).toThrow()
+    expect(() => generator.restoreState(1)).toThrow()
+    expect(() => generator.restoreState(10)).toThrow()
+  })
+
+  it('clears current state', () => {
+    const generator = new ClosedWalkGenerator({
+      images: [0, 1, 2, 3, 4],
+      loopLength: 6
+    })
+
+    const result = generator.generate()
+    generator.saveState(result)
+    expect(generator.getCurrentState()).not.toBeNull()
+
+    generator.clearCurrentState()
+    expect(generator.getCurrentState()).toBeNull()
+  })
+
+  it('clears entire state history', () => {
+    const generator = new ClosedWalkGenerator({
+      images: [0, 1, 2, 3, 4],
+      loopLength: 6
+    })
+
+    // Save multiple states
+    for (let i = 0; i < 3; i++) {
+      const result = generator.generate()
+      generator.saveState(result)
+    }
+
+    expect(generator.getStateHistory().length).toBe(3)
+    expect(generator.getCurrentState()).not.toBeNull()
+
+    generator.clearStateHistory()
+    expect(generator.getStateHistory().length).toBe(0)
+    expect(generator.getCurrentState()).toBeNull()
+  })
+
+  it('preserves image sets when saving state', () => {
+    const imagesA = [0, 1, 2]
+    const imagesB = [3, 4, 5]
+
+    const generator = new ClosedWalkGenerator({
+      imageSetA: imagesA,
+      imageSetB: imagesB,
+      loopLength: 5
+    })
+
+    const result = generator.generate()
+    const savedState = generator.saveState(result)
+
+    expect(savedState.imageSetA).toEqual(imagesA)
+    expect(savedState.imageSetB).toEqual(imagesB)
+  })
+
+  it('saves timestamp with state', () => {
+    const generator = new ClosedWalkGenerator({
+      images: [0, 1, 2, 3, 4],
+      loopLength: 6
+    })
+
+    const before = new Date()
+    const result = generator.generate()
+    const savedState = generator.saveState(result)
+    const after = new Date()
+
+    const savedTime = new Date(savedState.savedAt)
+    expect(savedTime.getTime()).toBeGreaterThanOrEqual(before.getTime())
+    expect(savedTime.getTime()).toBeLessThanOrEqual(after.getTime())
+  })
+})
+
+
 
 
