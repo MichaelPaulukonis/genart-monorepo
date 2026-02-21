@@ -457,3 +457,122 @@ describe('ClosedWalkGenerator - Adjacency Graph Caching', () => {
   })
 })
 
+describe('ClosedWalkGenerator - Fallback Generation', () => {
+  beforeEach(() => {
+    ClosedWalkGenerator.clearCache()
+  })
+
+  it('generates requested length when possible without fallback', () => {
+    const imageSet = [0, 1, 2, 3, 4, 5]
+    const result = new ClosedWalkGenerator({
+      images: imageSet,
+      loopLength: 8,
+      rng: makeRng([0.2, 0.3, 0.4, 0.5, 0.6])
+    }).generateWithFallback()
+
+    expect(result.walk).toHaveLength(8)
+    // These properties are only set when fallback is used
+    if (result.metadata.isLoopFallback) {
+      expect(result.metadata.achievedLoopLength).toBe(8)
+    }
+  })
+
+  it('attempts fallback when generation fails with low attempts', () => {
+    // Use a length that has lower chance of success
+    const imageSet = [0, 1, 2, 3, 4]
+    const results = []
+
+    // Run multiple times to get both success and fallback scenarios
+    for (let i = 0; i < 5; i++) {
+      const result = new ClosedWalkGenerator({
+        images: imageSet,
+        loopLength: 10,
+        maxAttempts: 1, // Very restrictive to encourage fallback
+        rng: makeRng([Math.random(), Math.random()])
+      }).generateWithFallback()
+      results.push(result)
+    }
+
+    // All should succeed (either directly or via fallback)
+    results.forEach(result => {
+      expect(result.walk.length).toBeGreaterThanOrEqual(3)
+      expect(result.walk.length).toBeLessThanOrEqual(10)
+      // Walk must be closed
+      expect(result.walk[0]).toEqual(result.walk[result.walk.length - 1])
+    })
+  })
+
+  it('sets fallback metadata when fallback is actually used', () => {
+    const imageSet = [0, 1, 2, 3]
+    let gotFallback = false
+
+    // Run multiple times until we get a fallback
+    for (let i = 0; i < 10; i++) {
+      const result = new ClosedWalkGenerator({
+        images: imageSet,
+        loopLength: 10,
+        maxAttempts: 1,
+        rng: makeRng([Math.random(), Math.random()])
+      }).generateWithFallback()
+
+      if (result.metadata.isLoopFallback) {
+        gotFallback = true
+        expect(result.metadata).toHaveProperty('requestedLoopLength')
+        expect(result.metadata).toHaveProperty('achievedLoopLength')
+        expect(result.metadata.requestedLoopLength).toBe(10)
+        expect(result.metadata.achievedLoopLength).toBeLessThan(10)
+        break
+      }
+    }
+
+    // We should have gotten at least one fallback in 10 attempts
+    expect(gotFallback).toBe(true)
+  })
+
+  it('throws if no viable walk exists due to insufficient images', () => {
+    // With only 2 images, minimum requirement is 3 images
+    expect(() => {
+      new ClosedWalkGenerator({
+        images: [0, 1],
+        loopLength: 5
+      })
+    }).toThrow()
+  })
+
+  it('maintains walk closure even with fallback lengths', () => {
+    const imageSet = [0, 1, 2, 3, 4]
+
+    for (let i = 0; i < 3; i++) {
+      const result = new ClosedWalkGenerator({
+        images: imageSet,
+        loopLength: 8,
+        maxAttempts: 2,
+        rng: makeRng([Math.random(), Math.random(), Math.random()])
+      }).generateWithFallback()
+
+      const { walk } = result
+      expect(walk[0]).toEqual(walk[walk.length - 1]) // Closure check
+      for (let j = 0; j < walk.length - 1; j++) {
+        const gen = new ClosedWalkGenerator({ images: imageSet, loopLength: 3 })
+        expect(gen.areAdjacent(walk[j], walk[j + 1])).toBe(true)
+      }
+    }
+  })
+
+  it('can successfully fall back from high to low loop lengths', () => {
+    // Test the fallback chain: ask for 10, might fallback to 9, 8, 7...
+    const imageSet = [0, 1, 2, 3]
+    const result = new ClosedWalkGenerator({
+      images: imageSet,
+      loopLength: 10,
+      maxAttempts: 2 // Low attempts to encourage fallback
+    }).generateWithFallback()
+
+    // Should get something valid
+    expect(result.walk.length).toBeGreaterThanOrEqual(3)
+    expect(result.walk[0]).toEqual(result.walk[result.walk.length - 1])
+  })
+})
+
+
+

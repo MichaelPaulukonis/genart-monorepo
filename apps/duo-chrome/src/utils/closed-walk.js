@@ -226,6 +226,50 @@ export class ClosedWalkGenerator {
   }
 
   /**
+   * Generate a closed walk with automatic fallback to shorter lengths if requested length is impossible.
+   * Attempts to generate the requested loop length. If that fails after max attempts,
+   * automatically tries progressively shorter lengths to find the longest viable loop.
+   * 
+   * @returns {Object} Walk result with metadata including actual loopLength achieved
+   * @throws Only if no valid closed walk can be generated at any length
+   */
+  generateWithFallback () {
+    const minLoopLength = 3
+    const requestedLength = this.loopLength
+    let lastError = null
+
+    // Try requested length first
+    try {
+      return this.generate()
+    } catch (error) {
+      lastError = error
+    }
+
+    // Fallback: try progressively shorter lengths
+    for (let tryLength = requestedLength - 1; tryLength >= minLoopLength; tryLength--) {
+      try {
+        // Temporarily set shorter loop length
+        this.loopLength = tryLength
+
+        const result = this.generate()
+        
+        // Restore original length in metadata for reference
+        result.metadata.requestedLoopLength = requestedLength
+        result.metadata.achievedLoopLength = tryLength
+        result.metadata.isLoopFallback = tryLength < requestedLength
+
+        return result
+      } catch (error) {
+        // Continue trying shorter lengths
+        lastError = error
+      }
+    }
+
+    // If we get here, no viable walk exists at any length
+    throw new Error(`Could not generate any closed walk between lengths 3 and ${requestedLength}: ${lastError?.message || 'Unknown error'}`)
+  }
+
+  /**
    * Clear the adjacency graph cache
    * Useful for memory management and testing
    */
