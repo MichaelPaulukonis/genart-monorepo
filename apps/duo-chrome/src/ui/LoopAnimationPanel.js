@@ -6,7 +6,7 @@
  */
 
 export class LoopAnimationPanel {
-  constructor(controller, callbacks = {}) {
+  constructor (controller, callbacks = {}) {
     this.controller = controller
     this.callbacks = callbacks
     this.panel = null
@@ -86,8 +86,14 @@ export class LoopAnimationPanel {
         e.stopPropagation()
         if (this.controller.enabled) {
           this.controller.disable()
+          if (this.callbacks.onLoopDisabled) {
+            this.callbacks.onLoopDisabled()
+          }
         } else {
           this.controller.enable()
+          if (this.callbacks.onLoopEnabled) {
+            this.callbacks.onLoopEnabled()
+          }
         }
         this.updateToggleButton()
       })

@@ -2,9 +2,11 @@
  * Closed walk generator for loopable animations.
  * Builds a sequence of ordered image pairs where consecutive states
  * share exactly one image index and the walk starts and ends on the same state.
+ * Enforces that no image appears in more than 2 consecutive frames,
+ * allowing images to reappear later but preventing continuous chains.
  */
 
-const DEFAULT_MAX_ATTEMPTS = 10
+const DEFAULT_MAX_ATTEMPTS = 1000
 
 function countStates (imagesA, imagesB) {
   let count = 0
@@ -114,13 +116,36 @@ export class ClosedWalkGenerator {
     return states[Math.max(0, Math.min(states.length - 1, index))]
   }
 
-  selectNextState ({ current, neighbors, startState, visited, isClosingStep }) {
+  selectNextState ({ current, neighbors, startState, visited, isClosingStep, walk }) {
     let candidates = neighbors
 
     if (isClosingStep) {
       const closingCandidates = neighbors.filter(n => this.areAdjacent(n, startState))
       if (closingCandidates.length > 0) {
         candidates = closingCandidates
+      }
+    }
+
+    // Prevent images from appearing in more than 2 consecutive frames
+    // Check the last 2 frames: if an image appeared in both, it cannot appear in the next frame
+    if (walk && walk.length >= 2) {
+      const prevFrame = walk[walk.length - 2]
+      const prevImages = new Set([prevFrame.a, prevFrame.b])
+      const currentImages = new Set([current.a, current.b])
+      
+      // Find images that appeared in both previous and current frames
+      const consecutiveImages = new Set()
+      for (const img of prevImages) {
+        if (currentImages.has(img)) {
+          consecutiveImages.add(img)
+        }
+      }
+      
+      // Filter out candidates that contain any image that appeared in last 2 frames
+      if (consecutiveImages.size > 0) {
+        candidates = candidates.filter(candidate => {
+          return !consecutiveImages.has(candidate.a) && !consecutiveImages.has(candidate.b)
+        })
       }
     }
 
@@ -145,7 +170,7 @@ export class ClosedWalkGenerator {
         const current = walk[walk.length - 1]
         const neighbors = adjacency.get(this.getStateKey(current)) || []
         const isClosingStep = walk.length === this.loopLength - 2
-        const next = this.selectNextState({ current, neighbors, startState, visited, isClosingStep })
+        const next = this.selectNextState({ current, neighbors, startState, visited, isClosingStep, walk })
         if (!next) {
           failed = true
           break
@@ -159,6 +184,28 @@ export class ClosedWalkGenerator {
       const penultimate = walk[walk.length - 1]
       if (!this.areAdjacent(penultimate, startState)) {
         continue
+      }
+
+      // Verify closing the loop doesn't create a 3+ consecutive appearance
+      // Check if startState images appeared in both of the last 2 frames
+      if (walk.length >= 2) {
+        const lastFrame = walk[walk.length - 1]
+        const secondLastFrame = walk[walk.length - 2]
+        const lastImages = new Set([lastFrame.a, lastFrame.b])
+        const secondLastImages = new Set([secondLastFrame.a, secondLastFrame.b])
+        
+        // Find images in both last frames
+        const consecutiveInLast = new Set()
+        for (const img of lastImages) {
+          if (secondLastImages.has(img)) {
+            consecutiveInLast.add(img)
+          }
+        }
+        
+        // If startState contains an image that appeared in last 2 frames, can't close
+        if (consecutiveInLast.has(startState.a) || consecutiveInLast.has(startState.b)) {
+          continue
+        }
       }
 
       walk.push(startState)
@@ -218,9 +265,7 @@ export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, 
 
   // Check if graph is already cached
   const cacheKey = signature(imagesA, imagesB)
-  let graphWasBuilt = false
   if (!ClosedWalkGenerator.graphCache.has(cacheKey)) {
-    graphWasBuilt = true
     if (onProgress) onProgress('building-graph')
     // Yield again to allow rendering before expensive computation
     await new Promise(resolve => setTimeout(resolve, 0))
@@ -234,8 +279,16 @@ export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, 
 }
 
 export function formatWalkForAnimation (walk, metadata = {}) {
+  const isClosingFrame = (frameIndex) => {
+    if (walk.length < 2 || frameIndex !== walk.length - 1) return false
+    const first = walk[0]
+    const last = walk[frameIndex]
+    return first && last && first.a === last.a && first.b === last.b
+  }
+
   const frames = walk.map((pair, frameIndex) => ({
     frame: frameIndex,
+    loopFrame: isClosingFrame(frameIndex) ? 0 : frameIndex,
     pair: { a: pair.a, b: pair.b },
     imageIndices: {
       aIndex: typeof pair.a === 'string' ? pair.a : pair.a,

@@ -177,6 +177,15 @@ describe('LoopAnimationController', () => {
       expect(controller.walk.length).toBe(controller.requestedLoopLength)
     })
 
+    it('should not include duplicated terminal frame', () => {
+      const first = controller.walk[0]
+      const last = controller.walk[controller.walk.length - 1]
+
+      // In the rendered/exported walk, closure is implicit (last wraps to first),
+      // so first and last should not be the same duplicated state.
+      expect(first.pair.a === last.pair.a && first.pair.b === last.pair.b).toBe(false)
+    })
+
     it('should generate walk with frame objects', () => {
       controller.walk.forEach(frame => {
         expect(frame).toHaveProperty('pair')

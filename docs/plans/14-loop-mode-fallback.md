@@ -10,12 +10,15 @@
 Loop mode initialization fails silently when `imageSetA` and `imageSetB` are empty, even though images are available in the application.
 
 ### Root Cause
+
 The `updateLoopControllerImageSets()` helper function in [duo-chrome.js](duo-chrome.js#L1270) attempts to use theme-based filtered image sets, but has no fallback mechanism when:
+
 1. No theme is assigned to positions A or B
 2. A theme is assigned but its images no longer exist (stale local storage)
 3. A theme's filter criteria result in zero matching images
 
 ### Current Code (Problematic)
+
 ```javascript
 function updateLoopControllerImageSets () {
   const imageSetA = controlState.themeAssignments?.[0] ? filterImages(imgs, getThemeById(controlState.themeAssignments[0])?.filter || {}) : imgs
@@ -31,12 +34,14 @@ The conditional uses `imgs` as fallback for undefined themes, but NOT if the the
 ## Requirements
 
 ### Functional Requirements
+
 1. Loop mode should be usable whenever ANY images are available
 2. Theme-based assignments should be respected when themes have valid images
 3. Fallback to full image set should occur only when necessary
 4. User should have clear feedback about which image set is being used
 
 ### Technical Requirements
+
 1. Modify `updateLoopControllerImageSets()` to check result arrays
 2. Fallback to `imgs` if filtered result is empty
 3. Add diagnostic logging to help users understand fallback behavior
@@ -48,6 +53,7 @@ The conditional uses `imgs` as fallback for undefined themes, but NOT if the the
 ### Implementation Steps
 
 1. **Enhance `updateLoopControllerImageSets()`**
+
    ```javascript
    function updateLoopControllerImageSets () {
      // Get theme-based sets or full imgs as primary fallback
@@ -101,18 +107,21 @@ The conditional uses `imgs` as fallback for undefined themes, but NOT if the the
 ## Testing Strategy
 
 ### Unit/Integration Tests
+
 1. Mock `filterImages()` to return empty array, verify fallback triggers
 2. Verify logging appears in console when fallback occurs
 3. Test with real theme data: assign theme, verify correct set used
 4. Test with non-existent theme: verify fallback to full imgs
 
 ### Manual Testing
+
 1. Load duo-chrome with no theme → enable loop mode → verify works
 2. Create and assign a theme → enable loop mode → verify uses theme images
 3. Delete theme folder, refresh page → enable loop mode → verify fallback works
 4. Apply strict filter that matches no images → enable loop mode → verify fallback
 
 ### Regression Testing
+
 - All other loop mode functionality should continue working
 - Theme system should not be affected
 - Performance should not degrade

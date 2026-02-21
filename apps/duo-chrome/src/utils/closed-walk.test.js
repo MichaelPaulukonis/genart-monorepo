@@ -104,13 +104,14 @@ describe('ClosedWalkGenerator - Adjacency Logic', () => {
 describe('ClosedWalkGenerator - Walk Generation', () => {
   it('generates a closed walk that starts and ends at the same state', () => {
     const rng = makeRng([0.05, 0.4, 0.7, 0.9])
-    const { walk, metadata } = new ClosedWalkGenerator({ images: [0, 1, 2, 3], loopLength: 5, rng }).generate()
+    // Use larger image set to support consecutive appearance constraint
+    const { walk } = new ClosedWalkGenerator({ images: [0, 1, 2, 3, 4, 5], loopLength: 5, rng }).generate()
 
     expect(walk).toHaveLength(5)
     expect(walk[0]).toEqual(walk[walk.length - 1])
 
     // All consecutive states should be adjacent
-    const gen = new ClosedWalkGenerator({ images: [0, 1, 2, 3], loopLength: 5 })
+    const gen = new ClosedWalkGenerator({ images: [0, 1, 2, 3, 4, 5], loopLength: 5 })
     for (let i = 0; i < walk.length - 1; i++) {
       expect(gen.areAdjacent(walk[i], walk[i + 1])).toBe(true)
     }
@@ -138,15 +139,16 @@ describe('ClosedWalkGenerator - Walk Generation', () => {
   })
 
   it('produces different sequences with different seeds', () => {
+    // Use larger image set and longer loop to support consecutive appearance constraint
     const gen1Result = new ClosedWalkGenerator({
-      images: [0, 1, 2, 3, 4],
-      loopLength: 6,
+      images: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      loopLength: 8,
       rng: makeRng([0.1, 0.2, 0.3, 0.4, 0.5])
     }).generate()
 
     const gen2Result = new ClosedWalkGenerator({
-      images: [0, 1, 2, 3, 4],
-      loopLength: 6,
+      images: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      loopLength: 8,
       rng: makeRng([0.9, 0.8, 0.7, 0.6, 0.5])
     }).generate()
 
@@ -156,13 +158,14 @@ describe('ClosedWalkGenerator - Walk Generation', () => {
 
 describe('ClosedWalkGenerator - Distinct Image Sets', () => {
   it('supports distinct A/B image sets', () => {
-    const imagesA = ['A1', 'A2']
-    const imagesB = ['B1', 'B2', 'B3']
+    // Use larger image sets to support consecutive appearance constraint
+    const imagesA = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6']
+    const imagesB = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7']
     const { walk } = new ClosedWalkGenerator({
       imageSetA: imagesA,
       imageSetB: imagesB,
-      loopLength: 4,
-      rng: makeRng([0.2, 0.3, 0.4, 0.5])
+      loopLength: 5,
+      rng: makeRng([0.7, 0.6, 0.5, 0.4, 0.3])
     }).generate()
 
     expect(walk[0]).toEqual(walk[walk.length - 1])
@@ -179,6 +182,48 @@ describe('ClosedWalkGenerator - Distinct Image Sets', () => {
     // Invalid: 1 A + 2 B = 3 unique (OK), but only 2 states total
     // loopLength=4 needs 3 transitions, but we only have 2 states, so 4-1 > 2 should throw
     expect(() => validateLoopLength(['A1'], 4, ['B1', 'B2'])).toThrow()
+  })
+
+  it('enforces consecutive appearance constraint (max 2 frames then break)', () => {
+    // With enough images, generate a valid walk
+    const { walk } = new ClosedWalkGenerator({
+      images: [0, 1, 2, 3, 4, 5, 6, 7],
+      loopLength: 12,
+      rng: makeRng([0.3, 0.4, 0.5, 0.6, 0.7])
+    }).generate()
+
+    // Verify no image appears in more than 2 consecutive frames
+    for (let i = 0; i < walk.length - 2; i++) {
+      const frame1 = walk[i]  // {a: 0, b: 1}
+      const frame2 = walk[i + 1]
+      const frame3 = walk[i + 2]
+
+      // Extract image indices from state objects
+      const images1 = [frame1.a, frame1.b]
+      const images2 = [frame2.a, frame2.b]
+      const images3 = [frame3.a, frame3.b]
+
+      // Find images in all three consecutive frames
+      const imagesInAll3 = images1.filter(img => 
+        images2.includes(img) && images3.includes(img)
+      )
+
+      // Should be empty - no image in 3+ consecutive frames
+      expect(imagesInAll3).toHaveLength(0)
+    }
+  })
+
+  it('fails gracefully when consecutive constraint cannot be satisfied', () => {
+    // Small image set with long loop makes consecutive constraint hard to satisfy
+    // This should throw (either validation error or max attempts exceeded)
+    expect(() => {
+      new ClosedWalkGenerator({
+        images: [0, 1, 2],
+        loopLength: 8,
+        maxAttempts: 5,
+        rng: makeRng([0.1, 0.2])
+      }).generate()
+    }).toThrow() // Just verify it throws, error message varies
   })
 })
 
@@ -201,9 +246,13 @@ describe('Animation Frame Formatting', () => {
     expect(result.frames[0].pair.b).toBe(result.frames[2].pair.b)
     expect(result.frames[0]).toEqual({
       frame: 0,
+      loopFrame: 0,
       pair: { a: 0, b: 1 },
       imageIndices: { aIndex: 0, bIndex: 1 }
     })
+
+    // Closing frame should map back to loop frame 0 for seamless color continuity
+    expect(result.frames[2].loopFrame).toBe(0)
   })
 
   it('includes metadata in formatted output', () => {

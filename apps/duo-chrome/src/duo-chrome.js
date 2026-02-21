@@ -45,6 +45,7 @@ import { HistoryManager } from './history/HistoryManager.js'
 import { ThumbnailGenerator } from './history/ThumbnailGenerator.js'
 import { FilmstripPanel } from './ui/FilmstripPanel.js'
 import { LoopAnimationController } from './utils/loop-animation-controller.js'
+import { generateLoopFrameColors } from './utils/loop-frame-colors.js'
 import { LoopAnimationPanel } from './ui/LoopAnimationPanel.js'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
@@ -56,6 +57,22 @@ function getRandomUniqueItem (arr, excludeItems) {
   }
   const randomIndex = Math.floor(Math.random() * filteredArr.length)
   return filteredArr[randomIndex]
+}
+
+function normalizeHexColor (value) {
+  if (!value || typeof value !== 'string') return ''
+  const hex = value.trim().toLowerCase()
+  if (/^#[0-9a-f]{3}$/.test(hex)) {
+    return `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
+  }
+  return hex
+}
+
+function rgbArrayToHex (rgb) {
+  if (!Array.isArray(rgb) || rgb.length < 3) return ''
+  const [r, g, b] = rgb
+  const toHex = (n) => Number(n).toString(16).padStart(2, '0')
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
 let currentBlendModeIndex = 0 // Start with the first blend mode
@@ -88,6 +105,8 @@ const sketch = function (p) {
   let filterModal = null
   let loopAnimationController = null
   let loopAnimationPanel = null
+  let loopFrameColors = []
+  let loopFrameLoadToken = 0
   let captureDebounceTimer = null
   const CAPTURE_DEBOUNCE_DELAY = 300 // ms - wait for rapid changes to settle
 
@@ -95,6 +114,18 @@ const sketch = function (p) {
     { img: null, color: null, layer: null, scale: 1 },
     { img: null, color: null, layer: null, scale: 1 }
   ]
+
+  function getCurrentBackgroundHexColor () {
+    const mode = backgroundModes[currentBackgroundModeIndex]
+    return normalizeHexColor(rgbArrayToHex(mode?.color || []))
+  }
+
+  function getPaletteWithoutBackground () {
+    const backgroundHex = getCurrentBackgroundHexColor()
+    const palette = ALL_PALETTES[colorIndex] || []
+    const filtered = palette.filter(entry => normalizeHexColor(entry?.color) !== backgroundHex)
+    return filtered.length > 0 ? filtered : palette
+  }
 
   /**
    * Control State Management System
@@ -941,8 +972,14 @@ const sketch = function (p) {
 
     // If the new color would conflict with the other image, skip to the next available
     // TODO: also check if new color is same as background and skip (white on white, black on black, etc)
+    const backgroundHex = getCurrentBackgroundHexColor()
+    const isInvalidColor = (entry) => {
+      const colorHex = normalizeHexColor(entry?.color)
+      return entry.color === otherColor.color || colorHex === backgroundHex
+    }
+
     let newColor = currentColorArray[newColorIndex]
-    if (newColor.color === otherColor.color) {
+    if (isInvalidColor(newColor)) {
       // Continue in the same direction to find the next unique color
       if (direction === 'next' || direction === 1) {
         newColorIndex = (newColorIndex + 1) % currentColorArray.length
@@ -952,7 +989,7 @@ const sketch = function (p) {
 
       // Safety check to prevent infinite loop
       let attempts = 0
-      while (currentColorArray[newColorIndex].color === otherColor.color && attempts < currentColorArray.length) {
+      while (isInvalidColor(currentColorArray[newColorIndex]) && attempts < currentColorArray.length) {
         if (direction === 'next' || direction === 1) {
           newColorIndex = (newColorIndex + 1) % currentColorArray.length
         } else {
@@ -1199,6 +1236,24 @@ const sketch = function (p) {
     // Initialize FilmstripPanel
     filmstripPanel = new FilmstripPanel(historyManager, thumbnailGenerator)
 
+    function assignLoopFrameColors () {
+      if (!loopAnimationController || !loopAnimationController.walk || loopAnimationController.walk.length === 0) {
+        loopFrameColors = []
+        return
+      }
+
+      const palette = ALL_PALETTES[colorIndex] || []
+      loopFrameColors = generateLoopFrameColors(loopAnimationController.walk, palette, Math.random, {
+        excludedColors: [getCurrentBackgroundHexColor()]
+      })
+    }
+
+    function loadImageAsync (src) {
+      return new Promise((resolve, reject) => {
+        p.loadImage(src, resolve, reject)
+      })
+    }
+
     // Initialize Loop Animation Controller
     loopAnimationController = new LoopAnimationController({
       fps: 4,
@@ -1208,38 +1263,63 @@ const sketch = function (p) {
           // Update the panel UI
           loopAnimationPanel.updateFrame(frame)
           
-          // Load and display images if loop is playing OR if we're saving the loop
-          // This ensures frames render correctly during save operations
-          if (loopAnimationController.isPlaying || loopAnimationController.isSavingLoop) {
-            // frame.pair.a and frame.pair.b are already the filenames
-            const filenameA = frame.pair.a
-            const filenameB = frame.pair.b
-            
-            // Get colors from the current palette, cycling by frame index
-            const currentPalette = ALL_PALETTES[colorIndex]
-            const colorA = currentPalette[loopAnimationController.currentFrameIndex % currentPalette.length]
-            const colorB = currentPalette[(loopAnimationController.currentFrameIndex + 1) % currentPalette.length]
-            
-            console.log('[LoopAnimation Draw] Loading new images:', filenameA, filenameB, 'with colors:', colorA.name, colorB.name)
+          // Load and display images whenever frame changes (playing, scrubbing, or saving)
+          // This ensures frames render correctly during all interactions
+          // frame.pair.a and frame.pair.b are already the filenames
+          const filenameA = frame.pair.a
+          const filenameB = frame.pair.b
 
-            // Load image A and update layer
-            p.loadImage(imgSource + filenameA, (imgA) => {
-              console.log('[LoopAnimation Draw] Image A loaded:', filenameA)
-              imageColorPairs[0].img = filenameA
-              imageColorPairs[0].color = colorA
-              imageColorPairs[0].layer = createMonochromeImage(imgA, colorA.color)
-              requestScreenUpdate()
-            })
-
-            // Load image B and update layer
-            p.loadImage(imgSource + filenameB, (imgB) => {
-              console.log('[LoopAnimation Draw] Image B loaded:', filenameB)
-              imageColorPairs[1].img = filenameB
-              imageColorPairs[1].color = colorB
-              imageColorPairs[1].layer = createMonochromeImage(imgB, colorB.color)
-              requestScreenUpdate()
-            })
+          const frameColors = loopFrameColors[loopAnimationController.currentFrameIndex]
+          if (!frameColors) {
+            assignLoopFrameColors()
           }
+
+          const fallbackPalette = ALL_PALETTES[colorIndex] || []
+          const colors = loopFrameColors[loopAnimationController.currentFrameIndex] || {
+            colorA: fallbackPalette[0] || imageColorPairs[0].color,
+            colorB: fallbackPalette[Math.min(1, Math.max(0, fallbackPalette.length - 1))] || imageColorPairs[1].color
+          }
+
+          const colorA = colors.colorA
+          const colorB = colors.colorB
+          
+          console.log('[LoopAnimation Draw] Loading new images:', filenameA, filenameB, 'with colors:', colorA.name, colorB.name)
+
+          const currentToken = ++loopFrameLoadToken
+
+          Promise.all([
+            loadImageAsync(imgSource + filenameA),
+            loadImageAsync(imgSource + filenameB)
+          ]).then(([imgA, imgB]) => {
+            if (currentToken !== loopFrameLoadToken) {
+              return
+            }
+
+            if (imageColorPairs[0].layer && imageColorPairs[0].layer.remove) {
+              imageColorPairs[0].layer.remove()
+            }
+            if (imageColorPairs[1].layer && imageColorPairs[1].layer.remove) {
+              imageColorPairs[1].layer.remove()
+            }
+
+            imageColorPairs[0].img = filenameA
+            imageColorPairs[0].color = colorA
+            imageColorPairs[0].scale = 1.0 // Reset to default scale for consistent loop frames
+            imageColorPairs[0].layer = createMonochromeImage(imgA, colorA.color)
+
+            imageColorPairs[1].img = filenameB
+            imageColorPairs[1].color = colorB
+            imageColorPairs[1].scale = 1.0 // Reset to default scale for consistent loop frames
+            imageColorPairs[1].layer = createMonochromeImage(imgB, colorB.color)
+
+            // Reset manual size control flags for loop frames
+            controlState.manualSizeControl[0] = false
+            controlState.manualSizeControl[1] = false
+
+            requestScreenUpdate()
+          }).catch((error) => {
+            console.warn('[LoopAnimation Draw] Failed to load loop frame images:', error)
+          })
         }
       },
       onPlayStateChange: (state) => {
@@ -1256,6 +1336,9 @@ const sketch = function (p) {
           } else if (phase === 'complete' || phase === 'error') {
             console.log('[LoopAnimation UI] Hiding loading spinner, updating UI')
             loopAnimationPanel.setLoading(false)
+            if (phase === 'complete') {
+              assignLoopFrameColors()
+            }
             loopAnimationPanel.updateAll()
           }
         }
@@ -1269,6 +1352,16 @@ const sketch = function (p) {
         p.saveCanvas(filename)
         // Small delay to ensure save completes
         await new Promise(resolve => setTimeout(resolve, 50))
+      },
+      onLoopEnabled: () => {
+        // Stop background auto-play when entering loop mode
+        pause = true
+        console.log('[LoopAnimation] Auto-play paused when enabling loop mode')
+      },
+      onLoopDisabled: () => {
+        // Keep auto-play stopped when exiting loop mode
+        pause = true
+        console.log('[LoopAnimation] Auto-play remains paused when disabling loop mode')
       }
     })
     loopAnimationPanel.mount()
@@ -2057,10 +2150,12 @@ const sketch = function (p) {
   }
 
   function initializeImageColorPairs () {
+    const availableColors = getPaletteWithoutBackground()
+
     imageColorPairs[0].img = getRandomUniqueItem(imgs, [])
-    imageColorPairs[0].color = getRandomUniqueItem(ALL_PALETTES[colorIndex], [])
+    imageColorPairs[0].color = getRandomUniqueItem(availableColors, [])
     imageColorPairs[1].img = getRandomUniqueItem(imgs, [imageColorPairs[0].img])
-    imageColorPairs[1].color = getRandomUniqueItem(ALL_PALETTES[colorIndex], [
+    imageColorPairs[1].color = getRandomUniqueItem(availableColors, [
       imageColorPairs[0].color
     ])
 
@@ -2121,8 +2216,9 @@ const sketch = function (p) {
     }
 
     // Always get a new random color (unless preserving existing color for navigation)
+    const availableColors = getPaletteWithoutBackground()
     const selectedColor = getRandomUniqueItem(
-      ALL_PALETTES[colorIndex],
+      availableColors,
       imageColorPairs.map(pair => pair.color)
     )
 

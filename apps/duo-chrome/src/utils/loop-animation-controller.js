@@ -68,7 +68,9 @@ export class LoopAnimationController {
    */
   setLoopLength (length) {
     try {
-      validateLoopLength(this.imageSetA, length, this.imageSetB)
+      // `requestedLoopLength` represents unique visible frames.
+      // Closed-walk generation needs one additional terminal frame to close the cycle.
+      validateLoopLength(this.imageSetA, length + 1, this.imageSetB)
       this.requestedLoopLength = length
       return true
     } catch (error) {
@@ -140,7 +142,9 @@ export class LoopAnimationController {
       const result = await generateClosedWalkAsync({
         imageSetA: this.imageSetA,
         imageSetB: this.imageSetB,
-        loopLength: this.requestedLoopLength,
+        // Generate with explicit closing frame, then trim duplicate terminal frame
+        // so UI/export frame counts match requested unique loop length.
+        loopLength: this.requestedLoopLength + 1,
         onProgress: (phase) => {
           console.log('[LoopAnimation] Generation phase:', phase)
           // Don't send 'complete' yet - wait until we've set the walk
@@ -151,7 +155,15 @@ export class LoopAnimationController {
       })
 
       console.log('[LoopAnimation] Walk generated:', result)
-      this.walk = result.frames
+      const generatedFrames = Array.isArray(result.frames) ? result.frames : []
+      const firstFrame = generatedFrames[0]
+      const lastFrame = generatedFrames[generatedFrames.length - 1]
+      const hasDuplicatedClosure =
+        generatedFrames.length > 1 &&
+        firstFrame?.pair?.a === lastFrame?.pair?.a &&
+        firstFrame?.pair?.b === lastFrame?.pair?.b
+
+      this.walk = hasDuplicatedClosure ? generatedFrames.slice(0, -1) : generatedFrames
       this.currentFrameIndex = 0
       this.isGenerating = false
 
