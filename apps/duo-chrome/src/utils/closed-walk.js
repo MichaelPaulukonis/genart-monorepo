@@ -224,6 +224,25 @@ export class ClosedWalkGenerator {
 
     throw new Error('Failed to generate a closed walk after maximum attempts')
   }
+
+  /**
+   * Clear the adjacency graph cache
+   * Useful for memory management and testing
+   */
+  static clearCache () {
+    ClosedWalkGenerator.graphCache.clear()
+  }
+
+  /**
+   * Get cache statistics for debugging
+   * @returns {Object} Cache stats including size and entries
+   */
+  static getCacheStats () {
+    return {
+      size: ClosedWalkGenerator.graphCache.size,
+      entries: Array.from(ClosedWalkGenerator.graphCache.keys())
+    }
+  }
 }
 
 export function validateLoopLength (images, loopLength, imageSetB) {

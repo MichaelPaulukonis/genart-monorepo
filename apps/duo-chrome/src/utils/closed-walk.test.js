@@ -194,7 +194,7 @@ describe('ClosedWalkGenerator - Distinct Image Sets', () => {
 
     // Verify no image appears in more than 2 consecutive frames
     for (let i = 0; i < walk.length - 2; i++) {
-      const frame1 = walk[i]  // {a: 0, b: 1}
+      const frame1 = walk[i] // {a: 0, b: 1}
       const frame2 = walk[i + 1]
       const frame3 = walk[i + 2]
 
@@ -204,7 +204,7 @@ describe('ClosedWalkGenerator - Distinct Image Sets', () => {
       const images3 = [frame3.a, frame3.b]
 
       // Find images in all three consecutive frames
-      const imagesInAll3 = images1.filter(img => 
+      const imagesInAll3 = images1.filter(img =>
         images2.includes(img) && images3.includes(img)
       )
 
@@ -369,3 +369,91 @@ describe('Async API', () => {
     expect(progressCalls2.length).toBeGreaterThan(0)
   })
 })
+
+describe('ClosedWalkGenerator - Adjacency Graph Caching', () => {
+  beforeEach(() => {
+    // Clear cache before each test
+    ClosedWalkGenerator.clearCache()
+  })
+
+  it('caches adjacency graph for same image set', () => {
+    const imageSet = [0, 1, 2, 3, 4]
+
+    // First generation builds and caches graph
+    new ClosedWalkGenerator({ images: imageSet, loopLength: 5 }).generate()
+    let cacheStats = ClosedWalkGenerator.getCacheStats()
+    expect(cacheStats.size).toBe(1)
+
+    // Second generation with same image set reuses cached graph
+    new ClosedWalkGenerator({ images: imageSet, loopLength: 6 }).generate()
+    cacheStats = ClosedWalkGenerator.getCacheStats()
+    expect(cacheStats.size).toBe(1) // Still only 1 cached graph
+  })
+
+  it('creates separate cache entries for different image sets', () => {
+    // First image set
+    new ClosedWalkGenerator({ images: [0, 1, 2, 3], loopLength: 4 }).generate()
+    let cacheStats = ClosedWalkGenerator.getCacheStats()
+    expect(cacheStats.size).toBe(1)
+
+    // Different image set creates new cache entry
+    new ClosedWalkGenerator({ images: [0, 1, 2, 3, 4, 5], loopLength: 5 }).generate()
+    cacheStats = ClosedWalkGenerator.getCacheStats()
+    expect(cacheStats.size).toBe(2)
+
+    // Same first image set reuses cache
+    new ClosedWalkGenerator({ images: [0, 1, 2, 3], loopLength: 5 }).generate()
+    cacheStats = ClosedWalkGenerator.getCacheStats()
+    expect(cacheStats.size).toBe(2) // Still 2 entries
+  })
+
+  it('caches distinct A/B image sets separately from single image set', () => {
+    const imagesA = [0, 1, 2, 3]
+    const imagesB = [4, 5, 6, 7]
+
+    // Single image set
+    new ClosedWalkGenerator({ images: [0, 1, 2, 3], loopLength: 5 }).generate()
+    let cacheStats = ClosedWalkGenerator.getCacheStats()
+    expect(cacheStats.size).toBe(1)
+
+    // Different A/B sets create new cache entry
+    new ClosedWalkGenerator({ imageSetA: imagesA, imageSetB: imagesB, loopLength: 5 }).generate()
+    cacheStats = ClosedWalkGenerator.getCacheStats()
+    expect(cacheStats.size).toBe(2)
+  })
+
+  it('clearCache() empties the entire cache', () => {
+    new ClosedWalkGenerator({ images: [0, 1, 2, 3], loopLength: 4 }).generate()
+    new ClosedWalkGenerator({ images: [0, 1, 2, 3, 4], loopLength: 5 }).generate()
+
+    let cacheStats = ClosedWalkGenerator.getCacheStats()
+    expect(cacheStats.size).toBe(2)
+
+    ClosedWalkGenerator.clearCache()
+    cacheStats = ClosedWalkGenerator.getCacheStats()
+    expect(cacheStats.size).toBe(0)
+  })
+
+  it('reuses cached graph with different loop lengths', () => {
+    const imageSet = [0, 1, 2, 3, 4, 5]
+
+    // Generate walks with different lengths but same image set
+    const walk1 = new ClosedWalkGenerator({ images: imageSet, loopLength: 5, rng: makeRng([0.1, 0.2]) }).generate()
+    const walk2 = new ClosedWalkGenerator({ images: imageSet, loopLength: 10, rng: makeRng([0.3, 0.4]) }).generate()
+    const walk3 = new ClosedWalkGenerator({ images: imageSet, loopLength: 8, rng: makeRng([0.5, 0.6]) }).generate()
+
+    // Should only have 1 cached graph (same image set)
+    const cacheStats = ClosedWalkGenerator.getCacheStats()
+    expect(cacheStats.size).toBe(1)
+
+    // But walks should be different due to different random seeds
+    expect(walk1.walk).not.toEqual(walk2.walk)
+    expect(walk2.walk).not.toEqual(walk3.walk)
+
+    // And have correct lengths
+    expect(walk1.walk).toHaveLength(5)
+    expect(walk2.walk).toHaveLength(10)
+    expect(walk3.walk).toHaveLength(8)
+  })
+})
+
