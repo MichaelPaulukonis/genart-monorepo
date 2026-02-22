@@ -211,103 +211,68 @@ describe('LoopAnimationController', () => {
     })
   })
 
-  describe('Playback Control - Play', () => {
+  describe('Playback Control', () => {
     beforeEach(async () => {
       await controller.enable()
     })
 
-    it('should start playback', () => {
+    it('should start, pause, and stop playback', () => {
+      // Initial state
       expect(controller.isPlaying).toBe(false)
+
+      // Play
       controller.play()
       expect(controller.isPlaying).toBe(true)
-    })
-
-    it('should fire play state change callback when playing', () => {
-      controller.play()
       expect(playStateChangeCallback).toHaveBeenCalledWith(
         expect.objectContaining({ playing: true })
       )
-    })
 
-    it('should fire frame change callback on play start', () => {
-      controller.play()
-      expect(frameChangeCallback).toHaveBeenCalled()
-    })
-
-    it('should schedule animation frame', () => {
-      const spy = vi.spyOn(global, 'requestAnimationFrame')
-      controller.play()
-      expect(spy).toHaveBeenCalled()
-      spy.mockRestore()
-    })
-
-    it('should not double-play', () => {
-      controller.play()
-      const initialFrameId = controller.animationFrameId
-      controller.play()
-      // Should not create new animation frame
-      expect(controller.animationFrameId).toBe(initialFrameId)
-    })
-  })
-
-  describe('Playback Control - Pause', () => {
-    beforeEach(async () => {
-      await controller.enable()
-      controller.play()
-    })
-
-    it('should pause playback', () => {
-      expect(controller.isPlaying).toBe(true)
+      // Pause
+      playStateChangeCallback.mockClear()
+      const currentFrame = controller.currentFrameIndex
       controller.pause()
       expect(controller.isPlaying).toBe(false)
-    })
-
-    it('should fire play state change callback when pausing', () => {
-      playStateChangeCallback.mockClear()
-      controller.pause()
+      expect(controller.currentFrameIndex).toBe(currentFrame)
       expect(playStateChangeCallback).toHaveBeenCalledWith(
         expect.objectContaining({ playing: false })
       )
-    })
 
-    it('should cancel animation frame', () => {
-      const spy = vi.spyOn(global, 'cancelAnimationFrame')
-      controller.pause()
-      expect(spy).toHaveBeenCalled()
-      spy.mockRestore()
-    })
-
-    it('should maintain current frame position', () => {
-      controller.currentFrameIndex = 2
-      controller.pause()
-      expect(controller.currentFrameIndex).toBe(2)
-    })
-  })
-
-  describe('Playback Control - Stop', () => {
-    beforeEach(async () => {
-      await controller.enable()
-      controller.play()
-    })
-
-    it('should stop playback and reset frame', () => {
+      // Stop (should reset frame)
       controller.currentFrameIndex = 3
-      controller.stop()
-
-      expect(controller.isPlaying).toBe(false)
-      expect(controller.currentFrameIndex).toBe(0)
-    })
-
-    it('should call pause internally', () => {
-      const pauseSpy = vi.spyOn(controller, 'pause')
-      controller.stop()
-      expect(pauseSpy).toHaveBeenCalled()
-    })
-
-    it('should fire frame change callback when resetting', () => {
       frameChangeCallback.mockClear()
       controller.stop()
+      expect(controller.isPlaying).toBe(false)
+      expect(controller.currentFrameIndex).toBe(0)
       expect(frameChangeCallback).toHaveBeenCalled()
+    })
+
+    it('should manage animation frames during playback', () => {
+      const requestSpy = vi.spyOn(global, 'requestAnimationFrame')
+      const cancelSpy = vi.spyOn(global, 'cancelAnimationFrame')
+
+      controller.play()
+      expect(requestSpy).toHaveBeenCalled()
+
+      controller.pause()
+      expect(cancelSpy).toHaveBeenCalled()
+
+      requestSpy.mockRestore()
+      cancelSpy.mockRestore()
+    })
+
+    it('should not double-play when already playing', () => {
+      controller.play()
+      const initialFrameId = controller.animationFrameId
+      controller.play()
+      expect(controller.animationFrameId).toBe(initialFrameId)
+    })
+
+    it('should fire callbacks on state changes', () => {
+      controller.play()
+      expect(frameChangeCallback).toHaveBeenCalled()
+      expect(playStateChangeCallback).toHaveBeenCalledWith(
+        expect.objectContaining({ playing: true })
+      )
     })
   })
 
