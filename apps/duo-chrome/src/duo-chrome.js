@@ -1357,11 +1357,13 @@ const sketch = function (p) {
         // Stop background auto-play when entering loop mode
         pause = true
         console.log('[LoopAnimation] Auto-play paused when enabling loop mode')
+        showStatusDisplay()
       },
       onLoopDisabled: () => {
         // Keep auto-play stopped when exiting loop mode
         pause = true
         console.log('[LoopAnimation] Auto-play remains paused when disabling loop mode')
+        showStatusDisplay()
       }
     })
     loopAnimationPanel.mount()
@@ -2499,6 +2501,46 @@ const sketch = function (p) {
       const currentBgMode = backgroundModes[currentBackgroundModeIndex]
       const modeName = currentBgMode.blendModes[currentBlendModeIndex]
       blendModeVal.textContent = modeName
+    }
+
+    // Update Loop Mode
+    const loopEnabled = document.getElementById('status-loop-enabled')
+    const loopLength = document.getElementById('status-loop-length')
+    const loopFps = document.getElementById('status-loop-fps')
+    const loopFrame = document.getElementById('status-loop-frame')
+    const loopFallback = document.getElementById('status-loop-fallback')
+
+    if (loopEnabled) {
+      loopEnabled.textContent = loopAnimationController?.enabled ? 'On' : 'Off'
+    }
+
+    if (loopLength) {
+      const totalFrames = loopAnimationController?.walk?.length || 0
+      loopLength.textContent = totalFrames > 0 ? `${totalFrames}` : '-'
+    }
+
+    if (loopFps) {
+      loopFps.textContent = loopAnimationController ? `${loopAnimationController.fps}` : '-'
+    }
+
+    if (loopFrame) {
+      const totalFrames = loopAnimationController?.walk?.length || 0
+      if (totalFrames > 0) {
+        loopFrame.textContent = `${loopAnimationController.currentFrameIndex + 1} / ${totalFrames}`
+      } else {
+        loopFrame.textContent = '-'
+      }
+    }
+
+    if (loopFallback) {
+      const metadata = loopAnimationController?.lastGenerationMetadata
+      if (metadata?.isLoopFallback) {
+        loopFallback.textContent = `Fallback: ${metadata.requestedLoopLength} -> ${metadata.achievedLoopLength}`
+        loopFallback.classList.remove('hidden')
+      } else {
+        loopFallback.textContent = ''
+        loopFallback.classList.add('hidden')
+      }
     }
   }
 

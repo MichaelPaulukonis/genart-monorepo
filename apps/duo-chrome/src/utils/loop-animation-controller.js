@@ -20,12 +20,16 @@ export class LoopAnimationController {
     this.imageSetA = options.imageSetA || []
     this.imageSetB = options.imageSetB || []
 
-    this.requestedLoopLength = 20 // Default loop length
+    this.requestedLoopLength = 5 // Default loop length
     this.maxLoopLength = 0 // Will be calculated based on image sets
 
     this.onFrameChange = options.onFrameChange || (() => {}) // Callback when frame changes
     this.onPlayStateChange = options.onPlayStateChange || (() => {}) // Callback when play/pause
     this.onGenerationProgress = options.onGenerationProgress || (() => {}) // Callback for progress
+
+    this.useFallback = options.useFallback !== undefined ? options.useFallback : true
+    this.lastGenerationMetadata = null
+    this.lastGenerationError = null
 
     this.animationFrameId = null
     this.isGenerating = false
@@ -68,6 +72,9 @@ export class LoopAnimationController {
    */
   setLoopLength (length) {
     try {
+      if (typeof length !== 'number' || Number.isNaN(length) || length < 3) {
+        return false
+      }
       // `requestedLoopLength` represents unique visible frames.
       // Closed-walk generation needs one additional terminal frame to close the cycle.
       validateLoopLength(this.imageSetA, length + 1, this.imageSetB)
@@ -136,6 +143,7 @@ export class LoopAnimationController {
 
     this.isGenerating = true
     this.onGenerationProgress('preparing')
+    const requestedVisibleLength = this.requestedLoopLength
 
     try {
       console.log('[LoopAnimation] Generating walk with loopLength:', this.requestedLoopLength)
@@ -145,6 +153,7 @@ export class LoopAnimationController {
         // Generate with explicit closing frame, then trim duplicate terminal frame
         // so UI/export frame counts match requested unique loop length.
         loopLength: this.requestedLoopLength + 1,
+        useFallback: this.useFallback,
         onProgress: (phase) => {
           console.log('[LoopAnimation] Generation phase:', phase)
           // Don't send 'complete' yet - wait until we've set the walk
@@ -167,6 +176,18 @@ export class LoopAnimationController {
       this.currentFrameIndex = 0
       this.isGenerating = false
 
+      const metadata = { ...result.metadata }
+      metadata.requestedLoopLength = requestedVisibleLength
+      metadata.achievedLoopLength = this.walk.length
+      metadata.isLoopFallback = metadata.achievedLoopLength !== requestedVisibleLength
+
+      this.lastGenerationMetadata = metadata
+      this.lastGenerationError = null
+
+      if (metadata.isLoopFallback && metadata.achievedLoopLength !== this.requestedLoopLength) {
+        this.requestedLoopLength = metadata.achievedLoopLength
+      }
+
       if (this.isPlaying) {
         this.play()
       } else {
@@ -180,6 +201,7 @@ export class LoopAnimationController {
       console.error('[LoopAnimation] Failed to generate walk:', error)
       this.walk = null
       this.isGenerating = false
+      this.lastGenerationError = error.message || String(error)
       this.onGenerationProgress('error')
     }
   }

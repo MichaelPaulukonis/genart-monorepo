@@ -383,6 +383,19 @@ export function generateClosedWalk ({ images, loopLength, imageSetA, imageSetB, 
   return formatWalkForAnimation(result.walk, result.metadata)
 }
 
+export function generateClosedWalkWithFallback ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng } = {}) {
+  const generator = new ClosedWalkGenerator({
+    images,
+    imageSetA,
+    imageSetB,
+    loopLength,
+    maxAttempts,
+    rng
+  })
+  const result = generator.generateWithFallback()
+  return formatWalkForAnimation(result.walk, result.metadata)
+}
+
 /**
  * Async version of generateClosedWalk that yields to the event loop.
  * Useful for large image sets where graph construction may take 100-200ms.
@@ -392,7 +405,7 @@ export function generateClosedWalk ({ images, loopLength, imageSetA, imageSetB, 
  * @param {Function} onProgress - Callback(phase) during graph building: 'preparing', 'generating', 'formatting'
  * @returns {Promise} Resolves to formatted animation sequence
  */
-export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, onProgress } = {}) {
+export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, onProgress, useFallback = false } = {}) {
   // Yield control to allow UI updates/spinner to render
   await new Promise(resolve => setTimeout(resolve, 0))
 
@@ -410,7 +423,9 @@ export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, 
   }
 
   if (onProgress) onProgress('generating')
-  const result = generateClosedWalk({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng })
+  const result = useFallback
+    ? generateClosedWalkWithFallback({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng })
+    : generateClosedWalk({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng })
 
   if (onProgress) onProgress('complete')
   return result

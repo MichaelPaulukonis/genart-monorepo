@@ -110,15 +110,6 @@ export class LoopAnimationPanel {
           this.updateLoopLengthInput()
         }
       })
-      this.elements.loopLengthInput.addEventListener('change', (e) => {
-        e.stopPropagation()
-        const length = parseInt(e.target.value, 10)
-        if (this.controller.setLoopLength(length)) {
-          this.controller.generateWalk()
-        } else {
-          this.updateLoopLengthInput()
-        }
-      })
     }
 
     // Playback controls
@@ -279,6 +270,14 @@ export class LoopAnimationPanel {
     }
   }
 
+  getUniqueImageCount () {
+    return new Set([...this.controller.imageSetA, ...this.controller.imageSetB]).size
+  }
+
+  canGenerate () {
+    return this.getUniqueImageCount() >= 3
+  }
+
   /**
    * Update loop length input and max value display
    */
@@ -295,8 +294,7 @@ export class LoopAnimationPanel {
     }
 
     // Disable if not enough images
-    const canGenerate = this.controller.imageSetA.length >= 2 && this.controller.imageSetB.length >= 2
-    this.elements.loopLengthInput.disabled = !canGenerate
+    this.elements.loopLengthInput.disabled = !this.canGenerate() || this.controller.isGenerating
   }
 
   /**
@@ -416,8 +414,14 @@ export class LoopAnimationPanel {
     if (this.elements.loopLengthInput) {
       this.elements.loopLengthInput.disabled = isLoading
     }
-    if (this.elements.playBtn) {
-      this.elements.playBtn.disabled = isLoading
+    if (this.elements.playPauseBtn) {
+      this.elements.playPauseBtn.disabled = isLoading
+    }
+    if (this.elements.stopBtn) {
+      this.elements.stopBtn.disabled = isLoading
+    }
+    if (this.elements.saveLoopBtn) {
+      this.elements.saveLoopBtn.disabled = isLoading
     }
   }
 
@@ -430,8 +434,16 @@ export class LoopAnimationPanel {
     let newText = ''
     if (!this.controller.enabled) {
       newText = 'Enable loop mode to create seamless animated sequences from image pairs.'
+    } else if (!this.canGenerate()) {
+      newText = 'Need at least 3 unique images to generate a loop.'
     } else if (this.controller.isGenerating) {
       newText = 'Generating animation sequence...'
+    } else if (this.controller.lastGenerationError) {
+      newText = `Generation failed: ${this.controller.lastGenerationError}`
+    } else if (this.controller.lastGenerationMetadata?.isLoopFallback) {
+      const requested = this.controller.lastGenerationMetadata.requestedLoopLength
+      const achieved = this.controller.lastGenerationMetadata.achievedLoopLength
+      newText = `Generated ${achieved} frames (requested ${requested}).`
     } else if (!this.controller.walk) {
       newText = 'Set loop length and generate the animation.'
     } else if (this.controller.isPlaying) {
