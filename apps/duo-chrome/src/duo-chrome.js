@@ -1354,6 +1354,8 @@ const sketch = function (p) {
         await new Promise(resolve => setTimeout(resolve, 50))
       },
       onLoopEnabled: () => {
+        // Set the current image pair as the desired start state for the loop
+        setCurrentImagePairAsLoopStart()
         // Stop background auto-play when entering loop mode
         pause = true
         console.log('[LoopAnimation] Auto-play paused when enabling loop mode')
@@ -1404,6 +1406,31 @@ const sketch = function (p) {
       if (loopAnimationPanel) {
         loopAnimationPanel.updateLoopLengthInput()
         loopAnimationPanel.updateAll()
+      }
+    }
+
+    /**
+     * Set the desired start state for loop generation using the current image pair
+     */
+    function setCurrentImagePairAsLoopStart () {
+      const imageSetA = loopAnimationController.imageSetA
+      const imageSetB = loopAnimationController.imageSetB
+
+      if (!imageColorPairs[0].img || !imageColorPairs[1].img) {
+        console.log('[LoopAnimation] Cannot set start state: images not loaded')
+        return
+      }
+
+      // Find indices of current images in the sets
+      const indexA = imageSetA.indexOf(imageColorPairs[0].img)
+      const indexB = imageSetB.indexOf(imageColorPairs[1].img)
+
+      if (indexA >= 0 && indexB >= 0) {
+        loopAnimationController.setDesiredStartState(indexA, indexB)
+        console.log('[LoopAnimation] Set desired start state from current image pair:', { indexA, indexB })
+      } else {
+        console.log('[LoopAnimation] Could not find current images in image sets:', { indexA, indexB })
+        loopAnimationController.setDesiredStartState(null, null)
       }
     }
 

@@ -44,6 +44,7 @@ export class LoopAnimationPanel {
       playPauseBtn: this.panel.querySelector('[data-action="play-pause"]'),
       stopBtn: this.panel.querySelector('[data-action="stop"]'),
       saveLoopBtn: this.panel.querySelector('[data-action="save-loop"]'),
+      refreshBtn: this.panel.querySelector('[data-action="refresh"]'),
       frameCounter: this.panel.querySelector('[data-display="frame-counter"]'),
       frameSlider: this.panel.querySelector('[data-input="frame-slider"]'),
       fpsSlider: this.panel.querySelector('[data-input="fps"]'),
@@ -144,6 +145,15 @@ export class LoopAnimationPanel {
         e.stopPropagation()
         console.log('[LoopPanel] Save Loop button clicked')
         await this.handleSaveLoop()
+      })
+    }
+
+    // Refresh/Regenerate button
+    if (this.elements.refreshBtn) {
+      this.elements.refreshBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        console.log('[LoopPanel] Refresh button clicked')
+        this.handleRefresh()
       })
     }
 
@@ -258,13 +268,20 @@ export class LoopAnimationPanel {
   updateToggleButton() {
     if (!this.elements.toggleBtn) return
 
-    if (this.controller.enabled) {
+    if (this.controller.isGenerating) {
+      // Show generating status during walk generation
+      this.elements.toggleBtn.textContent = '⏳ Generating loop...'
+      this.elements.toggleBtn.disabled = true
+      if (this.panelElement) this.panelElement.classList.add('enabled')
+    } else if (this.controller.enabled) {
       this.elements.toggleBtn.textContent = '✓ Loop Enabled'
+      this.elements.toggleBtn.disabled = false
       this.elements.toggleBtn.classList.add('active')
       if (this.panelElement) this.panelElement.classList.add('enabled')
       this.updateLoopLengthInput()
     } else {
       this.elements.toggleBtn.textContent = 'Enable Loop Mode'
+      this.elements.toggleBtn.disabled = false
       this.elements.toggleBtn.classList.remove('active')
       if (this.panelElement) this.panelElement.classList.remove('enabled')
     }
@@ -346,6 +363,13 @@ export class LoopAnimationPanel {
         this.elements.saveLoopBtn.textContent = '💾 Save Loop'
       }
     }
+
+    if (this.elements.refreshBtn) {
+      // Enable when walk exists and not generating/playing/saving
+      const isDisabled = !this.controller.walk || this.controller.isGenerating || this.controller.isPlaying || this.controller.isSavingLoop
+      this.elements.refreshBtn.disabled = isDisabled
+      this.elements.refreshBtn.classList.toggle('disabled', isDisabled)
+    }
   }
 
   /**
@@ -423,6 +447,12 @@ export class LoopAnimationPanel {
     if (this.elements.saveLoopBtn) {
       this.elements.saveLoopBtn.disabled = isLoading
     }
+    if (this.elements.refreshBtn) {
+      this.elements.refreshBtn.disabled = isLoading
+    }
+
+    // Update toggle button text to show generating status
+    this.updateToggleButton()
   }
 
   /**
@@ -689,6 +719,7 @@ export class LoopAnimationPanel {
             <button data-action="play-pause" title="Play / Pause (Space)">▶ Play</button>
             <button data-action="stop" title="Stop (Escape)">⏹ Stop</button>
             <button data-action="save-loop" title="Save all frames as individual images">💾 Save Loop</button>
+            <button data-action="refresh" title="Regenerate loop with current settings">🔄 Refresh</button>
             <div style="grid-column: 1 / -1;"></div>
             <input type="range" data-input="frame-slider" min="0" max="100" value="0" style="grid-column: 1 / -1;">
           </div>
@@ -717,6 +748,15 @@ export class LoopAnimationPanel {
         <span data-display="help-text"></span>
       </div>
     `
+  }
+
+  /**
+   * Handle refresh/regenerate button click
+   */
+  handleRefresh() {
+    if (!this.controller || this.controller.isGenerating) return
+    // Preserve current state (loop mode, fps, etc.) and regenerate
+    this.controller.generateWalk()
   }
 
   /**

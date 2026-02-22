@@ -23,12 +23,13 @@ function signature (imagesA, imagesB) {
 }
 
 export class ClosedWalkGenerator {
-  constructor ({ images, imageSetA, imageSetB, loopLength, maxAttempts = DEFAULT_MAX_ATTEMPTS, rng = Math.random }) {
+  constructor ({ images, imageSetA, imageSetB, loopLength, maxAttempts = DEFAULT_MAX_ATTEMPTS, rng = Math.random, desiredStartState = null }) {
     this.imagesA = imageSetA || images || []
     this.imagesB = imageSetB || images || []
     this.loopLength = loopLength
     this.maxAttempts = maxAttempts
     this.rng = rng
+    this.desiredStartState = desiredStartState
 
     // State persistence
     this.currentState = null // Stores current generated walk state
@@ -162,8 +163,18 @@ export class ClosedWalkGenerator {
 
   generate () {
     const { states, adjacency } = this.graph
+
+    let candidateStartStates = states
+    // If a desired start state is specified, use adjacent states to it as candidates
+    if (this.desiredStartState) {
+      const desiredKey = `${this.desiredStartState.a},${this.desiredStartState.b}`
+      const desiredStateNeighbors = adjacency.get(desiredKey) || []
+      candidateStartStates = desiredStateNeighbors.length > 0 ? desiredStateNeighbors : states
+      console.log('[ClosedWalk] Using desired start state neighbors:', candidateStartStates.length, 'candidates')
+    }
+
     for (let attempt = 0; attempt < this.maxAttempts; attempt++) {
-      const startState = this.getRandomState(states)
+      const startState = candidateStartStates[Math.floor(this.rng() * candidateStartStates.length)]
       const visited = new Set()
       visited.add(this.getStateKey(startState))
 
@@ -370,27 +381,29 @@ export function validateLoopLength (images, loopLength, imageSetB) {
   return ClosedWalkGenerator.validateLoopLengthStatic(imagesA, imagesB, loopLength)
 }
 
-export function generateClosedWalk ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng } = {}) {
+export function generateClosedWalk ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, desiredStartState = null } = {}) {
   const generator = new ClosedWalkGenerator({
     images,
     imageSetA,
     imageSetB,
     loopLength,
     maxAttempts,
-    rng
+    rng,
+    desiredStartState
   })
   const result = generator.generate()
   return formatWalkForAnimation(result.walk, result.metadata)
 }
 
-export function generateClosedWalkWithFallback ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng } = {}) {
+export function generateClosedWalkWithFallback ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, desiredStartState = null } = {}) {
   const generator = new ClosedWalkGenerator({
     images,
     imageSetA,
     imageSetB,
     loopLength,
     maxAttempts,
-    rng
+    rng,
+    desiredStartState
   })
   const result = generator.generateWithFallback()
   return formatWalkForAnimation(result.walk, result.metadata)
@@ -405,7 +418,7 @@ export function generateClosedWalkWithFallback ({ images, loopLength, imageSetA,
  * @param {Function} onProgress - Callback(phase) during graph building: 'preparing', 'generating', 'formatting'
  * @returns {Promise} Resolves to formatted animation sequence
  */
-export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, onProgress, useFallback = false } = {}) {
+export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, onProgress, useFallback = false, desiredStartState = null } = {}) {
   // Yield control to allow UI updates/spinner to render
   await new Promise(resolve => setTimeout(resolve, 0))
 
@@ -424,8 +437,8 @@ export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, 
 
   if (onProgress) onProgress('generating')
   const result = useFallback
-    ? generateClosedWalkWithFallback({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng })
-    : generateClosedWalk({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng })
+    ? generateClosedWalkWithFallback({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, desiredStartState })
+    : generateClosedWalk({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, desiredStartState })
 
   if (onProgress) onProgress('complete')
   return result

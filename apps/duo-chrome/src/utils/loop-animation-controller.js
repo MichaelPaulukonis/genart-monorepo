@@ -35,6 +35,9 @@ export class LoopAnimationController {
     this.isGenerating = false
     this.isSavingLoop = false
 
+    // Start state for walk generation (optional - if set, walk starts adjacent to this state)
+    this.desiredStartState = options.desiredStartState || null
+
     // Calculate max loop length if image sets were provided in options
     if (this.imageSetA.length > 0 && this.imageSetB.length > 0) {
       this.setImageSets(this.imageSetA, this.imageSetB)
@@ -98,6 +101,19 @@ export class LoopAnimationController {
   }
 
   /**
+   * Set the desired start state for walk generation
+   * When set, the generated walk will start with a state adjacent to this start state
+   */
+  setDesiredStartState (imageAIndex, imageBIndex) {
+    if (typeof imageAIndex === 'number' && typeof imageBIndex === 'number') {
+      this.desiredStartState = { a: imageAIndex, b: imageBIndex }
+      console.log('[LoopAnimation] Desired start state set to:', this.desiredStartState)
+    } else {
+      this.desiredStartState = null
+    }
+  }
+
+  /**
    * Enable loop mode and generate the animation walk
    */
   async enable () {
@@ -146,7 +162,7 @@ export class LoopAnimationController {
     const requestedVisibleLength = this.requestedLoopLength
 
     try {
-      console.log('[LoopAnimation] Generating walk with loopLength:', this.requestedLoopLength)
+      console.log('[LoopAnimation] Generating walk with loopLength:', this.requestedLoopLength, 'desiredStartState:', this.desiredStartState)
       const result = await generateClosedWalkAsync({
         imageSetA: this.imageSetA,
         imageSetB: this.imageSetB,
@@ -154,6 +170,7 @@ export class LoopAnimationController {
         // so UI/export frame counts match requested unique loop length.
         loopLength: this.requestedLoopLength + 1,
         useFallback: this.useFallback,
+        desiredStartState: this.desiredStartState,
         onProgress: (phase) => {
           console.log('[LoopAnimation] Generation phase:', phase)
           // Don't send 'complete' yet - wait until we've set the walk

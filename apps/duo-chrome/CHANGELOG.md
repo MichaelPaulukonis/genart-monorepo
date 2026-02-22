@@ -48,6 +48,14 @@ Version corrected from previous mismatch. This release includes:
 - **loop-animation:** Implement color cycling for loop animations
   - Colors cycle through palette based on frame index (independent of image pairs)
   - Each frame displays two consecutive images with different palette colors
+
+- **loop-animation:** Enhance loop mode with desired start state and regeneration controls
+  - Loop now uses current image pair as start/end point when enabling loop mode
+  - Added "Refresh" button to regenerate loops while preserving start/end state constraints
+  - Loop length changes trigger automatic regeneration with maintained start state
+  - UI feedback shows "Generating loop..." message during walk generation (replaces toggle button text)
+  - Loading spinner displays while generation is in progress
+  - Loop controls disabled during generation to prevent conflicting operations
   - Palette colors wrap around seamlessly when loop length exceeds palette size
   - Ensures first and last frames maintain image A with consistent color for seamless looping
   - Color selection independent of A/B image selection
