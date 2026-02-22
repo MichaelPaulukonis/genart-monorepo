@@ -136,7 +136,7 @@ Follow the established Nx monorepo structure:
 4. **Required Plan Contents**: Problem Statement, Requirements, Technical Approach, Implementation Steps, Testing Strategy, Risks & Mitigation, Dependencies.
 4.1 **Use Taskmaster MCP**: Unless directed otherwise, use taskmaster MCP server to parse the plan file (as prd) to create discrete tasks
 4.2 **Taskmaster append**: Taskmaster should append new tasks, and not delete existing tasks.
-5. **Completed Plans**: When all tasks in a plan have been completed the file will be internally annotated and moved to `docs/plans/completed/`.
+5. **Completed Plans**: When all tasks in a plan have been completed the file will be internally annotated and moved to `docs/plans/completed/`. Use `git mv` to preserve history.
 5. **Exceptions**: This process is not required for Product Requirement Document creation, documentation updates or minor, single-line bug fixes.
 
 ## 4. Nx Monorepo Management
