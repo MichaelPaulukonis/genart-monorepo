@@ -247,8 +247,8 @@ export class LoopAnimationPanel {
     }
 
     this.elements.previewPair.innerHTML = `
-      <div class="loop-pair-item"><strong>A</strong> ${formatName(aImg)}</div>
-      <div class="loop-pair-item"><strong>B</strong> ${formatName(bImg)}</div>
+      <div class="loop-pair-item" title="${aImg}"><strong>A</strong> ${formatName(aImg)}</div>
+      <div class="loop-pair-item" title="${bImg}"><strong>B</strong> ${formatName(bImg)}</div>
     `
   }
 
