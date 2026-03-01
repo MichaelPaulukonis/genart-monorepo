@@ -3,6 +3,9 @@
  *
  * Provides UI controls for the looped animation feature.
  * Includes toggle, loop length input, playback controls, FPS slider, and frame counter.
+ *
+ * Visual styling is in css/style.css (.loop-animation-panel, .loop-panel-section, etc.)
+ * A minimal <style> block is kept inline for computed-style values used in tests.
  */
 
 export class LoopAnimationPanel {
@@ -16,7 +19,7 @@ export class LoopAnimationPanel {
   /**
    * Create and mount the control panel
    */
-  mount(containerId = 'loop-animation-panel') {
+  mount (containerId = 'loop-animation-panel') {
     let container = document.getElementById(containerId)
     if (!container) {
       container = document.createElement('div')
@@ -35,7 +38,7 @@ export class LoopAnimationPanel {
   /**
    * Cache references to frequently used elements
    */
-  cacheElements() {
+  cacheElements () {
     this.panelElement = this.panel.querySelector('.loop-animation-panel')
     this.elements = {
       toggleBtn: this.panel.querySelector('[data-action="toggle"]'),
@@ -58,16 +61,14 @@ export class LoopAnimationPanel {
   /**
    * Attach event listeners to controls
    */
-  attachEventListeners() {
+  attachEventListeners () {
     // Panel-level bubble handler: block events from propagating OUTSIDE the panel
-    // Uses bubble phase so child elements get the event first
     if (this.panelElement) {
       ['mousedown', 'mouseup', 'click'].forEach(eventType => {
         this.panelElement.addEventListener(eventType, (e) => {
-          // Stop propagation in bubble phase - event has already reached target
           e.stopPropagation()
           console.log('[LoopPanel] Panel bubble handler stopping propagation for:', eventType)
-        }, false) // bubble phase (false or omitted) - fires AFTER child handlers
+        }, false)
       })
     }
 
@@ -100,7 +101,7 @@ export class LoopAnimationPanel {
       })
     }
 
-    // Loop length input - removed because panel handler now covers it
+    // Loop length input
     if (this.elements.loopLengthInput) {
       this.elements.loopLengthInput.addEventListener('change', (e) => {
         e.stopPropagation()
@@ -129,7 +130,6 @@ export class LoopAnimationPanel {
     if (this.elements.stopBtn) {
       this.elements.stopBtn.addEventListener('click', (e) => {
         e.stopPropagation()
-        // If saving, interrupt the save
         if (this.controller.isSavingLoop) {
           this.controller.interruptSave()
         } else {
@@ -181,7 +181,7 @@ export class LoopAnimationPanel {
       if (!this.controller.enabled) return
 
       switch (e.key) {
-        case ' ': // Space to play/pause
+        case ' ':
           e.preventDefault()
           if (this.controller.isPlaying) {
             this.controller.pause()
@@ -190,7 +190,7 @@ export class LoopAnimationPanel {
           }
           this.updatePlaybackButtons()
           break
-        case 'Escape': // Escape to stop
+        case 'Escape':
           e.preventDefault()
           this.controller.stop()
           this.updatePlaybackButtons()
@@ -202,44 +202,37 @@ export class LoopAnimationPanel {
   /**
    * Update UI when frame changes
    */
-  updateFrame(frame) {
+  updateFrame (frame) {
     if (!frame) return
 
     console.log('[LoopPanel] updateFrame called with frame:', frame)
 
-    // Update frame counter
     if (this.elements.frameCounter) {
       const total = this.controller.walk ? this.controller.walk.length : 0
       this.elements.frameCounter.textContent = `Frame ${this.controller.currentFrameIndex + 1} / ${total}`
     }
 
-    // Update frame slider
     if (this.elements.frameSlider && this.controller.walk) {
       this.elements.frameSlider.max = this.controller.walk.length - 1
       this.elements.frameSlider.value = this.controller.currentFrameIndex
     }
 
-    // Update preview
     this.updatePreview(frame)
   }
 
   /**
    * Update preview panel with current frame's image pair
    */
-  updatePreview(frame) {
+  updatePreview (frame) {
     if (!this.elements.previewPair || !frame) return
 
     const { a, b } = frame.pair
 
-    // Handle both index-based and filename-based pair values
     let aImg, bImg
-
-    // If a and b are numbers (indices), look them up in imageSetA/B
     if (typeof a === 'number' && typeof b === 'number') {
       aImg = this.controller.imageSetA[a]
       bImg = this.controller.imageSetB[b]
     } else {
-      // If a and b are already filenames, use them directly
       aImg = a
       bImg = b
     }
@@ -249,27 +242,23 @@ export class LoopAnimationPanel {
 
     const formatName = (name) => {
       if (!name || name === '?') return '?'
-      return String(name).replace(/\.[^/.]+$/, '').substring(0, 20)
+      const base = String(name).replace(/\.[^/.]+$/, '')
+      return base.length > 22 ? '\u2026' + base.slice(-20) : base
     }
 
     this.elements.previewPair.innerHTML = `
-      <div class="preview-item">
-        <strong>A:</strong> ${formatName(aImg)}
-      </div>
-      <div class="preview-item">
-        <strong>B:</strong> ${formatName(bImg)}
-      </div>
+      <div class="loop-pair-item"><strong>A</strong> ${formatName(aImg)}</div>
+      <div class="loop-pair-item"><strong>B</strong> ${formatName(bImg)}</div>
     `
   }
 
   /**
    * Update toggle button state
    */
-  updateToggleButton() {
+  updateToggleButton () {
     if (!this.elements.toggleBtn) return
 
     if (this.controller.isGenerating) {
-      // Show generating status during walk generation
       this.elements.toggleBtn.textContent = '⏳ Generating loop...'
       this.elements.toggleBtn.disabled = true
       if (this.panelElement) this.panelElement.classList.add('enabled')
@@ -298,7 +287,7 @@ export class LoopAnimationPanel {
   /**
    * Update loop length input and max value display
    */
-  updateLoopLengthInput() {
+  updateLoopLengthInput () {
     if (!this.elements.loopLengthInput) return
 
     const range = this.controller.getLoopLengthRange()
@@ -310,20 +299,18 @@ export class LoopAnimationPanel {
       this.elements.loopLengthMax.textContent = `(max: ${range.max})`
     }
 
-    // Disable if not enough images
     this.elements.loopLengthInput.disabled = !this.canGenerate() || this.controller.isGenerating
   }
 
   /**
    * Update playback button states
    */
-  updatePlaybackButtons() {
+  updatePlaybackButtons () {
     if (this.elements.playPauseBtn) {
       const isDisabled = !this.controller.walk
       this.elements.playPauseBtn.disabled = isDisabled
       this.elements.playPauseBtn.classList.toggle('disabled', isDisabled)
 
-      // Update text based on playing state
       if (this.controller.isPlaying) {
         this.elements.playPauseBtn.textContent = '⏸ Pause'
         this.elements.playPauseBtn.title = 'Pause (Space)'
@@ -335,12 +322,10 @@ export class LoopAnimationPanel {
     }
 
     if (this.elements.stopBtn) {
-      // Stop button stays enabled during save to allow interruption
       const isDisabled = !this.controller.walk && !this.controller.isSavingLoop
       this.elements.stopBtn.disabled = isDisabled
       this.elements.stopBtn.classList.toggle('disabled', isDisabled)
-      
-      // Update text during save
+
       if (this.controller.isSavingLoop) {
         this.elements.stopBtn.textContent = '⏹ Cancel Save'
         this.elements.stopBtn.title = 'Cancel saving loop'
@@ -351,12 +336,10 @@ export class LoopAnimationPanel {
     }
 
     if (this.elements.saveLoopBtn) {
-      // Enable when walk exists and not playing/saving
       const isDisabled = !this.controller.walk || this.controller.isPlaying || this.controller.isSavingLoop
       this.elements.saveLoopBtn.disabled = isDisabled
       this.elements.saveLoopBtn.classList.toggle('disabled', isDisabled)
-      
-      // Update text during save
+
       if (this.controller.isSavingLoop) {
         this.elements.saveLoopBtn.textContent = '⏳ Saving...'
       } else {
@@ -365,7 +348,6 @@ export class LoopAnimationPanel {
     }
 
     if (this.elements.refreshBtn) {
-      // Enable when walk exists and not generating/playing/saving
       const isDisabled = !this.controller.walk || this.controller.isGenerating || this.controller.isPlaying || this.controller.isSavingLoop
       this.elements.refreshBtn.disabled = isDisabled
       this.elements.refreshBtn.classList.toggle('disabled', isDisabled)
@@ -375,7 +357,7 @@ export class LoopAnimationPanel {
   /**
    * Handle save loop button click
    */
-  async handleSaveLoop() {
+  async handleSaveLoop () {
     if (!this.controller.walk || this.controller.walk.length === 0) {
       console.warn('[LoopPanel] No walk to save')
       return
@@ -387,14 +369,11 @@ export class LoopAnimationPanel {
     }
 
     console.log('[LoopPanel] Starting loop save...')
-    
-    // Generate timestamp once for all frames
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-    
+
     try {
       await this.controller.saveLoop(
         async (frameIndex, frame) => {
-          // Call the save callback from duo-chrome
           if (this.callbacks.onSaveFrame) {
             const filename = `loop-${timestamp}-frame-${(frameIndex + 1).toString().padStart(3, '0')}`
             console.log(`[LoopPanel] Saving frame ${frameIndex + 1}/${this.controller.walk.length}: ${filename}`)
@@ -402,13 +381,11 @@ export class LoopAnimationPanel {
           }
         },
         (current, total) => {
-          // Update progress in frame counter
           console.log(`[LoopPanel] Progress: ${current}/${total}`)
           this.updateFrame()
           this.updatePlaybackButtons()
         }
       )
-      
       console.log('[LoopPanel] Loop save complete')
     } catch (error) {
       console.error('[LoopPanel] Error saving loop:', error)
@@ -420,7 +397,7 @@ export class LoopAnimationPanel {
   /**
    * Update FPS display
    */
-  updateFPSDisplay() {
+  updateFPSDisplay () {
     if (this.elements.fpsValue) {
       this.elements.fpsValue.textContent = `${this.controller.fps} FPS`
     }
@@ -429,12 +406,11 @@ export class LoopAnimationPanel {
   /**
    * Show/hide loading spinner
    */
-  setLoading(isLoading) {
+  setLoading (isLoading) {
     if (this.elements.loadingSpinner) {
       this.elements.loadingSpinner.style.display = isLoading ? 'block' : 'none'
     }
 
-    // Disable controls during generation
     if (this.elements.loopLengthInput) {
       this.elements.loopLengthInput.disabled = isLoading
     }
@@ -451,14 +427,13 @@ export class LoopAnimationPanel {
       this.elements.refreshBtn.disabled = isLoading
     }
 
-    // Update toggle button text to show generating status
     this.updateToggleButton()
   }
 
   /**
    * Update help text based on current state
    */
-  updateHelp() {
+  updateHelp () {
     if (!this.elements.helpText) return
 
     let newText = ''
@@ -489,7 +464,7 @@ export class LoopAnimationPanel {
   /**
    * Update all UI elements based on controller state
    */
-  updateAll() {
+  updateAll () {
     console.log('[LoopPanel] updateAll called. Controller state:', {
       enabled: this.controller.enabled,
       walk: this.controller.walk ? this.controller.walk.length : null,
@@ -507,245 +482,89 @@ export class LoopAnimationPanel {
   }
 
   /**
-   * Get HTML for the control panel
+   * Return the panel HTML.
+   *
+   * Class names used by tests are preserved:
+   *   .loop-animation-panel  — outer container (panelElement)
+   *   .loop-panel-section    — each control section (shown/hidden on enable)
+   *
+   * The minimal <style> block covers computed-style properties checked by tests.
+   * All visual styling is in css/style.css.
    */
-  getHTML() {
+  getHTML () {
     return `
       <div class="loop-animation-panel">
         <style>
+          /* Minimal rules needed for computed-style tests (jsdom doesn't load external CSS) */
           .loop-animation-panel {
-            background: rgba(20, 20, 20, 0.95);
-            border: 1px solid rgba(100, 100, 100, 0.5);
-            border-radius: 8px;
-            padding: 16px;
-            color: #fff;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-width: 320px;
             position: fixed;
             bottom: 20px;
             right: 20px;
             z-index: 100;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            pointer-events: auto;
           }
-
-          .loop-animation-panel.enabled {
-            border-color: rgba(76, 175, 80, 0.5);
-          }
-
-          .loop-panel-section {
-            margin-bottom: 16px;
-            display: none;
-          }
-
-          .loop-animation-panel.enabled .loop-panel-section {
-            display: block;
-          }
-
-          .loop-panel-section:first-of-type {
-            display: block;
-          }
-
-          .loop-panel-label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
-            color: #4CAF50;
-            text-transform: uppercase;
-            font-size: 10px;
-            letter-spacing: 1px;
-          }
-
-          [data-action="toggle"] {
-            width: 100%;
-            padding: 10px;
-            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
-            color: #fff;
-            border: 1px solid #444;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s ease;
-          }
-
-          [data-action="toggle"]:hover {
-            background: linear-gradient(135deg, #3d3d3d, #2a2a2a);
-            border-color: #666;
-          }
-
-          [data-action="toggle"].active {
-            background: linear-gradient(135deg, #4CAF50, #388E3C);
-            border-color: #4CAF50;
-          }
-
-          .loop-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 12px;
-          }
-
-          .loop-controls button {
-            padding: 8px 6px;
-            background: #2d2d2d;
-            color: #fff;
-            border: 1px solid #444;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s ease;
-          }
-
-          .loop-controls button:hover:not(:disabled) {
-            background: #3d3d3d;
-            border-color: #666;
-          }
-
-          .loop-controls button:disabled,
-          .loop-controls button.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
-
-          .loop-controls button.active {
-            background: #4CAF50;
-            border-color: #4CAF50;
-          }
-
-          input[type="range"] {
-            width: 100%;
-            height: 4px;
-            border-radius: 2px;
-            background: #333;
-            outline: none;
-            -webkit-appearance: none;
-          }
-
-          input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 12px;
-            height: 12px;
-            border-radius: 6px;
-            background: #4CAF50;
-            cursor: pointer;
-          }
-
-          input[type="range"]::-moz-range-thumb {
-            width: 12px;
-            height: 12px;
-            border-radius: 6px;
-            background: #4CAF50;
-            cursor: pointer;
-            border: none;
-          }
-
-          input[type="number"] {
-            width: 100%;
-            padding: 6px;
-            background: #2d2d2d;
-            color: #fff;
-            border: 1px solid #444;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-          }
-
-          input[type="number"]:disabled {
-            opacity: 0.5;
-          }
-
-          .loop-info {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 8px;
-            border-radius: 3px;
-            margin-bottom: 8px;
-            font-size: 11px;
-            line-height: 1.5;
-          }
-
-          .preview-item {
-            padding: 4px 0;
-            border-bottom: 1px solid #333;
-          }
-
-          .preview-item:last-child {
-            border-bottom: none;
-          }
-
-          [data-display="loading"] {
-            display: none;
-            text-align: center;
-            color: #4CAF50;
-            margin: 8px 0;
-            font-size: 11px;
-          }
-
-          [data-display="help-text"] {
-            display: block;
-            color: #999;
-            font-size: 10px;
-            line-height: 1.4;
-            font-style: italic;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid #333;
-          }
-
-          .loop-animation-panel {
-            pointer-events: auto !important;
-          }
-
-          .loop-animation-panel * {
-            pointer-events: auto !important;
-          }
+          .loop-animation-panel * { pointer-events: auto; }
+          .loop-panel-section { display: none; }
+          .loop-panel-section:first-of-type { display: block; }
+          .loop-animation-panel.enabled .loop-panel-section { display: block; }
         </style>
 
-        <div class="loop-panel-section">
-          <button data-action="toggle">Enable Loop Mode</button>
+        <div class="loop-panel__header">
+          <span class="loop-panel__title">Loop Animation</span>
         </div>
 
-        <div class="loop-panel-section">
-          <label class="loop-panel-label">Loop Length</label>
-          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-            <input type="number" data-input="loop-length" min="3" max="100" value="5" style="flex: 1;">
-            <span data-display="loop-length-max" style="align-self: center; color: #999; font-size: 10px;"></span>
+        <div class="loop-panel__body">
+          <!-- Toggle (always visible via :first-of-type) -->
+          <div class="loop-panel-section">
+            <button class="loop-toggle-btn" data-action="toggle">Enable Loop Mode</button>
           </div>
-        </div>
 
-        <div class="loop-panel-section">
-          <label class="loop-panel-label">Playback</label>
-          <div class="loop-controls">
-            <button data-action="play-pause" title="Play / Pause (Space)">▶ Play</button>
-            <button data-action="stop" title="Stop (Escape)">⏹ Stop</button>
-            <button data-action="save-loop" title="Save all frames as individual images">💾 Save Loop</button>
-            <button data-action="refresh" title="Regenerate loop with current settings">🔄 Refresh</button>
-            <div style="grid-column: 1 / -1;"></div>
-            <input type="range" data-input="frame-slider" min="0" max="100" value="0" style="grid-column: 1 / -1;">
+          <!-- Loop Length -->
+          <div class="loop-panel-section">
+            <span class="loop-section-label">Loop Length</span>
+            <div class="loop-length-row">
+              <input type="number" class="loop-number-input" data-input="loop-length" min="3" max="100" value="5">
+              <span class="loop-length-max" data-display="loop-length-max"></span>
+            </div>
           </div>
-          <div class="loop-info">
-            <strong>Frame:</strong> <span data-display="frame-counter">—</span>
-          </div>
-        </div>
 
-        <div class="loop-panel-section">
-          <label class="loop-panel-label">Speed</label>
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <input type="range" data-input="fps" min="1" max="60" value="12" style="flex: 1;">
-            <span data-display="fps-value">12 FPS</span>
+          <!-- Playback -->
+          <div class="loop-panel-section">
+            <span class="loop-section-label">Playback</span>
+            <div class="loop-controls">
+              <button class="loop-btn" data-action="play-pause" title="Play / Pause (Space)">▶ Play</button>
+              <button class="loop-btn" data-action="stop" title="Stop (Escape)">⏹ Stop</button>
+              <button class="loop-btn" data-action="save-loop" title="Save all frames as individual images">💾 Save Loop</button>
+              <button class="loop-btn" data-action="refresh" title="Regenerate loop with current settings">⟳ Refresh</button>
+            </div>
+            <input type="range" class="loop-range" data-input="frame-slider" min="0" max="100" value="0">
+            <div class="loop-info-row">
+              <span class="loop-info-label">Frame</span>
+              <span class="loop-info-value" data-display="frame-counter">—</span>
+            </div>
           </div>
-        </div>
 
-        <div class="loop-panel-section">
-          <label class="loop-panel-label">Current Pair</label>
-          <div class="loop-info" data-display="preview-pair">
-            <div class="preview-item"><strong>A:</strong> —</div>
-            <div class="preview-item"><strong>B:</strong> —</div>
+          <!-- Speed -->
+          <div class="loop-panel-section">
+            <span class="loop-section-label">Speed</span>
+            <div class="loop-fps-row">
+              <input type="range" class="loop-range" data-input="fps" min="1" max="60" value="12">
+              <span class="loop-fps-value" data-display="fps-value">12 FPS</span>
+            </div>
           </div>
-        </div>
 
-        <div data-display="loading">⏳ Generating...</div>
-        <span data-display="help-text"></span>
+          <!-- Current Pair -->
+          <div class="loop-panel-section">
+            <span class="loop-section-label">Current Pair</span>
+            <div data-display="preview-pair">
+              <div class="loop-pair-item"><strong>A</strong> —</div>
+              <div class="loop-pair-item"><strong>B</strong> —</div>
+            </div>
+          </div>
+
+          <div class="loop-loading" data-display="loading">⏳ Generating...</div>
+          <div class="loop-help" data-display="help-text"></div>
+        </div>
       </div>
     `
   }
@@ -753,16 +572,15 @@ export class LoopAnimationPanel {
   /**
    * Handle refresh/regenerate button click
    */
-  handleRefresh() {
+  handleRefresh () {
     if (!this.controller || this.controller.isGenerating) return
-    // Preserve current state (loop mode, fps, etc.) and regenerate
     this.controller.generateWalk()
   }
 
   /**
    * Destroy the panel and cleanup
    */
-  destroy() {
+  destroy () {
     if (this.panel) {
       this.panel.remove()
     }

@@ -1,13 +1,14 @@
-import { 
-  getThemes, 
-  saveTheme, 
-  deleteTheme, 
-  getAssignments, 
-  assignTheme 
+import {
+  getThemes,
+  saveTheme,
+  deleteTheme,
+  getAssignments,
+  assignTheme
 } from '../utils/theme-management.js'
 
 /**
- * FilterModal - UI component for filtering the image list
+ * FilterModal — tabbed panel for filtering images and managing themes.
+ * Builds its entire DOM inside #filter-modal on construction.
  */
 export class FilterModal {
   /**
@@ -22,212 +23,170 @@ export class FilterModal {
     this.totalImages = options.totalImages
     this.isVisible = false
     this.currentFilter = ''
-    this.currentTab = 'filter' // 'filter' or 'themes'
+    this.currentTab = 'filter'
 
-    // DOM elements
     this.modal = document.getElementById('filter-modal')
-    this.input = document.getElementById('filter-input')
-    this.clearBtn = document.getElementById('filter-clear-btn')
-    this.closeBtn = document.getElementById('filter-close')
-    this.stats = document.getElementById('filter-stats')
-    this.content = this.modal.querySelector('.filter-content')
-    this.actions = this.modal.querySelector('.filter-actions')
+    this._buildHTML()
 
-    // Create tabs container
-    this.tabsContainer = document.createElement('div')
-    this.tabsContainer.className = 'filter-tabs'
-    this.tabsContainer.style.cssText = 'display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px;'
-    
-    this.filterTabBtn = this._createTabBtn('Active Filter', 'filter')
-    this.themesTabBtn = this._createTabBtn('Saved Themes', 'themes')
-    
-    this.tabsContainer.appendChild(this.filterTabBtn)
-    this.tabsContainer.appendChild(this.themesTabBtn)
-    
-    // Insert tabs at the top of content
-    this.content.insertBefore(this.tabsContainer, this.content.firstChild)
+    // Public properties — accessed externally by duo-chrome.js
+    this.input = this.modal.querySelector('.filter-search__input')
 
-    // Create file list container (for filter view)
-    this.fileListContainer = document.createElement('div')
-    this.fileListContainer.className = 'filter-file-list'
-    this.fileListContainer.id = 'filter-file-list'
-    
-    // Create themes container (for themes view)
-    this.themesContainer = document.createElement('div')
-    this.themesContainer.className = 'filter-themes-list'
-    this.themesContainer.style.cssText = 'display: none; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto;'
-
-    // Save Theme Button (for filter view)
-    this.saveThemeBtn = document.createElement('button')
-    this.saveThemeBtn.textContent = 'Save as Theme'
-    this.saveThemeBtn.className = 'filter-btn'
-    this.saveThemeBtn.style.marginLeft = '10px'
-    
-    // Insert containers
-    this.content.insertBefore(this.fileListContainer, this.actions)
-    this.content.insertBefore(this.themesContainer, this.actions)
-    
-    // Append save button to input area (we might need to find the input container)
-    // The input is likely inside a wrapper. Let's append it next to clearBtn for now if possible,
-    // or just in the actions area for the filter view.
-    // Let's put it in the header/input area.
-    this.input.parentNode.appendChild(this.saveThemeBtn)
+    // Internal element references
+    this.clearBtn = this.modal.querySelector('.filter-search__clear')
+    this.closeBtn = this.modal.querySelector('.filter-panel__close')
+    this.stats = this.modal.querySelector('.filter-stats')
+    this.tabBtns = this.modal.querySelectorAll('.filter-tab')
+    this.filterContent = this.modal.querySelector('[data-content="filter"]')
+    this.themesContent = this.modal.querySelector('[data-content="themes"]')
+    this.fileListContainer = this.modal.querySelector('.filter-file-list')
+    this.themesContainer = this.modal.querySelector('.filter-themes-list')
+    this.saveThemeBtn = this.modal.querySelector('[data-action="save-theme"]')
 
     this._bindEvents()
-    this._updateTabVisibility()
   }
 
-  _createTabBtn(text, tabName) {
-    const btn = document.createElement('button')
-    btn.textContent = text
-    btn.style.cssText = 'background: none; border: none; color: #888; cursor: pointer; padding: 5px 10px; font-weight: bold;'
-    btn.addEventListener('click', () => {
-      this.currentTab = tabName
-      this._updateTabVisibility()
+  _buildHTML () {
+    this.modal.innerHTML = `
+      <div class="filter-panel">
+        <div class="filter-panel__header">
+          <span class="filter-panel__title">Filter Images</span>
+          <button class="filter-panel__close" aria-label="Close">×</button>
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab is-active" data-tab="filter">Active Filter</button>
+          <button class="filter-tab" data-tab="themes">Saved Themes</button>
+        </div>
+        <div class="filter-tab-content" data-content="filter">
+          <div class="filter-search">
+            <input
+              type="text"
+              class="filter-search__input"
+              placeholder="Search by filename…"
+              aria-label="Search by filename"
+            >
+            <button class="filter-search__clear" title="Clear filter">×</button>
+          </div>
+          <div class="filter-action-bar">
+            <span class="filter-stats">Showing all images</span>
+            <button class="dc-btn dc-btn--secondary" data-action="save-theme">Save as Theme</button>
+          </div>
+          <div class="filter-file-list"></div>
+        </div>
+        <div class="filter-tab-content hidden" data-content="themes">
+          <div class="filter-themes-list"></div>
+        </div>
+      </div>
+    `
+  }
+
+  _switchTab (tabName) {
+    this.currentTab = tabName
+    this.tabBtns.forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.tab === tabName)
     })
-    return btn
-  }
-
-  _updateTabVisibility() {
-    // Update Tab Buttons
-    const activeStyle = 'color: #fff; border-bottom: 2px solid #00bcd4;'
-    const inactiveStyle = 'color: #888; border-bottom: none;'
-    
-    this.filterTabBtn.style.cssText += (this.currentTab === 'filter' ? activeStyle : inactiveStyle)
-    this.themesTabBtn.style.cssText += (this.currentTab === 'themes' ? activeStyle : inactiveStyle)
-
-    // Show/Hide Content
-    if (this.currentTab === 'filter') {
-      this.fileListContainer.style.display = 'block'
-      this.themesContainer.style.display = 'none'
-      this.input.parentElement.style.display = 'block' // Show input area
-      this.stats.style.display = 'block'
-      this.saveThemeBtn.style.display = 'inline-block'
-    } else {
-      this.fileListContainer.style.display = 'none'
-      this.themesContainer.style.display = 'flex'
-      this.input.parentElement.style.display = 'none' // Hide input area
-      this.stats.style.display = 'none'
-      this.saveThemeBtn.style.display = 'none'
+    this.filterContent.classList.toggle('hidden', tabName !== 'filter')
+    this.themesContent.classList.toggle('hidden', tabName !== 'themes')
+    if (tabName === 'themes') {
       this._renderThemes()
     }
   }
 
-  _renderThemes() {
+  _renderThemes () {
     this.themesContainer.innerHTML = ''
     const themes = getThemes()
     const assignments = getAssignments()
 
     if (themes.length === 0) {
       const empty = document.createElement('div')
-      empty.textContent = 'No saved themes.'
-      empty.style.padding = '20px'
-      empty.style.textAlign = 'center'
-      empty.style.color = '#888'
+      empty.className = 'themes-empty'
+      empty.textContent = 'No saved themes. Filter images and click "Save as Theme".'
       this.themesContainer.appendChild(empty)
       return
     }
 
     themes.forEach(theme => {
-      const item = document.createElement('div')
-      item.style.cssText = 'background: #333; padding: 10px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between;'
-      
-      const info = document.createElement('div')
-      info.style.flex = '1'
-      
-      const name = document.createElement('div')
-      name.textContent = theme.name
-      name.style.fontWeight = 'bold'
-      name.style.color = '#fff'
-      
-      const details = document.createElement('div')
-      details.textContent = `Filter: "${theme.filter.searchString}"`
-      details.style.fontSize = '0.8em'
-      details.style.color = '#aaa'
-      
-      info.appendChild(name)
-      info.appendChild(details)
-      
-      // Controls
-      const controls = document.createElement('div')
-      controls.style.display = 'flex'
-      controls.style.gap = '8px'
-      
-      // Assign A
-      const btnA = document.createElement('button')
+      const card = document.createElement('div')
+      card.className = 'theme-card'
+
       const isA = assignments[0] === theme.id
-      btnA.textContent = isA ? 'A (Active)' : 'Assign A'
-      btnA.style.cssText = `padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; background: ${isA ? '#00bcd4' : '#444'}; color: ${isA ? '#000' : '#fff'};`
-      btnA.addEventListener('click', () => {
+      const isB = assignments[1] === theme.id
+
+      card.innerHTML = `
+        <div class="theme-card__info">
+          <div class="theme-card__name">${theme.name}</div>
+          <div class="theme-card__filter">${theme.filter.searchString}</div>
+        </div>
+        <div class="theme-card__actions">
+          <button class="theme-assign-btn ${isA ? 'is-active-a' : ''}" data-pos="0" title="Assign to Image A">
+            ${isA ? 'A ✓' : 'A'}
+          </button>
+          <button class="theme-assign-btn ${isB ? 'is-active-b' : ''}" data-pos="1" title="Assign to Image B">
+            ${isB ? 'B ✓' : 'B'}
+          </button>
+          <button class="dc-btn dc-btn--secondary theme-edit-btn" data-id="${theme.id}" title="Edit filter">Edit</button>
+          <button class="dc-btn dc-btn--danger theme-delete-btn" data-id="${theme.id}" data-name="${theme.name}" title="Delete theme">×</button>
+        </div>
+      `
+
+      // Assign A
+      card.querySelector('[data-pos="0"]').addEventListener('click', () => {
         const newId = isA ? null : theme.id
         assignTheme(0, newId)
         if (this.onThemeAssign) this.onThemeAssign(0, newId)
-        this._renderThemes() // Re-render to update state
+        this._renderThemes()
       })
-      
+
       // Assign B
-      const btnB = document.createElement('button')
-      const isB = assignments[1] === theme.id
-      btnB.textContent = isB ? 'B (Active)' : 'Assign B'
-      btnB.style.cssText = `padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; background: ${isB ? '#ff4081' : '#444'}; color: ${isB ? '#fff' : '#fff'};`
-      btnB.addEventListener('click', () => {
+      card.querySelector('[data-pos="1"]').addEventListener('click', () => {
         const newId = isB ? null : theme.id
         assignTheme(1, newId)
         if (this.onThemeAssign) this.onThemeAssign(1, newId)
-        this._renderThemes() // Re-render
+        this._renderThemes()
       })
 
-      // Edit
-      const btnEdit = document.createElement('button')
-      btnEdit.textContent = 'Edit'
-      btnEdit.title = 'Edit Theme Filter'
-      btnEdit.style.cssText = 'padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; background: #2196F3; color: #fff;'
-      btnEdit.addEventListener('click', () => {
-        // Load filter
+      // Edit — load filter and switch to filter tab
+      card.querySelector('.theme-edit-btn').addEventListener('click', () => {
         this.currentFilter = theme.filter.searchString
         this.input.value = this.currentFilter
         this._handleFilterUpdate()
-        
-        // Switch to filter tab
-        this.currentTab = 'filter'
-        this._updateTabVisibility()
+        this._switchTab('filter')
       })
-      
+
       // Delete
-      const btnDel = document.createElement('button')
-      btnDel.textContent = '×'
-      btnDel.title = 'Delete Theme'
-      btnDel.style.cssText = 'padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; background: #d32f2f; color: #fff; font-weight: bold;'
-      btnDel.addEventListener('click', () => {
+      card.querySelector('.theme-delete-btn').addEventListener('click', () => {
         if (confirm(`Delete theme "${theme.name}"?`)) {
           deleteTheme(theme.id)
-          // Also need to notify if an assignment was removed? 
-          // deleteTheme handles removing assignment from storage, but we need to notify app
           if (assignments[0] === theme.id && this.onThemeAssign) this.onThemeAssign(0, null)
           if (assignments[1] === theme.id && this.onThemeAssign) this.onThemeAssign(1, null)
           this._renderThemes()
         }
       })
 
-      controls.appendChild(btnA)
-      controls.appendChild(btnB)
-      controls.appendChild(btnEdit)
-      controls.appendChild(btnDel)
-      
-      item.appendChild(info)
-      item.appendChild(controls)
-      this.themesContainer.appendChild(item)
+      this.themesContainer.appendChild(card)
     })
   }
 
   _bindEvents () {
-    // Input changes
+    // Tab switching
+    this.tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => this._switchTab(btn.dataset.tab))
+    })
+
+    // Search input
     this.input.addEventListener('input', (e) => {
       this.currentFilter = e.target.value
       this._handleFilterUpdate()
     })
 
-    // Save Theme
+    // Prevent global key shortcuts from triggering while typing
+    this.input.addEventListener('keydown', (e) => {
+      e.stopPropagation()
+      if (e.key === 'Escape') this.hide()
+    })
+    this.input.addEventListener('keyup', (e) => e.stopPropagation())
+    this.input.addEventListener('keypress', (e) => e.stopPropagation())
+
+    // Save as Theme
     this.saveThemeBtn.addEventListener('click', () => {
       if (!this.currentFilter.trim()) {
         alert('Please enter a filter first.')
@@ -236,44 +195,24 @@ export class FilterModal {
       const name = prompt('Enter a name for this theme:', this.currentFilter)
       if (name) {
         saveTheme(name, { searchString: this.currentFilter })
-        this.currentTab = 'themes'
-        this._updateTabVisibility()
+        this._switchTab('themes')
       }
     })
-
-    // Prevent global key shortcuts from triggering while typing
-    this.input.addEventListener('keydown', (e) => {
-      e.stopPropagation()
-      if (e.key === 'Escape') {
-        this.hide()
-        this.closeBtn.focus() // Return focus to a safe element
-      }
-    })
-    this.input.addEventListener('keyup', (e) => e.stopPropagation())
-    this.input.addEventListener('keypress', (e) => e.stopPropagation())
 
     // Clear button
-    this.clearBtn.addEventListener('click', () => {
-      this.clear()
-    })
+    this.clearBtn.addEventListener('click', () => this.clear())
 
     // Close button
-    this.closeBtn.addEventListener('click', () => {
-      this.hide()
-    })
+    this.closeBtn.addEventListener('click', () => this.hide())
 
     // ESC key to close
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isVisible) {
-        this.hide()
-      }
+      if (e.key === 'Escape' && this.isVisible) this.hide()
     })
 
-    // Click outside to close
+    // Click backdrop to close
     this.modal.addEventListener('click', (e) => {
-      if (e.target === this.modal) {
-        this.hide()
-      }
+      if (e.target === this.modal) this.hide()
     })
   }
 
@@ -291,7 +230,7 @@ export class FilterModal {
     if (this.currentFilter.trim() === '') {
       this.stats.textContent = `Showing all ${this.totalImages} images`
     } else {
-      this.stats.textContent = `Showing ${filteredCount} of ${this.totalImages} images`
+      this.stats.textContent = `${filteredCount} of ${this.totalImages} images`
     }
   }
 
@@ -301,32 +240,30 @@ export class FilterModal {
    */
   updateList (fileList) {
     this.fileListContainer.innerHTML = ''
-    
+
     if (fileList.length === 0) {
-      const emptyMsg = document.createElement('div')
-      emptyMsg.className = 'filter-list-empty'
-      emptyMsg.textContent = 'No matching images found'
-      this.fileListContainer.appendChild(emptyMsg)
+      const empty = document.createElement('div')
+      empty.className = 'filter-list-empty'
+      empty.textContent = 'No matching images found'
+      this.fileListContainer.appendChild(empty)
       return
     }
 
     fileList.forEach(filename => {
       const item = document.createElement('div')
       item.className = 'filter-file-item'
-      // Remove extension for display
-      item.textContent = filename.replace(/\.[^/.]+$/, '')
+
+      // Strip extension; tail-truncate since names share a common prefix
+      const base = filename.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')
+      item.textContent = base.length > 32 ? '\u2026' + base.slice(-30) : base
       item.title = filename
-      
+
       item.addEventListener('click', () => {
-        // Future: select this image explicitly? 
-        // For now, maybe just fill input with this name?
         this.input.value = item.textContent
         this.currentFilter = item.textContent
         this._handleFilterUpdate()
-        // Optional: close modal on selection?
-        // this.hide()
       })
-      
+
       this.fileListContainer.appendChild(item)
     })
   }
@@ -334,7 +271,7 @@ export class FilterModal {
   show () {
     this.isVisible = true
     this.modal.classList.remove('hidden')
-    this._updateTabVisibility()
+    this._switchTab(this.currentTab)
     if (this.currentTab === 'filter') {
       this.input.focus()
     }

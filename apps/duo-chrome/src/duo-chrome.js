@@ -2427,13 +2427,13 @@ const sketch = function (p) {
     const statusOverlay = document.getElementById('status-overlay')
     if (!statusOverlay) return
 
-    // helper to format filenames
+    // helper to format filenames — tail-truncate to show meaningful suffix
     const formatName = (filename) => {
       if (!filename) return '-'
-      // Remove extension
-      const name = filename.replace(/\.[^/.]+$/, '')
-      // Replace delimiters with spaces for natural wrapping
-      return name.replace(/[_-]/g, ' ')
+      // Remove extension, replace delimiters with spaces
+      const name = filename.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')
+      // Tail-truncate: show the end since filenames share a common prefix
+      return name.length > 22 ? '\u2026' + name.slice(-20) : name
     }
 
     // Update filenames
@@ -2442,12 +2442,23 @@ const sketch = function (p) {
 
     if (filenameA && imageColorPairs[0].img) {
       filenameA.textContent = formatName(imageColorPairs[0].img)
-      filenameA.title = imageColorPairs[0].img // Tooltip
+      filenameA.title = imageColorPairs[0].img // Full name on hover
     }
 
     if (filenameB && imageColorPairs[1].img) {
       filenameB.textContent = formatName(imageColorPairs[1].img)
-      filenameB.title = imageColorPairs[1].img // Tooltip
+      filenameB.title = imageColorPairs[1].img // Full name on hover
+    }
+
+    // Update color swatches
+    const swatchA = document.getElementById('status-swatch-a')
+    const swatchB = document.getElementById('status-swatch-b')
+
+    if (swatchA && imageColorPairs[0].color) {
+      swatchA.style.backgroundColor = imageColorPairs[0].color.color
+    }
+    if (swatchB && imageColorPairs[1].color) {
+      swatchB.style.backgroundColor = imageColorPairs[1].color.color
     }
 
     // Update color names
@@ -2472,15 +2483,15 @@ const sketch = function (p) {
         const theme = getThemeById(assignments[0])
         if (theme) {
           const count = filterImages(imgs, theme.filter).length
-          themeA.textContent = `Theme: ${theme.name}${count === 0 ? ' (Empty)' : ''}`
-          themeA.style.color = count === 0 ? '#ff9800' : '#4CAF50'
+          themeA.textContent = `${theme.name}${count === 0 ? ' (empty)' : ''}`
+          themeA.style.color = count === 0 ? 'var(--dc-accent-amber)' : 'var(--dc-accent-green)'
         } else {
-          themeA.textContent = 'Theme: Unknown'
-          themeA.style.color = '#aaa'
+          themeA.textContent = 'Unknown'
+          themeA.style.color = 'var(--dc-text-muted)'
         }
       } else {
-        themeA.textContent = 'Theme: None'
-        themeA.style.color = '#aaa'
+        themeA.textContent = 'None'
+        themeA.style.color = 'var(--dc-text-muted)'
       }
     }
 
@@ -2489,15 +2500,15 @@ const sketch = function (p) {
         const theme = getThemeById(assignments[1])
         if (theme) {
           const count = filterImages(imgs, theme.filter).length
-          themeB.textContent = `Theme: ${theme.name}${count === 0 ? ' (Empty)' : ''}`
-          themeB.style.color = count === 0 ? '#ff9800' : '#4CAF50'
+          themeB.textContent = `${theme.name}${count === 0 ? ' (empty)' : ''}`
+          themeB.style.color = count === 0 ? 'var(--dc-accent-amber)' : 'var(--dc-accent-green)'
         } else {
-          themeB.textContent = 'Theme: Unknown'
-          themeB.style.color = '#aaa'
+          themeB.textContent = 'Unknown'
+          themeB.style.color = 'var(--dc-text-muted)'
         }
       } else {
-        themeB.textContent = 'Theme: None'
-        themeB.style.color = '#aaa'
+        themeB.textContent = 'None'
+        themeB.style.color = 'var(--dc-text-muted)'
       }
     }
 
