@@ -2244,7 +2244,7 @@
         "description": "Revise image-switching workflow and agent guidance. The \"real original\" images were deleted, indicating a flaw in the current swapping logic. Image swapping should only be necessary for publishing (deployment), and agents should not manipulate image folders during standard development tasks. Restore the original images if possible or document recovery steps. Update `AGENTS.md` or relevant documentation to explicitly forbid agents from running `images:commit` or modifying image directories unless specifically performing a release/deploy task. Refactor the `swap-duo-chrome-images.js` script to be safer or less destructive, including adding commander.js to allow for optional directory parameters.",
         "details": "The `swap-duo-chrome-images.js` script needs to be refactored to prevent accidental loss of original images. Using commander.js will make the script more configurable by allowing users to specify which directories to swap rather than using hard-coded values. This flexibility helps prevent accidental changes to unintended directories. The refactored script should implement proper error handling, validation of directory parameters, and potentially include safeguards like dry-run mode or backup creation before performing swaps.",
         "testStrategy": "1. Test the refactored script with valid directory parameters\n2. Test with missing parameters to ensure defaults work correctly\n3. Test with invalid directory paths to verify appropriate error handling\n4. Verify that documentation accurately describes the new command-line options\n5. Test that the script maintains backward compatibility when run without parameters\n6. Ensure the script includes safety measures to prevent data loss",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": [
@@ -2312,7 +2312,7 @@
             "updatedAt": "2026-01-25T20:48:40.012Z"
           }
         ],
-        "updatedAt": "2026-01-25T20:48:40.012Z"
+        "updatedAt": "2026-03-02T18:04:42.768Z"
       },
       {
         "id": "9",
@@ -2425,12 +2425,13 @@
         "description": "Expand the status window UI to display the current palette name with optional color preview, show full filenames without truncation, and expose all keyboard-adjustable parameters for improved user feedback and control.",
         "details": "## Implementation Overview\nBuild upon the UI enhancement work from Task 2 to create a comprehensive status window that provides real-time feedback on critical application parameters.\n\n### 1. Palette Information Display\n- **Palette Name**: Add a dedicated UI element in the status window to show the currently active palette name. The display should update immediately when the palette changes via keyboard shortcuts or other methods.\n- **Optional Color Preview**: Implement a toggleable color swatch display that shows the actual colors in the current palette. This should be compact (e.g., small squares or a horizontal bar) and appear next to or below the palette name.\n- **Implementation**: Create a new `PaletteDisplay` component that subscribes to palette change events. Use the existing palette management system to retrieve current palette data.\n\n### 2. Full Filename Display (No Truncation)\n- **Extend Task 2 Work**: Leverage the filename display improvements from Task 2, but remove any truncation logic specifically for the status window.\n- **Display Strategy**: For long filenames, implement one of the following (or combination):\n  - Horizontal scrolling on hover\n  - Multi-line wrapping with proper line break rules\n  - Tooltip that shows full filename on hover\n  - Expandable/collapsible filename area\n- **Status Window Integration**: Ensure the filename display in the status window is distinct from other filename displays and prioritizes completeness over compactness.\n- **Edge Cases**: Handle filenames with special characters, very long paths (100+ characters), and Unicode characters.\n\n### 3. Keyboard-Adjustable Parameters Display\n- **Parameter Discovery**: Audit the codebase to identify all parameters that can be adjusted via keyboard shortcuts (e.g., opacity, zoom, rotation, blend mode, palette selection, etc.).\n- **Dynamic Display System**: Create a `ParameterPanel` component that:\n  - Shows parameter name, current value, and keyboard shortcut\n  - Updates in real-time as values change\n  - Groups related parameters logically\n  - Only displays parameters relevant to the current mode/tool\n- **Display Format**: Use a consistent format like `Parameter: Value [Shortcut]` (e.g., `Opacity: 75% [O+/-]`)\n- **Performance**: Implement efficient re-rendering to avoid performance issues when multiple parameters update rapidly.\n\n### 4. UI/UX Considerations\n- **Layout Design**: Design a layout that accommodates all new information without cluttering the status window. Consider using sections with clear headings or separators.\n- **Visibility**: Ensure text is readable across different background colors and image content. Implement adaptive text colors or background overlays if necessary.\n- **Responsive Behavior**: The status window should adapt to different application window sizes, potentially hiding less critical information on smaller screens.\n- **User Preferences**: Consider adding a settings option to toggle each display element (palette colors, parameter panel, etc.) on/off.\n\n### 5. Technical Implementation\n- **State Management**: Use the existing state management system (likely Redux, Context API, or similar) to subscribe to changes in palette, filename, and parameter values.\n- **Event Listeners**: Implement keyboard event listeners to capture parameter changes and trigger display updates.\n- **Component Architecture**: Create modular components for each display element to maintain separation of concerns and enable isolated testing.\n- **Styling**: Use CSS Grid or Flexbox for layout. Implement smooth transitions for value changes (e.g., numbers changing should animate briefly).\n\n### 6. Integration Points\n- Ensure the new status window components integrate seamlessly with the existing UI framework\n- Update any TypeScript interfaces or PropTypes to include new data structures\n- Document the new display system for future maintainers",
         "testStrategy": "## Testing Approach\n\n### 1. Unit Tests\n- **PaletteDisplay Component**: Test rendering with various palette names (short, long, special characters). Test color swatch rendering with different palette sizes (2-color, 16-color, etc.).\n- **FilenameDisplay Component**: Test display of filenames from 10 to 200+ characters. Verify truncation is NOT applied. Test special characters and Unicode.\n- **ParameterPanel Component**: Test rendering with different sets of parameters. Verify each parameter shows correct name, value, and shortcut.\n\n### 2. Integration Tests\n- **Real-time Updates**: Simulate palette changes and verify display updates within 100ms. Simulate keyboard parameter adjustments and verify immediate visual feedback.\n- **Event System**: Test that keyboard events properly propagate to the status window components. Verify state management integration.\n\n### 3. UI/Visual Tests\n- **Layout Validation**: Test status window layout at various application window sizes (800x600, 1920x1080, etc.). Verify no overlapping elements or text overflow.\n- **Readability**: Test text visibility on light, dark, and complex image backgrounds. Verify adaptive coloring works correctly.\n- **Responsive Behavior**: Confirm that on small screens, non-essential elements are hidden properly.\n\n### 4. Manual Test Cases\n1. **Palette Testing**:\n   - Load different palettes via keyboard shortcut - verify name updates immediately\n   - Toggle palette color display on/off - verify swatches appear/disappear\n   - Test with palettes containing many colors (20+) - verify swatch display remains usable\n\n2. **Filename Testing**:\n   - Load images with filenames of varying lengths (50, 100, 150 characters)\n   - Verify full filename is always visible (via scrolling, wrapping, or tooltip)\n   - Test with filenames containing spaces, hyphens, underscores, Unicode\n\n3. **Parameter Testing**:\n   - Adjust each keyboard-controllable parameter and verify display updates\n   - Rapidly change parameters (e.g., hold down opacity increase key) - verify display keeps up without lag\n   - Switch between different tools/modes - verify parameter panel shows only relevant parameters\n\n4. **Performance Testing**:\n   - Monitor frame rate while continuously updating parameters for 60 seconds\n   - Check for memory leaks by repeatedly changing palettes and parameters\n\n### 5. Accessibility Testing\n- Verify all new UI elements are screen-reader compatible\n- Test keyboard navigation to status window elements\n- Ensure color swatches have appropriate ARIA labels\n\n### 6. Regression Testing\n- Confirm existing status window functionality (from Task 2) still works correctly\n- Verify blend mode indicator (from Task 2) is not affected by new changes\n- Run full application smoke test to ensure no unintended side effects",
-        "status": "pending",
+        "status": "cancelled",
         "dependencies": [
           "2"
         ],
         "priority": "medium",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-03-02T18:21:57.369Z"
       },
       {
         "id": "14",
@@ -2440,7 +2441,7 @@
         "testStrategy": "## Test Strategy\n\n### Unit Tests\n1. **Graph Construction**\n   - Test adjacency detection with sample states\n   - Verify all valid pairs generated for n=4 images (should create 12 states)\n   - Test adjacency count: each state should have 2*(n-2) neighbors\n\n2. **Closed Walk Generation**\n   - Test loop closure: `walk[0] === walk[walk.length-1]` (adjacent check)\n   - Test adjacency constraint: all consecutive pairs must share exactly one index\n   - Test randomness: multiple generations produce different sequences\n   - Test length accuracy: output length matches requested loopLength\n\n3. **Edge Cases**\n   - n=3 images (minimum viable): should generate 6-state graph\n   - n=2 images: should throw error (insufficient for duo-chrome)\n   - Requested length > max possible: should fallback or retry\n   - Empty image array: should throw validation error\n\n### Integration Tests\n1. **Filter Integration**\n   - Generate walk with filtered image subset\n   - Verify indices map correctly to original image array\n   \n2. **Performance**\n   - Generate walk with n=50 images, loopLength=100 in <500ms\n   - Test memory usage stays under 50MB for large loops\n\n### Manual QA\n1. **Visual Validation**\n   - Create test animation with numbered images\n   - Verify frame sequence shows smooth transitions\n   - Confirm loop restarts without visual jump\n\n2. **Error Scenarios**\n   - Attempt generation with 1-2 images: verify clear error message\n   - Set loopLength=1000 with 10 images: verify graceful fallback\n\n### Test Data\n- Use mock image arrays with indices 0-9 for predictable testing\n- Create visual test set with distinct patterns to verify transition logic\n- Prepare edge case datasets: 0, 1, 2, 3, 50 images\n\n### Acceptance Criteria\n- ✅ Generates valid closed walk 100/100 times for n≥3\n- ✅ Loop closure verified for all generated walks\n- ✅ Adjacency constraint maintained across entire sequence\n- ✅ Performance <1s for n=100, loopLength=200\n- ✅ All edge cases handled with appropriate errors/fallbacks",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2543,10 +2544,10 @@
               6
             ],
             "details": "Implement logic to detect the current image pair (imageA, imageB) when loop mode is enabled. Pass this as a start state to the closed walk generator. The generated walk should begin with a state adjacent to this start state and end with a state adjacent to it, ensuring seamless loop closure. This enhances UX by making loop mode feel more continuous with the current viewing state. Implementation should preserve the current image indices in the animation state.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that current image pair is correctly detected when toggling loop mode. Verify walk starts with a state adjacent to current pair. Verify walk ends with a state adjacent to current pair. Test with different image pairs and themes. Verify no visual jump when loop playback begins.",
             "parentId": "undefined",
-            "updatedAt": "2026-02-23T00:00:00.000Z"
+            "updatedAt": "2026-02-22T22:30:24.099Z"
           },
           {
             "id": 9,
@@ -2556,10 +2557,10 @@
               6
             ],
             "details": "Add a refresh/regenerate button to the UI controls section. When clicked, the button should call regenerateWalk() on the ClosedWalkGenerator, create a new walk with the same parameters, and update the animation controller. Preserve all state: loop mode enabled/disabled flag, current loop length setting, current playback frame position (or reset to frame 1), current FPS setting. Provide visual feedback during generation (disable button, show loading indicator). This allows users to generate alternative loop sequences without disrupting their workflow.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test that clicking refresh button generates a new walk. Verify loop mode state is preserved after regeneration. Verify loop length parameter persists. Test that playback frame counter resets appropriately. Verify FPS setting is maintained. Test with different image sets and themes. Verify visual feedback appears during generation.",
             "parentId": "undefined",
-            "updatedAt": "2026-02-23T00:00:00.000Z"
+            "updatedAt": "2026-02-22T22:30:24.106Z"
           },
           {
             "id": 10,
@@ -2570,13 +2571,13 @@
               9
             ],
             "details": "Integrate with the status display window or create a loading indicator showing walk generation progress. Display 'Generating loop...' or similar message while ClosedWalkGenerator is processing. Once generation completes successfully, briefly show a success message or simply clear the status. Handle edge cases where generation fails or exceeds max retry attempts - show appropriate error message. This provides user feedback during potentially long-running operations, especially with large image sets or complex walk requirements. Status updates should be integrated with existing status display UI component.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manually test walk generation and verify status message appears. Verify message appears for entire duration of generation (especially noticeable with large image sets). Test success message display. Test error message display when generation fails. Verify no status message shown when no generation is occurring. Test across different browsers and screen sizes.",
             "parentId": "undefined",
-            "updatedAt": "2026-02-23T00:00:00.000Z"
+            "updatedAt": "2026-02-22T22:30:24.111Z"
           }
         ],
-        "updatedAt": "2026-02-22T16:19:56.419Z"
+        "updatedAt": "2026-02-22T22:30:24.111Z"
       },
       {
         "id": "15",
@@ -2599,8 +2600,9 @@
         "dependencies": [
           "15"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T18:20:06.978Z"
       },
       {
         "id": "17",
@@ -2707,8 +2709,9 @@
         "dependencies": [
           "20"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T18:19:34.016Z"
       },
       {
         "id": "25",
@@ -2721,8 +2724,9 @@
           "20",
           "18"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T18:19:44.217Z"
       },
       {
         "id": "26",
@@ -2736,13 +2740,24 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": "27",
+        "title": "Palette Visualizer Component for duo-chrome",
+        "description": "Implement a palette visualizer UI component that enables users to preview color palettes without affecting the current image-pair or loop state, with functionality to switch between palettes and apply them to the active context.",
+        "details": "**Component Architecture:**\n- Create `PaletteVisualizer` class in `duo-chrome/src/components/palette-visualizer/`\n- Initialize with `new PaletteVisualizer(containerEl, options)` where options include `storageKey`, `palettes`, `onApply`, and `previewMode`\n- Use event-driven architecture: emit `palettePreview`, `paletteSelect`, and `paletteApply` events\n\n**Core Features:**\n1. **Non-destructive Preview:** Render palette colors in a side panel/grid without modifying the underlying image-pair/loop data. Use CSS filters or temporary canvas overlay for preview effect\n2. **Palette Management:** Load palettes from `/api/palettes` endpoint or local JSON files in `assets/palettes/`. Support standard formats (ASE, JSON, GPL)\n3. **Switching Mechanism:** \n   - Vertical scrollable list of palette thumbnails on left side\n   - Main area displays selected palette as color grid (8x8px swatches minimum)\n   - Keyboard navigation: Arrow keys to navigate, Enter to preview, Ctrl+Enter to apply\n   - Search/filter bar at top to filter palettes by name or color count\n4. **Apply Action:** \n   - \"Apply to Current\" button confirms changes\n   - Batch apply to both image-pair and loop with single action\n   - Undo stack: store previous palette state for Ctrl+Z reversal\n\n**UI/UX Considerations:**\n- Position as fixed right sidebar (300px width) that can be toggled with `Ctrl+P`\n- Use `position: sticky` for palette list header\n- Color swatches show hex value on hover with `title` attribute and tooltip component\n- Selected palette highlighted with border and checkmark icon\n- Loading state skeleton while palettes load\n- Empty state illustration when no palettes available\n\n**State Management:**\n- Maintain separate `previewPalette` and `activePalette` states\n- Use `localStorage` to persist last selected palette ID (but not applied state)\n- Sync with duo-chrome's global state management (Redux/Vuex) on apply action\n\n**Integration Points:**\n- Hook into duo-chrome's `ImagePairRenderer` and `LoopEngine` classes\n- Apply palette by mapping colors to `ImagePairRenderer.colorMap` and `LoopEngine.keyframeColors`\n- Emit `paletteApplied` event for other components to react",
+        "testStrategy": "**Unit Tests:**\n- Test palette loading from various file formats (ASE, JSON, GPL) using Jest with fixture files\n- Verify palette switching updates UI state without triggering apply callback\n- Test keyboard navigation: simulate arrow keys and verify selection changes\n- Test search/filter functionality with 100+ palettes\n- Verify undo stack properly restores previous palette state\n\n**Integration Tests:**\n- Mount `PaletteVisualizer` alongside `ImagePairRenderer` and `LoopEngine` in test harness\n- Simulate palette apply and verify `colorMap` and `keyframeColors` updates\n- Test localStorage persistence: reload component and verify selected palette restored\n- Verify event emissions: listen for `palettePreview`, `paletteSelect`, `paletteApply` events\n\n**Visual Regression Tests:**\n- Use Percy/Storybook to capture screenshots of palette grid, list view, hover states\n- Test responsive behavior at 320px, 768px, 1440px widths\n- Verify color swatches render correctly with various palette sizes (2-256 colors)\n\n**Accessibility Testing:**\n- Run axe-core automated tests: verify color contrast ratio ≥ 4.5:1 for all text\n- Manual screen reader test (NVDA/JAWS): verify palette names and color values announced\n- Keyboard-only navigation test: verify all functionality accessible without mouse\n- Test focus management: focus trap within palette visualizer when open\n\n**Performance Testing:**\n- Render 50+ palettes with 100 colors each, verify UI remains responsive (<100ms render time)\n- Use Chrome DevTools to measure memory usage: ensure no leaks when switching palettes rapidly\n- Test apply action with large loops (1000+ keyframes): verify <500ms apply time\n\n**Manual QA Checklist:**\n- Open palette visualizer, verify current palette not affected\n- Switch between 10 different palettes, verify preview updates instantly\n- Apply palette, verify both image-pair and loop update simultaneously\n- Reload page, verify last selected palette remembered but not auto-applied\n- Test with duo-chrome's animation playing: verify smooth preview updates at 60fps",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-23T16:00:00.000Z",
-      "taskCount": 26,
-      "completedCount": 8,
+      "lastModified": "2026-03-02T18:21:57.374Z",
+      "taskCount": 27,
+      "completedCount": 9,
       "tags": [
         "duochrome"
       ]
