@@ -293,11 +293,12 @@ export class LoopAnimationPanel {
       this._jogDragging = true
       this._jogStartY = e.clientY
       this._jogStartFrame = this.controller.currentFrameIndex || 0
+      wheel.classList.add('is-dragging')
     })
 
     document.addEventListener('mousemove', e => {
       if (!this._jogDragging) return
-      const dy = this._jogStartY - e.clientY // up = positive
+      const dy = this._jogStartY - e.clientY // drag up = advance frames
       const total = this.controller.walk?.length || 1
       const sensitivity = Math.max(1, total / 60) // pixels per frame
       const delta = Math.round(dy / sensitivity)
@@ -308,9 +309,14 @@ export class LoopAnimationPanel {
       this._updateTimelineHead(newFrame)
     })
 
+    // capture:true — fires before any stopPropagation in the bubble chain,
+    // so releasing the mouse anywhere (including inside the panel) is detected.
     document.addEventListener('mouseup', () => {
-      this._jogDragging = false
-    })
+      if (this._jogDragging) {
+        this._jogDragging = false
+        wheel.classList.remove('is-dragging')
+      }
+    }, { capture: true })
   }
 
   /**
@@ -688,6 +694,7 @@ export class LoopAnimationPanel {
               <span class="jog-frame-num led-display" data-display="jog-frame">001</span>
               <span class="jog-frame-label">FRAME</span>
             </div>
+          <div class="jog-wheel-hint">DRAG ↕ TO SCRUB</div>
           </div>
 
           <!-- Hidden range for test compatibility -->

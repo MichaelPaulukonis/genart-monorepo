@@ -31,7 +31,7 @@
 
   /* Layout */
   --signal-panel-w:    300px;
-  --filmstrip-h:       88px;
+  --filmstrip-h:       160px;
 
   /* Legacy aliases (kept for compatibility) */
   --dc-panel-bg:          var(--dc-panel);
@@ -416,13 +416,32 @@ canvas {
 }
 
 .jog-wheel {
-  cursor: ew-resize;
+  cursor: ns-resize;     /* up/down drag gesture */
   display: block;
   filter: drop-shadow(0 0 6px rgba(255,176,0,0.25));
   transition: filter 0.15s;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.jog-wheel:hover { filter: drop-shadow(0 0 10px rgba(255,176,0,0.45)); }
-.jog-wheel:active { cursor: grabbing; }
+.jog-wheel:hover { filter: drop-shadow(0 0 10px rgba(255,176,0,0.55)); }
+.jog-wheel:active,
+.jog-wheel.is-dragging { cursor: ns-resize; filter: drop-shadow(0 0 14px rgba(255,176,0,0.8)); }
+
+/* Active drag state on the outer ring */
+.jog-wheel.is-dragging .jog-outer { stroke: rgba(255,176,0,0.4); }
+.jog-wheel.is-dragging .jog-inner { stroke: #ffcc44; }
+
+.jog-wheel-hint {
+  font-family: var(--dc-font-display);
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--dc-text-dim);
+  text-align: center;
+  margin-top: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.jog-wheel-container:hover .jog-wheel-hint { opacity: 1; }
 
 .jog-outer { fill: #161820; stroke: #2a2e3a; stroke-width: 2; }
 .jog-ring  { fill: none; stroke: #2a2e3a; stroke-width: 6; }
@@ -815,10 +834,13 @@ canvas {
 .filmstrip-scroll::-webkit-scrollbar-track { background: transparent; }
 .filmstrip-scroll::-webkit-scrollbar-thumb { background: var(--dc-rack-border); border-radius: 2px; }
 
-/* Filmstrip thumbnail cells */
+/* Filmstrip thumbnail cells
+   .filmstrip-thumbnail = class created by FilmstripPanel.js
+   .filmstrip-item      = legacy alias (kept for safety)           */
+.filmstrip-thumbnail,
 .filmstrip-item {
   flex-shrink: 0;
-  width: 60px;
+  width: 120px;
   height: 100%;
   background: #1a1c24;
   border: 1px solid var(--dc-rack-border);
@@ -828,8 +850,13 @@ canvas {
   position: relative;
   transition: border-color 0.1s;
 }
+.filmstrip-thumbnail:hover,
 .filmstrip-item:hover { border-color: var(--dc-text-dim); }
+
+/* .current = active class set by FilmstripPanel.updateHighlight() */
+.filmstrip-thumbnail.current,
 .filmstrip-item.active { border-color: var(--dc-amber); }
+.filmstrip-thumbnail.current::after,
 .filmstrip-item.active::after {
   content: '';
   position: absolute;
@@ -838,11 +865,52 @@ canvas {
   background: var(--dc-amber);
 }
 
+.filmstrip-thumbnail img,
+.filmstrip-thumbnail canvas,
 .filmstrip-item canvas,
 .filmstrip-item img {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.filmstrip-thumbnail-placeholder {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--dc-font-display);
+  font-size: 8px;
+  color: var(--dc-text-dim);
+  letter-spacing: 1px;
+}
+
+.filmstrip-thumbnail-info {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 2px 4px;
+  background: rgba(0,0,0,0.65);
+  font-family: var(--dc-font-display);
+  font-size: 7px;
+  color: var(--dc-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.filmstrip-branch-indicator {
+  position: absolute;
+  top: 3px; right: 3px;
+  width: 14px; height: 14px;
+  background: rgba(255,176,0,0.8);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: #000;
+  cursor: pointer;
 }
 
 /* ============================================================
@@ -1013,9 +1081,9 @@ canvas {
 .contact-tile__img {
   flex: 1;
   width: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
-  background: #111;
+  background: #fff;  /* white fill so black-on-transparent PNGs are visible */
 }
 
 .contact-tile__check {
