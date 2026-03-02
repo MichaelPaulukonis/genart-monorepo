@@ -140,7 +140,7 @@ const sketch = function (p) {
     imageIndices: [0, 1], // Current position in imgs array for each image (for navigation)
     isManualMode: false, // has user taken manual control (affects automatic cycling)
     showIndicators: false, // Whether to show visual indicators (active image highlighting)
-    activeFilter: { searchString: '' }, // Current image filter definition
+    activeFilter: { searchString: '', selectedImages: [] }, // Current image filter definition
     filteredImgs: [...imgs], // List of images matching current filter
     indicatorTimeout: null, // Timeout for auto-hiding visual indicators
     statusTimeout: null, // Timeout for auto-hiding status display
@@ -1440,11 +1440,15 @@ const sketch = function (p) {
     // Store reference for later updates
     window.updateLoopControllerImageSets = updateLoopControllerImageSets
 
-    // Initialize FilterModal
+    // Initialize FilterModal (ContactSheet in V3)
     filterModal = new FilterModal({
       totalImages: imgs.length,
-      onFilterChange: (searchString) => {
-        controlState.activeFilter.searchString = searchString
+      onFilterChange: (filterDef) => {
+        // filterDef is { searchString, selectedImages[] } in V3
+        controlState.activeFilter = {
+          searchString:   filterDef.searchString   || '',
+          selectedImages: filterDef.selectedImages  || []
+        }
         controlState.filteredImgs = filterImages(imgs, controlState.activeFilter)
         filterModal.updateStats(controlState.filteredImgs.length)
         filterModal.updateList(controlState.filteredImgs)
@@ -1455,11 +1459,9 @@ const sketch = function (p) {
         // Update visual indicator
         const filterOpenBtn = document.getElementById('filter-open-btn')
         if (filterOpenBtn) {
-          if (searchString.trim() !== '') {
-            filterOpenBtn.classList.add('active')
-          } else {
-            filterOpenBtn.classList.remove('active')
-          }
+          const hasFilter = controlState.activeFilter.searchString.trim() !== '' ||
+                            controlState.activeFilter.selectedImages.length > 0
+          filterOpenBtn.classList.toggle('active', hasFilter)
         }
       },
       onThemeAssign: (position, themeId) => {
@@ -1474,28 +1476,33 @@ const sketch = function (p) {
       }
     })
 
-    // If we restored a filter from localStorage, we need to sync the UI
-    if (controlState.activeFilter.searchString) {
+    // Sync filter UI with restored state
+    {
+      const hasFilter = controlState.activeFilter.searchString ||
+                        controlState.activeFilter.selectedImages?.length > 0
       filterModal.currentFilter = controlState.activeFilter.searchString
-      filterModal.input.value = controlState.activeFilter.searchString
+      filterModal.input.value   = controlState.activeFilter.searchString
+      filterModal.updateList(hasFilter ? controlState.filteredImgs : imgs)
       filterModal.updateStats(controlState.filteredImgs.length)
-      filterModal.updateList(controlState.filteredImgs)
 
       const filterOpenBtn = document.getElementById('filter-open-btn')
       if (filterOpenBtn) {
-        filterOpenBtn.classList.add('active')
+        filterOpenBtn.classList.toggle('active', !!hasFilter)
+        filterOpenBtn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          if (filterModal) filterModal.show()
+        })
       }
-    } else {
-      // Initial populate with all images
-      filterModal.updateList(imgs)
     }
-    const filterOpenBtn = document.getElementById('filter-open-btn')
-    if (filterOpenBtn) {
-      filterOpenBtn.addEventListener('click', (e) => {
-        e.stopPropagation() // Prevent triggering p.mousePressed
-        if (filterModal) {
-          filterModal.show()
-        }
+
+    // Wire monitor collapse button (V3: rack module toggle)
+    const monitorCollapse = document.getElementById('monitor-collapse')
+    if (monitorCollapse) {
+      monitorCollapse.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const statusOverlay = document.getElementById('status-overlay')
+        statusOverlay?.classList.toggle('is-collapsed')
+        monitorCollapse.textContent = statusOverlay?.classList.contains('is-collapsed') ? '+' : '−'
       })
     }
 
@@ -2166,11 +2173,16 @@ const sketch = function (p) {
     const savedFilter = localStorage.getItem('duochrome-filter')
     if (savedFilter) {
       try {
-        controlState.activeFilter = JSON.parse(savedFilter)
+        const parsed = JSON.parse(savedFilter)
+        // Migrate V2 format (searchString only) to V3 format
+        controlState.activeFilter = {
+          searchString:   parsed.searchString   || '',
+          selectedImages: parsed.selectedImages  || []
+        }
         controlState.filteredImgs = filterImages(imgs, controlState.activeFilter)
       } catch (e) {
         console.warn('Failed to parse saved filter:', e)
-        controlState.activeFilter = { searchString: '' }
+        controlState.activeFilter = { searchString: '', selectedImages: [] }
         controlState.filteredImgs = [...imgs]
       }
     }
@@ -2582,30 +2594,18 @@ const sketch = function (p) {
     }
   }
 
-  function showStatusDisplay (duration = 3000) {
+  function showStatusDisplay (duration = 0) {
+    // V3: Monitor is a permanent rack module — always update, never auto-hide
+    updateStatusDisplay()
     const statusOverlay = document.getElementById('status-overlay')
     if (!statusOverlay) return
-
-    // Update the display with current information
-    updateStatusDisplay()
-
-    // Show the overlay
-    statusOverlay.classList.remove('hidden', 'fade-out')
-
-    // Clear any existing timeout
+    // Ensure it isn't collapsed by keyboard toggle
+    if (statusOverlay.classList.contains('hidden')) return
+    statusOverlay.classList.remove('fade-out')
+    controlState.statusIsPermanent = true
     if (controlState.statusTimeout) {
       clearTimeout(controlState.statusTimeout)
       controlState.statusTimeout = null
-    }
-
-    // Set timeout to hide the overlay (only if duration > 0)
-    if (duration > 0) {
-      controlState.statusIsPermanent = false
-      controlState.statusTimeout = setTimeout(() => {
-        hideStatusDisplay()
-      }, duration)
-    } else {
-      controlState.statusIsPermanent = true
     }
   }
 
@@ -2631,14 +2631,12 @@ const sketch = function (p) {
   }
 
   function toggleStatusDisplay () {
+    // V3: toggle the rack module collapse state
     const statusOverlay = document.getElementById('status-overlay')
     if (!statusOverlay) return
-
-    if (statusOverlay.classList.contains('hidden')) {
-      showStatusDisplay(0) // Show permanently when manually toggled
-    } else {
-      hideStatusDisplay()
-    }
+    statusOverlay.classList.toggle('is-collapsed')
+    const btn = document.getElementById('monitor-collapse')
+    if (btn) btn.textContent = statusOverlay.classList.contains('is-collapsed') ? '+' : '−'
   }
 
   // Status Display Dragging System
@@ -2790,11 +2788,7 @@ const sketch = function (p) {
   }
 
   function updateStatusPosition () {
-    const statusOverlay = document.getElementById('status-overlay')
-    if (!statusOverlay) return
-
-    statusOverlay.style.left = `${controlState.statusPosition.x}px`
-    statusOverlay.style.top = `${controlState.statusPosition.y}px`
+    // V3: Monitor is in fixed rack panel — no position needed
   }
 
   /**
