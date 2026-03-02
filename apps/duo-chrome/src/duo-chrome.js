@@ -35,7 +35,7 @@
  */
 
 import { p5 } from 'p5js-wrapper'
-import { ALL_PALETTES } from './risocolors'
+import { ALL_PALETTES, PALETTE_NAMES } from './risocolors'
 import { imgs } from './generated/images.js'
 import { getFormattedVersion } from './utils/version.js'
 import { filterImages } from './utils/image-filtering.js'
@@ -47,6 +47,7 @@ import { FilmstripPanel } from './ui/FilmstripPanel.js'
 import { LoopAnimationController } from './utils/loop-animation-controller.js'
 import { generateLoopFrameColors } from './utils/loop-frame-colors.js'
 import { LoopAnimationPanel } from './ui/LoopAnimationPanel.js'
+import { PalettePanel } from './ui/PalettePanel.js'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
 
@@ -105,6 +106,7 @@ const sketch = function (p) {
   let filterModal = null
   let loopAnimationController = null
   let loopAnimationPanel = null
+  let palettePanel = null
   let loopFrameColors = []
   let loopFrameLoadToken = 0
   let captureDebounceTimer = null
@@ -123,7 +125,12 @@ const sketch = function (p) {
   function getPaletteWithoutBackground () {
     const backgroundHex = getCurrentBackgroundHexColor()
     const palette = ALL_PALETTES[colorIndex] || []
-    const filtered = palette.filter(entry => normalizeHexColor(entry?.color) !== backgroundHex)
+    const filtered = palette.filter(entry => {
+      const c = entry?.color
+      // Handle both array [r,g,b] (RISOCOLORS format) and '#hex' string formats
+      const colorHex = Array.isArray(c) ? normalizeHexColor(rgbArrayToHex(c)) : normalizeHexColor(c)
+      return colorHex !== backgroundHex
+    })
     return filtered.length > 0 ? filtered : palette
   }
 
@@ -966,16 +973,17 @@ const sketch = function (p) {
       return false
     }
 
-    // Ensure uniqueness - prevent both images from having the same color
+    // Ensure uniqueness - prevent both images from having the same color or the background
     const otherImageIndex = imageIndex === 0 ? 1 : 0
     const otherColor = imageColorPairs[otherImageIndex].color
 
-    // If the new color would conflict with the other image, skip to the next available
-    // TODO: also check if new color is same as background and skip (white on white, black on black, etc)
     const backgroundHex = getCurrentBackgroundHexColor()
+    const toHex = c => Array.isArray(c) ? normalizeHexColor(rgbArrayToHex(c)) : normalizeHexColor(c)
+    const otherHex = toHex(otherColor?.color)
+
     const isInvalidColor = (entry) => {
-      const colorHex = normalizeHexColor(entry?.color)
-      return entry.color === otherColor.color || colorHex === backgroundHex
+      const colorHex = toHex(entry?.color)
+      return colorHex === otherHex || colorHex === backgroundHex
     }
 
     let newColor = currentColorArray[newColorIndex]
@@ -1317,6 +1325,7 @@ const sketch = function (p) {
             controlState.manualSizeControl[1] = false
 
             requestScreenUpdate()
+            updateStatusDisplay()
           }).catch((error) => {
             console.warn('[LoopAnimation Draw] Failed to load loop frame images:', error)
           })
@@ -1506,6 +1515,31 @@ const sketch = function (p) {
       })
     }
 
+    // Initialize PalettePanel (V3 Palette rack module + picker overlay)
+    const palettePanelEl = document.getElementById('palette-panel')
+    if (palettePanelEl) {
+      palettePanel = new PalettePanel(palettePanelEl, {
+        palettes:     ALL_PALETTES,
+        paletteNames: PALETTE_NAMES,
+        initialIndex: colorIndex,
+        onPaletteChange: (index) => {
+          colorIndex = index
+          loopFrameColors = []   // clear cached loop colors; regenerated on next frame
+
+          // Re-color current image pair from the new palette immediately
+          const palette = getPaletteWithoutBackground()
+          if (palette.length > 0) {
+            imageColorPairs[0].color = getRandomUniqueItem(palette, [])
+            imageColorPairs[1].color = getRandomUniqueItem(palette, [imageColorPairs[0].color])
+            regenerateLayers()   // async — calls requestScreenUpdate internally
+          } else {
+            requestScreenUpdate()
+          }
+          updateStatusDisplay()
+        }
+      })
+    }
+
     // Try to restore composition from URL, otherwise initialize random pairs
     if (!restoreCompositionFromURL()) {
       initializeImageColorPairs() // Initialize both pairs initially
@@ -1515,53 +1549,27 @@ const sketch = function (p) {
   }
 
   p.mousePressed = function (event) {
-    // Don't update images if currently dragging status display
-    if (controlState.isDraggingStatus) {
-      return
-    }
+    if (controlState.isDraggingStatus) return
 
-    // Don't update images if clear history dialog is visible
-    const clearHistoryDialog = document.getElementById('clear-history-dialog')
-    if (clearHistoryDialog && !clearHistoryDialog.classList.contains('hidden')) {
-      return
-    }
-
-    // Don't update images if clicking on filmstrip panel
-    if (filmstripPanel && filmstripPanel.isVisible) {
-      const filmstripElement = document.getElementById('filmstrip-panel')
-      if (filmstripElement && event && event.target) {
-        // Check if click target is within filmstrip
-        if (filmstripElement.contains(event.target)) {
-          return
-        }
-      }
-    }
-
-    // Don't update images if clicking on filter button or modal
+    // Block clicks inside any fixed UI panel or overlay — never trigger an image
+    // change when the user is interacting with (or just mis-clicking inside) a
+    // panel that has nothing to do with the canvas.
     if (event && event.target) {
-      const filterBtn = document.getElementById('filter-open-btn')
-      const filterModal = document.getElementById('filter-modal')
-      
-      // Check filter button
-      if (filterBtn && (filterBtn === event.target || filterBtn.contains(event.target))) {
-        return
-      }
-
-      // Check filter modal (if visible)
-      if (filterModal && !filterModal.classList.contains('hidden') && filterModal.contains(event.target)) {
-        return
-      }
+      const uiPanels = [
+        'signal-panel',       // right-side rack (monitor, transport, palette)
+        'filmstrip-panel',    // bottom history strip
+        'filter-modal',       // contact sheet overlay
+        'palette-modal',      // palette picker overlay
+        'help-overlay',       // keyboard shortcuts overlay
+        'clear-history-dialog' // confirmation dialog
+      ]
+      if (uiPanels.some(id => {
+        const el = document.getElementById(id)
+        return el && el.contains(event.target)
+      })) return
     }
 
-    // Don't update images if clicking on loop animation panel
-    if (event && event.target) {
-      const loopPanel = document.getElementById('loop-animation-panel')
-      if (loopPanel && loopPanel.contains(event.target)) {
-        return
-      }
-    }
-
-    loadNewImagesAndColors() // Update one pair at a time
+    loadNewImagesAndColors()
   }
 
   p.keyPressed = function () {
@@ -1692,6 +1700,9 @@ const sketch = function (p) {
       return false // Prevent default browser behavior
     } else if (p.key === 'c') {
       colorIndex = (colorIndex + 1) % ALL_PALETTES.length
+      if (palettePanel) palettePanel.update(colorIndex)
+    } else if (p.key === 'g') {
+      if (palettePanel) palettePanel.toggle()
     } else if (p.key === 'm') {
       cycleBlendMode()
     } else if (p.key === 'p' || p.keyCode === 32) {
@@ -1831,6 +1842,7 @@ const sketch = function (p) {
         const paletteIndex = parseInt(paletteParam)
         if (paletteIndex >= 0 && paletteIndex < COLOR_MAPS.length) {
           colorIndex = paletteIndex
+          if (palettePanel) palettePanel.update(colorIndex)
         }
       }
 
@@ -2063,6 +2075,25 @@ const sketch = function (p) {
       (currentBackgroundModeIndex + 1) % backgroundModes.length
     currentBlendModeIndex = 0 // Reset to the first blend mode for the new background
     setBlendModeAndBackground()
+
+    // Re-pick any image color that now matches the new background (e.g. black image on
+    // newly-black background, or white image on newly-white background).
+    const newBgHex = getCurrentBackgroundHexColor()
+    const toHex = c => Array.isArray(c) ? normalizeHexColor(rgbArrayToHex(c)) : normalizeHexColor(c)
+    let colorChanged = false
+    imageColorPairs.forEach((pair, i) => {
+      if (pair.color && toHex(pair.color.color) === newBgHex) {
+        const palette = getPaletteWithoutBackground() // already excludes new background
+        const otherColor = imageColorPairs[1 - i]?.color
+        const otherHex = otherColor ? toHex(otherColor.color) : null
+        const choices = palette.filter(c => toHex(c.color) !== otherHex)
+        const pool = choices.length > 0 ? choices : palette
+        pair.color = pool[Math.floor(Math.random() * pool.length)]
+        colorChanged = true
+      }
+    })
+    if (colorChanged) regenerateLayers()
+
     requestScreenUpdate()
     showStatusDisplay()
 

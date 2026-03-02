@@ -1,5 +1,11 @@
 function normalizeHexColor (value) {
-  if (!value || typeof value !== 'string') return ''
+  if (!value) return ''
+  // Handle RGB array format e.g. [255, 0, 0]
+  if (Array.isArray(value)) {
+    const h = n => Math.max(0, Math.min(255, Math.round(Number(n)))).toString(16).padStart(2, '0')
+    return `#${h(value[0])}${h(value[1])}${h(value[2])}`
+  }
+  if (typeof value !== 'string') return ''
   const hex = value.trim().toLowerCase()
   if (/^#[0-9a-f]{3}$/.test(hex)) {
     return `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`

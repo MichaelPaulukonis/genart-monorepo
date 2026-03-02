@@ -46,6 +46,7 @@
             <h4>Signal Effects</h4>
             <ul>
               <li><kbd>C</kbd> — Cycle color palettes</li>
+              <li><kbd>G</kbd> — Open palette picker</li>
               <li><kbd>M</kbd> — Cycle blend modes</li>
               <li><kbd>V</kbd> — Toggle visual indicators</li>
             </ul>
@@ -209,7 +210,23 @@
         <!-- LoopAnimationPanel.getHTML() output goes here via mount() -->
       </div>
 
+      <!-- ── PALETTE MODULE ───────────────────────────────────── -->
+      <!-- PalettePanel.js mounts its rack-module__body here -->
+      <div id="palette-panel" class="rack-module">
+        <div class="rack-module__header">
+          <span class="rack-module__label">◈ Palette</span>
+          <button class="rack-module__collapse" id="palette-collapse" aria-label="Collapse palette">−</button>
+        </div>
+        <!-- PalettePanel body inserted here by JS -->
+      </div>
+
     </div><!-- /#signal-panel -->
+
+    <!-- ========================================================
+         PALETTE PICKER  (full-screen overlay)
+         JS builds interior in PalettePanel constructor
+         ======================================================== -->
+    <div id="palette-modal" class="palette-modal hidden"></div>
 
     <!-- ========================================================
          FILMSTRIP  (persistent bottom)
