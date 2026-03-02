@@ -139,3 +139,76 @@ describe('generateLoopFrameColors', () => {
     expect(result[3].colorB).toEqual(result[0].colorA)
   })
 })
+
+describe('normalizeHexColor behavior (via generateLoopFrameColors)', () => {
+  const walk = [{ frame: 0, loopFrame: 0 }, { frame: 1, loopFrame: 1 }, { frame: 2, loopFrame: 0 }]
+
+  it('excludes palette entries with RGB array colors matching an excluded hex string', () => {
+    const paletteWithArrayColors = [
+      { name: 'Black', color: [0, 0, 0] },
+      { name: 'Red', color: '#ff0000' },
+      { name: 'Blue', color: '#0000ff' }
+    ]
+
+    const result = generateLoopFrameColors(walk, paletteWithArrayColors, makeRng([0.1, 0.9, 0.5, 0.2]), {
+      excludedColors: ['#000000']
+    })
+
+    result.forEach(colors => {
+      expect(colors.colorA.name).not.toBe('Black')
+      expect(colors.colorB.name).not.toBe('Black')
+    })
+  })
+
+  it('normalizes RGB array entries passed as excludedColors', () => {
+    const simplePalette = [
+      { name: 'Black', color: '#000000' },
+      { name: 'Red', color: '#ff0000' },
+      { name: 'Blue', color: '#0000ff' }
+    ]
+
+    const result = generateLoopFrameColors(walk, simplePalette, makeRng([0.1, 0.9, 0.5, 0.2]), {
+      excludedColors: [[0, 0, 0]] // array format — should normalize to #000000
+    })
+
+    result.forEach(colors => {
+      expect(colors.colorA.name).not.toBe('Black')
+      expect(colors.colorB.name).not.toBe('Black')
+    })
+  })
+
+  it('expands 3-character hex shorthand in palette entries for exclusion matching', () => {
+    const shorthandPalette = [
+      { name: 'Black', color: '#000' },
+      { name: 'Red', color: '#f00' },
+      { name: 'Blue', color: '#00f' }
+    ]
+
+    const result = generateLoopFrameColors(walk, shorthandPalette, makeRng([0.1, 0.9, 0.5, 0.2]), {
+      excludedColors: ['#000000']
+    })
+
+    result.forEach(colors => {
+      expect(colors.colorA.name).not.toBe('Black')
+      expect(colors.colorB.name).not.toBe('Black')
+    })
+  })
+
+  it('correctly normalizes RISOCOLORS BLACK [0,0,0] array so it is excluded when bg is black', () => {
+    // Regression: [0,0,0] was previously not normalized, causing false negatives
+    const risoPalette = [
+      { name: 'Black', color: [0, 0, 0] },
+      { name: 'Fluorescent Pink', color: [255, 72, 176] },
+      { name: 'Medium Blue', color: [50, 85, 164] }
+    ]
+
+    const result = generateLoopFrameColors(walk, risoPalette, makeRng([0.1, 0.9, 0.5, 0.2]), {
+      excludedColors: ['#000000']
+    })
+
+    result.forEach(colors => {
+      expect(colors.colorA.color).not.toEqual([0, 0, 0])
+      expect(colors.colorB.color).not.toEqual([0, 0, 0])
+    })
+  })
+})
