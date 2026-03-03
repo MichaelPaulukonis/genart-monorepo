@@ -29,6 +29,8 @@ export class LoopAnimationPanel {
     this._jogDragging = false
     this._jogStartY = 0
     this._jogStartFrame = 0
+    this._jogPendingFrame = null
+    this._jogRafPending = false
   }
 
   /**
@@ -67,31 +69,31 @@ export class LoopAnimationPanel {
   cacheElements () {
     this.panelElement = this.panel.querySelector('.loop-animation-panel')
     this.elements = {
-      toggleBtn:       this.panel.querySelector('[data-action="toggle"]'),
+      toggleBtn: this.panel.querySelector('[data-action="toggle"]'),
       loopLengthInput: this.panel.querySelector('[data-input="loop-length"]'),
-      loopLengthMax:   this.panel.querySelector('[data-display="loop-length-max"]'),
-      playPauseBtn:    this.panel.querySelector('[data-action="play-pause"]'),
-      stopBtn:         this.panel.querySelector('[data-action="stop"]'),
-      saveLoopBtn:     this.panel.querySelector('[data-action="save-loop"]'),
-      refreshBtn:      this.panel.querySelector('[data-action="refresh"]'),
-      frameCounter:    this.panel.querySelector('[data-display="frame-counter"]'),
-      frameSlider:     this.panel.querySelector('[data-input="frame-slider"]'),
-      fpsSlider:       this.panel.querySelector('[data-input="fps"]'),
-      fpsValue:        this.panel.querySelector('[data-display="fps-value"]'),
-      previewPair:     this.panel.querySelector('[data-display="preview-pair"]'),
-      loadingSpinner:  this.panel.querySelector('[data-display="loading"]'),
-      helpText:        this.panel.querySelector('[data-display="help-text"]'),
+      loopLengthMax: this.panel.querySelector('[data-display="loop-length-max"]'),
+      playPauseBtn: this.panel.querySelector('[data-action="play-pause"]'),
+      stopBtn: this.panel.querySelector('[data-action="stop"]'),
+      saveLoopBtn: this.panel.querySelector('[data-action="save-loop"]'),
+      refreshBtn: this.panel.querySelector('[data-action="refresh"]'),
+      frameCounter: this.panel.querySelector('[data-display="frame-counter"]'),
+      frameSlider: this.panel.querySelector('[data-input="frame-slider"]'),
+      fpsSlider: this.panel.querySelector('[data-input="fps"]'),
+      fpsValue: this.panel.querySelector('[data-display="fps-value"]'),
+      previewPair: this.panel.querySelector('[data-display="preview-pair"]'),
+      loadingSpinner: this.panel.querySelector('[data-display="loading"]'),
+      helpText: this.panel.querySelector('[data-display="help-text"]'),
       // V3-specific
-      jogWheel:        this.panel.querySelector('.jog-wheel'),
-      jogTick:         this.panel.querySelector('.jog-tick'),
-      jogFrameNum:     this.panel.querySelector('[data-display="jog-frame"]'),
-      timelineTrack:   this.panel.querySelector('.loop-timeline__track'),
-      timelineHead:    this.panel.querySelector('.loop-timeline__head'),
-      inMarker:        this.panel.querySelector('.loop-timeline__marker[data-marker="in"]'),
-      outMarker:       this.panel.querySelector('.loop-timeline__marker[data-marker="out"]'),
-      inValue:         this.panel.querySelector('[data-display="in-point"]'),
-      outValue:        this.panel.querySelector('[data-display="out-point"]'),
-      fpsBtns:         this.panel.querySelectorAll('.loop-fps-btn'),
+      jogWheel: this.panel.querySelector('.jog-wheel'),
+      jogTick: this.panel.querySelector('.jog-tick'),
+      jogFrameNum: this.panel.querySelector('[data-display="jog-frame"]'),
+      timelineTrack: this.panel.querySelector('.loop-timeline__track'),
+      timelineHead: this.panel.querySelector('.loop-timeline__head'),
+      inMarker: this.panel.querySelector('.loop-timeline__marker[data-marker="in"]'),
+      outMarker: this.panel.querySelector('.loop-timeline__marker[data-marker="out"]'),
+      inValue: this.panel.querySelector('[data-display="in-point"]'),
+      outValue: this.panel.querySelector('[data-display="out-point"]'),
+      fpsBtns: this.panel.querySelectorAll('.loop-fps-btn')
     }
   }
 
@@ -112,7 +114,7 @@ export class LoopAnimationPanel {
     // Toggle
     if (this.elements.toggleBtn) {
       this.elements.toggleBtn.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation() })
-      this.elements.toggleBtn.addEventListener('mouseup',   e => { e.preventDefault(); e.stopPropagation() })
+      this.elements.toggleBtn.addEventListener('mouseup', e => { e.preventDefault(); e.stopPropagation() })
       this.elements.toggleBtn.addEventListener('click', e => {
         console.log('[LoopPanel] Toggle button clicked')
         e.preventDefault(); e.stopPropagation()
@@ -303,10 +305,21 @@ export class LoopAnimationPanel {
       const sensitivity = Math.max(1, total / 60) // pixels per frame
       const delta = Math.round(dy / sensitivity)
       const newFrame = ((this._jogStartFrame + delta) % total + total) % total
-      this.controller.setFrame(newFrame)
+
+      // Update DOM immediately for snappy visual feedback
       this._updateJogAngle(newFrame)
       if (this.elements.frameSlider) this.elements.frameSlider.value = newFrame
       this._updateTimelineHead(newFrame)
+
+      // Throttle the expensive image load to once per animation frame
+      this._jogPendingFrame = newFrame
+      if (!this._jogRafPending) {
+        this._jogRafPending = true
+        requestAnimationFrame(() => {
+          this.controller.setFrame(this._jogPendingFrame)
+          this._jogRafPending = false
+        })
+      }
     })
 
     // capture:true — fires before any stopPropagation in the bubble chain,
@@ -315,6 +328,11 @@ export class LoopAnimationPanel {
       if (this._jogDragging) {
         this._jogDragging = false
         wheel.classList.remove('is-dragging')
+        // Ensure the final resting frame is always rendered
+        if (this._jogPendingFrame !== null) {
+          this.controller.setFrame(this._jogPendingFrame)
+          this._jogPendingFrame = null
+        }
       }
     }, { capture: true })
   }
@@ -371,14 +389,14 @@ export class LoopAnimationPanel {
     }
 
     // Timeline markers
-    const inPct  = (this.inPoint  / Math.max(1, total - 1)) * 100
+    const inPct = (this.inPoint / Math.max(1, total - 1)) * 100
     const outPct = (this.outPoint / Math.max(1, total - 1)) * 100
-    if (this.elements.inMarker)  this.elements.inMarker.style.left  = `${inPct}%`
+    if (this.elements.inMarker) this.elements.inMarker.style.left = `${inPct}%`
     if (this.elements.outMarker) this.elements.outMarker.style.left = `${outPct}%`
 
     // Active range track
     if (this.elements.timelineTrack) {
-      this.elements.timelineTrack.style.left  = `${inPct}%`
+      this.elements.timelineTrack.style.left = `${inPct}%`
       this.elements.timelineTrack.style.right = `${100 - outPct}%`
     }
   }
@@ -390,13 +408,13 @@ export class LoopAnimationPanel {
     console.log('[LoopPanel] updateFrame called with frame:', frame)
 
     const total = this.controller.walk ? this.controller.walk.length : 0
-    const idx   = this.controller.currentFrameIndex
+    const idx = this.controller.currentFrameIndex
 
     if (this.elements.frameCounter) {
       this.elements.frameCounter.textContent = `Frame ${idx + 1} / ${total}`
     }
     if (this.elements.frameSlider && this.controller.walk) {
-      this.elements.frameSlider.max   = total - 1
+      this.elements.frameSlider.max = total - 1
       this.elements.frameSlider.value = idx
     }
 
@@ -464,8 +482,8 @@ export class LoopAnimationPanel {
   updateLoopLengthInput () {
     if (!this.elements.loopLengthInput) return
     const range = this.controller.getLoopLengthRange()
-    this.elements.loopLengthInput.min   = range.min
-    this.elements.loopLengthInput.max   = range.max
+    this.elements.loopLengthInput.min = range.min
+    this.elements.loopLengthInput.max = range.max
     this.elements.loopLengthInput.value = range.current
     if (this.elements.loopLengthMax) {
       this.elements.loopLengthMax.textContent = `(max: ${range.max})`
@@ -677,7 +695,7 @@ export class LoopAnimationPanel {
               <circle r="50" class="jog-outer"/>
               <!-- Tick marks around rim -->
               <g class="jog-ticks-minor">
-                ${Array.from({length: 24}, (_, i) => {
+                ${Array.from({ length: 24 }, (_, i) => {
                   const a = (i / 24) * 2 * Math.PI
                   const x1 = Math.sin(a) * 44; const y1 = -Math.cos(a) * 44
                   const x2 = Math.sin(a) * 49; const y2 = -Math.cos(a) * 49

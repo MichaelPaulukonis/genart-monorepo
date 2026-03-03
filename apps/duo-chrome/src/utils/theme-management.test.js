@@ -1,20 +1,20 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { 
-  getThemes, 
-  saveTheme, 
-  deleteTheme, 
-  getThemeById, 
-  getAssignments, 
-  saveAssignments, 
-  assignTheme 
+import {
+  getThemes,
+  saveTheme,
+  deleteTheme,
+  getThemeById,
+  getAssignments,
+  saveAssignments,
+  assignTheme
 } from './theme-management'
 
 describe('Theme Management Utility', () => {
   let localStorageMock
-  
+
   beforeEach(() => {
     localStorageMock = {}
-    
+
     vi.stubGlobal('localStorage', {
       getItem: (key) => localStorageMock[key] || null,
       setItem: (key, value) => { localStorageMock[key] = value.toString() },
@@ -32,7 +32,7 @@ describe('Theme Management Utility', () => {
       expect(theme).toHaveProperty('id')
       expect(theme.name).toBe('Test Theme')
       expect(theme.filter).toEqual({ searchString: 'test' })
-      
+
       const themes = getThemes()
       expect(themes).toHaveLength(1)
       expect(themes[0]).toEqual(theme)
@@ -51,9 +51,9 @@ describe('Theme Management Utility', () => {
     it('should delete a theme', () => {
       const t1 = saveTheme('Theme 1', { searchString: '1' })
       const t2 = saveTheme('Theme 2', { searchString: '2' })
-      
+
       expect(getThemes()).toHaveLength(2)
-      
+
       const remaining = deleteTheme(t1.id)
       expect(remaining).toHaveLength(1)
       expect(remaining[0].id).toBe(t2.id)
@@ -70,7 +70,7 @@ describe('Theme Management Utility', () => {
       const assignments = assignTheme(0, 'theme-123')
       expect(assignments[0]).toBe('theme-123')
       expect(assignments[1]).toBeNull()
-      
+
       const stored = getAssignments()
       expect(stored).toEqual(assignments)
     })
@@ -84,9 +84,9 @@ describe('Theme Management Utility', () => {
     it('should clear assignment when theme is deleted', () => {
       const theme = saveTheme('To Delete', { searchString: 'delete' })
       assignTheme(0, theme.id)
-      
+
       expect(getAssignments()[0]).toBe(theme.id)
-      
+
       deleteTheme(theme.id)
       expect(getAssignments()[0]).toBeNull()
     })

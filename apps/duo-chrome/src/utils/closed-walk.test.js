@@ -697,7 +697,3 @@ describe('ClosedWalkGenerator - State Persistence', () => {
     expect(savedTime.getTime()).toBeLessThanOrEqual(after.getTime())
   })
 })
-
-
-
-

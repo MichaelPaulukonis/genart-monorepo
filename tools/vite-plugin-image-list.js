@@ -163,7 +163,7 @@ async function generateModule (imageFiles, outputPath, exportName, baseDir) {
  * Total images: ${imageFiles.length}
  */
 
-export const ${exportName} = ${JSON.stringify(imageFiles, null, 2)}
+export const ${exportName} = [\n${imageFiles.map(f => `  '${f}'`).join(',\n')}\n]
 
 // Default export for convenience
 export default ${exportName}

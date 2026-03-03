@@ -11,7 +11,7 @@ The interactive controls transform Duo-Chrome from a passive viewing experience 
 - Navigate through the image collection for each position
 - Cycle through colors in the current palette
 - Exchange complete image states
-- Monitor current settings with a draggable status display
+- Monitor current settings in the status panel
 
 ## Control Architecture
 
@@ -39,9 +39,7 @@ controlState = {
   manualSizeControl: [false, false], // Manual size adjustment flags
   imageIndices: [0, 1],          // Position in image array
   isManualMode: false,           // Manual vs automatic mode
-  showIndicators: false,         // Visual indicator visibility
-  statusIsPermanent: false,      // Status display mode
-  isDraggingStatus: false        // UI interaction state
+  showIndicators: false          // Visual indicator visibility
 }
 ```
 
@@ -153,25 +151,23 @@ Provides complete state swapping between Image A and Image B.
 
 ### Status Display System
 
-A draggable overlay showing current image information and settings.
+A fixed panel in the signal rack showing current image information and settings.
 
 **Information Displayed:**
-- **Image Names:** Filename for each image (wrapped to 2 lines)
+- **Image Names:** Filename for each image
 - **Colors:** Current color name for each image
 - **Scale Factors:** Current size multiplier (e.g., "1.25")
 - **Active Highlighting:** Visual indication of selected image
+- **Blend Mode:** Current blend mode in use
 
 **Display Features:**
-- **Draggable:** Click and drag header to reposition
-- **Session Persistent:** Position saved across browser sessions
-- **Auto-hide:** Temporary display (3 seconds) for control actions
-- **Manual Toggle:** `I` key for permanent display
-- **Fixed Width:** Consistent size prevents layout shifts
+- **Always Visible:** Fixed position in the right-side rack panel
+- **Collapsible:** Click `−` button to collapse, `+` to expand
+- **Real-time Updates:** Refreshes automatically on control actions
 
 **Controls:**
-- `I` - Toggle status display visibility
-- **Drag Header** - Reposition display
-- **Auto-show** - Appears during control actions
+- `I` - Toggle panel collapse state
+- **Collapse Button** - `−`/`+` button in panel header
 
 ## Keyboard Reference
 
@@ -304,8 +300,7 @@ All control actions trigger coordinated updates:
 - Ensure images are loaded and displayed
 
 **Status Display Issues:**
-- Toggle with `I` key to refresh
-- Drag header to reposition if off-screen
+- Toggle collapse with `I` key or the `−`/`+` button
 - Check browser console for JavaScript errors
 
 **Size Control Problems:**

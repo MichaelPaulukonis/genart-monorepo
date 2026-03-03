@@ -20,12 +20,12 @@
  */
 export class PalettePanel {
   constructor (containerEl, options = {}) {
-    this.containerEl  = containerEl
-    this.palettes     = options.palettes     || []
+    this.containerEl = containerEl
+    this.palettes = options.palettes || []
     this.paletteNames = options.paletteNames || []
     this.onPaletteChange = options.onPaletteChange || null
     this._activeIndex = options.initialIndex || 0
-    this._isVisible   = false
+    this._isVisible = false
 
     this._modal = document.getElementById('palette-modal')
 
@@ -59,12 +59,12 @@ export class PalettePanel {
 
     this.containerEl.appendChild(body)
 
-    this._nameEl    = body.querySelector('[data-palette-name]')
-    this._countEl   = body.querySelector('[data-palette-count]')
-    this._stripEl   = body.querySelector('[data-palette-strip]')
-    this._prevBtn   = body.querySelector('.palette-module__prev')
-    this._nextBtn   = body.querySelector('.palette-module__next')
-    this._pickBtn   = body.querySelector('.palette-module__pick')
+    this._nameEl = body.querySelector('[data-palette-name]')
+    this._countEl = body.querySelector('[data-palette-count]')
+    this._stripEl = body.querySelector('[data-palette-strip]')
+    this._prevBtn = body.querySelector('.palette-module__prev')
+    this._nextBtn = body.querySelector('.palette-module__next')
+    this._pickBtn = body.querySelector('.palette-module__pick')
 
     // Wire collapse button already in the rack header
     const collapseBtn = this.containerEl.querySelector('.rack-module__collapse')
@@ -88,7 +88,7 @@ export class PalettePanel {
         <div class="palette-picker__grid" data-picker-grid></div>
       </div>
     `
-    this._grid     = this._modal.querySelector('[data-picker-grid]')
+    this._grid = this._modal.querySelector('[data-picker-grid]')
     this._closeBtn = this._modal.querySelector('[data-action="close"]')
   }
 
@@ -101,14 +101,14 @@ export class PalettePanel {
   _renderStrip () {
     if (!this._stripEl) return
     const palette = this.palettes[this._activeIndex] || []
-    const name    = this.paletteNames[this._activeIndex] || `Palette ${this._activeIndex + 1}`
-    const count   = palette.length
+    const name = this.paletteNames[this._activeIndex] || `Palette ${this._activeIndex + 1}`
+    const count = palette.length
 
-    if (this._nameEl)  this._nameEl.textContent  = name
+    if (this._nameEl) this._nameEl.textContent = name
     if (this._countEl) this._countEl.textContent = `${count} color${count !== 1 ? 's' : ''}`
 
     // Sample up to 14 swatches evenly from the palette
-    const MAX  = 14
+    const MAX = 14
     const step = count > MAX ? count / MAX : 1
     const entries = count > MAX
       ? Array.from({ length: MAX }, (_, i) => palette[Math.floor(i * step)])
@@ -126,12 +126,12 @@ export class PalettePanel {
     this._grid.innerHTML = ''
 
     this.palettes.forEach((palette, idx) => {
-      const name     = this.paletteNames[idx] || `Palette ${idx + 1}`
+      const name = this.paletteNames[idx] || `Palette ${idx + 1}`
       const isActive = idx === this._activeIndex
-      const count    = palette.length
+      const count = palette.length
 
       // Sample up to 30 swatches for the card display
-      const MAX  = 30
+      const MAX = 30
       const step = count > MAX ? count / MAX : 1
       const entries = count > MAX
         ? Array.from({ length: MAX }, (_, i) => palette[Math.floor(i * step)])

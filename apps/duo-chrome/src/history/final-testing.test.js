@@ -473,7 +473,7 @@ describe('Final Testing and Polish', () => {
 
     it('should handle modifications at various positions in large history', () => {
       const testPositions = [0, 50, 100, 150, 199]
-      
+
       testPositions.forEach(pos => {
         // Re-create large history for each test iteration to ensure valid path
         historyManager.clearHistory()

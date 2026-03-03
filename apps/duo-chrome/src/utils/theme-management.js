@@ -56,7 +56,7 @@ export function saveTheme (name, filter) {
     filter,
     createdAt: Date.now()
   }
-  
+
   themes.push(newTheme)
   localStorage.setItem(THEMES_KEY, JSON.stringify(themes))
   return newTheme
@@ -64,13 +64,13 @@ export function saveTheme (name, filter) {
 
 /**
  * Delete a theme by ID
- * @param {string} id 
+ * @param {string} id
  * @returns {Theme[]} Updated list of themes
  */
 export function deleteTheme (id) {
   const themes = getThemes().filter(t => t.id !== id)
   localStorage.setItem(THEMES_KEY, JSON.stringify(themes))
-  
+
   // Also remove from assignments if present
   const assignments = getAssignments()
   let changed = false
@@ -85,13 +85,13 @@ export function deleteTheme (id) {
   if (changed) {
     saveAssignments(assignments)
   }
-  
+
   return themes
 }
 
 /**
  * Get theme by ID
- * @param {string} id 
+ * @param {string} id
  * @returns {Theme|undefined}
  */
 export function getThemeById (id) {
@@ -114,7 +114,7 @@ export function getAssignments () {
 
 /**
  * Save A/B assignments
- * @param {ThemeAssignments} assignments 
+ * @param {ThemeAssignments} assignments
  */
 export function saveAssignments (assignments) {
   localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments))

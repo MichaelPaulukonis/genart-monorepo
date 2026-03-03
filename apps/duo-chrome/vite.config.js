@@ -35,7 +35,7 @@ function copyProductionImages () {
             // Remove the old target directory so we can do a clean copy
             rmSync(targetDir, { recursive: true, force: true })
           }
-          
+
           // Copy production images (clean copy after removal)
           cpSync(sourceDir, targetDir, { recursive: true })
           console.log('✅ Production images copied to public/images for deployment')

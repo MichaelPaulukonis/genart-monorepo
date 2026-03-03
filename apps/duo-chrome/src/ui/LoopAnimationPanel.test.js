@@ -10,7 +10,7 @@ import { LoopAnimationPanel } from './LoopAnimationPanel.js'
 
 // Mock controller for testing
 class MockLoopAnimationController {
-  constructor() {
+  constructor () {
     this.enabled = false
     this.isPlaying = false
     this.isGenerating = false
@@ -23,43 +23,49 @@ class MockLoopAnimationController {
     this.imageSetB = ['imageB_0.jpg', 'imageB_1.jpg', 'imageB_2.jpg', 'imageB_3.jpg', 'imageB_4.jpg']
   }
 
-  enable() { this.enabled = true }
-  disable() { this.enabled = false }
-  play() { this.isPlaying = true }
-  pause() { this.isPlaying = false }
-  stop() {
+  enable () { this.enabled = true }
+  disable () { this.enabled = false }
+  play () { this.isPlaying = true }
+  pause () { this.isPlaying = false }
+  stop () {
     this.isPlaying = false
     this.currentFrameIndex = 0
   }
-  setLoopLength(length) {
+
+  setLoopLength (length) {
     if (isNaN(length) || length < 3 || length > this.maxLoopLength) return false
     this.requestedLoopLength = length
     return true
   }
-  setFPS(fps) {
+
+  setFPS (fps) {
     if (fps < 1 || fps > 60) return false
     this.fps = fps
     return true
   }
-  setFrame(index) {
+
+  setFrame (index) {
     if (index < 0 || index >= (this.walk?.length || 0)) return false
     this.currentFrameIndex = index
     return true
   }
-  getCurrentFrame() {
+
+  getCurrentFrame () {
     if (!this.walk || this.walk.length === 0) {
       return { pair: { a: 0, b: 0 } }
     }
     return this.walk[this.currentFrameIndex] || { pair: { a: 0, b: 0 } }
   }
-  getLoopLengthRange() {
+
+  getLoopLengthRange () {
     return {
       min: 3,
       max: this.maxLoopLength,
       current: this.requestedLoopLength
     }
   }
-  generateWalk() {
+
+  generateWalk () {
     this.isGenerating = true
     this.walk = Array.from({ length: this.requestedLoopLength }, (_, i) => ({
       index: i,
@@ -67,7 +73,8 @@ class MockLoopAnimationController {
     }))
     this.isGenerating = false
   }
-  setImageSets(imageSetA, imageSetB) {
+
+  setImageSets (imageSetA, imageSetB) {
     this.imageSetA = imageSetA || []
     this.imageSetB = imageSetB || []
   }

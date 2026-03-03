@@ -10,6 +10,7 @@
     "sourceType": "module"
   },
   "plugins": ["p5js"],
+  "ignorePatterns": ["src/generated/**"],
   "rules": {
     // Add any custom rules here
     "no-labels": ["error", { "allowLoop": true }]

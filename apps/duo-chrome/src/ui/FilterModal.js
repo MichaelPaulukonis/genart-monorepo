@@ -37,11 +37,11 @@ export class FilterModal {
    */
   constructor (options) {
     this.onFilterChange = options.onFilterChange
-    this.onThemeAssign  = options.onThemeAssign
-    this.totalImages    = options.totalImages
-    this.isVisible      = false
-    this.currentFilter  = ''          // alias for searchString (external contract)
-    this.currentTab     = 'filter'
+    this.onThemeAssign = options.onThemeAssign
+    this.totalImages = options.totalImages
+    this.isVisible = false
+    this.currentFilter = '' // alias for searchString (external contract)
+    this.currentTab = 'filter'
 
     /** Full filter definition */
     this._filterDef = { searchString: '', selectedImages: [] }
@@ -56,16 +56,16 @@ export class FilterModal {
     this.input = this.modal.querySelector('.contact-sheet__input')
 
     // Internal element refs
-    this._searchInput   = this.input
-    this._clearBtn      = this.modal.querySelector('[data-action="clear"]')
-    this._closeBtn      = this.modal.querySelector('[data-action="close"]')
-    this._saveThemeBtn  = this.modal.querySelector('[data-action="save-theme"]')
-    this._statsEl       = this.modal.querySelector('.contact-sheet__stats')
-    this._tabBtns       = this.modal.querySelectorAll('.contact-sheet__tab')
+    this._searchInput = this.input
+    this._clearBtn = this.modal.querySelector('[data-action="clear"]')
+    this._closeBtn = this.modal.querySelector('[data-action="close"]')
+    this._saveThemeBtn = this.modal.querySelector('[data-action="save-theme"]')
+    this._statsEl = this.modal.querySelector('.contact-sheet__stats')
+    this._tabBtns = this.modal.querySelectorAll('.contact-sheet__tab')
     this._filterContent = this.modal.querySelector('[data-content="filter"]')
     this._themesContent = this.modal.querySelector('[data-content="themes"]')
-    this._grid          = this.modal.querySelector('.contact-grid')
-    this._themesGrid    = this.modal.querySelector('.themes-list')
+    this._grid = this.modal.querySelector('.contact-grid')
+    this._themesGrid = this.modal.querySelector('.themes-list')
 
     this._bindEvents()
   }
@@ -124,7 +124,7 @@ export class FilterModal {
 
   _renderThemes () {
     this._themesGrid.innerHTML = ''
-    const themes      = getThemes()
+    const themes = getThemes()
     const assignments = getAssignments()
 
     if (themes.length === 0) {
@@ -181,7 +181,7 @@ export class FilterModal {
       card.querySelector('.theme-edit-btn').addEventListener('click', () => {
         const f = theme.filter || {}
         this._filterDef = {
-          searchString:   f.searchString   || '',
+          searchString: f.searchString || '',
           selectedImages: [...(f.selectedImages || [])]
         }
         this.currentFilter = this._filterDef.searchString
@@ -213,7 +213,7 @@ export class FilterModal {
   _renderGrid (fileList) {
     this._grid.innerHTML = ''
     const selected = new Set(this._filterDef.selectedImages || [])
-    const inSearch  = new Set(fileList)
+    const inSearch = new Set(fileList)
 
     // Pinned = selected but NOT in current search results
     const pinned = [...selected].filter(f => !inSearch.has(f) && this._allImages.includes(f))
@@ -252,7 +252,7 @@ export class FilterModal {
     tile.className = [
       'contact-tile',
       checked ? 'is-selected' : '',
-      pinned  ? 'is-pinned'   : ''
+      pinned ? 'is-pinned' : ''
     ].filter(Boolean).join(' ')
     tile.title = filename
 
@@ -307,7 +307,7 @@ export class FilterModal {
       e.stopPropagation()
       if (e.key === 'Escape') this.hide()
     })
-    this._searchInput.addEventListener('keyup',    e => e.stopPropagation())
+    this._searchInput.addEventListener('keyup', e => e.stopPropagation())
     this._searchInput.addEventListener('keypress', e => e.stopPropagation())
 
     // Clear
@@ -328,7 +328,7 @@ export class FilterModal {
 
     // Save as Theme
     this._saveThemeBtn?.addEventListener('click', () => {
-      const hasSearch   = this._filterDef.searchString.trim() !== ''
+      const hasSearch = this._filterDef.searchString.trim() !== ''
       const hasSelected = this._filterDef.selectedImages.length > 0
       if (!hasSearch && !hasSelected) {
         alert('Please search or select at least one image first.')
@@ -351,7 +351,7 @@ export class FilterModal {
 
   _updateStats () {
     if (!this._statsEl) return
-    const hasSearch   = this._filterDef.searchString.trim() !== ''
+    const hasSearch = this._filterDef.searchString.trim() !== ''
     const hasSelected = this._filterDef.selectedImages.length > 0
 
     if (!hasSearch && !hasSelected) {
@@ -396,7 +396,7 @@ export class FilterModal {
    * Called externally by duo-chrome.js with the current filtered list.
    */
   updateList (fileList) {
-    this._allImages = [...fileList]  // store for pinned logic
+    this._allImages = [...fileList] // store for pinned logic
     this._renderGrid(fileList)
     this._updateStats()
   }

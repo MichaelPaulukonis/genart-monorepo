@@ -20,7 +20,7 @@ export class LoopAnimationController {
     this.imageSetA = options.imageSetA || []
     this.imageSetB = options.imageSetB || []
 
-    this.requestedLoopLength = 5 // Default loop length
+    this.requestedLoopLength = 50 // Default loop length
     this.maxLoopLength = 0 // Will be calculated based on image sets
 
     this.onFrameChange = options.onFrameChange || (() => {}) // Callback when frame changes
@@ -241,13 +241,13 @@ export class LoopAnimationController {
     this.isPlaying = true
     this.lastFrameTime = Date.now()
     this.onPlayStateChange({ playing: true, frameIndex: this.currentFrameIndex })
-    
+
     // Immediately show current frame
     this.onFrameChange(this.getCurrentFrame())
 
     const animate = () => {
       if (!this.isPlaying) return
-      
+
       const now = Date.now()
       const elapsed = now - this.lastFrameTime
 
@@ -342,7 +342,7 @@ export class LoopAnimationController {
 
     this.isSavingLoop = true
     const wasPlaying = this.isPlaying
-    
+
     // Don't pause playback - we need isPlaying=true for onFrameChange to load images
     // Instead, we'll manually load frames by calling onFrameChange
     if (wasPlaying) {
@@ -360,7 +360,7 @@ export class LoopAnimationController {
         // Update to this frame
         this.currentFrameIndex = i
         const frame = this.getCurrentFrame()
-        
+
         // Trigger frame change - this starts loading the images
         // But we need to ensure images load even when not playing
         this.onFrameChange(frame)
@@ -379,7 +379,7 @@ export class LoopAnimationController {
       console.log('[LoopAnimation] Save complete')
     } finally {
       this.isSavingLoop = false
-      
+
       // Resume playback if it was playing before
       if (wasPlaying) {
         this.play()

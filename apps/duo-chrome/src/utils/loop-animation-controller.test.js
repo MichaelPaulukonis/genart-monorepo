@@ -44,7 +44,7 @@ describe('LoopAnimationController', () => {
       expect(controller.isPlaying).toBe(false)
       expect(controller.currentFrameIndex).toBe(0)
       expect(controller.fps).toBe(12)
-      expect(controller.requestedLoopLength).toBe(5)
+      expect(controller.requestedLoopLength).toBe(25) // clamped from default 50 to maxLoopLength (5×5)
     })
 
     it('should store provided image sets', () => {
@@ -105,7 +105,7 @@ describe('LoopAnimationController', () => {
       expect(range).toHaveProperty('max')
       expect(range).toHaveProperty('current')
       expect(range.min).toBe(3)
-      expect(range.current).toBe(5)
+      expect(range.current).toBe(25) // clamped from default 50 to maxLoopLength (5×5)
     })
 
     it('should set valid loop length', () => {

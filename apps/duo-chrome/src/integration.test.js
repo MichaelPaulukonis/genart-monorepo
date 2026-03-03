@@ -180,10 +180,6 @@ describe('Comprehensive Integration Tests', () => {
       isManualMode: false,
       showIndicators: false,
       indicatorTimeout: null,
-      statusTimeout: null,
-      statusPosition: { x: 20, y: 20 },
-      statusIsPermanent: false,
-      isDraggingStatus: false,
       needsRedraw: true,
       animationFrameRequested: false
     }
@@ -490,9 +486,7 @@ describe('Comprehensive Integration Tests', () => {
     })
 
     mousePressed = vi.fn(() => {
-      if (!controlState.isDraggingStatus) {
-        loadNewImagesAndColors()
-      }
+      loadNewImagesAndColors()
     })
   })
 
@@ -759,14 +753,6 @@ describe('Comprehensive Integration Tests', () => {
       mousePressed()
 
       expect(loadNewImagesAndColors).toHaveBeenCalled()
-    })
-
-    it('should not trigger cycling when dragging status display', () => {
-      controlState.isDraggingStatus = true
-
-      mousePressed()
-
-      expect(loadNewImagesAndColors).not.toHaveBeenCalled()
     })
 
     it('should maintain existing mouse functionality', () => {

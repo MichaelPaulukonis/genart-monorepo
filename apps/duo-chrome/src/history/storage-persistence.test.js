@@ -278,7 +278,7 @@ describe('HistoryManager - localStorage Persistence', () => {
       // Verify history was restored
       expect(newManager.nodes.size).toBeGreaterThanOrEqual(2)
       expect(newManager.currentId).toBe(secondEntry.id)
-      
+
       // Check that the reloaded graph contains the original entries
       const loadedEntry1 = newManager.nodes.get(firstEntry.id).entry
       expect(loadedEntry1.imageA.filename).toBe(firstEntry.imageA.filename)

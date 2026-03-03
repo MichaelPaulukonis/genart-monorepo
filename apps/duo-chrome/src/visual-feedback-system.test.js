@@ -4,8 +4,7 @@
  * Tests for the visual feedback system including:
  * - Status display updates with control actions
  * - Active image highlighting behavior
- * - Status overlay positioning and visibility
- * - Dragging functionality and session persistence
+ * - Status overlay collapse toggle
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -66,32 +65,17 @@ global.window = {
   innerHeight: 1080
 }
 
-global.sessionStorage = {
-  getItem: vi.fn(),
-  setItem: vi.fn()
-}
-
 global.console = {
   log: vi.fn(),
   warn: vi.fn()
 }
-
-global.setTimeout = vi.fn((fn, delay) => {
-  if (delay === 0) fn() // Execute immediately for testing
-  return 123
-})
-
-global.clearTimeout = vi.fn()
 
 describe('Visual Feedback System', () => {
   let controlState
   let imageColorPairs
   let updateStatusDisplay
   let showStatusDisplay
-  let hideStatusDisplay
   let toggleStatusDisplay
-  let initializeStatusDragging
-  let updateStatusPosition
 
   beforeEach(() => {
     // Reset all mocks
@@ -108,13 +92,9 @@ describe('Visual Feedback System', () => {
       }
     })
 
-    // Initialize test state
+    // Initialize test state — V3: no dragging, no position tracking
     controlState = {
-      activeImageIndex: 0,
-      statusTimeout: null,
-      statusPosition: { x: 20, y: 20 },
-      statusIsPermanent: false,
-      isDraggingStatus: false
+      activeImageIndex: 0
     }
 
     imageColorPairs = [
@@ -185,86 +165,19 @@ describe('Visual Feedback System', () => {
       // Update Blend Mode
       const blendModeVal = document.getElementById('status-blend-mode-value')
       if (blendModeVal) {
-        // Mock value since we don't have the full backgroundModes array in this test context
         blendModeVal.textContent = 'MULTIPLY'
       }
     })
 
-    showStatusDisplay = vi.fn((duration = 3000) => {
-      const statusOverlay = document.getElementById('status-overlay')
-      if (!statusOverlay) return
-
+    // V3: show() just calls update()
+    showStatusDisplay = vi.fn(() => {
       updateStatusDisplay()
-      statusOverlay.classList.remove('hidden', 'fade-out')
-
-      if (controlState.statusTimeout) {
-        clearTimeout(controlState.statusTimeout)
-        controlState.statusTimeout = null
-      }
-
-      if (duration > 0) {
-        controlState.statusIsPermanent = false
-        controlState.statusTimeout = setTimeout(() => {
-          hideStatusDisplay()
-        }, duration)
-      } else {
-        controlState.statusIsPermanent = true
-      }
-    })
-
-    hideStatusDisplay = vi.fn(() => {
-      const statusOverlay = document.getElementById('status-overlay')
-      if (!statusOverlay) return
-
-      controlState.statusIsPermanent = false
-      if (controlState.statusTimeout) {
-        clearTimeout(controlState.statusTimeout)
-        controlState.statusTimeout = null
-      }
-
-      statusOverlay.classList.add('fade-out')
-      setTimeout(() => {
-        statusOverlay.classList.add('hidden')
-        statusOverlay.classList.remove('fade-out')
-      }, 300)
     })
 
     toggleStatusDisplay = vi.fn(() => {
       const statusOverlay = document.getElementById('status-overlay')
       if (!statusOverlay) return
-
-      if (statusOverlay.classList.contains('hidden')) {
-        showStatusDisplay(0) // Show permanently when manually toggled
-      } else {
-        hideStatusDisplay()
-      }
-    })
-
-    updateStatusPosition = vi.fn(() => {
-      const statusOverlay = document.getElementById('status-overlay')
-      if (!statusOverlay) return
-
-      statusOverlay.style.left = `${controlState.statusPosition.x}px`
-      statusOverlay.style.top = `${controlState.statusPosition.y}px`
-    })
-
-    initializeStatusDragging = vi.fn(() => {
-      const statusOverlay = document.getElementById('status-overlay')
-      if (!statusOverlay) return
-
-      // Load saved position from session storage
-      const savedPosition = sessionStorage.getItem('duo-chrome-status-position')
-      if (savedPosition) {
-        try {
-          const position = JSON.parse(savedPosition)
-          controlState.statusPosition = position
-          updateStatusPosition()
-        } catch (error) {
-          console.warn('Failed to load status position:', error)
-        }
-      } else {
-        updateStatusPosition()
-      }
+      statusOverlay.classList.toggle('is-collapsed')
     })
   })
 
@@ -344,89 +257,53 @@ describe('Visual Feedback System', () => {
     })
   })
 
-  describe('Status Overlay Visibility', () => {
-    it('should show status display with proper class management', () => {
-      showStatusDisplay()
-
-      expect(mockStatusOverlay.classList.remove).toHaveBeenCalledWith('hidden', 'fade-out')
-      expect(updateStatusDisplay).toHaveBeenCalled()
-    })
-
-    it('should hide status display with fade-out animation', () => {
-      hideStatusDisplay()
-
-      expect(mockStatusOverlay.classList.add).toHaveBeenCalledWith('fade-out')
-      expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 300)
-    })
-
-    it('should toggle status display visibility', () => {
-      // Mock as hidden initially
-      mockStatusOverlay.classList.contains = vi.fn((className) => className === 'hidden')
-
+  describe('Status Overlay Collapse', () => {
+    it('should toggle is-collapsed class on the overlay', () => {
       toggleStatusDisplay()
 
-      expect(showStatusDisplay).toHaveBeenCalledWith(0) // Permanent display
+      expect(mockStatusOverlay.classList.toggle).toHaveBeenCalledWith('is-collapsed')
     })
 
-    it('should handle temporary display with timeout', () => {
-      showStatusDisplay(5000)
+    it('should handle missing status overlay gracefully', () => {
+      document.getElementById = vi.fn((id) => {
+        if (id === 'status-overlay') return null
+        return mockElements[id]
+      })
 
-      expect(controlState.statusIsPermanent).toBe(false)
-      expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 5000)
-    })
-
-    it('should handle permanent display without timeout', () => {
-      showStatusDisplay(0)
-
-      expect(controlState.statusIsPermanent).toBe(true)
-      expect(controlState.statusTimeout).toBeNull()
-    })
-
-    it('should clear existing timeout when showing again', () => {
-      controlState.statusTimeout = 456
-
-      showStatusDisplay()
-
-      expect(clearTimeout).toHaveBeenCalledWith(456)
+      expect(() => {
+        toggleStatusDisplay()
+      }).not.toThrow()
     })
   })
 
-  describe('Status Overlay Positioning', () => {
-    it('should update position with CSS styles', () => {
-      controlState.statusPosition = { x: 100, y: 200 }
+  describe('Status Display Refresh', () => {
+    it('should call updateStatusDisplay when showing', () => {
+      showStatusDisplay()
 
-      updateStatusPosition()
-
-      expect(mockStatusOverlay.style.left).toBe('100px')
-      expect(mockStatusOverlay.style.top).toBe('200px')
+      expect(updateStatusDisplay).toHaveBeenCalled()
     })
 
-    it('should load saved position from session storage', () => {
-      const savedPosition = { x: 150, y: 250 }
-      sessionStorage.getItem = vi.fn(() => JSON.stringify(savedPosition))
-
-      initializeStatusDragging()
-
-      expect(controlState.statusPosition).toEqual(savedPosition)
-      expect(updateStatusPosition).toHaveBeenCalled()
-    })
-
-    it('should handle invalid saved position gracefully', () => {
-      sessionStorage.getItem = vi.fn(() => 'invalid-json')
+    it('should handle missing status overlay gracefully', () => {
+      document.getElementById = vi.fn((id) => {
+        if (id === 'status-overlay') return null
+        return mockElements[id]
+      })
 
       expect(() => {
-        initializeStatusDragging()
+        showStatusDisplay()
+        updateStatusDisplay()
       }).not.toThrow()
-
-      expect(console.warn).toHaveBeenCalledWith('Failed to load status position:', expect.any(Error))
     })
 
-    it('should use default position when no saved position exists', () => {
-      sessionStorage.getItem = vi.fn(() => null)
+    it('should handle missing individual status elements gracefully', () => {
+      document.getElementById = vi.fn((id) => {
+        if (id.startsWith('status-')) return null
+        return mockElements[id]
+      })
 
-      initializeStatusDragging()
-
-      expect(updateStatusPosition).toHaveBeenCalled()
+      expect(() => {
+        updateStatusDisplay()
+      }).not.toThrow()
     })
   })
 
@@ -460,80 +337,10 @@ describe('Visual Feedback System', () => {
       expect(mockElements['status-color-a'].textContent).toBe('Sunset Orange')
     })
 
-    it('should show status display temporarily on control actions', () => {
-      showStatusDisplay(2000) // Simulate control action trigger
-
-      expect(mockStatusOverlay.classList.remove).toHaveBeenCalledWith('hidden', 'fade-out')
-      expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 2000)
-    })
-  })
-
-  describe('Performance and Error Handling', () => {
-    it('should handle missing status overlay gracefully', () => {
-      document.getElementById = vi.fn((id) => {
-        if (id === 'status-overlay') return null
-        return mockElements[id]
-      })
-
-      expect(() => {
-        showStatusDisplay()
-        hideStatusDisplay()
-        updateStatusDisplay()
-      }).not.toThrow()
-    })
-
-    it('should handle missing individual status elements gracefully', () => {
-      document.getElementById = vi.fn((id) => {
-        if (id.startsWith('status-')) return null
-        return mockElements[id]
-      })
-
-      expect(() => {
-        updateStatusDisplay()
-      }).not.toThrow()
-    })
-
-    it('should prevent memory leaks by clearing timeouts', () => {
-      controlState.statusTimeout = 789
-
-      hideStatusDisplay()
-
-      expect(clearTimeout).toHaveBeenCalledWith(789)
-      expect(controlState.statusTimeout).toBeNull()
-    })
-
-    it('should handle rapid show/hide calls without issues', () => {
+    it('should refresh display on control actions', () => {
       showStatusDisplay()
-      hideStatusDisplay()
-      showStatusDisplay()
-      hideStatusDisplay()
 
-      expect(mockStatusOverlay.classList.add).toHaveBeenCalledWith('fade-out')
-      expect(mockStatusOverlay.classList.remove).toHaveBeenCalledWith('hidden', 'fade-out')
-    })
-  })
-
-  describe('Session Persistence', () => {
-    it('should save position to session storage', () => {
-      controlState.statusPosition = { x: 300, y: 400 }
-
-      // Simulate drag end (would normally be called in drag handler)
-      sessionStorage.setItem('duo-chrome-status-position', JSON.stringify(controlState.statusPosition))
-
-      expect(sessionStorage.setItem).toHaveBeenCalledWith(
-        'duo-chrome-status-position',
-        JSON.stringify({ x: 300, y: 400 })
-      )
-    })
-
-    it('should restore position on initialization', () => {
-      const savedPosition = { x: 500, y: 600 }
-      sessionStorage.getItem = vi.fn(() => JSON.stringify(savedPosition))
-
-      initializeStatusDragging()
-
-      expect(sessionStorage.getItem).toHaveBeenCalledWith('duo-chrome-status-position')
-      expect(controlState.statusPosition).toEqual(savedPosition)
+      expect(updateStatusDisplay).toHaveBeenCalled()
     })
   })
 })
