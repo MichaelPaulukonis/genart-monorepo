@@ -158,3 +158,21 @@ export const ALL_PALETTES = [
   YELLOW_PINK,
   JELLY_DREAM
 ]
+
+/** Human-readable names for ALL_PALETTES (index-matched) */
+export const PALETTE_NAMES = [
+  'Risograph',
+  'Primary',
+  'Secondary',
+  'Bone & White',
+  'Fiery Ocean',
+  'Peachy Delight',
+  'Pink Ombré',
+  'Vibrant Nature',
+  'Cool Coastal',
+  'Golden Twilight',
+  'Gold Elegance',
+  'Vibrant Sunset',
+  'Yellow Pink',
+  'Jelly Dream'
+]

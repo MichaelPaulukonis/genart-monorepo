@@ -7,196 +7,246 @@
     <title>DUO CHROME</title>
   </head>
   <body>
+    <!-- ========================================================
+         HELP OVERLAY
+         ======================================================== -->
     <div id="help-overlay" class="help-overlay hidden">
       <div class="help-content">
-        <h2>Duo-Chrome Controls</h2>
-        <h3>Interactive Image Composition</h3>
-        
+        <h2>Duo-Chrome</h2>
+        <h3>Analog Video Synthesizer</h3>
+
         <div class="shortcuts-grid">
           <div class="shortcut-section">
-            <h4>Image Selection</h4>
+            <h4>Channel Select</h4>
             <ul>
-              <li><kbd>A</kbd> - Select Image A for control</li>
-              <li><kbd>B</kbd> - Select Image B for control</li>
-              <li><kbd>X</kbd> - Exchange images A and B</li>
+              <li><kbd>A</kbd> — Select Image A</li>
+              <li><kbd>B</kbd> — Select Image B</li>
+              <li><kbd>X</kbd> — Exchange A and B</li>
             </ul>
           </div>
-          
+
           <div class="shortcut-section">
             <h4>Image Navigation</h4>
             <ul>
-              <li><kbd>← / →</kbd> - Navigate images (or History if Filmstrip active)</li>
-              <li><kbd>Cmd+[ / Cmd+]</kbd> - Cycle colors in palette</li>
-              <li><kbd>Mouse Click</kbd> - Generate new pair</li>
+              <li><kbd>← / →</kbd> — Navigate images</li>
+              <li><kbd>Shift+← / Shift+→</kbd> — History ±10</li>
+              <li><kbd>Cmd+← / Cmd+→</kbd> — History start/end</li>
+              <li><kbd>Mouse Click</kbd> — Generate new pair</li>
             </ul>
           </div>
-          
+
           <div class="shortcut-section">
             <h4>Size Control</h4>
             <ul>
-              <li><kbd>↑ / ↓</kbd> - Adjust active image size</li>
+              <li><kbd>↑ / ↓</kbd> — Adjust active image size</li>
             </ul>
           </div>
-          
+
           <div class="shortcut-section">
-            <h4>Visual Effects</h4>
+            <h4>Signal Effects</h4>
             <ul>
-              <li><kbd>B</kbd> - Toggle background color</li>
-              <li><kbd>C</kbd> - Cycle color palettes</li>
-              <li><kbd>M</kbd> - Cycle blend modes</li>
+              <li><kbd>C</kbd> — Cycle color palettes</li>
+              <li><kbd>G</kbd> — Open palette picker</li>
+              <li><kbd>M</kbd> — Cycle blend modes</li>
+              <li><kbd>V</kbd> — Toggle visual indicators</li>
             </ul>
           </div>
-          
+
           <div class="shortcut-section">
-            <h4>Display & Feedback</h4>
+            <h4>Transport</h4>
             <ul>
-              <li><kbd>V</kbd> - Toggle visual indicators</li>
-              <li><kbd>I</kbd> - Toggle status display</li>
-              <li><kbd>L</kbd> - Filter Images</li>
+              <li><kbd>P / Space</kbd> — Play / Pause loop</li>
+              <li><kbd>, / .</kbd> — Step one frame</li>
+              <li><kbd>&lt; / &gt;</kbd> — Step five frames</li>
             </ul>
           </div>
-          
+
           <div class="shortcut-section">
-            <h4>History Navigation</h4>
+            <h4>Display</h4>
             <ul>
-              <li><kbd>[</kbd> or <kbd>←</kbd> - Previous composition</li>
-              <li><kbd>]</kbd> or <kbd>→</kbd> - Next composition</li>
-              <li><kbd>Shift+[</kbd> - Previous 10 compositions</li>
-              <li><kbd>Shift+]</kbd> - Next 10 compositions</li>
-              <li><kbd>Cmd+[</kbd> - Jump to beginning</li>
-              <li><kbd>Cmd+]</kbd> - Jump to end</li>
-              <li><kbd>F</kbd> - Toggle filmstrip</li>
-              <li><kbd>Shift+C</kbd> - Clear history</li>
-              <li><kbd>Shift+T</kbd> - Regenerate thumbnails</li>
+              <li><kbd>I</kbd> — Toggle Monitor module</li>
+              <li><kbd>F</kbd> — Toggle Filmstrip</li>
+              <li><kbd>L</kbd> — Open Contact Sheet</li>
             </ul>
           </div>
-          
+
           <div class="shortcut-section">
-            <h4>Animation & Save</h4>
+            <h4>History</h4>
             <ul>
-              <li><kbd>P / Space</kbd> - Pause/resume</li>
-              <li><kbd>S</kbd> - Toggle auto-save</li>
-              <li><kbd>Cmd+S</kbd> - Manual save</li>
-              <li><kbd>Shift+S</kbd> - Share composition (copy URL)</li>
+              <li><kbd>[</kbd> or <kbd>←</kbd> — Previous composition</li>
+              <li><kbd>]</kbd> or <kbd>→</kbd> — Next composition</li>
+              <li><kbd>Shift+C</kbd> — Clear history</li>
+              <li><kbd>Shift+T</kbd> — Regenerate thumbnails</li>
             </ul>
           </div>
-          
+
+          <div class="shortcut-section">
+            <h4>Save &amp; Share</h4>
+            <ul>
+              <li><kbd>S</kbd> — Toggle auto-save</li>
+              <li><kbd>Cmd+S</kbd> — Manual save</li>
+              <li><kbd>Shift+S</kbd> — Copy share URL</li>
+            </ul>
+          </div>
+
           <div class="shortcut-section full-width">
             <h4>Help</h4>
             <ul>
-              <li><kbd>H</kbd> or <kbd>?</kbd> - Toggle this help</li>
+              <li><kbd>H</kbd> or <kbd>?</kbd> — Toggle this help</li>
             </ul>
           </div>
         </div>
-        
+
         <div class="version-info" id="version-info">v1.0.0</div>
         <button id="close-help" class="close-button">Close</button>
       </div>
     </div>
 
-    <div id="status-overlay" class="status-overlay hidden">
-      <div class="status-content">
-        <div class="status-header">Image Status</div>
-        <div class="status-images">
-          <div class="status-image" id="status-image-a">
-            <div class="status-label">Image A</div>
-            <div class="status-filename" id="status-filename-a">-</div>
-            <div class="status-color" id="status-color-a">-</div>
-            <div class="status-theme" id="status-theme-a" style="font-size: 0.8em; color: #aaa; margin-top: 2px;">-</div>
-            <div class="status-scale">Scale: <span id="status-scale-a">1.00</span></div>
-          </div>
-          <div class="status-image" id="status-image-b">
-            <div class="status-label">Image B</div>
-            <div class="status-filename" id="status-filename-b">-</div>
-            <div class="status-color" id="status-color-b">-</div>
-            <div class="status-theme" id="status-theme-b" style="font-size: 0.8em; color: #aaa; margin-top: 2px;">-</div>
-            <div class="status-scale">Scale: <span id="status-scale-b">1.00</span></div>
-          </div>
-        </div>
-        <div class="status-blend-mode">
-          <span class="status-label">Blend:</span>
-          <span id="status-blend-mode-value">-</span>
+    <!-- ========================================================
+         CLEAR HISTORY DIALOG
+         ======================================================== -->
+    <div id="clear-history-dialog" class="confirmation-dialog hidden">
+      <div class="confirmation-content">
+        <h3>Clear History?</h3>
+        <p>This will permanently delete all history entries except the current composition.</p>
+        <p class="confirmation-warning">This action cannot be undone.</p>
+        <div class="confirmation-buttons">
+          <button id="clear-history-cancel" class="confirmation-btn confirmation-btn-cancel">Cancel</button>
+          <button id="clear-history-confirm" class="confirmation-btn confirmation-btn-confirm">Clear History</button>
         </div>
       </div>
     </div>
 
-    <div id="filmstrip-panel" class="filmstrip-panel hidden">
+    <!-- ========================================================
+         CONTACT SHEET (filter) — JS builds interior in FilterModal constructor
+         ======================================================== -->
+    <div id="filter-modal" class="filter-modal hidden"></div>
+
+    <!-- ========================================================
+         SIGNAL PANEL  (fixed right rack)
+         ======================================================== -->
+    <div id="signal-panel">
+
+      <!-- ── MONITOR MODULE (status) ─────────────────────────── -->
+      <div id="status-overlay" class="rack-module">
+        <div class="rack-module__header">
+          <span class="rack-module__label">◈ Monitor</span>
+          <button class="rack-module__collapse" id="monitor-collapse" aria-label="Collapse monitor">−</button>
+        </div>
+        <div class="rack-module__body">
+          <div class="status-images">
+            <div class="status-image" id="status-image-a">
+              <div class="status-image__color-row">
+                <span class="status-image__id">A</span>
+                <span class="status-image__swatch" id="status-swatch-a"></span>
+                <span class="status-image__color-name" id="status-color-a">—</span>
+              </div>
+              <span class="status-image__filename" id="status-filename-a">—</span>
+              <div class="status-image__meta">
+                <span class="status-meta-label">Theme</span>
+                <span class="status-meta-value" id="status-theme-a">—</span>
+              </div>
+              <div class="status-image__meta">
+                <span class="status-meta-label">Scale</span>
+                <span class="status-meta-value"><span id="status-scale-a">1.00</span></span>
+              </div>
+            </div>
+            <div class="status-image" id="status-image-b">
+              <div class="status-image__color-row">
+                <span class="status-image__id">B</span>
+                <span class="status-image__swatch" id="status-swatch-b"></span>
+                <span class="status-image__color-name" id="status-color-b">—</span>
+              </div>
+              <span class="status-image__filename" id="status-filename-b">—</span>
+              <div class="status-image__meta">
+                <span class="status-meta-label">Theme</span>
+                <span class="status-meta-value" id="status-theme-b">—</span>
+              </div>
+              <div class="status-image__meta">
+                <span class="status-meta-label">Scale</span>
+                <span class="status-meta-value"><span id="status-scale-b">1.00</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="status-footer">
+            <div class="status-footer__row">
+              <span class="status-footer__label">Blend</span>
+              <span class="status-footer__value" id="status-blend-mode-value">—</span>
+            </div>
+            <div class="status-loop-section">
+              <span class="status-loop-section__title">Loop</span>
+              <div class="status-loop-grid">
+                <div class="status-footer__row">
+                  <span class="status-footer__label">State</span>
+                  <span class="status-footer__value" id="status-loop-enabled">Off</span>
+                </div>
+                <div class="status-footer__row">
+                  <span class="status-footer__label">Frames</span>
+                  <span class="status-footer__value" id="status-loop-length">—</span>
+                </div>
+                <div class="status-footer__row">
+                  <span class="status-footer__label">FPS</span>
+                  <span class="status-footer__value" id="status-loop-fps">—</span>
+                </div>
+                <div class="status-footer__row">
+                  <span class="status-footer__label">Frame</span>
+                  <span class="status-footer__value" id="status-loop-frame">—</span>
+                </div>
+              </div>
+              <div id="status-loop-fallback" class="status-loop-fallback hidden"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TRANSPORT MODULE (loop animation panel) ──────────── -->
+      <!-- LoopAnimationPanel.js mounts inside this div -->
+      <div id="loop-animation-panel" class="rack-module">
+        <div class="rack-module__header">
+          <span class="rack-module__label">◈ Transport</span>
+          <button class="rack-module__collapse" id="transport-collapse" aria-label="Collapse transport">−</button>
+        </div>
+        <!-- LoopAnimationPanel.getHTML() output goes here via mount() -->
+      </div>
+
+      <!-- ── PALETTE MODULE ───────────────────────────────────── -->
+      <!-- PalettePanel.js mounts its rack-module__body here -->
+      <div id="palette-panel" class="rack-module">
+        <div class="rack-module__header">
+          <span class="rack-module__label">◈ Palette</span>
+          <button class="rack-module__collapse" id="palette-collapse" aria-label="Collapse palette">−</button>
+        </div>
+        <!-- PalettePanel body inserted here by JS -->
+      </div>
+
+    </div><!-- /#signal-panel -->
+
+    <!-- ========================================================
+         PALETTE PICKER  (full-screen overlay)
+         JS builds interior in PalettePanel constructor
+         ======================================================== -->
+    <div id="palette-modal" class="palette-modal hidden"></div>
+
+    <!-- ========================================================
+         FILMSTRIP  (persistent bottom)
+         ======================================================== -->
+    <div id="filmstrip-panel" class="filmstrip-panel">
       <div class="filmstrip-header">
         <div class="filmstrip-title">History</div>
         <div class="filmstrip-counter" id="filmstrip-counter">0 / 0</div>
-        <button id="filmstrip-close" class="filmstrip-close-btn" aria-label="Close filmstrip">×</button>
+        <button id="filmstrip-close" class="filmstrip-close-btn" aria-label="Toggle filmstrip">−</button>
       </div>
       <div class="filmstrip-container">
         <div class="filmstrip-scroll" id="filmstrip-scroll">
-          <!-- Thumbnails will be dynamically inserted here -->
+          <!-- Thumbnails inserted dynamically -->
         </div>
       </div>
     </div>
 
-            <div id="clear-history-dialog" class="confirmation-dialog hidden">
-
-              <div class="confirmation-content">
-
-                <h3>Clear History?</h3>
-
-                <p>This will permanently delete all history entries except the current composition.</p>
-
-                <p class="confirmation-warning">This action cannot be undone.</p>
-
-                <div class="confirmation-buttons">
-
-                  <button id="clear-history-cancel" class="confirmation-btn confirmation-btn-cancel">Cancel</button>
-
-                  <button id="clear-history-confirm" class="confirmation-btn confirmation-btn-confirm">Clear History</button>
-
-                </div>
-
-              </div>
-
-            </div>
-
-        
-
-            <button id="filter-open-btn" class="filter-open-btn" title="Filter Images (L)">
-
-              <span class="icon">🔍</span> Filter
-
-            </button>
-
-        
-
-            <div id="filter-modal" class="filter-modal hidden">
-
-          <div class="filter-content">
-
-            <h3>Filter Images</h3>
-
-            <div class="filter-input-group">
-
-              <input type="text" id="filter-input" placeholder="Search by filename..." aria-label="Search by filename">
-
-              <button id="filter-clear-btn" class="filter-clear-btn" title="Clear filter">×</button>
-
-            </div>
-
-            <div class="filter-stats" id="filter-stats">
-
-              Showing all images
-
-            </div>
-
-            <div class="filter-actions">
-
-              <button id="filter-close" class="filter-btn">Close</button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-    
-
-        <script type="module" src="/src/duo-chrome.js"></script>
+    <!-- ========================================================
+         p5.js canvas is appended to body by the sketch
+         ======================================================== -->
+    <script type="module" src="/src/duo-chrome.js"></script>
   </body>
 </html>

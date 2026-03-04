@@ -136,7 +136,7 @@ Follow the established Nx monorepo structure:
 4. **Required Plan Contents**: Problem Statement, Requirements, Technical Approach, Implementation Steps, Testing Strategy, Risks & Mitigation, Dependencies.
 4.1 **Use Taskmaster MCP**: Unless directed otherwise, use taskmaster MCP server to parse the plan file (as prd) to create discrete tasks
 4.2 **Taskmaster append**: Taskmaster should append new tasks, and not delete existing tasks.
-5. **Completed Plans**: When all tasks in a plan have been completed the file will be internally annotated and moved to `docs/plans/completed/`.
+5. **Completed Plans**: When all tasks in a plan have been completed the file will be internally annotated and moved to `docs/plans/completed/`. Use `git mv` to preserve history.
 5. **Exceptions**: This process is not required for Product Requirement Document creation, documentation updates or minor, single-line bug fixes.
 
 ## 4. Nx Monorepo Management
@@ -493,33 +493,6 @@ ls -lat apps/duo-chrome/public/images_*
 # Remove old backups (adjust date pattern as needed)
 rm -rf apps/duo-chrome/public/images_2025-*
 ```
-
----
-### 13.2 Task 14 Subtask Breakdown
-
-**14.1**: Implement Graph State Model and Adjacency Graph Construction
-- Generate n*(n-1) ordered state pairs
-
-**14.2**: Implement Core Adjacency Validation Logic
-- Determine if states share exactly one image index
-
-**14.3**: Implement Closed Walk Generation with Backtracking
-- Build random walk sequences using backtracking
-
-**14.4**: Implement Public API and Integration Layer
-- validateLoopLength(), regenerateWalk(), standardized output formatting
-
-**14.5**: Implement Performance Optimization and State Management
-- Caching, Web Worker support, fallback generation
-
-**14.6**: Implement UI Controls for Loop Animation Mode
-- Toggle switch for loop mode
-- Loop length input with validation
-- Play/Pause/Stop playback controls
-- Frame counter and FPS slider
-- Image pair preview panel
-- Visual indicators and help text
-- Integration with status display window
 
 ---
 *These instructions should be followed to ensure consistency, maintainability, and quality across the GenArt monorepo codebase.*

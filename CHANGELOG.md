@@ -6,6 +6,10 @@ This changelog aggregates infrastructure and shared-library changes across the w
 
 ### Infrastructure & Shared Libraries
 
+- **monorepo:** narrow Vitest workspace project discovery to explicit config files
+  - Updated `vitest.workspace.js` to target only `vitest.config.*` paths under `apps/*` and `libs/*`
+  - Reduces VS Code Vitest extension project over-detection and avoids max-config warnings
+
 - **duo-chrome:** Implement seamless loop animation mode with export capability
   - Added LoopAnimationController with closed-walk algorithm for creating seamless loops
   - Interactive loop animation UI with playback controls (play/pause/stop with keyboard shortcuts)

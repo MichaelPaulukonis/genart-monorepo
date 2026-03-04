@@ -20,16 +20,23 @@ export class LoopAnimationController {
     this.imageSetA = options.imageSetA || []
     this.imageSetB = options.imageSetB || []
 
-    this.requestedLoopLength = 20 // Default loop length
+    this.requestedLoopLength = 50 // Default loop length
     this.maxLoopLength = 0 // Will be calculated based on image sets
 
     this.onFrameChange = options.onFrameChange || (() => {}) // Callback when frame changes
     this.onPlayStateChange = options.onPlayStateChange || (() => {}) // Callback when play/pause
     this.onGenerationProgress = options.onGenerationProgress || (() => {}) // Callback for progress
 
+    this.useFallback = options.useFallback !== undefined ? options.useFallback : true
+    this.lastGenerationMetadata = null
+    this.lastGenerationError = null
+
     this.animationFrameId = null
     this.isGenerating = false
     this.isSavingLoop = false
+
+    // Start state for walk generation (optional - if set, walk starts adjacent to this state)
+    this.desiredStartState = options.desiredStartState || null
 
     // Calculate max loop length if image sets were provided in options
     if (this.imageSetA.length > 0 && this.imageSetB.length > 0) {
@@ -68,7 +75,12 @@ export class LoopAnimationController {
    */
   setLoopLength (length) {
     try {
-      validateLoopLength(this.imageSetA, length, this.imageSetB)
+      if (typeof length !== 'number' || Number.isNaN(length) || length < 3) {
+        return false
+      }
+      // `requestedLoopLength` represents unique visible frames.
+      // Closed-walk generation needs one additional terminal frame to close the cycle.
+      validateLoopLength(this.imageSetA, length + 1, this.imageSetB)
       this.requestedLoopLength = length
       return true
     } catch (error) {
@@ -85,6 +97,19 @@ export class LoopAnimationController {
       min: 3,
       max: this.maxLoopLength,
       current: this.requestedLoopLength
+    }
+  }
+
+  /**
+   * Set the desired start state for walk generation
+   * When set, the generated walk will start with a state adjacent to this start state
+   */
+  setDesiredStartState (imageAIndex, imageBIndex) {
+    if (typeof imageAIndex === 'number' && typeof imageBIndex === 'number') {
+      this.desiredStartState = { a: imageAIndex, b: imageBIndex }
+      console.log('[LoopAnimation] Desired start state set to:', this.desiredStartState)
+    } else {
+      this.desiredStartState = null
     }
   }
 
@@ -115,7 +140,8 @@ export class LoopAnimationController {
    */
   disable () {
     this.enabled = false
-    this.stop()
+    if (this.isPlaying) this.pause()
+    this.currentFrameIndex = 0
     this.walk = null
   }
 
@@ -134,13 +160,18 @@ export class LoopAnimationController {
 
     this.isGenerating = true
     this.onGenerationProgress('preparing')
+    const requestedVisibleLength = this.requestedLoopLength
 
     try {
-      console.log('[LoopAnimation] Generating walk with loopLength:', this.requestedLoopLength)
+      console.log('[LoopAnimation] Generating walk with loopLength:', this.requestedLoopLength, 'desiredStartState:', this.desiredStartState)
       const result = await generateClosedWalkAsync({
         imageSetA: this.imageSetA,
         imageSetB: this.imageSetB,
-        loopLength: this.requestedLoopLength,
+        // Generate with explicit closing frame, then trim duplicate terminal frame
+        // so UI/export frame counts match requested unique loop length.
+        loopLength: this.requestedLoopLength + 1,
+        useFallback: this.useFallback,
+        desiredStartState: this.desiredStartState,
         onProgress: (phase) => {
           console.log('[LoopAnimation] Generation phase:', phase)
           // Don't send 'complete' yet - wait until we've set the walk
@@ -151,16 +182,35 @@ export class LoopAnimationController {
       })
 
       console.log('[LoopAnimation] Walk generated:', result)
-      this.walk = result.frames
+      const generatedFrames = Array.isArray(result.frames) ? result.frames : []
+      const firstFrame = generatedFrames[0]
+      const lastFrame = generatedFrames[generatedFrames.length - 1]
+      const hasDuplicatedClosure =
+        generatedFrames.length > 1 &&
+        firstFrame?.pair?.a === lastFrame?.pair?.a &&
+        firstFrame?.pair?.b === lastFrame?.pair?.b
+
+      this.walk = hasDuplicatedClosure ? generatedFrames.slice(0, -1) : generatedFrames
       this.currentFrameIndex = 0
       this.isGenerating = false
 
+      const metadata = { ...result.metadata }
+      metadata.requestedLoopLength = requestedVisibleLength
+      metadata.achievedLoopLength = this.walk.length
+      metadata.isLoopFallback = metadata.achievedLoopLength !== requestedVisibleLength
+
+      this.lastGenerationMetadata = metadata
+      this.lastGenerationError = null
+
+      if (metadata.isLoopFallback && metadata.achievedLoopLength !== this.requestedLoopLength) {
+        this.requestedLoopLength = metadata.achievedLoopLength
+      }
+
       if (this.isPlaying) {
         this.play()
-      } else {
-        // Update UI with first frame
-        this.onFrameChange(this.getCurrentFrame())
       }
+      // Panel UI is updated via onGenerationProgress('complete') → updateAll()
+      // Canvas display only changes when playback starts (play/step/scrub)
 
       // Now send complete callback after state is updated
       this.onGenerationProgress('complete')
@@ -168,6 +218,7 @@ export class LoopAnimationController {
       console.error('[LoopAnimation] Failed to generate walk:', error)
       this.walk = null
       this.isGenerating = false
+      this.lastGenerationError = error.message || String(error)
       this.onGenerationProgress('error')
     }
   }
@@ -190,13 +241,13 @@ export class LoopAnimationController {
     this.isPlaying = true
     this.lastFrameTime = Date.now()
     this.onPlayStateChange({ playing: true, frameIndex: this.currentFrameIndex })
-    
+
     // Immediately show current frame
     this.onFrameChange(this.getCurrentFrame())
 
     const animate = () => {
       if (!this.isPlaying) return
-      
+
       const now = Date.now()
       const elapsed = now - this.lastFrameTime
 
@@ -260,6 +311,20 @@ export class LoopAnimationController {
   }
 
   /**
+   * Cyclically rotate the walk so frameIndex becomes frame 0.
+   * Preserves the closed-loop property. Resets currentFrameIndex to 0
+   * and fires onFrameChange with the new frame 0.
+   */
+  rotateWalkTo (frameIndex) {
+    if (!this.walk || this.walk.length === 0) return
+    const idx = Math.max(0, Math.min(frameIndex, this.walk.length - 1))
+    if (idx === 0) return
+    this.walk = [...this.walk.slice(idx), ...this.walk.slice(0, idx)]
+    this.currentFrameIndex = 0
+    this.onFrameChange(this.getCurrentFrame())
+  }
+
+  /**
    * Get animation info for display
    */
   getAnimationInfo () {
@@ -291,7 +356,7 @@ export class LoopAnimationController {
 
     this.isSavingLoop = true
     const wasPlaying = this.isPlaying
-    
+
     // Don't pause playback - we need isPlaying=true for onFrameChange to load images
     // Instead, we'll manually load frames by calling onFrameChange
     if (wasPlaying) {
@@ -309,7 +374,7 @@ export class LoopAnimationController {
         // Update to this frame
         this.currentFrameIndex = i
         const frame = this.getCurrentFrame()
-        
+
         // Trigger frame change - this starts loading the images
         // But we need to ensure images load even when not playing
         this.onFrameChange(frame)
@@ -328,7 +393,7 @@ export class LoopAnimationController {
       console.log('[LoopAnimation] Save complete')
     } finally {
       this.isSavingLoop = false
-      
+
       // Resume playback if it was playing before
       if (wasPlaying) {
         this.play()

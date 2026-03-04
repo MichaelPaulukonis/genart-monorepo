@@ -10,7 +10,7 @@ import { LoopAnimationPanel } from './LoopAnimationPanel.js'
 
 // Mock controller for testing
 class MockLoopAnimationController {
-  constructor() {
+  constructor () {
     this.enabled = false
     this.isPlaying = false
     this.isGenerating = false
@@ -23,43 +23,49 @@ class MockLoopAnimationController {
     this.imageSetB = ['imageB_0.jpg', 'imageB_1.jpg', 'imageB_2.jpg', 'imageB_3.jpg', 'imageB_4.jpg']
   }
 
-  enable() { this.enabled = true }
-  disable() { this.enabled = false }
-  play() { this.isPlaying = true }
-  pause() { this.isPlaying = false }
-  stop() {
+  enable () { this.enabled = true }
+  disable () { this.enabled = false }
+  play () { this.isPlaying = true }
+  pause () { this.isPlaying = false }
+  stop () {
     this.isPlaying = false
     this.currentFrameIndex = 0
   }
-  setLoopLength(length) {
+
+  setLoopLength (length) {
     if (isNaN(length) || length < 3 || length > this.maxLoopLength) return false
     this.requestedLoopLength = length
     return true
   }
-  setFPS(fps) {
+
+  setFPS (fps) {
     if (fps < 1 || fps > 60) return false
     this.fps = fps
     return true
   }
-  setFrame(index) {
+
+  setFrame (index) {
     if (index < 0 || index >= (this.walk?.length || 0)) return false
     this.currentFrameIndex = index
     return true
   }
-  getCurrentFrame() {
+
+  getCurrentFrame () {
     if (!this.walk || this.walk.length === 0) {
       return { pair: { a: 0, b: 0 } }
     }
     return this.walk[this.currentFrameIndex] || { pair: { a: 0, b: 0 } }
   }
-  getLoopLengthRange() {
+
+  getLoopLengthRange () {
     return {
       min: 3,
       max: this.maxLoopLength,
       current: this.requestedLoopLength
     }
   }
-  generateWalk() {
+
+  generateWalk () {
     this.isGenerating = true
     this.walk = Array.from({ length: this.requestedLoopLength }, (_, i) => ({
       index: i,
@@ -67,9 +73,18 @@ class MockLoopAnimationController {
     }))
     this.isGenerating = false
   }
-  setImageSets(imageSetA, imageSetB) {
+
+  setImageSets (imageSetA, imageSetB) {
     this.imageSetA = imageSetA || []
     this.imageSetB = imageSetB || []
+  }
+
+  rotateWalkTo (frameIndex) {
+    if (!this.walk || this.walk.length === 0) return
+    const idx = Math.max(0, Math.min(frameIndex, this.walk.length - 1))
+    if (idx === 0) return
+    this.walk = [...this.walk.slice(idx), ...this.walk.slice(0, idx)]
+    this.currentFrameIndex = 0
   }
 }
 
@@ -124,17 +139,25 @@ describe('LoopAnimationPanel', () => {
       expect(panel.elements.fpsSlider.value).toBe('12')
     })
 
-    it('should hide all control sections initially', () => {
+    it('should dim loop-gated sections initially (panel not enabled)', () => {
       panel.mount()
-      const sections = panel.panelElement.querySelectorAll('.loop-panel-section')
-      const toggleSection = sections[0]
-      const otherSections = Array.from(sections).slice(1)
-
-      expect(toggleSection.style.display).not.toBe('none')
-      otherSections.forEach(section => {
-        if (section !== toggleSection) {
-          expect(window.getComputedStyle(section).display).toBe('none')
-        }
+      // Panel starts without the 'enabled' class
+      expect(panel.panelElement.classList.contains('enabled')).toBe(false)
+      // All sections present in DOM
+      const allSections = panel.panelElement.querySelectorAll('.loop-panel-section')
+      allSections.forEach(section => {
+        expect(window.getComputedStyle(section).display).toBe('block')
+      })
+      // Loop-gated sections are dimmed
+      const gatedSections = panel.panelElement.querySelectorAll('.loop-gated')
+      expect(gatedSections.length).toBeGreaterThan(0)
+      gatedSections.forEach(section => {
+        expect(window.getComputedStyle(section).opacity).toBe('0.4')
+      })
+      // Non-gated sections (toggle, transport, speed) remain fully visible
+      const nonGated = panel.panelElement.querySelectorAll('.loop-panel-section:not(.loop-gated)')
+      nonGated.forEach(section => {
+        expect(window.getComputedStyle(section).opacity).not.toBe('0.4')
       })
     })
   })
@@ -173,16 +196,14 @@ describe('LoopAnimationPanel', () => {
       expect(toggleBtn.classList.contains('active')).toBe(true)
     })
 
-    it('should show/hide control sections based on enabled state', () => {
-      const loopLengthSection = panel.panelElement.querySelectorAll('.loop-panel-section')[1]
-
+    it('should add/remove enabled class on panel based on enabled state', () => {
       controller.enabled = false
       panel.updateAll()
-      expect(window.getComputedStyle(loopLengthSection).display).toBe('none')
+      expect(panel.panelElement.classList.contains('enabled')).toBe(false)
 
       controller.enabled = true
       panel.updateAll()
-      expect(window.getComputedStyle(loopLengthSection).display).toBe('block')
+      expect(panel.panelElement.classList.contains('enabled')).toBe(true)
     })
   })
 
@@ -289,7 +310,87 @@ describe('LoopAnimationPanel', () => {
       const stopBtn = panel.elements.stopBtn
 
       expect(playPauseBtn.title).toContain('Space')
-      expect(stopBtn.title).toContain('Escape')
+      expect(stopBtn.title).toBe('Stop')
+    })
+  })
+
+  describe('Non-Loop Transport', () => {
+    let onPlay, onPause, onSave, onRandomize, getIsSketchPlaying
+    let nlPanel
+
+    beforeEach(() => {
+      onPlay = vi.fn()
+      onPause = vi.fn()
+      onSave = vi.fn()
+      onRandomize = vi.fn()
+      getIsSketchPlaying = vi.fn().mockReturnValue(false)
+      nlPanel = new LoopAnimationPanel(controller, {
+        onPlay, onPause, onSave, onRandomize, getIsSketchPlaying
+      })
+      nlPanel.mount()
+      controller.enabled = false
+      nlPanel.updatePlaybackButtons()
+    })
+
+    afterEach(() => {
+      nlPanel.destroy()
+    })
+
+    it('should call onPlay when play button clicked and sketch is not playing', () => {
+      getIsSketchPlaying.mockReturnValue(false)
+      nlPanel.elements.playPauseBtn.click()
+      expect(onPlay).toHaveBeenCalled()
+      expect(onPause).not.toHaveBeenCalled()
+    })
+
+    it('should call onPause when play button clicked and sketch is playing', () => {
+      getIsSketchPlaying.mockReturnValue(true)
+      nlPanel.elements.playPauseBtn.click()
+      expect(onPause).toHaveBeenCalled()
+      expect(onPlay).not.toHaveBeenCalled()
+    })
+
+    it('should call onSave when save button clicked in non-loop mode', () => {
+      nlPanel.elements.saveLoopBtn.click()
+      expect(onSave).toHaveBeenCalled()
+    })
+
+    it('should call onRandomize when refresh button clicked in non-loop mode', () => {
+      nlPanel.elements.refreshBtn.click()
+      expect(onRandomize).toHaveBeenCalled()
+    })
+
+    it('should disable stop button in non-loop mode', () => {
+      expect(nlPanel.elements.stopBtn.disabled).toBe(true)
+    })
+
+    it('should enable stop button when loop mode is enabled with a walk', () => {
+      controller.enabled = true
+      controller.walk = [{ pair: { a: 'a.jpg', b: 'b.jpg' } }]
+      nlPanel.updatePlaybackButtons()
+      expect(nlPanel.elements.stopBtn.disabled).toBe(false)
+    })
+
+    it('should show ▶ Play when sketch is stopped', () => {
+      getIsSketchPlaying.mockReturnValue(false)
+      nlPanel.updatePlaybackButtons()
+      expect(nlPanel.elements.playPauseBtn.textContent).toContain('▶ Play')
+    })
+
+    it('should show ⏸ Pause when sketch is playing', () => {
+      getIsSketchPlaying.mockReturnValue(true)
+      nlPanel.updatePlaybackButtons()
+      expect(nlPanel.elements.playPauseBtn.textContent).toContain('⏸ Pause')
+    })
+
+    it('should show "Save image" title in non-loop mode', () => {
+      nlPanel.updatePlaybackButtons()
+      expect(nlPanel.elements.saveLoopBtn.title).toBe('Save image')
+    })
+
+    it('should show "Randomize" title on refresh button in non-loop mode', () => {
+      nlPanel.updatePlaybackButtons()
+      expect(nlPanel.elements.refreshBtn.title).toBe('Randomize')
     })
   })
 
@@ -479,7 +580,8 @@ describe('LoopAnimationPanel', () => {
       expect(panel.elements.loopLengthInput.disabled).toBe(true)
     })
 
-    it('should enable controls when generation complete', () => {
+    it('should enable controls when generation complete (loop must be enabled)', () => {
+      controller.enabled = true
       panel.setLoading(true)
       panel.setLoading(false)
       expect(panel.elements.loopLengthInput.disabled).toBe(false)
@@ -537,10 +639,11 @@ describe('LoopAnimationPanel', () => {
       controller.enabled = false
       panel.updateToggleButton()
 
+      // Panel not enabled — non-toggle sections are dimmed (opacity) but still in DOM
+      expect(panel.panelElement.classList.contains('enabled')).toBe(false)
       const controlSections = panel.panelElement.querySelectorAll('.loop-panel-section')
       Array.from(controlSections).slice(1).forEach(section => {
-        // Other sections should be hidden
-        expect(window.getComputedStyle(section).display).toBe('none')
+        expect(window.getComputedStyle(section).display).toBe('block')
       })
     })
 
@@ -570,6 +673,99 @@ describe('LoopAnimationPanel', () => {
         const frame = { index: 0, pair: { a: 'a.jpg', b: 'b.jpg' } }
         panel.updateFrame(frame)
       }).not.toThrow()
+    })
+  })
+
+  describe('Go to Start Button', () => {
+    beforeEach(() => {
+      panel.mount()
+      controller.enabled = true
+      controller.generateWalk()
+      panel.updateAll()
+    })
+
+    it('should have a go-to-start button in the template', () => {
+      const btn = panel.panel.querySelector('[data-action="go-to-start"]')
+      expect(btn).toBeTruthy()
+    })
+
+    it('should be cached as goToStartBtn element', () => {
+      expect(panel.elements.goToStartBtn).toBeTruthy()
+    })
+
+    it('should be disabled when no walk exists', () => {
+      controller.walk = null
+      panel.updatePlaybackButtons()
+      expect(panel.elements.goToStartBtn.disabled).toBe(true)
+    })
+
+    it('should be enabled when walk exists', () => {
+      panel.updatePlaybackButtons()
+      expect(panel.elements.goToStartBtn.disabled).toBe(false)
+    })
+
+    it('should call controller.stop() on click', () => {
+      const stopSpy = vi.spyOn(controller, 'stop')
+      panel.elements.goToStartBtn.click()
+      expect(stopSpy).toHaveBeenCalled()
+    })
+  })
+
+  describe('Set as Frame 1 Button', () => {
+    beforeEach(() => {
+      panel.mount()
+      controller.enabled = true
+      controller.generateWalk()
+      panel.updateAll()
+    })
+
+    it('should have a SET AS FRAME 1 button in the template', () => {
+      const btn = panel.panel.querySelector('[data-action="set-loop-start"]')
+      expect(btn).toBeTruthy()
+      expect(btn.textContent).toContain('SET FRAME 1')
+    })
+
+    it('should be cached as setStartBtn element', () => {
+      expect(panel.elements.setStartBtn).toBeTruthy()
+    })
+
+    it('should be disabled when no walk exists', () => {
+      controller.walk = null
+      panel.updatePlaybackButtons()
+      expect(panel.elements.setStartBtn.disabled).toBe(true)
+    })
+
+    it('should be disabled while playing', () => {
+      controller.isPlaying = true
+      panel.updatePlaybackButtons()
+      expect(panel.elements.setStartBtn.disabled).toBe(true)
+    })
+
+    it('should be enabled when walk exists and not playing', () => {
+      controller.isPlaying = false
+      panel.updatePlaybackButtons()
+      expect(panel.elements.setStartBtn.disabled).toBe(false)
+    })
+
+    it('should call rotateWalkTo with currentFrameIndex on click', () => {
+      const rotateWalkToSpy = vi.spyOn(controller, 'rotateWalkTo')
+      controller.currentFrameIndex = 3
+      panel.elements.setStartBtn.click()
+      expect(rotateWalkToSpy).toHaveBeenCalledWith(3)
+    })
+
+    it('should fire onSetLoopStart callback with new frame 0 on click', () => {
+      const onSetLoopStart = vi.fn()
+      const panelWithCb = new LoopAnimationPanel(controller, { onSetLoopStart })
+      panelWithCb.mount('test-set-start')
+      controller.generateWalk()
+      panelWithCb.updateAll()
+
+      controller.currentFrameIndex = 2
+      panelWithCb.elements.setStartBtn.click()
+
+      expect(onSetLoopStart).toHaveBeenCalledWith(controller.walk[0])
+      panelWithCb.destroy()
     })
   })
 

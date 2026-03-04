@@ -5,7 +5,9 @@ dist-ssr
 *.local
 
 # Development image swapping - use images_production for deployment
-public/images
+public/images/
+public/images_dev_backup
+public/images_dev_backup.old
 
 # Auto-generated files
 src/utils/version-constants.js

@@ -1,27 +1,61 @@
 // vite.config.js
 const { resolve } = require('path')
 const { defineConfig } = require('vite')
-const { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync } = require('fs')
+const { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, rmSync } = require('fs')
 const { imageListPlugin } = require('../../tools/vite-plugin-image-list.js')
 
 // Vite plugin to copy production images before build
 function copyProductionImages () {
   return {
     name: 'copy-production-images',
-    configResolved () {
+    configResolved (config) {
       const appRoot = __dirname
       const sourceDir = resolve(appRoot, 'public/images_production')
       const targetDir = resolve(appRoot, 'public/images')
 
-      // Only copy if images_production exists and images doesn't exist or is different
-      if (existsSync(sourceDir) && !existsSync(targetDir)) {
-        console.log('ℹ️  public/images not found, copying from images_production...')
+      // Determine if this is a production build
+      const isProductionBuild = config.command === 'build' || process.env.NODE_ENV === 'production'
+
+      if (!existsSync(sourceDir)) {
+        console.warn('⚠️  images_production directory not found')
+        return
+      }
+
+      // Production build: always copy from images_production
+      if (isProductionBuild) {
+        console.log('🚀 Production build detected - copying images from images_production...')
         try {
+          // Backup existing images if they exist and are different
+          if (existsSync(targetDir)) {
+            console.log('ℹ️  Backing up existing public/images (your custom dev images)...')
+            const backupDir = resolve(appRoot, 'public/images_dev_backup')
+            // Backup the current images (which may be dev images)
+            cpSync(targetDir, backupDir, { recursive: true, force: true })
+            console.log('✓ Backup created at public/images_dev_backup')
+            // Remove the old target directory so we can do a clean copy
+            rmSync(targetDir, { recursive: true, force: true })
+          }
+
+          // Copy production images (clean copy after removal)
           cpSync(sourceDir, targetDir, { recursive: true })
-          console.log('✓ Copied production images to public/images for build')
+          console.log('✅ Production images copied to public/images for deployment')
         } catch (error) {
-          console.warn('⚠️  Could not copy production images:', error.message)
-          console.warn('    Development will use existing images or fail if none exist')
+          console.error('❌ Error copying production images:', error.message)
+          throw error // Fail the build if we can't copy production images
+        }
+      } else {
+        // Development mode: only copy if images doesn't exist
+        if (!existsSync(targetDir)) {
+          console.log('ℹ️  public/images not found, copying from images_production...')
+          try {
+            cpSync(sourceDir, targetDir, { recursive: true })
+            console.log('✓ Copied production images to public/images for development')
+          } catch (error) {
+            console.warn('⚠️  Could not copy production images:', error.message)
+            console.warn('    Development will use existing images or fail if none exist')
+          }
+        } else {
+          console.log('ℹ️  Development mode - using existing public/images')
         }
       }
     }

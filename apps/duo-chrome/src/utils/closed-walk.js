@@ -2,9 +2,11 @@
  * Closed walk generator for loopable animations.
  * Builds a sequence of ordered image pairs where consecutive states
  * share exactly one image index and the walk starts and ends on the same state.
+ * Enforces that no image appears in more than 2 consecutive frames,
+ * allowing images to reappear later but preventing continuous chains.
  */
 
-const DEFAULT_MAX_ATTEMPTS = 10
+const DEFAULT_MAX_ATTEMPTS = 1000
 
 function countStates (imagesA, imagesB) {
   let count = 0
@@ -21,12 +23,17 @@ function signature (imagesA, imagesB) {
 }
 
 export class ClosedWalkGenerator {
-  constructor ({ images, imageSetA, imageSetB, loopLength, maxAttempts = DEFAULT_MAX_ATTEMPTS, rng = Math.random }) {
+  constructor ({ images, imageSetA, imageSetB, loopLength, maxAttempts = DEFAULT_MAX_ATTEMPTS, rng = Math.random, desiredStartState = null }) {
     this.imagesA = imageSetA || images || []
     this.imagesB = imageSetB || images || []
     this.loopLength = loopLength
     this.maxAttempts = maxAttempts
     this.rng = rng
+    this.desiredStartState = desiredStartState
+
+    // State persistence
+    this.currentState = null // Stores current generated walk state
+    this.stateHistory = [] // History of generated walks for regeneration
 
     this.validateLoopLength(this.loopLength)
     const cacheKey = signature(this.imagesA, this.imagesB)
@@ -114,13 +121,36 @@ export class ClosedWalkGenerator {
     return states[Math.max(0, Math.min(states.length - 1, index))]
   }
 
-  selectNextState ({ current, neighbors, startState, visited, isClosingStep }) {
+  selectNextState ({ current, neighbors, startState, visited, isClosingStep, walk }) {
     let candidates = neighbors
 
     if (isClosingStep) {
       const closingCandidates = neighbors.filter(n => this.areAdjacent(n, startState))
       if (closingCandidates.length > 0) {
         candidates = closingCandidates
+      }
+    }
+
+    // Prevent images from appearing in more than 2 consecutive frames
+    // Check the last 2 frames: if an image appeared in both, it cannot appear in the next frame
+    if (walk && walk.length >= 2) {
+      const prevFrame = walk[walk.length - 2]
+      const prevImages = new Set([prevFrame.a, prevFrame.b])
+      const currentImages = new Set([current.a, current.b])
+      
+      // Find images that appeared in both previous and current frames
+      const consecutiveImages = new Set()
+      for (const img of prevImages) {
+        if (currentImages.has(img)) {
+          consecutiveImages.add(img)
+        }
+      }
+      
+      // Filter out candidates that contain any image that appeared in last 2 frames
+      if (consecutiveImages.size > 0) {
+        candidates = candidates.filter(candidate => {
+          return !consecutiveImages.has(candidate.a) && !consecutiveImages.has(candidate.b)
+        })
       }
     }
 
@@ -133,8 +163,18 @@ export class ClosedWalkGenerator {
 
   generate () {
     const { states, adjacency } = this.graph
+
+    let candidateStartStates = states
+    // If a desired start state is specified, use adjacent states to it as candidates
+    if (this.desiredStartState) {
+      const desiredKey = `${this.desiredStartState.a},${this.desiredStartState.b}`
+      const desiredStateNeighbors = adjacency.get(desiredKey) || []
+      candidateStartStates = desiredStateNeighbors.length > 0 ? desiredStateNeighbors : states
+      console.log('[ClosedWalk] Using desired start state neighbors:', candidateStartStates.length, 'candidates')
+    }
+
     for (let attempt = 0; attempt < this.maxAttempts; attempt++) {
-      const startState = this.getRandomState(states)
+      const startState = candidateStartStates[Math.floor(this.rng() * candidateStartStates.length)]
       const visited = new Set()
       visited.add(this.getStateKey(startState))
 
@@ -145,7 +185,7 @@ export class ClosedWalkGenerator {
         const current = walk[walk.length - 1]
         const neighbors = adjacency.get(this.getStateKey(current)) || []
         const isClosingStep = walk.length === this.loopLength - 2
-        const next = this.selectNextState({ current, neighbors, startState, visited, isClosingStep })
+        const next = this.selectNextState({ current, neighbors, startState, visited, isClosingStep, walk })
         if (!next) {
           failed = true
           break
@@ -159,6 +199,28 @@ export class ClosedWalkGenerator {
       const penultimate = walk[walk.length - 1]
       if (!this.areAdjacent(penultimate, startState)) {
         continue
+      }
+
+      // Verify closing the loop doesn't create a 3+ consecutive appearance
+      // Check if startState images appeared in both of the last 2 frames
+      if (walk.length >= 2) {
+        const lastFrame = walk[walk.length - 1]
+        const secondLastFrame = walk[walk.length - 2]
+        const lastImages = new Set([lastFrame.a, lastFrame.b])
+        const secondLastImages = new Set([secondLastFrame.a, secondLastFrame.b])
+        
+        // Find images in both last frames
+        const consecutiveInLast = new Set()
+        for (const img of lastImages) {
+          if (secondLastImages.has(img)) {
+            consecutiveInLast.add(img)
+          }
+        }
+        
+        // If startState contains an image that appeared in last 2 frames, can't close
+        if (consecutiveInLast.has(startState.a) || consecutiveInLast.has(startState.b)) {
+          continue
+        }
       }
 
       walk.push(startState)
@@ -177,6 +239,140 @@ export class ClosedWalkGenerator {
 
     throw new Error('Failed to generate a closed walk after maximum attempts')
   }
+
+  /**
+   * Generate a closed walk with automatic fallback to shorter lengths if requested length is impossible.
+   * Attempts to generate the requested loop length. If that fails after max attempts,
+   * automatically tries progressively shorter lengths to find the longest viable loop.
+   * 
+   * @returns {Object} Walk result with metadata including actual loopLength achieved
+   * @throws Only if no valid closed walk can be generated at any length
+   */
+  generateWithFallback () {
+    const minLoopLength = 3
+    const requestedLength = this.loopLength
+    let lastError = null
+
+    // Try requested length first
+    try {
+      return this.generate()
+    } catch (error) {
+      lastError = error
+    }
+
+    // Fallback: try progressively shorter lengths
+    for (let tryLength = requestedLength - 1; tryLength >= minLoopLength; tryLength--) {
+      try {
+        // Temporarily set shorter loop length
+        this.loopLength = tryLength
+
+        const result = this.generate()
+        
+        // Restore original length in metadata for reference
+        result.metadata.requestedLoopLength = requestedLength
+        result.metadata.achievedLoopLength = tryLength
+        result.metadata.isLoopFallback = tryLength < requestedLength
+
+        return result
+      } catch (error) {
+        // Continue trying shorter lengths
+        lastError = error
+      }
+    }
+
+    // If we get here, no viable walk exists at any length
+    throw new Error(`Could not generate any closed walk between lengths 3 and ${requestedLength}: ${lastError?.message || 'Unknown error'}`)
+  }
+
+  /**
+   * Save the current walk state to the instance for later retrieval
+   * @param {Object} walkResult - Result from generate() or generateWithFallback()
+   * @returns {Object} The saved state
+   */
+  saveState (walkResult) {
+    const state = {
+      walk: walkResult.walk,
+      metadata: { ...walkResult.metadata },
+      savedAt: new Date().toISOString(),
+      imageSetA: [...this.imagesA],
+      imageSetB: [...this.imagesB]
+    }
+
+    this.currentState = state
+    this.stateHistory.push(state)
+
+    // Keep history limited to last 10 states
+    if (this.stateHistory.length > 10) {
+      this.stateHistory.shift()
+    }
+
+    return state
+  }
+
+  /**
+   * Get the current saved walk state
+   * @returns {Object|null} Current state or null if no state saved
+   */
+  getCurrentState () {
+    return this.currentState
+  }
+
+  /**
+   * Get the history of saved states
+   * @returns {Array} Array of previous states
+   */
+  getStateHistory () {
+    return this.stateHistory
+  }
+
+  /**
+   * Clear the current state
+   */
+  clearCurrentState () {
+    this.currentState = null
+  }
+
+  /**
+   * Clear all state history
+   */
+  clearStateHistory () {
+    this.currentState = null
+    this.stateHistory = []
+  }
+
+  /**
+   * Restore a previous state from history
+   * @param {number} index - Index in history (0 = oldest, length-1 = newest)
+   * @returns {Object} The restored state
+   * @throws If index is out of bounds
+   */
+  restoreState (index) {
+    if (index < 0 || index >= this.stateHistory.length) {
+      throw new Error(`Invalid state history index: ${index}. Valid range: 0-${this.stateHistory.length - 1}`)
+    }
+    this.currentState = this.stateHistory[index]
+    return this.currentState
+  }
+
+
+  /**
+   * Clear the adjacency graph cache
+   * Useful for memory management and testing
+   */
+  static clearCache () {
+    ClosedWalkGenerator.graphCache.clear()
+  }
+
+  /**
+   * Get cache statistics for debugging
+   * @returns {Object} Cache stats including size and entries
+   */
+  static getCacheStats () {
+    return {
+      size: ClosedWalkGenerator.graphCache.size,
+      entries: Array.from(ClosedWalkGenerator.graphCache.keys())
+    }
+  }
 }
 
 export function validateLoopLength (images, loopLength, imageSetB) {
@@ -185,16 +381,31 @@ export function validateLoopLength (images, loopLength, imageSetB) {
   return ClosedWalkGenerator.validateLoopLengthStatic(imagesA, imagesB, loopLength)
 }
 
-export function generateClosedWalk ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng } = {}) {
+export function generateClosedWalk ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, desiredStartState = null } = {}) {
   const generator = new ClosedWalkGenerator({
     images,
     imageSetA,
     imageSetB,
     loopLength,
     maxAttempts,
-    rng
+    rng,
+    desiredStartState
   })
   const result = generator.generate()
+  return formatWalkForAnimation(result.walk, result.metadata)
+}
+
+export function generateClosedWalkWithFallback ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, desiredStartState = null } = {}) {
+  const generator = new ClosedWalkGenerator({
+    images,
+    imageSetA,
+    imageSetB,
+    loopLength,
+    maxAttempts,
+    rng,
+    desiredStartState
+  })
+  const result = generator.generateWithFallback()
   return formatWalkForAnimation(result.walk, result.metadata)
 }
 
@@ -207,7 +418,7 @@ export function generateClosedWalk ({ images, loopLength, imageSetA, imageSetB, 
  * @param {Function} onProgress - Callback(phase) during graph building: 'preparing', 'generating', 'formatting'
  * @returns {Promise} Resolves to formatted animation sequence
  */
-export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, onProgress } = {}) {
+export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, onProgress, useFallback = false, desiredStartState = null } = {}) {
   // Yield control to allow UI updates/spinner to render
   await new Promise(resolve => setTimeout(resolve, 0))
 
@@ -218,24 +429,32 @@ export async function generateClosedWalkAsync ({ images, loopLength, imageSetA, 
 
   // Check if graph is already cached
   const cacheKey = signature(imagesA, imagesB)
-  let graphWasBuilt = false
   if (!ClosedWalkGenerator.graphCache.has(cacheKey)) {
-    graphWasBuilt = true
     if (onProgress) onProgress('building-graph')
     // Yield again to allow rendering before expensive computation
     await new Promise(resolve => setTimeout(resolve, 0))
   }
 
   if (onProgress) onProgress('generating')
-  const result = generateClosedWalk({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng })
+  const result = useFallback
+    ? generateClosedWalkWithFallback({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, desiredStartState })
+    : generateClosedWalk({ images, loopLength, imageSetA, imageSetB, maxAttempts, rng, desiredStartState })
 
   if (onProgress) onProgress('complete')
   return result
 }
 
 export function formatWalkForAnimation (walk, metadata = {}) {
+  const isClosingFrame = (frameIndex) => {
+    if (walk.length < 2 || frameIndex !== walk.length - 1) return false
+    const first = walk[0]
+    const last = walk[frameIndex]
+    return first && last && first.a === last.a && first.b === last.b
+  }
+
   const frames = walk.map((pair, frameIndex) => ({
     frame: frameIndex,
+    loopFrame: isClosingFrame(frameIndex) ? 0 : frameIndex,
     pair: { a: pair.a, b: pair.b },
     imageIndices: {
       aIndex: typeof pair.a === 'string' ? pair.a : pair.a,

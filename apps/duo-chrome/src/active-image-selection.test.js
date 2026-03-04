@@ -114,10 +114,6 @@ describe('Active Image Selection System', () => {
       isManualMode: false,
       showIndicators: false,
       indicatorTimeout: null,
-      statusTimeout: null,
-      statusPosition: { x: 20, y: 20 },
-      statusIsPermanent: false,
-      isDraggingStatus: false,
       needsRedraw: true,
       lastFrameTime: 0,
       frameCount: 0,
@@ -151,21 +147,9 @@ describe('Active Image Selection System', () => {
       requestScreenUpdate()
     })
 
-    showStatusDisplay = vi.fn((duration = 3000) => {
+    // V3: show() just refreshes the display; panel is always visible in rack
+    showStatusDisplay = vi.fn(() => {
       updateStatusDisplay()
-      mockStatusOverlay.classList.remove('hidden', 'fade-out')
-      if (controlState.statusTimeout) {
-        clearTimeout(controlState.statusTimeout)
-        controlState.statusTimeout = null
-      }
-      if (duration > 0) {
-        controlState.statusIsPermanent = false
-        controlState.statusTimeout = setTimeout(() => {
-          // hideStatusDisplay logic would go here
-        }, duration)
-      } else {
-        controlState.statusIsPermanent = true
-      }
     })
 
     updateStatusDisplay = vi.fn(() => {
@@ -328,12 +312,6 @@ describe('Active Image Selection System', () => {
 
       expect(showStatusDisplay).toHaveBeenCalled()
       expect(updateStatusDisplay).toHaveBeenCalled()
-    })
-
-    it('should remove hidden and fade-out classes from status overlay', () => {
-      setActiveImage(1)
-
-      expect(mockStatusOverlay.classList.remove).toHaveBeenCalledWith('hidden', 'fade-out')
     })
 
     it('should handle missing status overlay gracefully', () => {

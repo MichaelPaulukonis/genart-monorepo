@@ -106,7 +106,7 @@ describe('Task 4: Composition State Restoration Integration', () => {
 
     // Create history manager
     historyManager = new HistoryManager(mockP5, mockStateRefs)
-    
+
     // Capture initial state
     historyManager.captureCurrentState('initial')
     loadImageCallbacks = [] // Reset for tests

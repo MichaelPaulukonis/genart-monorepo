@@ -2104,7 +2104,7 @@
   "duochrome": {
     "tasks": [
       {
-        "id": 1,
+        "id": "1",
         "title": "Implement Arrow Key Navigation for Filmstrip Mode",
         "description": "Reconfigure keyboard controls so arrow keys navigate through image history when in filmstrip mode, while reserving square brackets for image changes across all application modes.",
         "details": "This task involves improving keyboard navigation to create a more intuitive user experience:\n\n1. Modify keyboard event handlers to detect when filmstrip mode is active\n2. Implement left/right arrow key functionality to navigate through history timeline when in filmstrip mode\n3. Configure square bracket keys ([]) to handle image changes in all application modes\n4. Consider and document the following implementation details:\n   - Ensure smooth visual indication when navigating through history\n   - Handle edge cases (beginning/end of history)\n   - Maintain appropriate scrolling behavior when navigating\n   - Consider animation or visual cues for improved user feedback\n   - Review and document all keyboard shortcuts for consistency\n5. Update help documentation to reflect the new keyboard mapping scheme",
@@ -2115,7 +2115,7 @@
         "subtasks": []
       },
       {
-        "id": 2,
+        "id": "2",
         "title": "Enhance Filename Display and Add Blend Mode Indicator",
         "description": "Improve the display of filenames in the UI by implementing better formatting for tagged names and add a visible indicator for the current blend mode to enhance user experience.",
         "details": "1. Add Blend Mode Display:\n   - Identify appropriate location in the UI to display the current blend mode\n   - Implement a clear visual indicator of the active blend mode\n   - Consider using an icon alongside text for better recognition\n   - Ensure the indicator updates in real-time when blend mode changes\n\n2. Improve Filename Display:\n   - Analyze current implementation of filename display\n   - Implement one or more of these solutions for better readability:\n     a. Break long filenames at natural boundaries (underscores, hyphens) with appropriate wrapping\n     b. Implement truncation with ellipsis (...) while preserving the most relevant parts\n     c. Add a hover effect that shows the complete filename in a tooltip\n     d. Consider implementing a toggle between compressed and full filename views\n   - Ensure consistent styling across different UI components where filenames appear\n   - Pay special attention to the 'tagged-name' format which is currently problematic\n\n3. Technical Considerations:\n   - Update CSS to handle text wrapping and overflow properly\n   - Implement responsive behavior to adapt to different window sizes\n   - Consider accessibility implications, ensuring filenames are readable by screen readers\n   - Add appropriate ARIA attributes if using tooltip or hover functionality\n   - Review existing filename formatting logic to determine the best integration points",
@@ -2128,7 +2128,7 @@
         "subtasks": []
       },
       {
-        "id": 3,
+        "id": "3",
         "title": "Implement Non-Destructive History Architecture",
         "description": "Redesign the history management system to preserve subsequent history entries when editing images in the middle of history, using a tree or linked-list data structure.",
         "details": "This task involves redesigning how image history is stored and managed to prevent loss of history entries when modifying images in the middle of the timeline.\n\n1. Analyze current history implementation:\n   - Document the current data structure used for storing history\n   - Identify how history traversal and modification currently works\n   - Determine points where history is being cleared\n\n2. Design new history data structure:\n   - Implement a tree or linked-list structure that can represent branched history\n   - Each node should contain necessary information about the image state\n   - Design should allow for multiple branches stemming from any point in history\n\n3. Implement the new history tracking mechanism:\n   - Modify the image modification functions to create new branches instead of clearing history\n   - Ensure all metadata and state information is properly preserved\n   - Implement efficient storage to prevent memory issues with large history trees\n\n4. Update UI to represent branched history:\n   - Modify the filmstrip or history panel to visually represent branches\n   - Consider using indentation, connecting lines, or other visual cues to show relationships\n   - Ensure the active branch/node is clearly highlighted\n\n5. Implement navigation through the branched history:\n   - Update existing navigation controls to work with the new structure\n   - Consider adding UI elements specific to branch navigation (e.g., expanding/collapsing branches)\n\n6. (Lower priority) Implement branch pruning:\n   - Add functionality to delete specific branches\n   - Ensure pruning doesn't affect other branches or the main timeline\n   - Add confirmation dialogs to prevent accidental deletion",
@@ -2141,7 +2141,7 @@
         "subtasks": []
       },
       {
-        "id": 4,
+        "id": "4",
         "title": "Add Facility to Filter Image List by One or More Filters",
         "description": "Implement functionality to filter the displayed image list based on multiple criteria, allowing users to quickly find and focus on specific images in their collection. Includes a Filter Modal with interactive filename list for direct file selection and management.",
         "status": "done",
@@ -2196,35 +2196,36 @@
         "updatedAt": "2026-01-12T16:06:12.313Z"
       },
       {
-        "id": 5,
+        "id": "5",
         "title": "Implement A/B Theme Assignment for Filtered Image Groups",
         "description": "Develop functionality to assign filtered image groups to A/B positions (foreground/background), ensuring that displayed images come from different selected themes rather than potentially showing two images from the same theme.",
         "details": "1. Extend the filtering system from Task #4 to support theme creation:\n   - Add functionality to save current filter settings as a named theme\n   - Implement a theme management panel showing all saved themes\n   - Enable editing and deletion of saved themes\n   - Store themes persistently between application sessions\n\n2. Create UI for theme assignment:\n   - Design and implement UI controls for assigning themes to A/B positions\n   - Add visual indicators showing which theme is assigned to each position\n   - Ensure the UI clearly communicates the concept of themed positions to users\n   - Consider implementing drag-and-drop from theme list to position indicators\n\n3. Modify image selection and display logic:\n   - Update the image selection algorithm to pull from different theme pools\n   - Implement logic to ensure each position always displays an image from its assigned theme\n   - Handle edge cases where a theme might not contain any images that match criteria\n   - Consider implementing a fallback mechanism when assigned themes have no matching images\n\n4. Add user feedback and information:\n   - Provide clear visual indication of which theme each displayed image belongs to\n   - Implement tooltips or info panels showing theme details\n   - Add error messages or warnings when theme assignments cannot be fulfilled\n   - Consider adding statistics about number of images in each theme",
         "testStrategy": "1. Theme creation and management testing:\n   - Verify filters can be saved as named themes\n   - Test that saved themes correctly preserve all filter criteria\n   - Confirm themes persist between application sessions\n   - Test editing and deleting themes\n\n2. Theme assignment testing:\n   - Verify themes can be assigned to A/B positions through all provided UI methods\n   - Test that visual indicators correctly reflect current theme assignments\n   - Confirm assignments are preserved during application usage\n   - Test changing assignments and verify immediate updates to displayed images\n\n3. Image display verification:\n   - Confirm that displayed images always come from their assigned themes\n   - Test with various combinations of theme assignments\n   - Verify behavior when switching between images maintains theme assignments\n   - Test that history navigation preserves theme assignments\n\n4. Edge case testing:\n   - Test behavior when an assigned theme contains no images\n   - Verify handling when a theme becomes empty due to filter changes\n   - Test with very large themes and very small themes\n   - Confirm proper behavior when the same theme is assigned to both positions",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           "4"
         ],
         "priority": "medium",
         "subtasks": [],
-        "updatedAt": "2026-01-25T20:42:36.693Z"
+        "updatedAt": "2026-02-22T01:30:19.056Z"
       },
       {
-        "id": 6,
+        "id": "6",
         "title": "Implement Remote Server Connection for Image Files",
         "description": "Create functionality to connect to local or remote fileservers for image storage, enabling users to directly access and save images to specific folders on their local machine.",
         "details": "1. Research and evaluate existing solutions:\n   - Review the canvas-utils project's implementation for similar functionality\n   - Investigate available libraries or APIs for fileserver connections\n   - Assess browser security limitations and workarounds for local file access\n\n2. Design the architecture for remote server connections:\n   - Create a flexible interface that can handle both local and remote fileservers\n   - Develop a configuration system for server connection parameters\n   - Implement proper error handling and connection status indicators\n\n3. Implement local fileserver connection:\n   - Develop methods to browse local directory structures\n   - Create functionality to list available images from connected folders\n   - Implement file operations (read, write, delete) for local fileserver\n\n4. Implement remote fileserver connection (if feasible):\n   - Research available remote fileserver APIs or protocols\n   - Implement authentication and secure connection handling\n   - Create methods for browsing and operating on remote files\n\n5. Integrate with existing image handling system:\n   - Modify the current image loading system to support remote sources\n   - Ensure the history system correctly tracks images from remote sources\n   - Update the filtering system to include remote location metadata\n\n6. Create user interface components:\n   - Design connection configuration dialog/panel\n   - Implement folder browser interface\n   - Add visual indicators for connection status\n   - Develop save location selection interface",
         "testStrategy": "1. Connection testing:\n   - Verify successful connection to local fileservers\n   - Test connection error handling and user feedback\n   - If implemented, verify remote server connections and authentication\n\n2. File operation testing:\n   - Test browsing and listing files from connected servers\n   - Verify loading images from remote sources\n   - Confirm saving files to specified locations works correctly\n   - Test error handling for file operations (permissions, disconnections)\n\n3. Integration testing:\n   - Verify history system correctly tracks remote images\n   - Test that filtering system works with remote image sources\n   - Ensure all existing image manipulation features work with remote images\n\n4. Performance testing:\n   - Measure and optimize load times for remote images\n   - Test application behavior with large remote directories\n   - Verify application responsiveness during file operations\n\n5. Security testing:\n   - Verify proper handling of connection credentials\n   - Test for potential security vulnerabilities in file handling\n   - Ensure user permissions are respected",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "3",
           "4"
         ],
         "priority": "medium",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-02-22T14:33:14.044Z"
       },
       {
-        "id": 7,
+        "id": "7",
         "title": "Refactor duo-chrome.js into Smaller Modules",
         "description": "Restructure the large duo-chrome.js file into smaller, more maintainable modules with clear separation of concerns, while preserving all existing functionality.",
         "details": "The duo-chrome.js file has grown too large, making it difficult to maintain and extend. This task involves breaking it down into smaller, more focused modules.\n\n1. Analyze the current structure of duo-chrome.js:\n   - Map out all the functions, classes, and their relationships\n   - Identify logical groupings of functionality\n   - Document key interfaces and dependencies between components\n   - Measure current file size and complexity metrics as a baseline\n\n2. Design a new modular architecture:\n   - Create a proposed module structure with clear separation of concerns\n   - Define interfaces between modules\n   - Ensure backward compatibility with existing code that uses duo-chrome.js\n   - Consider implementing a façade pattern to maintain the current public API\n\n3. Implement the refactoring:\n   - Create new files for each module with appropriate naming\n   - Move related functionality to each module\n   - Update import/export statements as needed\n   - Implement the façade to maintain compatibility\n   - Add appropriate documentation for the new structure\n\n4. Performance considerations:\n   - Ensure the modularization doesn't negatively impact load time or runtime performance\n   - Consider implementing lazy loading for modules that aren't immediately needed\n   - Compare performance metrics before and after refactoring\n\n5. Update affected areas:\n   - Modify any code that directly imports or uses duo-chrome.js\n   - Update build processes or bundling configuration if necessary\n   - Ensure the history system correctly handles operations split across multiple modules",
@@ -2238,12 +2239,12 @@
         "subtasks": []
       },
       {
-        "id": 8,
+        "id": "8",
         "title": "Revise Image Switching Workflow and Safety",
         "description": "Revise image-switching workflow and agent guidance. The \"real original\" images were deleted, indicating a flaw in the current swapping logic. Image swapping should only be necessary for publishing (deployment), and agents should not manipulate image folders during standard development tasks. Restore the original images if possible or document recovery steps. Update `AGENTS.md` or relevant documentation to explicitly forbid agents from running `images:commit` or modifying image directories unless specifically performing a release/deploy task. Refactor the `swap-duo-chrome-images.js` script to be safer or less destructive, including adding commander.js to allow for optional directory parameters.",
         "details": "The `swap-duo-chrome-images.js` script needs to be refactored to prevent accidental loss of original images. Using commander.js will make the script more configurable by allowing users to specify which directories to swap rather than using hard-coded values. This flexibility helps prevent accidental changes to unintended directories. The refactored script should implement proper error handling, validation of directory parameters, and potentially include safeguards like dry-run mode or backup creation before performing swaps.",
         "testStrategy": "1. Test the refactored script with valid directory parameters\n2. Test with missing parameters to ensure defaults work correctly\n3. Test with invalid directory paths to verify appropriate error handling\n4. Verify that documentation accurately describes the new command-line options\n5. Test that the script maintains backward compatibility when run without parameters\n6. Ensure the script includes safety measures to prevent data loss",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": [
@@ -2311,10 +2312,10 @@
             "updatedAt": "2026-01-25T20:48:40.012Z"
           }
         ],
-        "updatedAt": "2026-01-25T20:48:40.012Z"
+        "updatedAt": "2026-03-02T18:04:42.768Z"
       },
       {
-        "id": 9,
+        "id": "9",
         "title": "Restructure Duo-Chrome Image Deployment",
         "description": "Restructure image management to decouple the active development folder from the deployment source. \n1. Make `apps/duo-chrome/public/images` git-ignored so developers can swap content freely without git status noise.\n2. Establish `apps/duo-chrome/public/images_production` (or similar) as the tracked, official source for deployment images.\n3. Update build/deploy scripts to copy from `images_production` to the build output `dist/.../images` (or `public/images` temporarily during build), ensuring only official images are deployed.\n4. Verify that swapping images in dev does not affect git status.",
         "details": "",
@@ -2325,7 +2326,7 @@
         "subtasks": []
       },
       {
-        "id": 10,
+        "id": "10",
         "title": "Fix Critical Duo-Chrome Test Failures",
         "description": "Investigate and fix critical test failures in duo-chrome.\n- HistoryManager.js: Fix _logError related crashes.\n- vitest.config.js: Exclude standalone test scripts (navigation-system.test.js, size-control.test.js) from Vitest execution.\n- Goal: Reduce failing tests (50+) and ensure robust error handling.",
         "details": "1. Verify HistoryManager.js has _logError (it does).\n2. Check if tests are mocking it incorrectly or if it's not being found during execution.\n3. Update vitest configuration to ignore .test.js files that are not actually Vitest suites.\n4. Run tests and verify improvement.",
@@ -2337,7 +2338,7 @@
         "updatedAt": "2026-01-12T14:47:32.876Z"
       },
       {
-        "id": 11,
+        "id": "11",
         "title": "Establish Test File Organization Strategy",
         "description": "Evaluate and implement a new test organization strategy by either moving tests to a standalone tests folder or documenting why they should remain co-located with source code, ensuring alignment with the project's testing approach and build configuration.",
         "details": "## Objective\nMake a final decision on test file organization and implement the chosen approach consistently across the codebase.\n\n## Current State Analysis\n1. **Mixed Organization**: The project currently has tests in multiple locations:\n   - Some tests are co-located with source files (e.g., `duo-chrome.js` might have `duo-chrome.test.js` in the same directory)\n   - Some standalone test scripts exist that are not Vitest suites (e.g., `navigation-system.test.js`, `size-control.test.js`)\n   - Task 10 mentions excluding standalone test scripts from Vitest execution\n\n2. **Build Configuration Impact**: The `vitest.config.js` already needs to exclude certain test files, indicating organization issues\n\n3. **Project Structure Context**: \n   - Duo-chrome is being actively refactored (Task 7, 8, 9, 10)\n   - Image deployment and build scripts are being restructured (Task 9)\n   - Module boundaries are changing (Task 7)\n\n## Decision Framework\n\n### Option A: Move to Standalone Tests Folder\n**Pros:**\n- Cleaner separation of source and test code\n- Easier to configure test runners with single glob pattern\n- Simplifies build/deployment scripts (no need to exclude test files)\n- Better for large codebases with many test files\n- Aligns with many industry standards\n\n**Cons:**\n- Harder to see tests when working on source files\n- Requires more navigation during development\n- Import paths may become more complex\n- Larger refactoring effort\n\n**Implementation Steps:**\n1. Create `tests/` directory structure mirroring source structure (e.g., `tests/unit/`, `tests/integration/`)\n2. Move all `*.test.js` and `*.spec.js` files to corresponding locations\n3. Update import paths in test files to correctly reference source modules\n4. Update `vitest.config.js`:\n   - Remove exclusions for standalone test scripts\n   - Update test file glob patterns to point to `tests/` directory\n   - Ensure coverage configuration still works correctly\n5. Update build scripts to ensure test files are not bundled\n6. Update `.gitignore` if needed\n7. Update documentation (AGENTS.md, README.md) with new testing conventions\n8. Verify CI/CD pipelines still work correctly\n\n### Option B: Keep Tests Next to Code\n**Pros:**\n- Tests are immediately visible when editing source\n- Simpler import paths (often just `./module`)\n- Easier to maintain 1:1 mapping between source and test\n- Less disruptive to current workflow\n\n**Cons:**\n- Requires careful build configuration to exclude tests\n- Can clutter source directories\n- May complicate deployment scripts\n- Harder to run tests separately from source\n\n**Implementation Steps:**\n1. Document the decision rationale in `TESTING.md` or similar\n2. Establish clear naming conventions (e.g., `*.test.js` only for Vitest, `*.e2e.js` for end-to-end)\n3. Update `vitest.config.js` with clear, maintainable exclusion patterns\n4. Create a script to validate that no test files are included in production builds\n5. Update `AGENTS.md` to clarify when and how to create test files\n6. Ensure all standalone test scripts are properly excluded from Vitest\n7. Add linting rules to enforce test file naming conventions\n\n## Hybrid Approach Recommendation\nConsider a hybrid approach based on test type:\n- **Unit tests**: Co-located with source files (`*.test.js`)\n- **Integration/E2E tests**: In standalone `tests/` folder\n- **Standalone test scripts**: In `tests/scripts/` or `tools/` directory\n\n## Key Considerations\n1. **Task 10 Impact**: The vitest.config.js changes in Task 10 must align with this decision\n2. **Build Process**: Task 9's deployment restructuring should not package test files\n3. **Refactoring Impact**: Task 7's module refactoring will be easier with clear test organization\n4. **Agent Guidance**: Whichever approach is chosen must be clearly documented in AGENTS.md\n5. **CI/CD**: Ensure GitHub Actions or other CI scripts are updated accordingly\n\n## Deliverables\n- Decision document (if keeping current approach)\n- OR fully migrated test suite with updated configuration\n- Updated documentation\n- Validation script to ensure tests are excluded from production builds\n- Updated CI/CD configuration if needed",
@@ -2345,10 +2346,70 @@
         "status": "pending",
         "dependencies": [],
         "priority": "medium",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Audit and inventory all existing test files across the codebase",
+            "description": "Comprehensive audit of current test file locations, types, and organization patterns. Document all test files, identify standalone scripts vs Vitest suites, and analyze the mixed organization structure.",
+            "dependencies": [],
+            "details": "Perform a complete scan of the codebase to identify all test files. Categorize them by location (co-located vs standalone), type (unit, integration, e2e), and framework (Vitest vs custom scripts). Document findings in a temporary audit document. Identify the specific redundant loop animation tests mentioned: closed-walk.test.js (47 tests, 6 redundant), loop-animation-controller.test.js (59 tests, 10+ redundant), and LoopAnimationPanel.test.js (45 tests, 15+ redundant). This audit will inform the organization strategy decision.",
+            "status": "pending",
+            "testStrategy": null,
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Evaluate organization options and finalize strategy decision",
+            "description": "Analyze pros and cons of standalone tests folder vs co-located approach. Make final decision based on project context, refactoring impact, and alignment with Tasks 7, 9, and 10.",
+            "dependencies": [
+              1
+            ],
+            "details": "Review the audit results from subtask 1. Evaluate Option A (standalone tests folder) and Option B (co-located tests) against project needs. Consider the hybrid approach for different test types. Document the final decision in a DECISION.md file or similar, including rationale, trade-offs, and alignment with concurrent refactoring tasks (7, 9, 10). Ensure the decision addresses how to handle standalone test scripts like navigation-system.test.js and size-control.test.js. Get team consensus if required.",
+            "status": "pending",
+            "testStrategy": null,
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Consolidate redundant loop animation tests for better maintainability",
+            "description": "Reduce the 151 loop animation tests by 31 redundant cases while maintaining critical path coverage. Target 120 tests total through merging duplicate caching, playback, and UI interaction tests.",
+            "dependencies": [
+              1
+            ],
+            "details": "Focus on the three identified files: closed-walk.test.js, loop-animation-controller.test.js, and LoopAnimationPanel.test.js. Merge 6 duplicate graph caching tests in closed-walk.test.js. Consolidate 10+ redundant playback control tests in loop-animation-controller.test.js. Simplify 15+ granular UI interaction tests in LoopAnimationPanel.test.js while preserving coverage. Ensure each test has unique value and clear purpose. Maintain 100% critical path coverage. Document the consolidation process and update test descriptions for clarity. This reduces maintenance burden and improves test suite performance.",
+            "status": "pending",
+            "testStrategy": "Verify consolidated tests still cover all critical paths. Run coverage report before and after to ensure no loss in coverage. Validate that all edge cases previously tested are still covered by the consolidated tests.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Execute the chosen test file reorganization strategy",
+            "description": "Implement the final organization strategy by either moving tests to standalone folder structure or establishing co-location conventions and updating all file paths accordingly.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "If standalone folder chosen: Create tests/unit/, tests/integration/, tests/scripts/ directories mirroring source structure. Move all *.test.js and *.spec.js files to appropriate locations. Update import paths in all test files to correctly reference source modules using relative paths or aliases. Move standalone test scripts to tests/scripts/ or tools/ directory. If co-located approach chosen: Establish and document clear naming conventions (e.g., *.test.js for Vitest, *.e2e.js for end-to-end). Create linting rules to enforce conventions. Ensure consistent structure across all modules being refactored in Task 7. Update any hardcoded paths in source files that reference tests.",
+            "status": "pending",
+            "testStrategy": null,
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Update configuration, documentation, and validate implementation",
+            "description": "Update vitest.config.js, build scripts, CI/CD pipelines, and documentation. Create validation script to ensure tests are excluded from production builds.",
+            "dependencies": [
+              4
+            ],
+            "details": "Update vitest.config.js: Modify test file glob patterns to point to new test locations. Remove exclusions for standalone test scripts if using standalone folder approach, or add clear, maintainable exclusion patterns if using co-located approach. Ensure coverage configuration works correctly with new structure. Update build scripts from Task 9 to guarantee test files are not bundled in production. Update .gitignore if needed. Update AGENTS.md with clear guidance on test creation and organization. Update README.md testing section. Update CI/CD workflows (GitHub Actions) to use new test paths. Create a validation script that verifies no test files are included in production builds by scanning the bundle. Run full test suite to confirm all tests pass. Verify coverage reporting still works.",
+            "status": "pending",
+            "testStrategy": "Run full test suite and confirm 100% pass rate. Generate coverage report and verify accuracy. Build production bundle and run validation script to ensure zero test files are included. Test CI/CD pipeline in a feature branch.",
+            "parentId": "undefined"
+          }
+        ]
       },
       {
-        "id": 12,
+        "id": "12",
         "title": "Migrate Duo-Chrome from StandardJS to ESLint with Pre-commit Enforcement",
         "description": "Migrate duo-chrome from StandardJS to ESLint with a stricter, more modern configuration, establishing it as the linting standard for all files with pre-commit enforcement.",
         "details": "## Objective\nReplace StandardJS with a more configurable and modern ESLint setup in duo-chrome, using it as a pilot project to establish a new linting standard across all applications with automated enforcement on commits.\n\n## Implementation Steps\n\n### 1. Evaluate and Select Linting Standard\n- Research modern ESLint configurations (Airbnb, Google, custom)\n- Consider TypeScript support if migration is planned\n- Evaluate rule strictness vs. developer productivity\n- Document rationale for chosen standard\n- Create `.eslintrc.js` or `eslint.config.js` configuration file\n- Ensure compatibility with existing codebase style where appropriate\n\n### 2. Install and Configure ESLint\n- Remove StandardJS dependencies: `npm uninstall standard`\n- Install ESLint and chosen config: `npm install --save-dev eslint eslint-config-airbnb-base` (or alternative)\n- Install necessary plugins: `@typescript-eslint/eslint-plugin` (if TS), `eslint-plugin-import`, `eslint-plugin-node`\n- Add linting scripts to `package.json`:\n  ```json\n  {\n    \"scripts\": {\n      \"lint\": \"eslint .\",\n      \"lint:fix\": \"eslint . --fix\"\n    }\n  }\n  ```\n\n### 3. Configure Pre-commit Hooks\n- Install Husky: `npm install --save-dev husky`\n- Enable Git hooks: `npx husky install`\n- Install lint-staged: `npm install --save-dev lint-staged`\n- Configure `lint-staged` in `package.json`:\n  ```json\n  {\n    \"lint-staged\": {\n      \"*.js\": [\"eslint --fix\", \"git add\"]\n    }\n  }\n  ```\n- Add pre-commit hook: `npx husky add .husky/pre-commit \"npx lint-staged\"`\n\n### 4. Apply Linting to All Files\n- Run initial linting pass: `npm run lint:fix`\n- Manually fix any remaining linting errors that can't be auto-fixed\n- Address any architectural issues revealed by stricter linting rules\n- Update code to comply with new standards (e.g., explicit return types, stricter variable declarations)\n\n### 5. Update Documentation\n- Document the new linting standard in `README.md` or `CONTRIBUTING.md`\n- Explain how to run linting locally\n- Describe the pre-commit hook behavior\n- Create a migration guide for other apps\n\n### 6. Verify Build Integration\n- Ensure linting runs in CI/CD pipeline\n- Update GitHub Actions or other CI configurations\n- Verify linting doesn't break production builds\n- Consider adding linting as a prerequisite for PR merging\n\n## Special Considerations\n- **Task 7 (Refactor duo-chrome.js)**: If Task 7 is completed first, apply linting to the new modular structure. If not, lint the monolithic file first, then refactor.\n- **Task 10 (Fix Critical Tests)**: Coordinate with test fixes to avoid merge conflicts\n- **Task 11 (Test Organization)**: Align linting rules with test file locations and patterns\n- Gradual migration approach: Consider using ESLint with StandardJS rules initially, then progressively enabling stricter rules\n- Editor integration: Ensure VS Code or other editor configurations are updated\n- Ignore patterns: Configure `.eslintignore` for build artifacts, node_modules, and generated files",
@@ -2359,27 +2420,28 @@
         "subtasks": []
       },
       {
-        "id": 13,
+        "id": "13",
         "title": "Enhance Status Window with Palette Information, Full Filenames, and Keyboard Parameters",
         "description": "Expand the status window UI to display the current palette name with optional color preview, show full filenames without truncation, and expose all keyboard-adjustable parameters for improved user feedback and control.",
         "details": "## Implementation Overview\nBuild upon the UI enhancement work from Task 2 to create a comprehensive status window that provides real-time feedback on critical application parameters.\n\n### 1. Palette Information Display\n- **Palette Name**: Add a dedicated UI element in the status window to show the currently active palette name. The display should update immediately when the palette changes via keyboard shortcuts or other methods.\n- **Optional Color Preview**: Implement a toggleable color swatch display that shows the actual colors in the current palette. This should be compact (e.g., small squares or a horizontal bar) and appear next to or below the palette name.\n- **Implementation**: Create a new `PaletteDisplay` component that subscribes to palette change events. Use the existing palette management system to retrieve current palette data.\n\n### 2. Full Filename Display (No Truncation)\n- **Extend Task 2 Work**: Leverage the filename display improvements from Task 2, but remove any truncation logic specifically for the status window.\n- **Display Strategy**: For long filenames, implement one of the following (or combination):\n  - Horizontal scrolling on hover\n  - Multi-line wrapping with proper line break rules\n  - Tooltip that shows full filename on hover\n  - Expandable/collapsible filename area\n- **Status Window Integration**: Ensure the filename display in the status window is distinct from other filename displays and prioritizes completeness over compactness.\n- **Edge Cases**: Handle filenames with special characters, very long paths (100+ characters), and Unicode characters.\n\n### 3. Keyboard-Adjustable Parameters Display\n- **Parameter Discovery**: Audit the codebase to identify all parameters that can be adjusted via keyboard shortcuts (e.g., opacity, zoom, rotation, blend mode, palette selection, etc.).\n- **Dynamic Display System**: Create a `ParameterPanel` component that:\n  - Shows parameter name, current value, and keyboard shortcut\n  - Updates in real-time as values change\n  - Groups related parameters logically\n  - Only displays parameters relevant to the current mode/tool\n- **Display Format**: Use a consistent format like `Parameter: Value [Shortcut]` (e.g., `Opacity: 75% [O+/-]`)\n- **Performance**: Implement efficient re-rendering to avoid performance issues when multiple parameters update rapidly.\n\n### 4. UI/UX Considerations\n- **Layout Design**: Design a layout that accommodates all new information without cluttering the status window. Consider using sections with clear headings or separators.\n- **Visibility**: Ensure text is readable across different background colors and image content. Implement adaptive text colors or background overlays if necessary.\n- **Responsive Behavior**: The status window should adapt to different application window sizes, potentially hiding less critical information on smaller screens.\n- **User Preferences**: Consider adding a settings option to toggle each display element (palette colors, parameter panel, etc.) on/off.\n\n### 5. Technical Implementation\n- **State Management**: Use the existing state management system (likely Redux, Context API, or similar) to subscribe to changes in palette, filename, and parameter values.\n- **Event Listeners**: Implement keyboard event listeners to capture parameter changes and trigger display updates.\n- **Component Architecture**: Create modular components for each display element to maintain separation of concerns and enable isolated testing.\n- **Styling**: Use CSS Grid or Flexbox for layout. Implement smooth transitions for value changes (e.g., numbers changing should animate briefly).\n\n### 6. Integration Points\n- Ensure the new status window components integrate seamlessly with the existing UI framework\n- Update any TypeScript interfaces or PropTypes to include new data structures\n- Document the new display system for future maintainers",
         "testStrategy": "## Testing Approach\n\n### 1. Unit Tests\n- **PaletteDisplay Component**: Test rendering with various palette names (short, long, special characters). Test color swatch rendering with different palette sizes (2-color, 16-color, etc.).\n- **FilenameDisplay Component**: Test display of filenames from 10 to 200+ characters. Verify truncation is NOT applied. Test special characters and Unicode.\n- **ParameterPanel Component**: Test rendering with different sets of parameters. Verify each parameter shows correct name, value, and shortcut.\n\n### 2. Integration Tests\n- **Real-time Updates**: Simulate palette changes and verify display updates within 100ms. Simulate keyboard parameter adjustments and verify immediate visual feedback.\n- **Event System**: Test that keyboard events properly propagate to the status window components. Verify state management integration.\n\n### 3. UI/Visual Tests\n- **Layout Validation**: Test status window layout at various application window sizes (800x600, 1920x1080, etc.). Verify no overlapping elements or text overflow.\n- **Readability**: Test text visibility on light, dark, and complex image backgrounds. Verify adaptive coloring works correctly.\n- **Responsive Behavior**: Confirm that on small screens, non-essential elements are hidden properly.\n\n### 4. Manual Test Cases\n1. **Palette Testing**:\n   - Load different palettes via keyboard shortcut - verify name updates immediately\n   - Toggle palette color display on/off - verify swatches appear/disappear\n   - Test with palettes containing many colors (20+) - verify swatch display remains usable\n\n2. **Filename Testing**:\n   - Load images with filenames of varying lengths (50, 100, 150 characters)\n   - Verify full filename is always visible (via scrolling, wrapping, or tooltip)\n   - Test with filenames containing spaces, hyphens, underscores, Unicode\n\n3. **Parameter Testing**:\n   - Adjust each keyboard-controllable parameter and verify display updates\n   - Rapidly change parameters (e.g., hold down opacity increase key) - verify display keeps up without lag\n   - Switch between different tools/modes - verify parameter panel shows only relevant parameters\n\n4. **Performance Testing**:\n   - Monitor frame rate while continuously updating parameters for 60 seconds\n   - Check for memory leaks by repeatedly changing palettes and parameters\n\n### 5. Accessibility Testing\n- Verify all new UI elements are screen-reader compatible\n- Test keyboard navigation to status window elements\n- Ensure color swatches have appropriate ARIA labels\n\n### 6. Regression Testing\n- Confirm existing status window functionality (from Task 2) still works correctly\n- Verify blend mode indicator (from Task 2) is not affected by new changes\n- Run full application smoke test to ensure no unintended side effects",
-        "status": "pending",
+        "status": "cancelled",
         "dependencies": [
           "2"
         ],
         "priority": "medium",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-03-02T18:21:57.369Z"
       },
       {
-        "id": 14,
+        "id": "14",
         "title": "Implement Closed Walk Graph Algorithm for Animation Loop Generation",
         "description": "Implement the core closed walk graph algorithm that generates a seamless loop sequence of image pairs for duo-chrome animations. This includes graph state representation, adjacency validation, random walk generation with Hamiltonian cycle principles, and loop validation. The algorithm must ensure the walk starts and ends at the same state while respecting adjacency constraints where consecutive states share exactly one image.",
         "details": "## Implementation Details\n\n### Graph State Model\n- Represent each state as an ordered pair `(a, b)` where `a` and `b` are distinct image indices\n- Implement adjacency check: `states[i]` and `states[i+1]` are adjacent if they share exactly one image index\n- Store walk as array of state objects: `[{a: 0, b: 1}, {a: 1, b: 2}, ..., {a: n, b: 0}]`\n\n### Closed Walk Generation Algorithm\n```javascript\n// Core algorithm implementation\nclass ClosedWalkGenerator {\n  constructor(imageIndices, loopLength) {\n    this.images = imageIndices;\n    this.loopLength = loopLength;\n    this.graph = this.buildAdjacencyGraph();\n  }\n\n  buildAdjacencyGraph() {\n    // Create adjacency list for all valid state pairs\n    const states = [];\n    const adjacency = new Map();\n    \n    // Generate all possible ordered pairs (a, b) where a !== b\n    for (let i = 0; i < this.images.length; i++) {\n      for (let j = 0; j < this.images.length; j++) {\n        if (i !== j) {\n          const stateKey = `${i},${j}`;\n          states.push({a: i, b: j});\n          adjacency.set(stateKey, []);\n        }\n      }\n    }\n    \n    // Build adjacency relationships\n    states.forEach(state => {\n      const key = `${state.a},${state.b}`;\n      states.forEach(neighbor => {\n        if (this.areAdjacent(state, neighbor)) {\n          adjacency.get(key).push(neighbor);\n        }\n      });\n    });\n    \n    return { states, adjacency };\n  }\n\n  areAdjacent(state1, state2) {\n    // Share exactly one image index\n    const shareA = state1.a === state2.a || state1.a === state2.b;\n    const shareB = state1.b === state2.a || state1.b === state2.b;\n    return (shareA !== shareB) && (state1.a !== state1.b) && (state2.a !== state2.b);\n  }\n\n  generateClosedWalk() {\n    const { states, adjacency } = this.graph;\n    const startState = this.getRandomState(states);\n    const walk = [startState];\n    const visited = new Set();\n    visited.add(this.getStateKey(startState));\n\n    // Build walk using backtracking with heuristics\n    for (let i = 1; i < this.loopLength; i++) {\n      const current = walk[walk.length - 1];\n      const neighbors = adjacency.get(this.getStateKey(current));\n      const validNext = neighbors.filter(n => !visited.has(this.getStateKey(n)));\n      \n      const next = validNext.length > 0 \n        ? this.selectBestTransition(current, validNext)\n        : this.getRandomState(neighbors);\n        \n      walk.push(next);\n      visited.add(this.getStateKey(next));\n    }\n\n    // Ensure loop closure - final state must be adjacent to start\n    if (!this.areAdjacent(walk[walk.length - 1], startState)) {\n      // Find bridging state or regenerate\n      return this.generateClosedWalk(); // Recursive retry\n    }\n\n    return walk;\n  }\n\n  selectBestTransition(current, candidates) {\n    // Heuristic: prefer transitions with visual similarity\n    // This is a placeholder for image similarity metrics\n    return candidates[Math.floor(Math.random() * candidates.length)];\n  }\n\n  getStateKey(state) {\n    return `${state.a},${state.b}`;\n  }\n\n  getRandomState(states) {\n    return states[Math.floor(Math.random() * states.length)];\n  }\n}\n```\n\n### Validation & Edge Cases\n- Pre-validate: `loopLength <= (n * (n-1))` where n = number of images\n- Handle insufficient images: if n < 3, return error\n- Implement max retry attempts (10) for walk generation\n- Fallback: generate shortest possible loop if requested length impossible\n\n### Integration Points\n- Accept filtered image array from existing theme/filter system\n- Return walk sequence in format: `[{frame: 0, pair: {a: idx, b: idx}}, ...]`\n- Expose `validateLoopLength(images, length)` method for UI validation\n\n### Performance Optimization\n- Cache adjacency graph for repeated generations with same image set\n- Use Web Workers for graph generation with large image sets (>100 images)\n- Implement incremental walk building to avoid full recalculation on parameter changes\n\n### State Management\n- Store generated walk in animation state store\n- Provide `regenerateWalk()` method for user-triggered regeneration\n- Include metadata: generation timestamp, image count, loop length, success status",
         "testStrategy": "## Test Strategy\n\n### Unit Tests\n1. **Graph Construction**\n   - Test adjacency detection with sample states\n   - Verify all valid pairs generated for n=4 images (should create 12 states)\n   - Test adjacency count: each state should have 2*(n-2) neighbors\n\n2. **Closed Walk Generation**\n   - Test loop closure: `walk[0] === walk[walk.length-1]` (adjacent check)\n   - Test adjacency constraint: all consecutive pairs must share exactly one index\n   - Test randomness: multiple generations produce different sequences\n   - Test length accuracy: output length matches requested loopLength\n\n3. **Edge Cases**\n   - n=3 images (minimum viable): should generate 6-state graph\n   - n=2 images: should throw error (insufficient for duo-chrome)\n   - Requested length > max possible: should fallback or retry\n   - Empty image array: should throw validation error\n\n### Integration Tests\n1. **Filter Integration**\n   - Generate walk with filtered image subset\n   - Verify indices map correctly to original image array\n   \n2. **Performance**\n   - Generate walk with n=50 images, loopLength=100 in <500ms\n   - Test memory usage stays under 50MB for large loops\n\n### Manual QA\n1. **Visual Validation**\n   - Create test animation with numbered images\n   - Verify frame sequence shows smooth transitions\n   - Confirm loop restarts without visual jump\n\n2. **Error Scenarios**\n   - Attempt generation with 1-2 images: verify clear error message\n   - Set loopLength=1000 with 10 images: verify graceful fallback\n\n### Test Data\n- Use mock image arrays with indices 0-9 for predictable testing\n- Create visual test set with distinct patterns to verify transition logic\n- Prepare edge case datasets: 0, 1, 2, 3, 50 images\n\n### Acceptance Criteria\n- ✅ Generates valid closed walk 100/100 times for n≥3\n- ✅ Loop closure verified for all generated walks\n- ✅ Adjacency constraint maintained across entire sequence\n- ✅ Performance <1s for n=100, loopLength=200\n- ✅ All edge cases handled with appropriate errors/fallbacks",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -2443,10 +2505,10 @@
               4
             ],
             "details": "Implement adjacency graph caching using image set signature as key. Add Web Worker integration for graph generation when image count >100. Implement incremental walk building to avoid full recalculation. Add max retry attempts (10) with fallback to generate shortest possible loop when requested length is impossible. Integrate with animation state store to persist generated walk. Provide clear error messages for unsolvable configurations.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Test caching behavior with same/different image sets. Verify Web Worker invocation threshold and performance. Test incremental building with parameter changes. Test fallback generation for impossible lengths. Validate state persistence and regeneration workflow.",
             "parentId": "undefined",
-            "updatedAt": "2026-01-28T02:14:55.833Z"
+            "updatedAt": "2026-02-22T16:19:56.407Z"
           },
           {
             "id": 6,
@@ -2456,10 +2518,10 @@
               5
             ],
             "details": "Implement toggle switch for enabling/disabling loop mode with application state updates. Create numeric input for loop length with real-time validation via validateLoopLength() API. Add Play/Pause/Stop buttons with keyboard shortcuts (Space, Esc). Display current frame counter and total frames. Implement FPS slider (1-60) controlling animation speed. Add preview panel showing current frame's image pair. Create visual indicator when loop mode is active. Integrate with status display window. Add contextual help text explaining loop parameters. Disable all loop controls when insufficient images (<3) are available.\n<info added on 2026-01-28T19:49:15.430Z>\nUPCOMING: Loop Sequence Export Feature (planned as Task 14.7 or separate Task 15). This future feature will allow users to export one complete loop sequence as a set of images for creating GIFs, videos, or other media. It includes: save functionality for the current walk and image pairs, an export dialog with options for output directory, naming conventions, and format selection, progress feedback during export, and metadata preservation. This export functionality is explicitly separate from the play/pause/stop controls - it is designed for capturing one exact loop sequence rather than real-time playback.\n</info added on 2026-01-28T19:49:15.430Z>",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Test toggle enable/disable behavior and state persistence across sessions. Verify numeric input validation with edge cases (invalid lengths, non-numeric input). Test playback controls with animation frame sequencing and keyboard shortcuts. Validate frame counter accuracy throughout animation cycle. Test FPS control changes animation speed correctly. Verify preview displays correct image pair from generated walk. Test help text visibility and accuracy. Test disabled state behavior with filtered/themed image sets.",
             "parentId": "undefined",
-            "updatedAt": "2026-01-28T02:14:55.840Z"
+            "updatedAt": "2026-02-22T16:19:56.419Z"
           },
           {
             "id": 7,
@@ -2473,12 +2535,52 @@
             "testStrategy": "Test coverage completed:\n- Tested with no themes assigned (uses full imgs)\n- Tested with valid theme (uses filtered results)\n- Verified fallback triggers when theme filter returns 0 images\n- Verified logging shows correct counts and fallback status",
             "parentId": "undefined",
             "updatedAt": "2026-01-29T15:45:00.000Z"
+          },
+          {
+            "id": 8,
+            "title": "Use Current Image Pair as Loop Start/End",
+            "description": "When enabling loop mode, initialize the loop walk using the currently displayed image pair as both the start and end state. This creates a seamless transition when activating loop mode on the current frame.",
+            "dependencies": [
+              6
+            ],
+            "details": "Implement logic to detect the current image pair (imageA, imageB) when loop mode is enabled. Pass this as a start state to the closed walk generator. The generated walk should begin with a state adjacent to this start state and end with a state adjacent to it, ensuring seamless loop closure. This enhances UX by making loop mode feel more continuous with the current viewing state. Implementation should preserve the current image indices in the animation state.",
+            "status": "done",
+            "testStrategy": "Test that current image pair is correctly detected when toggling loop mode. Verify walk starts with a state adjacent to current pair. Verify walk ends with a state adjacent to current pair. Test with different image pairs and themes. Verify no visual jump when loop playback begins.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-22T22:30:24.099Z"
+          },
+          {
+            "id": 9,
+            "title": "Add Refresh/Regenerate Button with State Preservation",
+            "description": "Implement a refresh button in the Loop Animation Panel that regenerates the closed walk sequence while preserving the current loop mode state (enabled/disabled, loop length, frame position, playback speed).",
+            "dependencies": [
+              6
+            ],
+            "details": "Add a refresh/regenerate button to the UI controls section. When clicked, the button should call regenerateWalk() on the ClosedWalkGenerator, create a new walk with the same parameters, and update the animation controller. Preserve all state: loop mode enabled/disabled flag, current loop length setting, current playback frame position (or reset to frame 1), current FPS setting. Provide visual feedback during generation (disable button, show loading indicator). This allows users to generate alternative loop sequences without disrupting their workflow.",
+            "status": "done",
+            "testStrategy": "Test that clicking refresh button generates a new walk. Verify loop mode state is preserved after regeneration. Verify loop length parameter persists. Test that playback frame counter resets appropriately. Verify FPS setting is maintained. Test with different image sets and themes. Verify visual feedback appears during generation.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-22T22:30:24.106Z"
+          },
+          {
+            "id": 10,
+            "title": "Add Generation Busy Indicator/Status Message",
+            "description": "Display a status message to the user when the closed walk algorithm is generating a new loop sequence. Show 'Generating loop...' during generation and a success message when complete.",
+            "dependencies": [
+              5,
+              9
+            ],
+            "details": "Integrate with the status display window or create a loading indicator showing walk generation progress. Display 'Generating loop...' or similar message while ClosedWalkGenerator is processing. Once generation completes successfully, briefly show a success message or simply clear the status. Handle edge cases where generation fails or exceeds max retry attempts - show appropriate error message. This provides user feedback during potentially long-running operations, especially with large image sets or complex walk requirements. Status updates should be integrated with existing status display UI component.",
+            "status": "done",
+            "testStrategy": "Manually test walk generation and verify status message appears. Verify message appears for entire duration of generation (especially noticeable with large image sets). Test success message display. Test error message display when generation fails. Verify no status message shown when no generation is occurring. Test across different browsers and screen sizes.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-22T22:30:24.111Z"
           }
         ],
-        "updatedAt": "2026-01-28T02:14:55.840Z"
+        "updatedAt": "2026-02-22T22:30:24.111Z"
       },
       {
-        "id": 15,
+        "id": "15",
         "title": "Module Structure & Build Configuration",
         "description": "Initialize the monorepo library structure with proper build configuration, package.json, and TypeScript definitions. Create the foundational scaffolding for the reusable draggable panel module.",
         "details": "Create `libs/draggable-panel/` directory with:\n- `package.json` with ES module exports (`\"type\": \"module\"`)\n- `tsconfig.json` for TypeScript compilation (target: ES2020, module: ESNext)\n- `src/index.ts` main entry point\n- `src/DraggablePanel.ts` core class file\n- `src/types.ts` for TypeScript interfaces\n- `dist/` output directory\n- Rollup/Vite build configuration for UMD and ES builds\n- Jest testing setup with jsdom environment\n- ESLint configuration for vanilla JS/TS\n\nUse monorepo workspace protocol for dependencies. Export both default and named exports. Include source maps for debugging.",
@@ -2489,158 +2591,183 @@
         "subtasks": []
       },
       {
-        "id": 16,
+        "id": "16",
         "title": "Core Dragging Engine",
         "description": "Implement the fundamental mouse and touch event handling system for dragging panels. Create smooth 60fps movement using requestAnimationFrame with visual feedback during drag operations.",
         "details": "Implement in `src/DraggablePanel.ts`:\n- Private `#handleMouseDown(event)` method with `event.target.closest('[data-drag-handle]')` detection\n- `#handleMouseMove(event)` using `requestAnimationFrame` to update `transform: translate(x, y)`\n- `#handleMouseUp()` to commit final position and remove listeners\n- Use `pointer-events: none` on document during drag to prevent iframe issues\n- Add CSS classes: `.dragging` (opacity: 0.9, cursor: grabbing), `.drag-handle` (cursor: move)\n- Store offset between mouse and panel origin in private state\n- Passive: false on move events to prevent scrolling\n- Touch support via same handlers (Pointer Events API recommended)\n\n```typescript\nprivate onPointerDown = (e: PointerEvent) => {\n  if (!e.target.closest('[data-drag-handle]')) return;\n  e.preventDefault();\n  this.dragOffset = { x: e.clientX - this.x, y: e.clientY - this.y };\n  window.addEventListener('pointermove', this.onPointerMove, { passive: false });\n  window.addEventListener('pointerup', this.onPointerUp);\n}\n```",
         "testStrategy": "Unit tests: simulate mouse events, verify transform updates. Manual test: drag panel, check for smooth 60fps movement using Chrome DevTools FPS meter. Verify cursor changes to 'grabbing' during drag. Test touch events in mobile emulation mode.",
         "priority": "high",
         "dependencies": [
-          15
+          "15"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T18:20:06.978Z"
       },
       {
-        "id": 17,
+        "id": "17",
         "title": "Position Persistence Layer",
         "description": "Build localStorage-based persistence layer that automatically saves panel positions on drag end and restores them on initialization. Implement unique key generation and error handling for storage operations.",
         "details": "Create `src/StorageManager.ts`:\n- Generate storage key: `options.storageKey || 'dp_' + element.id || 'dp_' + Math.random().toString(36).slice(2)`\n- Save format: `{ x: number, y: number, timestamp: number, version: '1.0' }`\n- Auto-save in `#handleMouseUp()` after drag completes\n- Restore in constructor: read storage, parse JSON, validate schema, apply transform\n- Handle storage errors: wrap in try/catch, fallback to default position\n- Add `clearStorage()` method to delete specific panel data\n- Storage quota handling: catch `QuotaExceededError` and silently fail\n- Use `window.addEventListener('storage', ...)` for cross-tab sync\n\n```typescript\nprivate savePosition() {\n  try {\n    const data = { x: this.x, y: this.y, timestamp: Date.now(), version: '1.0' };\n    localStorage.setItem(this.storageKey, JSON.stringify(data));\n  } catch (e) {\n    console.warn('DraggablePanel: Failed to save position', e);\n  }\n}\n```",
         "testStrategy": "Test localStorage set/get in jsdom. Verify data structure includes version field. Test error handling by stubbing localStorage to throw. Manually test: drag panel, reload page, verify position restores. Test cross-tab sync by opening two tabs.",
         "priority": "high",
         "dependencies": [
-          16
+          "16"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:43:50.482Z"
       },
       {
-        "id": 18,
+        "id": "18",
         "title": "Z-Index Management System",
         "description": "Implement global z-index management that automatically brings clicked panels to front and maintains proper stacking order. Add special handling for modal dialogs to ensure they always appear above regular panels.",
         "details": "Create `src/ZIndexManager.ts` singleton:\n- Track global z-index counter starting at 1000\n- Use `WeakMap<HTMLElement, number>` to store assigned z-index per panel\n- On panel mousedown/focus: increment counter, assign `element.style.zIndex = counter`\n- Modal detection: check `element.hasAttribute('data-modal')` or `role=\"dialog\"` with `aria-modal=\"true\"`\n- Modal panels get z-index from separate modal counter starting at 10000\n- On initialization, query all panels and sync with existing DOM z-index values\n- Provide `bringToTop()` public method for programmatic control\n- Handle `focusin` event for keyboard navigation z-index updates\n\n```typescript\n// In constructor\nthis.element.addEventListener('mousedown', () => ZIndexManager.bringToTop(this.element, this.isModal));\n```",
         "testStrategy": "Unit test: simulate clicks on multiple panels, verify zIndex values increase sequentially. Manual test: click panels in random order, verify last clicked is visually on top. Test modal: open modal over regular panel, verify modal always stays on top.",
         "priority": "high",
         "dependencies": [
-          16
+          "16"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:43:50.489Z"
       },
       {
-        "id": 19,
+        "id": "19",
         "title": "Boundary Detection & Constraint System",
         "description": "Develop viewport boundary detection system that prevents panels from being dragged off-screen. Implement dynamic boundary recalculation on window resize and support custom constraint options.",
         "details": "Create `src/BoundaryManager.ts`:\n- Calculate boundaries: `viewportWidth - panelWidth - margin(16px)`\n- Clamp position in `#handleMouseMove`: `x = Math.max(0, Math.min(maxX, newX))`\n- Listen to `window.resize` event and auto-adjust panel positions if needed\n- Support custom `options.bounds: { left, top, right, bottom }` in pixels\n- Handle edge cases: panel larger than viewport (center it), negative coordinates\n- Add `constrainPosition(x, y)` utility method\n- Use `getBoundingClientRect()` for accurate dimensions including transforms\n- Debounce resize handler with 100ms timeout\n\n```typescript\nprivate constrainPosition(x: number, y: number) {\n  const rect = this.element.getBoundingClientRect();\n  const maxX = window.innerWidth - rect.width;\n  const maxY = window.innerHeight - rect.height;\n  return {\n    x: Math.max(0, Math.min(maxX, x)),\n    y: Math.max(0, Math.min(maxY, y))\n  };\n}\n```",
         "testStrategy": "Manual test: drag panel to each edge, verify it stops at viewport boundary. Test window resize: drag panel near right edge, shrink window, verify panel stays visible. Unit test: test `constrainPosition` with various inputs including negative and oversized values.",
         "priority": "high",
         "dependencies": [
-          16
+          "16"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:43:50.494Z"
       },
       {
-        "id": 20,
+        "id": "20",
         "title": "Public API Implementation",
         "description": "Construct the public-facing API as a JavaScript class with constructor, options validation, and control methods. Expose enable/disable functionality, position retrieval, and reset capabilities.",
         "details": "Implement main `DraggablePanel` class in `src/DraggablePanel.ts`:\n- Constructor signature: `new DraggablePanel(element: HTMLElement, options: DraggablePanelOptions)`\n- Options interface: `{ storageKey?: string, minWidth?: number, minHeight?: number, bounds?: Bounds, handle?: string }`\n- Methods:\n  - `enable()` / `disable()` - add/remove all event listeners\n  - `reset()` - clear storage and restore to initial position\n  - `getPosition(): { x, y }` - return current position\n  - `setPosition(x, y)` - programmatically move panel\n  - `destroy()` - cleanup all listeners and references\n- Validate element exists and is HTMLElement\n- Throw descriptive errors for invalid options\n- Store initial position as fallback for reset\n- Use private fields (`#position`, `#isEnabled`) for encapsulation\n\n```typescript\nconstructor(element: HTMLElement, options: DraggablePanelOptions = {}) {\n  if (!element || !(element instanceof HTMLElement)) {\n    throw new Error('DraggablePanel: Valid HTMLElement required');\n  }\n  this.element = element;\n  this.options = { ...defaultOptions, ...options };\n  this.init();\n}\n```",
         "testStrategy": "Unit tests: test constructor validation, all public methods. Test enable/disable by checking event listeners attached/detached. Test reset by verifying localStorage cleared and position restored. Test error handling with invalid inputs.",
         "priority": "high",
         "dependencies": [
-          16,
-          17,
-          18,
-          19
+          "16",
+          "17",
+          "18",
+          "19"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:44:38.476Z"
       },
       {
-        "id": 21,
+        "id": "21",
         "title": "Touch & Mobile Support",
         "description": "Extend the dragging system to support touch devices by implementing touch event handlers and preventing default browser behaviors like scrolling and zooming during drag operations.",
         "details": "Enhance core dragging engine:\n- Add `touchstart`, `touchmove`, `touchend` listeners alongside mouse events\n- Use `event.touches[0].clientX/Y` for coordinates\n- Call `event.preventDefault()` on `touchmove` to stop page scrolling\n- Add CSS: `touch-action: none; -webkit-user-select: none; -webkit-touch-callout: none;`\n- Support multi-touch: only track single touch (ignore if >1 finger)\n- Add `passive: false` option to touchmove listener\n- Test on iOS Safari and Android Chrome for smooth performance\n- Consider Pointer Events as unified alternative (check browser support)\n\n```typescript\nprivate onTouchStart = (e: TouchEvent) => {\n  if (e.touches.length !== 1) return;\n  const touch = e.touches[0];\n  // ... same logic as mouse but with touch coordinates\n}\n```",
         "testStrategy": "Manual test on real mobile devices: iPhone Safari, Android Chrome. Verify no page scroll when dragging. Test multi-touch: place one finger on panel, another on page, verify drag still works. Use Chrome DevTools device emulation for automated touch tests.",
         "priority": "medium",
         "dependencies": [
-          16
+          "16"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:44:38.483Z"
       },
       {
-        "id": 22,
+        "id": "22",
         "title": "Accessibility & Keyboard Navigation",
         "description": "Implement comprehensive accessibility features including ARIA attributes, keyboard navigation, focus management, and screen reader announcements to ensure WCAG compliance.",
         "details": "Add to `DraggablePanel` class:\n- In `init()`: set `role=\"dialog\"`, `aria-labelledby=\"panel-title\"`, `tabindex=\"0\"`\n- Add `aria-grabbed=\"true/false\"` during drag operations\n- Keyboard controls: `Ctrl/Cmd + ArrowKeys` to move panel 10px, `+ Shift` for 50px\n- Focus management: trap focus inside modal panels with `Tab` key\n- Screen reader live region: announce position changes via `aria-live=\"polite\"` region\n- Add `keydown` listener with `e.preventDefault()` for handled keys\n- Provide `options.announcePosition: boolean` to enable/disable announcements\n- Ensure drag handle has `role=\"button\"` and `tabindex=\"0\"` if separate from panel\n\n```typescript\nprivate onKeyDown = (e: KeyboardEvent) => {\n  if (!e.ctrlKey || !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;\n  e.preventDefault();\n  const delta = e.shiftKey ? 50 : 10;\n  // Update position based on arrow key\n}\n```",
         "testStrategy": "Run axe-core automated accessibility tests. Manual test with NVDA/JAWS screen readers: verify position announcements. Test keyboard navigation: verify Ctrl+Arrow moves panel. Verify focus trap in modal panels using Tab key. Check ARIA attributes in Chrome DevTools.",
         "priority": "medium",
         "dependencies": [
-          16
+          "16"
         ],
         "status": "pending",
         "subtasks": []
       },
       {
-        "id": 23,
+        "id": "23",
         "title": "Performance Optimization",
         "description": "Optimize rendering performance for smooth 60fps dragging, especially with multiple panels. Implement throttling, CSS compositing layers, and efficient event cleanup to prevent memory leaks.",
         "details": "Performance optimizations:\n- Throttle mousemove/touchmove to 16ms using `requestAnimationFrame` (already in core)\n- Use `transform: translate(x, y)` instead of `left/top` for GPU compositing\n- Add `will-change: transform` CSS property during drag\n- Debounce resize handler: `debounce(() => this.constrainAll(), 100)`\n- Memory management: in `destroy()`, remove ALL event listeners and clear WeakMap references\n- For many panels: use single delegated `mousemove` on document instead of per-panel\n- Avoid layout thrashing: read dimensions once, write transforms only\n- Add `options.throttleFPS: number` to allow customization (default 60fps)\n- Use `performance.now()` for frame timing if needed\n\n```typescript\n// In constructor\nthis.throttledMove = this.throttle(this.onPointerMove, 16);\n\nprivate throttle(fn: Function, limit: number) {\n  let inThrottle = false;\n  return (...args: any[]) => {\n    if (!inThrottle) {\n      fn.apply(this, args);\n      inThrottle = true;\n      setTimeout(() => inThrottle = false, limit);\n    }\n  };\n}\n```",
         "testStrategy": "Performance profiling: use Chrome DevTools Performance tab, verify 60fps during drag with no layout thrashing. Memory profiling: take heap snapshots before/after creating/destroying 100 panels, verify no leaks. Test with 50+ panels simultaneously, verify smooth dragging.",
         "priority": "medium",
         "dependencies": [
-          16,
-          19
+          "16",
+          "19"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:45:03.451Z"
       },
       {
-        "id": 24,
+        "id": "24",
         "title": "duo-chrome Integration - Loop Animation Panel",
         "description": "Apply the DraggablePanel module to the Loop Animation Panel in the duo-chrome project. Configure project-specific options and verify integration works within the existing codebase architecture.",
         "details": "Integration steps for duo-chrome:\n- Add dependency: `",
         "testStrategy": "Manual integration test in duo-chrome dev environment: verify Loop Animation Panel is draggable. Check localStorage for `duo-chrome-loop-panel` key. Reload page and verify position persists. Test alongside other duo-chrome features to ensure no regressions. Run duo-chrome e2e test suite.",
         "priority": "medium",
         "dependencies": [
-          20
+          "20"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T18:19:34.016Z"
       },
       {
-        "id": 25,
+        "id": "25",
         "title": "duo-chrome Integration - Filter Modal",
         "description": "Apply the DraggablePanel module to the Filter Modal in duo-chrome, ensuring proper modal z-index handling and verifying that modal dialogs always appear above regular panels as required.",
         "details": "Modal-specific integration:\n- In duo-chrome Filter Modal component, import DraggablePanel\n- Initialize with modal options: `new DraggablePanel(modalEl, { storageKey: 'duo-chrome-filter-modal', modal: true, handle: '.modal-header' })`\n- Verify modal gets `aria-modal=\"true\"` and proper role\n- Test stacking: open Loop Animation Panel, then open Filter Modal, verify modal appears on top\n- Test multiple modals: if duo-chrome has multiple modals, verify they stack correctly\n- Ensure modal backdrop (if any) also gets appropriate z-index\n- Add `data-modal` attribute for ZIndexManager detection\n- Test modal close: verify z-index cleanup on destroy\n\n```javascript\n// In duo-chrome filter-modal.js\nimport { DraggablePanel } from '@monorepo/draggable-panel';\n\nfunction initFilterModal() {\n  const modal = document.getElementById('filter-modal');\n  const panel = new DraggablePanel(modal, {\n    storageKey: 'duo-chrome-filter-modal',\n    modal: true,\n    bounds: { left: 0, top: 0, right: 0, bottom: 0 }\n  });\n  return panel;\n}\n```",
         "testStrategy": "Manual test: open Filter Modal, verify it's draggable and stays within viewport. Open Loop Animation Panel, click between them, verify z-index updates correctly. Reload page with modal open, verify position and state restore. Test modal stacking if multiple modals exist.",
         "priority": "medium",
         "dependencies": [
-          20,
-          18
+          "20",
+          "18"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T18:19:44.217Z"
       },
       {
-        "id": 26,
+        "id": "26",
         "title": "Documentation & Developer Guidelines",
         "description": "Create comprehensive documentation including API reference, integration examples, and coding standards. Provide clear guidance for future developers to adopt this pattern across all monorepo projects.",
         "details": "Documentation deliverables:\n- `README.md` in `libs/draggable-panel/` with:\n  - Installation: `npm install @monorepo/draggable-panel`\n  - Basic usage example with HTML/CSS/JS\n  - API reference with all options and methods\n  - TypeScript definitions\n- `docs/examples/` directory with:\n  - `basic.html` - simple draggable panel\n  - `modal.html` - modal dialog example\n  - `multiple.html` - multiple panels with z-index\n  - `accessibility.html` - keyboard navigation demo\n- `INTEGRATION.md` guide for monorepo projects\n- Update root `CODING_STANDARDS.md`:\n  - Section: \"UI Panel Positioning\"\n  - Rule: \"Always use DraggablePanel for repositionable panels\"\n  - Example code snippet\n- JSDoc comments on all public methods\n- CodeSandbox live demo link\n- Migration guide for existing implementations\n\n```markdown\n## Basic Usage\n\n```javascript\nimport { DraggablePanel } from '@monorepo/draggable-panel';\n\nconst panel = new DraggablePanel(document.getElementById('my-panel'), {\n  storageKey: 'my-panel-position',\n  handle: '.panel-header'\n});\n```\n```",
         "testStrategy": "Review documentation for clarity and accuracy. Test all example files locally. Have another developer follow integration guide to verify completeness. Check that CodeSandbox example works. Validate all JSDoc comments appear in IDE tooltips.",
         "priority": "low",
         "dependencies": [
-          20
+          "20"
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": "27",
+        "title": "Palette Visualizer Component for duo-chrome",
+        "description": "Implement a palette visualizer UI component that enables users to preview color palettes without affecting the current image-pair or loop state, with functionality to switch between palettes and apply them to the active context.",
+        "details": "**Component Architecture:**\n- Create `PaletteVisualizer` class in `duo-chrome/src/components/palette-visualizer/`\n- Initialize with `new PaletteVisualizer(containerEl, options)` where options include `storageKey`, `palettes`, `onApply`, and `previewMode`\n- Use event-driven architecture: emit `palettePreview`, `paletteSelect`, and `paletteApply` events\n\n**Core Features:**\n1. **Non-destructive Preview:** Render palette colors in a side panel/grid without modifying the underlying image-pair/loop data. Use CSS filters or temporary canvas overlay for preview effect\n2. **Palette Management:** Load palettes from `/api/palettes` endpoint or local JSON files in `assets/palettes/`. Support standard formats (ASE, JSON, GPL)\n3. **Switching Mechanism:** \n   - Vertical scrollable list of palette thumbnails on left side\n   - Main area displays selected palette as color grid (8x8px swatches minimum)\n   - Keyboard navigation: Arrow keys to navigate, Enter to preview, Ctrl+Enter to apply\n   - Search/filter bar at top to filter palettes by name or color count\n4. **Apply Action:** \n   - \"Apply to Current\" button confirms changes\n   - Batch apply to both image-pair and loop with single action\n   - Undo stack: store previous palette state for Ctrl+Z reversal\n\n**UI/UX Considerations:**\n- Position as fixed right sidebar (300px width) that can be toggled with `Ctrl+P`\n- Use `position: sticky` for palette list header\n- Color swatches show hex value on hover with `title` attribute and tooltip component\n- Selected palette highlighted with border and checkmark icon\n- Loading state skeleton while palettes load\n- Empty state illustration when no palettes available\n\n**State Management:**\n- Maintain separate `previewPalette` and `activePalette` states\n- Use `localStorage` to persist last selected palette ID (but not applied state)\n- Sync with duo-chrome's global state management (Redux/Vuex) on apply action\n\n**Integration Points:**\n- Hook into duo-chrome's `ImagePairRenderer` and `LoopEngine` classes\n- Apply palette by mapping colors to `ImagePairRenderer.colorMap` and `LoopEngine.keyframeColors`\n- Emit `paletteApplied` event for other components to react",
+        "testStrategy": "**Unit Tests:**\n- Test palette loading from various file formats (ASE, JSON, GPL) using Jest with fixture files\n- Verify palette switching updates UI state without triggering apply callback\n- Test keyboard navigation: simulate arrow keys and verify selection changes\n- Test search/filter functionality with 100+ palettes\n- Verify undo stack properly restores previous palette state\n\n**Integration Tests:**\n- Mount `PaletteVisualizer` alongside `ImagePairRenderer` and `LoopEngine` in test harness\n- Simulate palette apply and verify `colorMap` and `keyframeColors` updates\n- Test localStorage persistence: reload component and verify selected palette restored\n- Verify event emissions: listen for `palettePreview`, `paletteSelect`, `paletteApply` events\n\n**Visual Regression Tests:**\n- Use Percy/Storybook to capture screenshots of palette grid, list view, hover states\n- Test responsive behavior at 320px, 768px, 1440px widths\n- Verify color swatches render correctly with various palette sizes (2-256 colors)\n\n**Accessibility Testing:**\n- Run axe-core automated tests: verify color contrast ratio ≥ 4.5:1 for all text\n- Manual screen reader test (NVDA/JAWS): verify palette names and color values announced\n- Keyboard-only navigation test: verify all functionality accessible without mouse\n- Test focus management: focus trap within palette visualizer when open\n\n**Performance Testing:**\n- Render 50+ palettes with 100 colors each, verify UI remains responsive (<100ms render time)\n- Use Chrome DevTools to measure memory usage: ensure no leaks when switching palettes rapidly\n- Test apply action with large loops (1000+ keyframes): verify <500ms apply time\n\n**Manual QA Checklist:**\n- Open palette visualizer, verify current palette not affected\n- Switch between 10 different palettes, verify preview updates instantly\n- Apply palette, verify both image-pair and loop update simultaneously\n- Reload page, verify last selected palette remembered but not auto-applied\n- Test with duo-chrome's animation playing: verify smooth preview updates at 60fps",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:42:29.180Z"
       }
     ],
     "metadata": {
-      "created": "2026-01-28T19:49:02.440Z",
-      "updated": "2026-01-28T19:50:16.523Z",
-      "description": "Tasks for duochrome context"
+      "version": "1.0.0",
+      "lastModified": "2026-03-02T21:45:03.452Z",
+      "taskCount": 27,
+      "completedCount": 10,
+      "tags": [
+        "duochrome"
+      ]
     }
   }
 }

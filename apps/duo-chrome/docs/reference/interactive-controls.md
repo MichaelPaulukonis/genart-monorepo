@@ -11,7 +11,7 @@ The interactive controls transform Duo-Chrome from a passive viewing experience 
 - Navigate through the image collection for each position
 - Cycle through colors in the current palette
 - Exchange complete image states
-- Monitor current settings with a draggable status display
+- Monitor current settings in the status panel
 
 ## Control Architecture
 
@@ -39,9 +39,7 @@ controlState = {
   manualSizeControl: [false, false], // Manual size adjustment flags
   imageIndices: [0, 1],          // Position in image array
   isManualMode: false,           // Manual vs automatic mode
-  showIndicators: false,         // Visual indicator visibility
-  statusIsPermanent: false,      // Status display mode
-  isDraggingStatus: false        // UI interaction state
+  showIndicators: false          // Visual indicator visibility
 }
 ```
 
@@ -153,25 +151,23 @@ Provides complete state swapping between Image A and Image B.
 
 ### Status Display System
 
-A draggable overlay showing current image information and settings.
+A fixed panel in the signal rack showing current image information and settings.
 
 **Information Displayed:**
-- **Image Names:** Filename for each image (wrapped to 2 lines)
+- **Image Names:** Filename for each image
 - **Colors:** Current color name for each image
 - **Scale Factors:** Current size multiplier (e.g., "1.25")
 - **Active Highlighting:** Visual indication of selected image
+- **Blend Mode:** Current blend mode in use
 
 **Display Features:**
-- **Draggable:** Click and drag header to reposition
-- **Session Persistent:** Position saved across browser sessions
-- **Auto-hide:** Temporary display (3 seconds) for control actions
-- **Manual Toggle:** `I` key for permanent display
-- **Fixed Width:** Consistent size prevents layout shifts
+- **Always Visible:** Fixed position in the right-side rack panel
+- **Collapsible:** Click `−` button to collapse, `+` to expand
+- **Real-time Updates:** Refreshes automatically on control actions
 
 **Controls:**
-- `I` - Toggle status display visibility
-- **Drag Header** - Reposition display
-- **Auto-show** - Appears during control actions
+- `I` - Toggle panel collapse state
+- **Collapse Button** - `−`/`+` button in panel header
 
 ## Keyboard Reference
 
@@ -202,9 +198,67 @@ A draggable overlay showing current image information and settings.
 | `B` | Background | Toggle background color (black/white) |
 | `C` | Color Palette | Cycle through color palettes |
 | `M` | Blend Mode | Cycle through blend modes |
-| `P` or `Space` | Pause | Pause/resume automatic cycling |
+| `P` or `Space` | Play/Pause | **Loop mode:** play/pause loop animation. **Non-loop:** pause/resume sketch auto-cycling |
 | `S` | Auto-save | Toggle automatic saving |
 | `Cmd+S` | Manual Save | Save current composition |
+| `Esc` | Blur Focus | Removes keyboard focus from active input or button |
+
+### Loop Animation Panel Controls (when Loop Mode panel is visible)
+| Key | Function | Description |
+|-----|----------|-------------|
+| `,` | Step Back | Advance one frame backward (paused loop only) |
+| `.` | Step Forward | Advance one frame forward (paused loop only) |
+
+## Loop Animation Panel
+
+The Loop Animation Panel is the right-side panel that controls the closed-walk animation system. It is always visible and has two distinct sections: loop-specific controls (grayed out when loop is disabled) and an always-active PLAYBACK section.
+
+### Loop Mode Controls
+
+These controls are interactive only when Loop Mode is enabled. They appear dimmed when disabled.
+
+| Control | Description |
+|---------|-------------|
+| **Enable Loop Mode** toggle | Enables/disables the closed-walk animation system. When enabled, a walk (sequence of image pairs) is generated automatically. |
+| **Loop Length** input | Number of unique frames in the loop (minimum 3). Changing this and clicking Regenerate produces a new walk of the requested length. |
+| **Jog Wheel** | Click and drag left/right to scrub through frames manually when playback is paused. |
+| **SET AS FRAME 1** button | Cyclically rotates the walk so the current frame becomes frame 1. Also seeds the next walk generation to start near that image pair. Disabled during playback or save. |
+| **Frame N / M** | Displays the current frame number and total frame count. |
+| **Current Pair** | Shows the filenames of the current Image A and Image B for the displayed frame. |
+
+### Transport Controls (PLAYBACK section — always visible)
+
+The PLAYBACK section is always visible and active regardless of loop mode state.
+
+| Button | Loop Mode | Non-Loop Mode |
+|--------|-----------|---------------|
+| **⏮ TO START** | Jump to frame 1 | Disabled |
+| **⏯ Play / Pause** | Start or stop loop animation playback | Resume or pause sketch auto-cycling |
+| **⏹ Stop** | Stop playback and return to frame 1 | Disabled |
+| **💾 Save** | Save all loop frames as individual PNG files (numbered sequentially) | Save current canvas as a single PNG |
+| **🔄 Regenerate / Randomize** | Generate a new random walk of the current length | Load a new random image pair and colors |
+
+### Speed Controls (always visible)
+
+The speed selector is always active and affects both loop playback and non-loop auto-cycling.
+
+| Buttons | Description |
+|---------|-------------|
+| **1 · 2 · 4 · 8 · 12 · 24 · 30** | Set frames per second. The active rate is highlighted. In non-loop mode, this sets how quickly the sketch auto-advances to new image pairs. |
+
+### Walk Generation
+
+When Loop Mode is enabled (or when Regenerate is clicked), a closed walk is generated over the image pair state space:
+
+1. Each frame is a unique `(imageA, imageB)` pair
+2. Adjacent frames differ by exactly one image (A or B changes, not both)
+3. The walk is a closed loop — the last frame is one step away from the first
+4. Walk length is the number of unique visible frames (the closing duplicate frame is trimmed automatically)
+5. If the exact requested length cannot be achieved, the nearest achievable length is used
+
+**SET AS FRAME 1** and subsequent Regenerate: After rotating the walk, the new frame 1 pair is used as the `desiredStartState` for the next generation, so regeneration begins near the same image pair.
+
+---
 
 ## Integration with Existing Features
 
@@ -215,7 +269,7 @@ The interactive controls seamlessly integrate with the existing automatic cyclin
 - **Manual Mode Detection:** System detects when user takes manual control
 - **Preservation:** Manual adjustments preserved during automatic cycling
 - **Reset Behavior:** New automatic pairs reset manual adjustments
-- **Pause Integration:** Pause system works with manual controls
+- **Pause Integration:** `P`/`Space` pauses sketch auto-cycling; in loop mode the loop playback is paused instead
 
 ### Blend Mode Integration
 
@@ -304,8 +358,7 @@ All control actions trigger coordinated updates:
 - Ensure images are loaded and displayed
 
 **Status Display Issues:**
-- Toggle with `I` key to refresh
-- Drag header to reposition if off-screen
+- Toggle collapse with `I` key or the `−`/`+` button
 - Check browser console for JavaScript errors
 
 **Size Control Problems:**
@@ -315,7 +368,7 @@ All control actions trigger coordinated updates:
 
 ### Performance Tips
 
-- **Pause During Adjustments:** Use `P` to pause automatic cycling while making manual adjustments
+- **Pause During Adjustments:** Use `P`/`Space` to pause automatic cycling while making manual adjustments; the loop panel Play/Pause button provides the same control
 - **Limit Rapid Changes:** Allow time between rapid key presses for smooth updates
 - **Monitor Memory:** Large scale factors may impact performance on older devices
 
@@ -332,4 +385,4 @@ Potential areas for system expansion:
 
 ---
 
-*This documentation covers the complete interactive controls system as implemented in Duo-Chrome v2.0+. For basic usage instructions, see the in-app help system (`H` or `?` key).*
+*This documentation covers the complete interactive controls system as implemented in Duo-Chrome (branch `duo-chrome-ui-v3`). For basic usage instructions, see the in-app help system (`H` or `?` key).*

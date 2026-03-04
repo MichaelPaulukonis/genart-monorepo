@@ -44,7 +44,7 @@ describe('LoopAnimationController', () => {
       expect(controller.isPlaying).toBe(false)
       expect(controller.currentFrameIndex).toBe(0)
       expect(controller.fps).toBe(12)
-      expect(controller.requestedLoopLength).toBe(5)
+      expect(controller.requestedLoopLength).toBe(25) // clamped from default 50 to maxLoopLength (5×5)
     })
 
     it('should store provided image sets', () => {
@@ -105,7 +105,7 @@ describe('LoopAnimationController', () => {
       expect(range).toHaveProperty('max')
       expect(range).toHaveProperty('current')
       expect(range.min).toBe(3)
-      expect(range.current).toBe(5)
+      expect(range.current).toBe(25) // clamped from default 50 to maxLoopLength (5×5)
     })
 
     it('should set valid loop length', () => {
@@ -177,6 +177,15 @@ describe('LoopAnimationController', () => {
       expect(controller.walk.length).toBe(controller.requestedLoopLength)
     })
 
+    it('should not include duplicated terminal frame', () => {
+      const first = controller.walk[0]
+      const last = controller.walk[controller.walk.length - 1]
+
+      // In the rendered/exported walk, closure is implicit (last wraps to first),
+      // so first and last should not be the same duplicated state.
+      expect(first.pair.a === last.pair.a && first.pair.b === last.pair.b).toBe(false)
+    })
+
     it('should generate walk with frame objects', () => {
       controller.walk.forEach(frame => {
         expect(frame).toHaveProperty('pair')
@@ -202,103 +211,68 @@ describe('LoopAnimationController', () => {
     })
   })
 
-  describe('Playback Control - Play', () => {
+  describe('Playback Control', () => {
     beforeEach(async () => {
       await controller.enable()
     })
 
-    it('should start playback', () => {
+    it('should start, pause, and stop playback', () => {
+      // Initial state
       expect(controller.isPlaying).toBe(false)
+
+      // Play
       controller.play()
       expect(controller.isPlaying).toBe(true)
-    })
-
-    it('should fire play state change callback when playing', () => {
-      controller.play()
       expect(playStateChangeCallback).toHaveBeenCalledWith(
         expect.objectContaining({ playing: true })
       )
-    })
 
-    it('should fire frame change callback on play start', () => {
-      controller.play()
-      expect(frameChangeCallback).toHaveBeenCalled()
-    })
-
-    it('should schedule animation frame', () => {
-      const spy = vi.spyOn(global, 'requestAnimationFrame')
-      controller.play()
-      expect(spy).toHaveBeenCalled()
-      spy.mockRestore()
-    })
-
-    it('should not double-play', () => {
-      controller.play()
-      const initialFrameId = controller.animationFrameId
-      controller.play()
-      // Should not create new animation frame
-      expect(controller.animationFrameId).toBe(initialFrameId)
-    })
-  })
-
-  describe('Playback Control - Pause', () => {
-    beforeEach(async () => {
-      await controller.enable()
-      controller.play()
-    })
-
-    it('should pause playback', () => {
-      expect(controller.isPlaying).toBe(true)
+      // Pause
+      playStateChangeCallback.mockClear()
+      const currentFrame = controller.currentFrameIndex
       controller.pause()
       expect(controller.isPlaying).toBe(false)
-    })
-
-    it('should fire play state change callback when pausing', () => {
-      playStateChangeCallback.mockClear()
-      controller.pause()
+      expect(controller.currentFrameIndex).toBe(currentFrame)
       expect(playStateChangeCallback).toHaveBeenCalledWith(
         expect.objectContaining({ playing: false })
       )
-    })
 
-    it('should cancel animation frame', () => {
-      const spy = vi.spyOn(global, 'cancelAnimationFrame')
-      controller.pause()
-      expect(spy).toHaveBeenCalled()
-      spy.mockRestore()
-    })
-
-    it('should maintain current frame position', () => {
-      controller.currentFrameIndex = 2
-      controller.pause()
-      expect(controller.currentFrameIndex).toBe(2)
-    })
-  })
-
-  describe('Playback Control - Stop', () => {
-    beforeEach(async () => {
-      await controller.enable()
-      controller.play()
-    })
-
-    it('should stop playback and reset frame', () => {
+      // Stop (should reset frame)
       controller.currentFrameIndex = 3
-      controller.stop()
-
-      expect(controller.isPlaying).toBe(false)
-      expect(controller.currentFrameIndex).toBe(0)
-    })
-
-    it('should call pause internally', () => {
-      const pauseSpy = vi.spyOn(controller, 'pause')
-      controller.stop()
-      expect(pauseSpy).toHaveBeenCalled()
-    })
-
-    it('should fire frame change callback when resetting', () => {
       frameChangeCallback.mockClear()
       controller.stop()
+      expect(controller.isPlaying).toBe(false)
+      expect(controller.currentFrameIndex).toBe(0)
       expect(frameChangeCallback).toHaveBeenCalled()
+    })
+
+    it('should manage animation frames during playback', () => {
+      const requestSpy = vi.spyOn(global, 'requestAnimationFrame')
+      const cancelSpy = vi.spyOn(global, 'cancelAnimationFrame')
+
+      controller.play()
+      expect(requestSpy).toHaveBeenCalled()
+
+      controller.pause()
+      expect(cancelSpy).toHaveBeenCalled()
+
+      requestSpy.mockRestore()
+      cancelSpy.mockRestore()
+    })
+
+    it('should not double-play when already playing', () => {
+      controller.play()
+      const initialFrameId = controller.animationFrameId
+      controller.play()
+      expect(controller.animationFrameId).toBe(initialFrameId)
+    })
+
+    it('should fire callbacks on state changes', () => {
+      controller.play()
+      expect(frameChangeCallback).toHaveBeenCalled()
+      expect(playStateChangeCallback).toHaveBeenCalledWith(
+        expect.objectContaining({ playing: true })
+      )
     })
   })
 
@@ -494,6 +468,48 @@ describe('LoopAnimationController', () => {
       controller.disable()
       // Should clean up animation frame
       expect(controller.animationFrameId).toBeNull()
+    })
+  })
+
+  describe('Walk Rotation', () => {
+    beforeEach(async () => { await controller.enable() })
+
+    it('should rotate walk so given frame becomes index 0', () => {
+      const originalFrame2 = controller.walk[2]
+      controller.rotateWalkTo(2)
+      expect(controller.walk[0]).toEqual(originalFrame2)
+      expect(controller.currentFrameIndex).toBe(0)
+    })
+
+    it('should preserve walk length after rotation', () => {
+      const originalLength = controller.walk.length
+      controller.rotateWalkTo(3)
+      expect(controller.walk.length).toBe(originalLength)
+    })
+
+    it('should do nothing when rotating to frame 0', () => {
+      const originalWalk = [...controller.walk]
+      controller.rotateWalkTo(0)
+      expect(controller.walk).toEqual(originalWalk)
+    })
+
+    it('should fire onFrameChange after rotation', () => {
+      frameChangeCallback.mockClear()
+      controller.rotateWalkTo(2)
+      expect(frameChangeCallback).toHaveBeenCalledOnce()
+      expect(frameChangeCallback).toHaveBeenCalledWith(controller.getCurrentFrame())
+    })
+
+    it('should clamp out-of-range index', () => {
+      const len = controller.walk.length
+      const lastFrame = controller.walk[len - 1]
+      controller.rotateWalkTo(999)
+      expect(controller.walk[0]).toEqual(lastFrame)
+    })
+
+    it('should do nothing if no walk exists', () => {
+      controller.walk = null
+      expect(() => controller.rotateWalkTo(2)).not.toThrow()
     })
   })
 

@@ -821,7 +821,7 @@ export class HistoryManager {
     if (this.nodes.size <= targetSize) return 0
 
     const keepIds = new Set()
-    
+
     // 1. Prune Active Path
     const path = this.history
     let startIndex = 0
@@ -832,7 +832,7 @@ export class HistoryManager {
       const newRoot = this.nodes.get(this.rootId)
       if (newRoot) newRoot.parentId = null
     }
-    
+
     // Keep nodes in the (possibly truncated) active path
     for (let i = startIndex; i < path.length; i++) {
       keepIds.add(path[i].id)
@@ -845,7 +845,7 @@ export class HistoryManager {
     if (keepIds.size < targetSize) {
       const sortedNodes = Array.from(this.nodes.values())
         .sort((a, b) => b.timestamp - a.timestamp)
-      
+
       for (const node of sortedNodes) {
         if (keepIds.size >= targetSize) break
         keepIds.add(node.id)
@@ -857,7 +857,7 @@ export class HistoryManager {
     for (const [id, node] of this.nodes) {
       if (!keepIds.has(id)) {
         this.nodes.delete(id)
-        // Also verify parent references? 
+        // Also verify parent references?
         // In a graph, removing a node might break parent's children array.
         // We should cleanup parent references.
         if (node.parentId && this.nodes.has(node.parentId)) {
@@ -872,12 +872,12 @@ export class HistoryManager {
     }
 
     this._invalidateCache()
-    
+
     // Clear thumbnail cache for removed entries if possible
     // (ThumbnailGenerator doesn't expose delete yet, but we can clear all if drastic)
     if (removedCount > 0 && this.thumbnailGenerator) {
-       // Ideally we'd remove specific IDs. 
-       // For now, assume ThumbnailGenerator manages its own LRU or we let it be.
+      // Ideally we'd remove specific IDs.
+      // For now, assume ThumbnailGenerator manages its own LRU or we let it be.
     }
 
     this.saveToStorage()
