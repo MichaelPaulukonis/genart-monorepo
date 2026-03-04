@@ -168,9 +168,10 @@ test-results/
 playwright-report/
 playwright/.cache/
 
-# misc chats
+# misc chat-related
 conversation/
-.specstory/ 
+.specstory/
+.claude/settings.local.json
 
 # Image management for duo-chrome
 # Production images are in images_production/ (tracked)
@@ -182,5 +183,6 @@ apps/duo-chrome/public/images_alt
 apps/duo-chrome/public/images_main
 apps/duo-chrome/public/images.bak
 apps/duo-chrome/public/images_*/
+
 # Allow images_production (contains official images for deployment)
 !apps/duo-chrome/public/images_production/

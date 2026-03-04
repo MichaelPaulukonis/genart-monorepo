@@ -5,7 +5,7 @@ export class FilmstripPanel {
   constructor (historyManager, thumbnailGenerator) {
     this.historyManager = historyManager
     this.thumbnailGenerator = thumbnailGenerator
-    this.isVisible = false
+    this.isVisible = true
 
     // DOM elements
     this.panel = document.getElementById('filmstrip-panel')

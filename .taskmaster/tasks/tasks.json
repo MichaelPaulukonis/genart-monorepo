@@ -2614,8 +2614,9 @@
         "dependencies": [
           "16"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:43:50.482Z"
       },
       {
         "id": "18",
@@ -2627,8 +2628,9 @@
         "dependencies": [
           "16"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:43:50.489Z"
       },
       {
         "id": "19",
@@ -2640,8 +2642,9 @@
         "dependencies": [
           "16"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:43:50.494Z"
       },
       {
         "id": "20",
@@ -2656,8 +2659,9 @@
           "18",
           "19"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:44:38.476Z"
       },
       {
         "id": "21",
@@ -2669,8 +2673,9 @@
         "dependencies": [
           "16"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:44:38.483Z"
       },
       {
         "id": "22",
@@ -2696,8 +2701,9 @@
           "16",
           "19"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "cancelled",
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:45:03.451Z"
       },
       {
         "id": "24",
@@ -2747,17 +2753,18 @@
         "description": "Implement a palette visualizer UI component that enables users to preview color palettes without affecting the current image-pair or loop state, with functionality to switch between palettes and apply them to the active context.",
         "details": "**Component Architecture:**\n- Create `PaletteVisualizer` class in `duo-chrome/src/components/palette-visualizer/`\n- Initialize with `new PaletteVisualizer(containerEl, options)` where options include `storageKey`, `palettes`, `onApply`, and `previewMode`\n- Use event-driven architecture: emit `palettePreview`, `paletteSelect`, and `paletteApply` events\n\n**Core Features:**\n1. **Non-destructive Preview:** Render palette colors in a side panel/grid without modifying the underlying image-pair/loop data. Use CSS filters or temporary canvas overlay for preview effect\n2. **Palette Management:** Load palettes from `/api/palettes` endpoint or local JSON files in `assets/palettes/`. Support standard formats (ASE, JSON, GPL)\n3. **Switching Mechanism:** \n   - Vertical scrollable list of palette thumbnails on left side\n   - Main area displays selected palette as color grid (8x8px swatches minimum)\n   - Keyboard navigation: Arrow keys to navigate, Enter to preview, Ctrl+Enter to apply\n   - Search/filter bar at top to filter palettes by name or color count\n4. **Apply Action:** \n   - \"Apply to Current\" button confirms changes\n   - Batch apply to both image-pair and loop with single action\n   - Undo stack: store previous palette state for Ctrl+Z reversal\n\n**UI/UX Considerations:**\n- Position as fixed right sidebar (300px width) that can be toggled with `Ctrl+P`\n- Use `position: sticky` for palette list header\n- Color swatches show hex value on hover with `title` attribute and tooltip component\n- Selected palette highlighted with border and checkmark icon\n- Loading state skeleton while palettes load\n- Empty state illustration when no palettes available\n\n**State Management:**\n- Maintain separate `previewPalette` and `activePalette` states\n- Use `localStorage` to persist last selected palette ID (but not applied state)\n- Sync with duo-chrome's global state management (Redux/Vuex) on apply action\n\n**Integration Points:**\n- Hook into duo-chrome's `ImagePairRenderer` and `LoopEngine` classes\n- Apply palette by mapping colors to `ImagePairRenderer.colorMap` and `LoopEngine.keyframeColors`\n- Emit `paletteApplied` event for other components to react",
         "testStrategy": "**Unit Tests:**\n- Test palette loading from various file formats (ASE, JSON, GPL) using Jest with fixture files\n- Verify palette switching updates UI state without triggering apply callback\n- Test keyboard navigation: simulate arrow keys and verify selection changes\n- Test search/filter functionality with 100+ palettes\n- Verify undo stack properly restores previous palette state\n\n**Integration Tests:**\n- Mount `PaletteVisualizer` alongside `ImagePairRenderer` and `LoopEngine` in test harness\n- Simulate palette apply and verify `colorMap` and `keyframeColors` updates\n- Test localStorage persistence: reload component and verify selected palette restored\n- Verify event emissions: listen for `palettePreview`, `paletteSelect`, `paletteApply` events\n\n**Visual Regression Tests:**\n- Use Percy/Storybook to capture screenshots of palette grid, list view, hover states\n- Test responsive behavior at 320px, 768px, 1440px widths\n- Verify color swatches render correctly with various palette sizes (2-256 colors)\n\n**Accessibility Testing:**\n- Run axe-core automated tests: verify color contrast ratio ≥ 4.5:1 for all text\n- Manual screen reader test (NVDA/JAWS): verify palette names and color values announced\n- Keyboard-only navigation test: verify all functionality accessible without mouse\n- Test focus management: focus trap within palette visualizer when open\n\n**Performance Testing:**\n- Render 50+ palettes with 100 colors each, verify UI remains responsive (<100ms render time)\n- Use Chrome DevTools to measure memory usage: ensure no leaks when switching palettes rapidly\n- Test apply action with large loops (1000+ keyframes): verify <500ms apply time\n\n**Manual QA Checklist:**\n- Open palette visualizer, verify current palette not affected\n- Switch between 10 different palettes, verify preview updates instantly\n- Apply palette, verify both image-pair and loop update simultaneously\n- Reload page, verify last selected palette remembered but not auto-applied\n- Test with duo-chrome's animation playing: verify smooth preview updates at 60fps",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2026-03-02T21:42:29.180Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-03-02T18:21:57.374Z",
+      "lastModified": "2026-03-02T21:45:03.452Z",
       "taskCount": 27,
-      "completedCount": 9,
+      "completedCount": 10,
       "tags": [
         "duochrome"
       ]

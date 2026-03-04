@@ -1,5 +1,7 @@
 # DUO-CHROME: Repository Analysis & Documentation Snapshot
 
+> **Note:** This document is a historical snapshot generated on October 9, 2025, describing the project at v0.1.0 (233-line `duo-chrome.js`, no testing). The current codebase (branch `duo-chrome-ui-v3`) has undergone significant development: `duo-chrome.js` is now 1500+ lines with a SOLID-refactored modular architecture, 400+ unit tests via Vitest, a Loop Animation system, and a multi-panel UI. This document is preserved for historical reference.
+
 ## 1. Project Overview
 
 - **Project Name and Purpose**: **DUO-CHROME** - A creative coding web application that displays two different monochrome images overlaid in two different colors, creating dynamic visual compositions inspired by duotone printing techniques.

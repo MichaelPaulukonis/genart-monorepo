@@ -67,7 +67,41 @@ Version corrected from previous mismatch. This release includes:
   - Fallback to full image set if theme filtering produces empty results
   - Integrates with existing duo-chrome image management system
 
+- **loop-animation:** Add dual-mode PLAYBACK section always visible below loop controls
+  - Transport (play/pause, stop, save, regenerate) and speed selector always accessible
+  - In non-loop mode: play/pause controls sketch auto-cycling; save saves single frame; regenerate loads new random pair
+  - In loop mode: full loop playback controls as before
+  - Stop button disabled (not hidden) in non-loop mode
+  - FPS selector (1, 2, 4, 8, 12, 24, 30) controls speed in both loop and non-loop modes
+
+- **loop-animation:** Add SET AS FRAME 1 — cyclic walk rotation
+  - Rotates the walk array so the current frame becomes frame 1, preserving the closed-loop property
+  - Seeds the next walk generation to start near the same image pair
+  - Replaces the non-functional in/out marker system
+
+- **loop-animation:** Add FPS speed buttons 1, 2, and 4
+
 ### Fixes
+
+- **loop-animation:** Fix space key conflict between loop playback and sketch auto-play
+  - Space/P now exclusively controls loop when loop mode is enabled
+  - Prevents two competing frame increments running simultaneously
+
+- **loop-animation:** Fix enabling/disabling loop mode changing the displayed frame
+  - Enabling loop no longer triggers onFrameChange before walk is generated
+  - Disabling loop pauses silently without resetting to frame 0 via stop()
+
+- **loop-animation:** Fix ESC key resetting loop to frame 0
+  - ESC now only blurs the focused element; it never advances or resets the frame
+
+- **loop-animation:** Fix FPS not honored in non-loop auto-play
+  - Auto-advance interval now computed from loopAnimationController.fps instead of hardcoded 30
+
+- **loop-animation:** Fix active FPS button missing left border on non-first buttons
+
+- **filmstrip:** Fix FilmstripPanel initial visibility state mismatch
+
+- **loop-animation:** Fix loop length input remaining enabled when loop mode is disabled
 
 - **loop-animation:** Fix loop mode image set initialization with fallback handling
   - Added secondary fallback checks for empty theme-filtered image sets

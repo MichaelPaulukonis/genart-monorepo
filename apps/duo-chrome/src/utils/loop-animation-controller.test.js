@@ -471,6 +471,48 @@ describe('LoopAnimationController', () => {
     })
   })
 
+  describe('Walk Rotation', () => {
+    beforeEach(async () => { await controller.enable() })
+
+    it('should rotate walk so given frame becomes index 0', () => {
+      const originalFrame2 = controller.walk[2]
+      controller.rotateWalkTo(2)
+      expect(controller.walk[0]).toEqual(originalFrame2)
+      expect(controller.currentFrameIndex).toBe(0)
+    })
+
+    it('should preserve walk length after rotation', () => {
+      const originalLength = controller.walk.length
+      controller.rotateWalkTo(3)
+      expect(controller.walk.length).toBe(originalLength)
+    })
+
+    it('should do nothing when rotating to frame 0', () => {
+      const originalWalk = [...controller.walk]
+      controller.rotateWalkTo(0)
+      expect(controller.walk).toEqual(originalWalk)
+    })
+
+    it('should fire onFrameChange after rotation', () => {
+      frameChangeCallback.mockClear()
+      controller.rotateWalkTo(2)
+      expect(frameChangeCallback).toHaveBeenCalledOnce()
+      expect(frameChangeCallback).toHaveBeenCalledWith(controller.getCurrentFrame())
+    })
+
+    it('should clamp out-of-range index', () => {
+      const len = controller.walk.length
+      const lastFrame = controller.walk[len - 1]
+      controller.rotateWalkTo(999)
+      expect(controller.walk[0]).toEqual(lastFrame)
+    })
+
+    it('should do nothing if no walk exists', () => {
+      controller.walk = null
+      expect(() => controller.rotateWalkTo(2)).not.toThrow()
+    })
+  })
+
   describe('Integration with Image Sets and Closed Walk', () => {
     it('should generate different walks for different loop lengths', async () => {
       const controller1 = new LoopAnimationController({

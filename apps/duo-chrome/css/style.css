@@ -268,7 +268,7 @@ canvas {
 .status-image__color-name {
   font-family: var(--dc-font-display);
   font-size: 9px;
-  color: var(--dc-text-dim);
+  color: var(--dc-text-bright);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -470,49 +470,31 @@ canvas {
   color: var(--dc-text-dim);
 }
 
-/* ---- In/Out Markers ---- */
-.loop-inout-row {
+/* ---- Walk Action Buttons (go-to-start + set-as-frame-1) ---- */
+.loop-action-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 4px;
   margin: 6px 0 4px;
-  gap: 4px;
 }
 
-.loop-marker-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.loop-marker-label {
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--dc-text-dim);
-}
-
-.loop-marker-value {
+.loop-action-btn {
+  flex: 1;
+  padding: 4px 6px;
   font-family: var(--dc-font-display);
-  font-size: 13px;
-  color: var(--dc-amber);
-  text-shadow: 0 0 4px rgba(255,176,0,0.4);
-  min-width: 30px;
-  text-align: center;
-}
-
-.loop-marker-set-btn {
-  padding: 2px 6px;
   font-size: 9px;
+  letter-spacing: 0.5px;
+  text-align: center;
   background: rgba(255,176,0,0.08);
-  border: 1px solid rgba(255,176,0,0.2);
-  border-radius: 2px;
+  border: 1px solid rgba(255,176,0,0.25);
+  border-radius: var(--dc-radius);
   color: var(--dc-amber);
   cursor: pointer;
-  font-family: var(--dc-font-display);
-  letter-spacing: 0.5px;
+  transition: background 0.1s, border-color 0.1s;
+  white-space: nowrap;
 }
-.loop-marker-set-btn:hover { background: rgba(255,176,0,0.18); }
+.loop-action-btn:hover { background: rgba(255,176,0,0.18); border-color: rgba(255,176,0,0.5); }
+.loop-action-btn:disabled,
+.loop-action-btn.disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* Mini timeline */
 .loop-timeline {
@@ -572,9 +554,11 @@ canvas {
 .loop-fps-btn + .loop-fps-btn { border-left: none; }
 .loop-fps-btn.is-active {
   background: rgba(255,176,0,0.18);
-  border-color: var(--dc-amber);
+  border: 1px solid var(--dc-amber);
   color: var(--dc-amber);
   text-shadow: 0 0 4px rgba(255,176,0,0.5);
+  position: relative;
+  z-index: 1;
 }
 
 /* ---- Transport Buttons ---- */
@@ -738,6 +722,28 @@ canvas {
 
 .loop-panel-section {
   margin-bottom: 2px;
+  transition: opacity 0.2s;
+}
+
+/* Loop-gated sections are dimmed and non-interactive until enabled */
+.loop-gated { opacity: 0.4; pointer-events: none; transition: opacity 0.2s; }
+.loop-animation-panel.enabled .loop-gated { opacity: 1; pointer-events: auto; }
+
+.loop-separator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 4px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 176, 0, 0.2);
+}
+.loop-separator-label {
+  font-family: var(--dc-font-display);
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--dc-amber);
+  opacity: 0.6;
+  white-space: nowrap;
 }
 
 .loop-controls {

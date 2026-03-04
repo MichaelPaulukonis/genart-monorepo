@@ -850,7 +850,38 @@ const sketch = function (p) {
         pause = true
         console.log('[LoopAnimation] Auto-play remains paused when disabling loop mode')
         showStatusDisplay()
-      }
+      },
+      onBeforeRotate: (rotationIndex) => {
+        // Rotate loopFrameColors BEFORE the walk rotates so onFrameChange sees correct colors
+        if (loopFrameColors.length > 0 && rotationIndex > 0) {
+          loopFrameColors = [
+            ...loopFrameColors.slice(rotationIndex),
+            ...loopFrameColors.slice(0, rotationIndex)
+          ]
+        }
+      },
+      onSetLoopStart: (frame) => {
+        // frame.pair.a / frame.pair.b are filenames; look up indices in image sets
+        const indexA = loopAnimationController.imageSetA.indexOf(frame.pair.a)
+        const indexB = loopAnimationController.imageSetB.indexOf(frame.pair.b)
+        loopAnimationController.setDesiredStartState(indexA, indexB)
+        console.log('[LoopAnimation] Walk rotated; new desiredStartState:', { indexA, indexB })
+      },
+      onPlay: () => {
+        pause = false
+        console.log('[Transport] Sketch play started')
+      },
+      onPause: () => {
+        pause = true
+        console.log('[Transport] Sketch play paused')
+      },
+      onSave: () => {
+        p.saveCanvas(generateFilename())
+      },
+      onRandomize: () => {
+        loadNewImagesAndColors()
+      },
+      getIsSketchPlaying: () => !pause
     })
     loopAnimationPanel.mount()
     loopAnimationPanel.updateAll()
@@ -1202,8 +1233,13 @@ const sketch = function (p) {
     } else if (p.key === 'm') {
       backgroundSystem.cycleBlendMode()
     } else if (p.key === 'p' || p.keyCode === 32) {
+      if (loopAnimationController && loopAnimationController.enabled) {
+        // Space is handled by the LoopAnimationPanel keydown listener when loop mode is active
+        return false
+      }
       pause = !pause
       console.log(`pause: ${pause}`)
+      if (loopAnimationPanel) loopAnimationPanel.updatePlaybackButtons()
     } else if (p.key === 'S') {
       autoSave = !autoSave
       console.log(`autoSave: ${autoSave}`)
@@ -1219,7 +1255,9 @@ const sketch = function (p) {
   }
 
   p.draw = () => {
-    if (!pause && p.frameCount % 30 === 0) {
+    const _fps = loopAnimationController ? loopAnimationController.fps : 2
+    const _interval = Math.max(1, Math.round(60 / _fps))
+    if (!pause && !(loopAnimationController && loopAnimationController.enabled) && p.frameCount % _interval === 0) {
       loadNewImagesAndColors()
       if (autoSave) {
         p.saveCanvas(generateFilename())

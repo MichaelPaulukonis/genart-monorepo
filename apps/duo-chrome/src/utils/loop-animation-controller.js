@@ -140,7 +140,8 @@ export class LoopAnimationController {
    */
   disable () {
     this.enabled = false
-    this.stop()
+    if (this.isPlaying) this.pause()
+    this.currentFrameIndex = 0
     this.walk = null
   }
 
@@ -207,10 +208,9 @@ export class LoopAnimationController {
 
       if (this.isPlaying) {
         this.play()
-      } else {
-        // Update UI with first frame
-        this.onFrameChange(this.getCurrentFrame())
       }
+      // Panel UI is updated via onGenerationProgress('complete') → updateAll()
+      // Canvas display only changes when playback starts (play/step/scrub)
 
       // Now send complete callback after state is updated
       this.onGenerationProgress('complete')
@@ -307,6 +307,20 @@ export class LoopAnimationController {
     if (!this.walk) return
 
     this.currentFrameIndex = Math.max(0, Math.min(index, this.walk.length - 1))
+    this.onFrameChange(this.getCurrentFrame())
+  }
+
+  /**
+   * Cyclically rotate the walk so frameIndex becomes frame 0.
+   * Preserves the closed-loop property. Resets currentFrameIndex to 0
+   * and fires onFrameChange with the new frame 0.
+   */
+  rotateWalkTo (frameIndex) {
+    if (!this.walk || this.walk.length === 0) return
+    const idx = Math.max(0, Math.min(frameIndex, this.walk.length - 1))
+    if (idx === 0) return
+    this.walk = [...this.walk.slice(idx), ...this.walk.slice(0, idx)]
+    this.currentFrameIndex = 0
     this.onFrameChange(this.getCurrentFrame())
   }
 

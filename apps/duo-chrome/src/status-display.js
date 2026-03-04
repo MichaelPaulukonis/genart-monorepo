@@ -1,6 +1,7 @@
 import { backgroundModes } from './background-modes.js'
 import { filterImages } from './utils/image-filtering.js'
 import { getThemeById } from './utils/theme-management.js'
+import { normalizeHexColor } from './utils/color-utils.js'
 
 /**
  * Creates the status panel rendering system.
@@ -44,8 +45,8 @@ export function createStatusDisplay ({
 
     const swatchA = document.getElementById('status-swatch-a')
     const swatchB = document.getElementById('status-swatch-b')
-    if (swatchA && imageColorPairs[0].color) swatchA.style.backgroundColor = imageColorPairs[0].color.color
-    if (swatchB && imageColorPairs[1].color) swatchB.style.backgroundColor = imageColorPairs[1].color.color
+    if (swatchA && imageColorPairs[0].color) swatchA.style.backgroundColor = normalizeHexColor(imageColorPairs[0].color.color)
+    if (swatchB && imageColorPairs[1].color) swatchB.style.backgroundColor = normalizeHexColor(imageColorPairs[1].color.color)
 
     const colorA = document.getElementById('status-color-a')
     const colorB = document.getElementById('status-color-b')
