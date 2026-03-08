@@ -3,6 +3,7 @@ import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
 import { displayUI, drawOSD, displayProcessingText, drawGrid } from './ui.js'
 import { mouseDragged, mouseReleased, mousePressed, specialKeys, handleKeys, keyReleased, handleFile, getHandleAtPosition, isInsideRect } from './input.js'
+import { WebGLProcessor } from './webgl-processor.js'
 
 const sketch = function (p) {
   const state = {
@@ -77,7 +78,9 @@ const sketch = function (p) {
       processing: false,
       eraseMode: false,
       refit: false
-    }
+    },
+
+    webglProcessor: null
   }
 
   p.preload = function () {
@@ -87,6 +90,7 @@ const sketch = function (p) {
   }
 
   p.setup = function () {
+    p.noSmooth()
     p.pixelDensity(state.density)
     const c = p.createCanvas(state.displaySize, state.displaySize)
     c.drop((file) => handleFile(p, state, { processImage }, file))
@@ -95,8 +99,16 @@ const sketch = function (p) {
     p.background(state.backgroundColor)
 
     state.displayLayer = p.createGraphics(state.outputSize, state.outputSize)
+    state.displayLayer.noSmooth()
     state.displayLayer.pixelDensity(state.density)
     state.displayLayer.imageMode(p.CENTER)
+
+    state.webglProcessor = new WebGLProcessor(p, state.outputSize, state.outputSize)
+    state.webglProcessor.init('./shaders/monochrome.vert', './shaders/monochrome.frag').then(() => {
+      if (state.img) {
+        buildCombinedLayer(state.img)
+      }
+    })
 
     loadSettings()
     initGridControls()
@@ -168,6 +180,7 @@ const sketch = function (p) {
     updatePaintScale(width, height)
     state.paintLayer && state.paintLayer.remove()
     state.paintLayer = p.createGraphics(width, height)
+    state.paintLayer.noSmooth()
     state.paintLayer.elt.id = `paint.${p.frameCount}`
     state.paintLayer.pixelDensity(state.density)
     state.paintLayer.imageMode(p.CENTER)
@@ -177,6 +190,7 @@ const sketch = function (p) {
   const setupCombinedBuffer = () => { // No width, height parameters
     state.combinedLayer && state.combinedLayer.remove()
     state.combinedLayer = p.createGraphics(state.outputSize, state.outputSize) // Always outputSize
+    state.combinedLayer.noSmooth()
     state.combinedLayer.elt.id = `combined.${p.frameCount}`
     state.combinedLayer.pixelDensity(state.density)
     // combinedLayer.imageMode(p.CENTER) // This might need to be adjusted or removed
@@ -437,6 +451,7 @@ const sketch = function (p) {
   const adjustCanvas = () => {
     p.resizeCanvas(state.displaySize, state.displaySize)
     const tempBuff = p.createGraphics(state.outputSize, state.outputSize)
+    tempBuff.noSmooth()
     tempBuff.elt.id = `temp_adjust_on.${p.frameCount}`
     tempBuff.pixelDensity(state.density)
     tempBuff.imageMode(p.CENTER)
@@ -449,6 +464,7 @@ const sketch = function (p) {
     state.editTool = state.editTools.PAINT // Default to paint
     p.resizeCanvas(state.img.width * state.paintScale, state.img.height * state.paintScale)
     const tempBuff = p.createGraphics(state.img.width, state.img.height)
+    tempBuff.noSmooth()
     tempBuff.elt.id = `temp_edit_on.${p.frameCount}`
     tempBuff.pixelDensity(state.density)
     tempBuff.imageMode(p.CENTER)
@@ -500,47 +516,7 @@ const sketch = function (p) {
 
   // Create save image that matches exactly what user sees on screen
   const createSaveImage = () => {
-    if (state.transparencyModeEnabled) {
-      // For transparency mode, use the same flow as standard mode but apply transparency
-      // Create a copy of displayLayer and apply transparency processing
-      const exportCanvas = p.createGraphics(state.displayLayer.width, state.displayLayer.height)
-      exportCanvas.pixelDensity(state.density)
-      exportCanvas.image(state.displayLayer, 0, 0)
-
-      // Process for transparency mode
-      exportCanvas.loadPixels()
-      for (let i = 0; i < exportCanvas.pixels.length; i += 4) {
-        const r = exportCanvas.pixels[i]
-        const g = exportCanvas.pixels[i + 1]
-        const b = exportCanvas.pixels[i + 2]
-        const a = exportCanvas.pixels[i + 3]
-
-        if (a > 0) { // Only process non-transparent pixels
-          const avg = (r + g + b) / 3
-
-          // displayLayer already contains correctly processed (inverted) pixels
-          // Just determine transparency based on the processed values
-          const bw = avg > state.threshold ? 255 : 0
-
-          const shouldBeTransparent = bw >= 255 - state.transparencyThreshold
-
-          if (shouldBeTransparent) {
-            exportCanvas.pixels[i + 3] = 0 // Make transparent
-          } else {
-            // Keep as black and opaque
-            exportCanvas.pixels[i] = 0
-            exportCanvas.pixels[i + 1] = 0
-            exportCanvas.pixels[i + 2] = 0
-            exportCanvas.pixels[i + 3] = 255
-          }
-        }
-      }
-      exportCanvas.updatePixels()
-      return exportCanvas
-    } else {
-      // For standard mode, use the existing displayLayer
-      return state.displayLayer
-    }
+    return state.displayLayer
   }
 
   const getMonochromeImage = (img, threshold, forSave = false) => {
@@ -624,9 +600,25 @@ const sketch = function (p) {
   }
 
   const buildPaintLayer = img => {
-    const newImg = getMonochromeImage(img, state.threshold)
-    state.displayLayer.background(state.backgroundColor)
-    state.displayLayer.image(newImg, state.displayLayer.width / 2, state.displayLayer.height / 2)
+    let sourceBuffer
+    if (state.webglProcessor && state.webglProcessor.isReady) {
+      sourceBuffer = state.webglProcessor.process(state, img)
+    } else {
+      sourceBuffer = getMonochromeImage(img, state.threshold)
+    }
+
+    state.displayLayer.clear()
+    if (!state.transparencyModeEnabled) {
+      state.displayLayer.background(state.backgroundColor)
+    }
+
+    state.displayLayer.imageMode(p.CENTER)
+    state.displayLayer.image(sourceBuffer, state.displayLayer.width / 2, state.displayLayer.height / 2)
+    // Note: paintLayer is already composited in the shader if we use processedBuffer,
+    // but in EDIT mode we draw it manually to allow real-time feedback during strokes.
+    // However, the shader also samples uTexPaint. 
+    // To avoid double-drawing, we could disable uTexPaint in shader for EDIT mode, 
+    // OR just draw it on top here. Drawing on top is safer for the "Edit" feel.
     state.displayLayer.image(
       state.paintLayer,
       state.displayLayer.width / 2,
@@ -642,35 +634,56 @@ const sketch = function (p) {
   }
 
   const buildCombinedLayer = img => {
-    const newImg = getMonochromeImage(img, state.threshold)
+    if (!state.webglProcessor || !state.webglProcessor.isReady) {
+      // Fallback to CPU processing while shaders load
+      const newImg = getMonochromeImage(img, state.threshold)
+      if (state.combinedLayer === null) {
+        setupCombinedBuffer()
+      }
+      state.combinedLayer.clear()
+      state.combinedLayer.push()
+      const centerX = Math.round(state.combinedLayer.width / 2)
+      const centerY = Math.round(state.combinedLayer.height / 2)
+      state.combinedLayer.translate(centerX, centerY)
+      const finalScale = state.view.zoom * state.view.baseScale
+      state.combinedLayer.scale(finalScale)
+      state.combinedLayer.translate(-state.view.x, -state.view.y)
+      state.combinedLayer.imageMode(p.CENTER)
+      state.combinedLayer.image(newImg, 0, 0)
+      state.combinedLayer.image(state.paintLayer, 0, 0)
+      state.combinedLayer.pop()
+    } else {
+      // WebGL Path: process full source image + paint layer with shader
+      const processedBuffer = state.webglProcessor.process(state, img)
 
-    if (state.combinedLayer === null) {
-      setupCombinedBuffer()
+      if (state.combinedLayer === null) {
+        setupCombinedBuffer()
+      }
+      state.combinedLayer.clear()
+      state.combinedLayer.push()
+
+      const centerX = Math.round(state.combinedLayer.width / 2)
+      const centerY = Math.round(state.combinedLayer.height / 2)
+      state.combinedLayer.translate(centerX, centerY)
+
+      const finalScale = state.view.zoom * state.view.baseScale
+      state.combinedLayer.scale(finalScale)
+      state.combinedLayer.translate(-state.view.x, -state.view.y)
+
+      // The processedBuffer is already the correct size (outputSize x outputSize)
+      // containing the full source image + paint layer at original resolution
+      state.combinedLayer.imageMode(p.CENTER)
+      state.combinedLayer.image(processedBuffer, 0, 0)
+
+      state.combinedLayer.pop()
     }
 
-    state.combinedLayer.clear()
-    state.combinedLayer.push()
+    // The result is directly displayed.
+    state.displayLayer.clear()
+    if (!state.transparencyModeEnabled) {
+      state.displayLayer.background(state.backgroundColor)
+    }
 
-    // 1. Center the transform origin
-    // Use Math.round to avoid sub-pixel offsets
-    const centerX = Math.round(state.combinedLayer.width / 2)
-    const centerY = Math.round(state.combinedLayer.height / 2)
-    state.combinedLayer.translate(centerX, centerY)
-
-    // 2. Apply the unified view transform
-    const finalScale = state.view.zoom * state.view.baseScale
-    state.combinedLayer.scale(finalScale)
-    state.combinedLayer.translate(-state.view.x, -state.view.y)
-
-    // 3. Draw the image and paint layer at their native resolution, centered on the view
-    state.combinedLayer.imageMode(p.CENTER)
-    state.combinedLayer.image(newImg, 0, 0) // Draw at native resolution
-    state.combinedLayer.image(state.paintLayer, 0, 0)
-
-    state.combinedLayer.pop()
-
-    // The result is directly displayed. No more cropping at the end of the pipe.
-    state.displayLayer.background(state.backgroundColor)
     state.displayLayer.imageMode(p.CENTER)
     state.displayLayer.image(
       state.combinedLayer,
@@ -701,25 +714,56 @@ const sketch = function (p) {
 
 
   const getContentBounds = (img) => {
-    // This is computationally expensive, but necessary for accurate bounds.
-    // Create a temporary buffer to combine the monochrome image and the paint layer.
-    const source = getMonochromeImage(img, state.threshold)
-    const tempLayer = p.createGraphics(source.width, source.height)
-    tempLayer.pixelDensity(state.density)
-    tempLayer.image(source, 0, 0)
-    tempLayer.image(state.paintLayer, 0, 0)
+    let pixels
+    let scanWidth, scanHeight
+    let tempLayer = null
 
-    tempLayer.loadPixels()
+    if (state.webglProcessor && state.webglProcessor.isReady) {
+      // Process at native resolution (no zoom/pan)
+      state.webglProcessor.process(state, img)
+      pixels = state.webglProcessor.getProcessedPixels()
+
+      scanWidth = img.width
+      scanHeight = img.height
+    } else {
+      // Fallback to CPU-heavy path
+      const source = getMonochromeImage(img, state.threshold)
+      tempLayer = p.createGraphics(source.width, source.height)
+      tempLayer.pixelDensity(state.density)
+      tempLayer.image(source, 0, 0)
+      tempLayer.image(state.paintLayer, 0, 0)
+      tempLayer.loadPixels()
+      pixels = tempLayer.pixels
+      scanWidth = tempLayer.width
+      scanHeight = tempLayer.height
+    }
+
     let top = -1
     let bottom = -1
     let left = -1
     let right = -1
 
+    const bgR = p.red(state.backgroundColor)
+    const bgG = p.green(state.backgroundColor)
+    const bgB = p.blue(state.backgroundColor)
+
     // Find top
-    for (let y = 0; y < tempLayer.height; y++) {
-      for (let x = 0; x < tempLayer.width; x++) {
-        const index = (x + y * tempLayer.width) * 4
-        if (tempLayer.pixels[index] !== p.red(state.backgroundColor) || tempLayer.pixels[index + 1] !== p.green(state.backgroundColor) || tempLayer.pixels[index + 2] !== p.blue(state.backgroundColor)) {
+    for (let y = 0; y < scanHeight; y++) {
+      for (let x = 0; x < scanWidth; x++) {
+        const index = (x + y * scanWidth) * 4
+        const r = pixels[index]
+        const g = pixels[index + 1]
+        const b = pixels[index + 2]
+        const a = pixels[index + 3]
+
+        let isContent = false
+        if (state.transparencyModeEnabled) {
+          isContent = a > 0
+        } else {
+          isContent = (r !== bgR || g !== bgG || b !== bgB)
+        }
+
+        if (isContent) {
           top = y
           break
         }
@@ -729,15 +773,27 @@ const sketch = function (p) {
 
     // Image is blank
     if (top === -1) {
-      tempLayer.remove()
+      if (tempLayer) tempLayer.remove()
       return { x: 0, y: 0, width: img.width, height: img.height, isEmpty: true }
     }
 
     // Find bottom
-    for (let y = tempLayer.height - 1; y >= 0; y--) {
-      for (let x = 0; x < tempLayer.width; x++) {
-        const index = (x + y * tempLayer.width) * 4
-        if (tempLayer.pixels[index] !== p.red(state.backgroundColor) || tempLayer.pixels[index + 1] !== p.green(state.backgroundColor) || tempLayer.pixels[index + 2] !== p.blue(state.backgroundColor)) {
+    for (let y = scanHeight - 1; y >= 0; y--) {
+      for (let x = 0; x < scanWidth; x++) {
+        const index = (x + y * scanWidth) * 4
+        const r = pixels[index]
+        const g = pixels[index + 1]
+        const b = pixels[index + 2]
+        const a = pixels[index + 3]
+
+        let isContent = false
+        if (state.transparencyModeEnabled) {
+          isContent = a > 0
+        } else {
+          isContent = (r !== bgR || g !== bgG || b !== bgB)
+        }
+
+        if (isContent) {
           bottom = y
           break
         }
@@ -746,10 +802,22 @@ const sketch = function (p) {
     }
 
     // Find left
-    for (let x = 0; x < tempLayer.width; x++) {
-      for (let y = 0; y < tempLayer.height; y++) {
-        const index = (x + y * tempLayer.width) * 4
-        if (tempLayer.pixels[index] !== p.red(state.backgroundColor) || tempLayer.pixels[index + 1] !== p.green(state.backgroundColor) || tempLayer.pixels[index + 2] !== p.blue(state.backgroundColor)) {
+    for (let x = 0; x < scanWidth; x++) {
+      for (let y = 0; y < scanHeight; y++) {
+        const index = (x + y * scanWidth) * 4
+        const r = pixels[index]
+        const g = pixels[index + 1]
+        const b = pixels[index + 2]
+        const a = pixels[index + 3]
+
+        let isContent = false
+        if (state.transparencyModeEnabled) {
+          isContent = a > 0
+        } else {
+          isContent = (r !== bgR || g !== bgG || b !== bgB)
+        }
+
+        if (isContent) {
           left = x
           break
         }
@@ -758,10 +826,22 @@ const sketch = function (p) {
     }
 
     // Find right
-    for (let x = tempLayer.width - 1; x >= 0; x--) {
-      for (let y = 0; y < tempLayer.height; y++) {
-        const index = (x + y * tempLayer.width) * 4
-        if (tempLayer.pixels[index] !== p.red(state.backgroundColor) || tempLayer.pixels[index + 1] !== p.green(state.backgroundColor) || tempLayer.pixels[index + 2] !== p.blue(state.backgroundColor)) {
+    for (let x = scanWidth - 1; x >= 0; x--) {
+      for (let y = 0; y < scanHeight; y++) {
+        const index = (x + y * scanWidth) * 4
+        const r = pixels[index]
+        const g = pixels[index + 1]
+        const b = pixels[index + 2]
+        const a = pixels[index + 3]
+
+        let isContent = false
+        if (state.transparencyModeEnabled) {
+          isContent = a > 0
+        } else {
+          isContent = (r !== bgR || g !== bgG || b !== bgB)
+        }
+
+        if (isContent) {
           right = x
           break
         }
@@ -769,7 +849,7 @@ const sketch = function (p) {
       if (right !== -1) break
     }
 
-    tempLayer.remove()
+    if (tempLayer) tempLayer.remove()
     return { x: left, y: top, width: right - left + 1, height: bottom - top + 1, isEmpty: false }
   }
 

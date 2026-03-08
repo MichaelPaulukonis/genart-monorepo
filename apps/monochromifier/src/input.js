@@ -290,8 +290,8 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
       state.dirty = true
       return false
     }
-    if (state.editTool === state.editTools.CROP && p.key === 'r') {
-      if (state.cropState !== 'idle') {
+    if (p.key === 'r') {
+      if (state.editTool === state.editTools.CROP && state.cropState !== 'idle') {
         state.cropState = 'idle'
         state.dirty = true
       } else if (state.undoStack.length > 0) {

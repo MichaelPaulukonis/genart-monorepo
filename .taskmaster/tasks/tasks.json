@@ -2808,5 +2808,79 @@
       "description": "Tasks for duochrome context",
       "updated": "2026-03-04T20:03:41.551Z"
     }
+  },
+  "monochrome": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Research and evaluate WebGL for performance optimization",
+        "description": "Investigate WebGL implementation to determine if it can provide significant performance improvements for image processing operations compared to current Canvas2D approach.",
+        "details": "1. **Initial Research & Benchmarking**\n   - Research existing WebGL libraries for image processing (e.g., glfx.js, TWGL.js, GPU.js)\n   - Create performance benchmarks comparing Canvas2D vs WebGL for common operations (blur, brightness/contrast, color adjustments)\n   - Measure FPS, memory usage, and processing time for various image sizes (512x512, 1024x1024, 2048x2048)\n   - Document browser compatibility and WebGL feature support matrix\n\n2. **Proof of Concept Implementation**\n   - Set up basic WebGL context and shader compilation system\n   - Implement 2-3 core image processing operations as WebGL shaders:\n     - Fragment shader for brightness/contrast adjustment\n     - Fragment shader for Gaussian blur\n     - Fragment shader for hue/saturation adjustment\n   - Create wrapper class to abstract WebGL complexity (WebGLProcessor)\n   - Ensure graceful fallback to Canvas2D if WebGL is unavailable\n\n3. **Integration Architecture Design**\n   - Design interface that mirrors current Canvas2D processor API for drop-in replacement\n   - Plan texture management strategy (creating, updating, and disposing WebGL textures)\n   - Design shader program caching mechanism to avoid recompilation\n   - Document memory management considerations (framebuffer cleanup, context loss handling)\n\n4. **Technical Considerations**\n   - Handle WebGL context loss/restoration events\n   - Implement proper error handling for shader compilation failures\n   - Consider mobile device performance and GPU limitations\n   - Evaluate security implications (CORS issues with WebGL textures)\n   - Assess impact on bundle size when adding WebGL dependencies",
+        "testStrategy": "1. **Performance Benchmarks**\n   - Run automated benchmarks comparing Canvas2D vs WebGL across 5 different image sizes\n   - Verify WebGL achieves minimum 2x performance improvement for blur operations\n   - Measure and document memory footprint differences\n   - Test on multiple browsers (Chrome, Firefox, Safari) and devices (desktop, mobile)\n\n2. **Functional Testing**\n   - Verify all implemented shaders produce pixel-perfect matches to Canvas2D equivalents\n   - Test with transparent PNGs, JPEGs, and WebP images\n   - Validate color space handling and precision (8-bit vs floating point textures)\n   - Ensure proper handling of edge cases (zero-sized images, extreme parameter values)\n\n3. **Compatibility Testing**\n   - Test graceful fallback when WebGL is disabled or unsupported\n   - Verify context loss recovery mechanism works correctly\n   - Check for GPU driver-specific bugs on different hardware\n   - Validate mobile browser performance and compatibility\n\n4. **Integration Testing**\n   - Run existing image processing test suite against WebGL implementation\n   - Verify API compatibility with current Canvas2D processor\n   - Test batch processing of multiple images\n   - Validate memory cleanup - no GPU memory leaks after processing hundreds of images",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Research WebGL libraries and create performance benchmarks",
+            "description": "Conduct comprehensive research on existing WebGL libraries (glfx.js, TWGL.js, GPU.js) and establish performance benchmarks comparing Canvas2D vs WebGL for image processing operations relevant to the monochromifier app.",
+            "dependencies": [],
+            "details": "1. Evaluate WebGL libraries: glfx.js for filter effects, TWGL.js for low-level WebGL helpers, GPU.js for GPU computation\n2. Create benchmark suite measuring: FPS during continuous processing, memory usage (heap snapshots), processing time per operation\n3. Test with representative image sizes: 512x512, 1024x1024, 2048x2048, 4096x4096\n4. Benchmark operations: brightness/contrast, Gaussian blur, thresholding, inversion\n5. Document browser compatibility matrix (Chrome, Firefox, Safari, Edge) and WebGL feature support\n6. Measure bundle size impact of each library\n7. Create baseline metrics with current Canvas2D implementation for comparison",
+            "status": "done",
+            "testStrategy": "Run automated benchmark suite across 5 different image sizes and 4 browsers. Verify statistical significance of results with minimum 100 iterations per test. Document performance improvement thresholds (target: 2x+ improvement for blur operations)."
+          },
+          {
+            "id": 2,
+            "title": "Set up p5.js WEBGL proof of concept with shader compilation system",
+            "description": "Establish the foundational p5.js WEBGL environment and create a robust shader compilation and management system that handles context loss gracefully.",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "1. Initialize p5.js instance with WEBGL mode instead of default renderer\n2. Create shader compilation utility class that handles: vertex shader setup, fragment shader compilation, error logging for compilation failures\n3. Implement WebGL context loss/restoration event handlers (webglcontextlost, webglcontextrestored)\n4. Create WebGLProcessor wrapper class to abstract p5.js shader API complexity\n5. Set up framebuffer object (FBO) for offscreen rendering to maintain image state\n6. Implement graceful fallback detection: check for WebGL support, fallback to Canvas2D if unavailable\n7. Create basic passthrough shader that simply renders input texture to screen",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement core image processing shaders for monochromifier operations",
+            "description": "Develop fragment shaders for the three core monochromifier operations (thresholding, inverting, transparency) and solve the coordinate system mapping challenge between WEBGL's center-origin and the app's top-left-origin system.",
+            "dependencies": [
+              "1.2"
+            ],
+            "details": "1. Implement thresholding shader: sample texture color, convert to grayscale, apply threshold value as uniform, output binary result\n2. Implement inversion shader: sample texture color, invert RGB channels (1.0 - color), preserve alpha\n3. Implement transparency shader: sample texture color, multiply alpha channel by transparency uniform\n4. Solve coordinate mapping: either transform UV coordinates in shaders to match top-left origin, or adjust p5.js rendering logic to use translated coordinate system\n5. Create uniform management system for passing parameters (threshold value, invert toggle, transparency level) to shaders\n6. Optimize shader code for mobile GPUs (minimize texture lookups, use lowp/mediump precision qualifiers where appropriate)\n7. Test shaders with various image aspect ratios to ensure proper mapping",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Design integration architecture for drop-in Canvas2D replacement",
+            "description": "Design a comprehensive integration architecture that mirrors the existing Canvas2D processor API while handling texture management, shader caching, and UI overlay rendering compatibility.",
+            "dependencies": [
+              "1.3"
+            ],
+            "details": "1. Design WebGLProcessor API that matches current Canvas2D processor method signatures (processImage, adjustBrightness, etc.) for drop-in replacement\n2. Plan texture lifecycle management: create textures from image data, update textures when source changes, dispose textures on cleanup to prevent memory leaks\n3. Design shader program caching mechanism: cache compiled shader programs based on operation type, reuse programs across multiple frames, implement LRU eviction for memory-constrained environments\n4. Design dual-buffer rendering strategy: use separate p5.Graphics 2D buffer for UI overlays (OSD, grid) that gets composited over WebGL processed image\n5. Plan synchronization between WebGL processing and 2D overlay rendering to maintain correct z-ordering\n6. Document memory management considerations: framebuffer cleanup in setup/draw cycle, context loss texture recreation, GPU memory limits on mobile\n7. Create integration guide showing how to replace existing Canvas2D calls with WebGLProcessor",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Validate performance and ensure UI compatibility through comprehensive testing",
+            "description": "Execute performance validation tests on high-resolution images, verify UI overlays render correctly, and document final recommendations for production adoption.",
+            "dependencies": [
+              "1.4"
+            ],
+            "details": "1. Run performance benchmarks on high-resolution images (4K and 8K) to verify GPU acceleration benefits scale with image size\n2. Test UI overlay rendering: verify OSD elements, grid lines, and interactive handles render correctly over WebGL processed image\n3. Conduct cross-device testing: test on low-end mobile devices to ensure shaders don't exceed GPU capabilities, test on high-DPI displays for rendering quality\n4. Measure actual vs perceived performance: ensure FPS improvements translate to responsive UI, check for frame drops during shader compilation\n5. Test rapid parameter adjustment: quickly change threshold/transparency values to ensure real-time updates without frame drops\n6. Validate memory usage: monitor GPU memory consumption during extended use, check for leaks after multiple image loads\n7. Create performance report comparing Canvas2D vs WebGL implementation with recommendations on adoption criteria (minimum image size, device capabilities)",
+            "status": "done",
+            "testStrategy": "Automated performance tests on 10 high-resolution images (up to 8192x8192). Manual UI/UX testing across 6 device profiles (low-end mobile, mid-range mobile, high-end mobile, laptop, desktop, tablet). Memory profiling over 30-minute continuous use session. A/B test with 20 users to validate perceived performance improvement."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2026-03-07T21:54:41.544Z",
+      "updated": "2026-03-07T22:41:31.296Z",
+      "description": "Tag created on 3/7/2026"
+    }
   }
 }
