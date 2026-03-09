@@ -4,6 +4,7 @@ import { formatVersion } from './utils/version.js'
 
 const infoBox = document.getElementById('info-box')
 const gridControls = document.getElementById('grid-controls')
+const halftoneControls = document.getElementById('halftone-controls')
 const closeButton = document.getElementById('close-info-box')
 
 // Check for required DOM elements
@@ -88,6 +89,7 @@ function setTranslate(xPos, yPos, el, centered) {
 // Initialize draggables
 makeDraggable(infoBox, { centered: true })
 makeDraggable(gridControls, { centered: false })
+makeDraggable(halftoneControls, { centered: false })
 
 
 // Set up accessibility attributes for infoBox

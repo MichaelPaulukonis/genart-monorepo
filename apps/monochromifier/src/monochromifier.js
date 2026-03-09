@@ -80,6 +80,14 @@ const sketch = function (p) {
       refit: false
     },
 
+    showHalftoneControls: true,
+    halftone: {
+      enabled: false,
+      patternType: 0, // 0: Dots, 1: Lines, 2: Dither
+      dotSize: 8,
+      angle: 45
+    },
+
     webglProcessor: null
   }
 
@@ -104,7 +112,10 @@ const sketch = function (p) {
     state.displayLayer.imageMode(p.CENTER)
 
     state.webglProcessor = new WebGLProcessor(p, state.outputSize, state.outputSize)
-    state.webglProcessor.init('./shaders/monochrome.vert', './shaders/monochrome.frag').then(() => {
+    state.webglProcessor.init({
+      monochrome: { vert: './shaders/monochrome.vert', frag: './shaders/monochrome.frag' },
+      halftone: { vert: './shaders/monochrome.vert', frag: './shaders/halftone.frag' }
+    }).then(() => {
       if (state.img) {
         buildCombinedLayer(state.img)
       }
@@ -112,6 +123,7 @@ const sketch = function (p) {
 
     loadSettings()
     initGridControls()
+    initHalftoneControls()
 
     processImage(state.img)
   }
@@ -127,6 +139,16 @@ const sketch = function (p) {
         state.gridColor = settings.gridColor ?? state.gridColor
         state.gridOpacity = settings.gridOpacity ?? state.gridOpacity
         state.gridThickness = settings.gridThickness ?? state.gridThickness
+      }
+
+      const savedHalftone = localStorage.getItem('monochromifier_halftone_settings')
+      if (savedHalftone) {
+        const h = JSON.parse(savedHalftone)
+        state.showHalftoneControls = h.showHalftoneControls ?? state.showHalftoneControls
+        state.halftone.enabled = h.enabled ?? state.halftone.enabled
+        state.halftone.patternType = h.patternType ?? state.halftone.patternType
+        state.halftone.dotSize = h.dotSize ?? state.halftone.dotSize
+        state.halftone.angle = h.angle ?? state.halftone.angle
       }
     } catch (e) {
       console.error('Failed to load settings', e)
@@ -144,6 +166,15 @@ const sketch = function (p) {
         gridThickness: state.gridThickness
       }
       localStorage.setItem('monochromifier_grid_settings', JSON.stringify(settings))
+
+      const halftoneSettings = {
+        showHalftoneControls: state.showHalftoneControls,
+        enabled: state.halftone.enabled,
+        patternType: state.halftone.patternType,
+        dotSize: state.halftone.dotSize,
+        angle: state.halftone.angle
+      }
+      localStorage.setItem('monochromifier_halftone_settings', JSON.stringify(halftoneSettings))
     } catch (e) {
       console.error('Failed to save settings', e)
     }
@@ -169,6 +200,45 @@ const sketch = function (p) {
     gridColor.addEventListener('input', (e) => { state.gridColor = e.target.value; state.dirty = true; saveSettings() })
     gridOpacity.addEventListener('input', (e) => { state.gridOpacity = e.target.value; state.dirty = true; saveSettings() })
     gridThickness.addEventListener('input', (e) => { state.gridThickness = e.target.value; state.dirty = true; saveSettings() })
+  }
+
+  const initHalftoneControls = () => {
+    const toggle = document.getElementById('halftone-toggle')
+    const type = document.getElementById('halftone-type')
+    const size = document.getElementById('halftone-size')
+    const angle = document.getElementById('halftone-angle')
+
+    if (!toggle) return
+
+    toggle.checked = state.halftone.enabled
+    type.value = state.halftone.patternType
+    size.value = state.halftone.dotSize
+    angle.value = state.halftone.angle
+
+    toggle.addEventListener('change', (e) => { 
+      state.halftone.enabled = e.target.checked
+      state.dirty = true
+      saveSettings() 
+      buildCombinedLayer(state.img)
+    })
+    type.addEventListener('change', (e) => { 
+      state.halftone.patternType = parseInt(e.target.value)
+      state.dirty = true
+      saveSettings()
+      buildCombinedLayer(state.img)
+    })
+    size.addEventListener('input', (e) => { 
+      state.halftone.dotSize = parseFloat(e.target.value)
+      state.dirty = true
+      saveSettings()
+      buildCombinedLayer(state.img)
+    })
+    angle.addEventListener('input', (e) => { 
+      state.halftone.angle = parseFloat(e.target.value)
+      state.dirty = true
+      saveSettings()
+      buildCombinedLayer(state.img)
+    })
   }
 
   const updatePaintScale = (w, h) => {
@@ -323,6 +393,15 @@ const sketch = function (p) {
           gridControls.classList.remove('hidden')
         } else {
           gridControls.classList.add('hidden')
+        }
+      }
+
+      const halftoneControls = document.getElementById('halftone-controls')
+      if (halftoneControls) {
+        if (state.modal.showUI && state.showHalftoneControls) {
+          halftoneControls.classList.remove('hidden')
+        } else {
+          halftoneControls.classList.add('hidden')
         }
       }
 

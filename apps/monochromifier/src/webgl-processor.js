@@ -7,19 +7,29 @@ export class WebGLProcessor {
     this.width = width;
     this.height = height;
     this.buffer = p.createGraphics(width, height, p.WEBGL);
-    this.buffer.noSmooth(); // Use NEAREST filtering to avoid edge artifacts
-    this.shader = null;
+    this.buffer.noSmooth();
+    this.shaders = {};
     this.isReady = false;
   }
 
-  async init(vertPath, fragPath) {
-    return new Promise((resolve) => {
-      this.shader = this.p.loadShader(vertPath, fragPath, () => {
-        this.isReady = true;
-        console.log('Shader loaded successfully');
-        resolve(true);
+  /**
+   * Initializes multiple shaders.
+   * @param {Object} shaderConfigs - e.g. { monochrome: { vert, frag }, halftone: { vert, frag } }
+   */
+  async init(shaderConfigs) {
+    const promises = Object.entries(shaderConfigs).map(([name, paths]) => {
+      return new Promise((resolve) => {
+        this.p.loadShader(paths.vert, paths.frag, (s) => {
+          this.shaders[name] = s;
+          console.log(`Shader '${name}' loaded successfully`);
+          resolve();
+        });
       });
     });
+
+    await Promise.all(promises);
+    this.isReady = true;
+    return true;
   }
 
   updateSize(w, h) {
@@ -27,49 +37,56 @@ export class WebGLProcessor {
       this.width = w;
       this.height = h;
       this.buffer.resizeCanvas(w, h);
-      this.buffer.noSmooth(); // Re-apply after resize
+      this.buffer.noSmooth();
     }
   }
 
   process(state, img) {
-    if (!this.isReady || !this.shader) return;
+    if (!this.isReady) return;
 
-    // Ensure buffer matches image size to avoid stretching and scaling issues
+    // Determine which shader to use
+    const shaderName = state.halftone?.enabled ? 'halftone' : 'monochrome';
+    const activeShader = this.shaders[shaderName];
+    
+    if (!activeShader) return;
+
+    // Ensure buffer matches image size
     this.updateSize(img.width, img.height);
 
     const b = this.buffer;
     b.clear();
-    b.noStroke(); // Ensure no default black border is drawn
-    b.shader(this.shader);
+    b.noStroke();
+    b.shader(activeShader);
 
-    // Set uniforms
-    this.shader.setUniform('uTexImage', img);
-    this.shader.setUniform('uTexPaint', state.paintLayer);
-    this.shader.setUniform('uTexSize', [img.width, img.height]);
-    this.shader.setUniform('uThreshold', state.threshold / 255.0);
-    this.shader.setUniform('uInvert', state.invert);
-    this.shader.setUniform('uTransparencyMode', state.transparencyModeEnabled);
-    this.shader.setUniform('uTransparencyThreshold', state.transparencyThreshold);
+    // Common Uniforms
+    activeShader.setUniform('uTexImage', img);
+    activeShader.setUniform('uTexPaint', state.paintLayer);
+    activeShader.setUniform('uTexSize', [img.width, img.height]);
+    activeShader.setUniform('uThreshold', state.threshold / 255.0);
+    activeShader.setUniform('uInvert', state.invert);
+    activeShader.setUniform('uTransparencyMode', state.transparencyModeEnabled);
+    activeShader.setUniform('uTransparencyThreshold', state.transparencyThreshold);
     
-    // Normalize background color
     const bg = state.backgroundColor;
-    this.shader.setUniform('uBackgroundColor', [
+    activeShader.setUniform('uBackgroundColor', [
       this.p.red(bg) / 255.0,
       this.p.green(bg) / 255.0,
       this.p.blue(bg) / 255.0
     ]);
 
-    // Draw a rectangle covering the full buffer to trigger the shader.
-    // In p5 WEBGL mode, rect is drawn relative to center (0,0).
+    // Halftone-specific Uniforms
+    if (shaderName === 'halftone') {
+      activeShader.setUniform('uPatternType', state.halftone.patternType);
+      activeShader.setUniform('uDotSize', state.halftone.dotSize);
+      // Convert degrees to radians
+      activeShader.setUniform('uAngle', (state.halftone.angle || 0) * (Math.PI / 180.0));
+    }
+
     b.rect(-this.width / 2, -this.height / 2, this.width, this.height);
     
     return b;
   }
 
-  /**
-   * Reads pixels from the WebGL buffer. 
-   * Note: This is a synchronous operation and can be a bottleneck.
-   */
   getProcessedPixels() {
     if (!this.isReady) return null;
     this.buffer.loadPixels();

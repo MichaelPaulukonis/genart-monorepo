@@ -2875,11 +2875,78 @@
             "testStrategy": "Automated performance tests on 10 high-resolution images (up to 8192x8192). Manual UI/UX testing across 6 device profiles (low-end mobile, mid-range mobile, high-end mobile, laptop, desktop, tablet). Memory profiling over 30-minute continuous use session. A/B test with 20 users to validate perceived performance improvement."
           }
         ]
+      },
+      {
+        "id": 2,
+        "title": "Implement halftone effects using WebGL shaders",
+        "description": "Research and implement halftone effects in the 'monochromifier' app using WebGL shaders, including circular dots, line screens, and stochastic dithering with real-time rendering and UI controls.",
+        "details": "## 1. Research Halftone Algorithms\n- **Circular Dots**: Classic halftone pattern using varying dot sizes based on luminance\n- **Line Screens**: Parallel lines with varying thickness/spacing\n- **Stochastic Dithering**: Randomized patterns (blue noise, Bayer matrices) for smoother gradients\n- **Hybrid Approaches**: Combine multiple techniques for artistic effects\n- Reference academic papers and existing implementations (Photoshop, GIMP plugins)\n\n## 2. Fragment Shader Implementation\n```glsl\n// Core halftone shader structure\nprecision highp float;\nuniform sampler2D u_image;\nuniform vec2 u_resolution;\nuniform float u_dotSize;\nuniform float u_angle;\nuniform int u_patternType;\nuniform bool u_transparencyAware;\n\n// Pattern type constants\n#define PATTERN_CIRCULAR 0\n#define PATTERN_LINE 1\n#define PATTERN_STOCHASTIC 2\n\nvoid main() {\n    vec2 uv = gl_FragCoord.xy / u_resolution;\n    vec4 color = texture2D(u_image, uv);\n    float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));\n    \n    // Apply halftone pattern based on type\n    if (u_patternType == PATTERN_CIRCULAR) {\n        // Circular dot implementation\n    } else if (u_patternType == PATTERN_LINE) {\n        // Line screen implementation\n    } else {\n        // Stochastic dithering\n    }\n    \n    // Handle transparency if enabled\n    if (u_transparencyAware) {\n        // Alpha channel considerations\n    }\n}\n```\n\n## 3. WebGLProcessor Integration\n- Extend existing WebGLProcessor class with halftone-specific uniforms\n- Add shader compilation and linking in processor initialization\n- Implement texture management for input/output buffers\n- Ensure proper framebuffer handling for multi-pass effects\n- Maintain compatibility with existing filter pipeline\n\n## 4. UI Controls Implementation\n- **Pattern Type Selector**: Dropdown with Circular Dots, Line Screens, Stochastic options\n- **Dot Size Slider**: Range 1-50px with real-time preview\n- **Angle Control**: 0-360 degree rotation for line screens and dot patterns\n- **Transparency Toggle**: Checkbox for alpha channel handling\n- **Preset Manager**: Save/load common halftone configurations\n- **Live Preview**: Update shader parameters without recompilation\n\n## 5. Performance Optimization\n- Use uniform buffers for parameter updates\n- Implement level-of-detail (LOD) for large images\n- Optimize fragment shader with early exit conditions\n- Consider compute shaders for advanced stochastic generation\n- Benchmark against Canvas2D equivalent implementation\n\n## 6. Browser Compatibility\n- Test WebGL 1.0 and 2.0 shader compilation\n- Provide fallbacks for unsupported features\n- Handle mobile GPU limitations (precision issues, texture size limits)\n- Implement graceful degradation for older browsers",
+        "testStrategy": "## 1. Shader Unit Tests\n- **Visual Regression Testing**: Capture shader output for known input images\n- **Parameter Validation**: Test all uniform combinations produce valid results\n- **Edge Cases**: Pure black/white images, transparency gradients, high-frequency patterns\n- **Cross-browser Rendering**: Verify consistent output across Chrome, Firefox, Safari, Edge\n\n## 2. Integration Testing\n- **Pipeline Compatibility**: Ensure halftone effect works with other WebGL filters\n- **Memory Leak Detection**: Monitor GPU memory usage during repeated application\n- **Error Handling**: Test shader compilation failures and fallback behavior\n- **Performance Benchmarks**: Measure FPS at various image resolutions (512x512 to 4096x4096)\n\n## 3. UI Testing\n- **Control Responsiveness**: Verify sliders update shader in real-time (<16ms delay)\n- **Preset Functionality**: Test save/load operations preserve all parameters\n- **Accessibility**: Keyboard navigation and screen reader compatibility\n- **Mobile Touch Support**: Test gesture controls for angle and size adjustment\n\n## 4. Algorithm Validation\n- **Luminance Accuracy**: Compare output against reference implementations\n- **Pattern Consistency**: Verify dot/line patterns maintain proper spacing\n- **Transparency Handling**: Test compositing with various background colors\n- **Artistic Quality**: Peer review of output quality by design team\n\n## 5. Automated Test Suite\n- **Visual Diff Testing**: Use pixelmatch or similar for screenshot comparisons\n- **Performance Regression**: Fail tests if FPS drops below baseline\n- **Shader Compilation**: Automated validation of GLSL syntax across targets\n- **Cross-platform CI**: Run tests on Windows, macOS, Linux, iOS, Android",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Research halftone algorithms and define shader architecture",
+            "description": "Research circular dots, line screens, and stochastic dithering algorithms. Define shader uniform structure and pattern type constants for implementation.",
+            "dependencies": [],
+            "details": "Study academic papers and existing implementations (Photoshop, GIMP plugins). Document algorithm specifics for each pattern type including dot size calculations, line thickness formulas, and stochastic matrix generation. Define GLSL uniform structure including dot size, angle, pattern type, and transparency settings. Create technical specification document outlining shader architecture and integration points with existing WebGLProcessor class.",
+            "status": "done",
+            "testStrategy": null
+          },
+          {
+            "id": 2,
+            "title": "Implement fragment shaders for all halftone patterns",
+            "description": "Write GLSL fragment shaders implementing circular dots, line screens, and stochastic dithering with transparency support and real-time parameter updates.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement three pattern algorithms in a single modular GLSL fragment shader: circular dot size calculation based on luminance thresholds, line screen thickness/spacing with rotation matrix, and stochastic dithering using 8x8 Bayer matrices. Add transparency-aware branching for alpha channel handling. Use high precision floats and define pattern type constants. Implement efficient distance calculations and modular arithmetic for pattern repetition. Add early exit conditions for performance.",
+            "status": "done",
+            "testStrategy": "Create visual regression tests for each pattern type with known input images. Test edge cases including pure black/white images, smooth gradients, transparency gradients, and high-frequency source patterns. Verify shader compilation on both WebGL 1.0 and 2.0 contexts."
+          },
+          {
+            "id": 3,
+            "title": "Integrate shaders into WebGLProcessor pipeline",
+            "description": "Extend WebGLProcessor class to compile halftone shaders, manage uniforms, handle texture buffers, and maintain compatibility with existing filter pipeline.",
+            "dependencies": [
+              2
+            ],
+            "details": "Add shader compilation and linking to WebGLProcessor initialization method. Implement uniform location caching for halftone parameters (dotSize, angle, patternType, transparencyAware). Set up input/output texture management with proper framebuffer handling for multi-pass effects. Ensure compatibility with existing filter pipeline architecture by adding halftone as a new filter type. Add error handling for shader compilation failures with fallback mechanisms. Implement texture buffer lifecycle management and cleanup.",
+            "status": "done",
+            "testStrategy": "Unit test shader compilation and uniform updates. Verify integration doesn't break existing filters in the pipeline. Test texture buffer lifecycle management including creation, binding, and deletion. Validate framebuffer completeness and error handling."
+          },
+          {
+            "id": 4,
+            "title": "Create UI controls for halftone parameters",
+            "description": "Build interactive UI components including pattern selector, dot size slider, angle control, transparency toggle, and preset manager with live preview.",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement dropdown component for pattern type selection (circular dots, line screens, stochastic). Create range slider for dot size (1-50px) with real-time preview updates. Add angle control (0-360 degrees) with visual rotation indicator. Build transparency checkbox for alpha channel handling. Implement preset save/load system using localStorage with JSON serialization. Ensure all controls update shader uniforms without recompilation. Add debouncing for slider inputs to prevent performance issues.",
+            "status": "done",
+            "testStrategy": "Test UI component interactions and state management. Verify parameter updates reflect correctly in shader output within 16ms frame budget. Test preset save/load functionality across browser sessions. Validate UI responsiveness on mobile devices with touch controls."
+          },
+          {
+            "id": 5,
+            "title": "Optimize performance and ensure browser compatibility",
+            "description": "Implement performance optimizations and test cross-browser compatibility with WebGL 1.0/2.0 fallbacks for mobile and desktop browsers.",
+            "dependencies": [
+              4
+            ],
+            "details": "Add uniform buffers for efficient parameter updates without CPU-GPU sync. Implement level-of-detail (LOD) system for images larger than 2048px using downsampled textures. Optimize fragment shader with early exit conditions for pure white/black areas. Test on WebGL 1.0 and 2.0 contexts with feature detection. Handle mobile GPU precision issues by detecting lowp/mediump support. Implement graceful degradation for older browsers without WebGL. Benchmark performance against Canvas2D equivalent implementation across 5 image sizes.",
+            "status": "pending",
+            "testStrategy": "Run automated performance benchmarks on Chrome, Firefox, Safari, and Edge. Test fallback mechanisms by simulating WebGL 1.0 environment. Verify mobile compatibility on iOS Safari and Chrome Android with various device pixel ratios. Measure FPS and frame time consistency during parameter adjustments."
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2026-03-07T21:54:41.544Z",
-      "updated": "2026-03-07T22:41:31.296Z",
+      "updated": "2026-03-09T15:09:36.528Z",
       "description": "Tag created on 3/7/2026"
     }
   }

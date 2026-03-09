@@ -11,37 +11,62 @@
 
 <body>
   <script type="module" src="/src/monochromifier.js"></script>
-
-  <div id="grid-controls" class="grid-controls hidden">
-    <h3>Grid Overlay</h3>
-    <div class="control-group">
-      <label for="grid-toggle">Enable Grid</label>
-      <input type="checkbox" id="grid-toggle" />
-    </div>
-    <div class="control-group">
-      <label for="grid-type">Type</label>
-      <select id="grid-type">
-        <option value="1-split">Crosshair (1-split)</option>
-        <option value="2-split">Thirds (2-split)</option>
-        <option value="3-split">Fourths (3-split)</option>
-        <option value="4-split">Fifths (4-split)</option>
-        <option value="9-split">Tenths (9-split)</option>
-        <option value="golden">Golden Ratio</option>
-      </select>
-    </div>
-    <div class="control-group">
-      <label for="grid-color">Color</label>
-      <input type="color" id="grid-color" value="#000000" />
-    </div>
-    <div class="control-group">
-      <label for="grid-opacity">Opacity</label>
-      <input type="range" id="grid-opacity" min="0" max="255" value="150" />
-    </div>
-    <div class="control-group">
-      <label for="grid-thickness">Thickness</label>
-      <input type="range" id="grid-thickness" min="1" max="10" value="1" />
-    </div>
+<div id="grid-controls" class="control-panel draggable hidden">
+  <div class="drag-handle">:: Grid Controls</div>
+  <h3>Grid Overlay</h3>
+  <div class="control-group">
+    <label for="grid-toggle">Enable Grid</label>
+    <input type="checkbox" id="grid-toggle" />
   </div>
+  <div class="control-group">
+    <label for="grid-type">Type</label>
+    <select id="grid-type">
+      <option value="1-split">Crosshair (1-split)</option>
+      <option value="2-split">Thirds (2-split)</option>
+      <option value="3-split">Fourths (3-split)</option>
+      <option value="4-split">Fifths (4-split)</option>
+      <option value="9-split">Tenths (9-split)</option>
+      <option value="golden">Golden Ratio</option>
+    </select>
+  </div>
+  <div class="control-group">
+    <label for="grid-color">Color</label>
+    <input type="color" id="grid-color" value="#000000" />
+  </div>
+  <div class="control-group">
+    <label for="grid-opacity">Opacity</label>
+    <input type="range" id="grid-opacity" min="0" max="255" value="150" />
+  </div>
+  <div class="control-group">
+    <label for="grid-thickness">Thickness</label>
+    <input type="range" id="grid-thickness" min="1" max="10" value="1" />
+  </div>
+</div>
+
+<div id="halftone-controls" class="control-panel draggable hidden">
+  <div class="drag-handle">:: Halftone Controls</div>
+  <h3>Halftone Effect</h3>
+  <div class="control-group">
+    <label for="halftone-toggle">Enable Halftone</label>
+    <input type="checkbox" id="halftone-toggle" />
+  </div>
+  <div class="control-group">
+    <label for="halftone-type">Pattern</label>
+    <select id="halftone-type">
+      <option value="0">Circular Dots</option>
+      <option value="1">Line Screen</option>
+      <option value="2">Bayer Dither</option>
+    </select>
+  </div>
+  <div class="control-group">
+    <label for="halftone-size">Size/Frequency</label>
+    <input type="range" id="halftone-size" min="2" max="50" step="1" value="8" />
+  </div>
+  <div class="control-group">
+    <label for="halftone-angle">Angle (Deg)</label>
+    <input type="range" id="halftone-angle" min="0" max="180" step="1" value="45" />
+  </div>
+</div>
 
   <div id="info-box" class="info-box hidden">
     <h2>Monochromifier</h2>

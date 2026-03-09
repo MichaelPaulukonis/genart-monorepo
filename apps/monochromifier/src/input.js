@@ -334,6 +334,14 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
     state.showGridControls = !state.showGridControls
     state.dirty = true
     return false
+  } else if (p.key === 'j') {
+    state.showHalftoneControls = !state.showHalftoneControls
+    state.dirty = true
+    return false
+  } else if (p.key === 'k') {
+    state.showGridControls = !state.showGridControls
+    state.dirty = true
+    return false
   } else if (p.key === 'h' || p.key === 'H') {
     state.modal.showUI = !state.modal.showUI
     state.dirty = true
