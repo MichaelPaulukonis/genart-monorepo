@@ -90,6 +90,18 @@ makeDraggable(infoBox, { centered: true })
 makeDraggable(gridControls, { centered: false })
 makeDraggable(halftoneControls, { centered: false })
 
+// GLOBAL UI PROTECTION: Block all mouse events from reaching the p5.js canvas
+// when clicking anywhere inside a UI panel. This fixes bleed-through for
+// sliders, dropdowns, and buttons.
+const blockBleedThrough = (e) => e.stopPropagation()
+;[infoBox, gridControls, halftoneControls].forEach(panel => {
+  if (panel) {
+    panel.addEventListener('mousedown', blockBleedThrough)
+    panel.addEventListener('touchstart', blockBleedThrough, { passive: false })
+    panel.addEventListener('pointerdown', blockBleedThrough)
+  }
+})
+
 
 // Set up accessibility attributes for infoBox
 if (infoBox) {

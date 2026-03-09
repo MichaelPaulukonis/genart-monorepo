@@ -4,6 +4,7 @@ varying vec2 vTexCoord;
 
 uniform sampler2D uTexImage;
 uniform vec2 uTexSize;
+uniform float uThreshold;
 uniform int uPatternType; // 0: Dots, 1: Lines, 2: Dither
 uniform float uDotSize;   // Size of the grid cell
 uniform float uAngle;     // Rotation in radians
@@ -45,80 +46,80 @@ vec2 rotate(vec2 pt, float angle) {
   return vec2(pt.x * c - pt.y * s, pt.x * s + pt.y * c);
 }
 
+float getRawLuminance(vec2 uv, sampler2D tex) {
+  vec4 color = texture2D(tex, clamp(uv, 0.0, 1.0));
+  if (color.a == 0.0) return 1.0; 
+  return dot(color.rgb, vec3(0.299, 0.587, 0.114));
+}
+
 void main() {
-  // Use crisp sampling from the previous optimization
   vec2 clampedUV = clamp(vTexCoord, 0.0, 0.999999);
   vec2 pixelPos = clampedUV * uTexSize;
   
-  // Base sampling for luminance
-  vec4 color = texture2D(uTexImage, (floor(pixelPos) + 0.5) / uTexSize);
-  
-  // Early exit for fully transparent pixels
-  if (color.a == 0.0) {
-    gl_FragColor = uTransparencyMode ? vec4(0.0) : vec4(uBackgroundColor, 1.0);
-    return;
-  }
-
-  float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));
-  
-  // Early exit for extreme luminance values (performance optimization)
-  if (luminance < 0.001) {
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    return;
-  }
-  if (luminance > 0.999 && !uTransparencyMode) {
-    gl_FragColor = vec4(uBackgroundColor, 1.0);
-    return;
-  }
-
-  float result = 0.0;
+  float isInk = 0.0; 
 
   if (uPatternType == 0) { // CIRCULAR DOTS
     vec2 rotatedPos = rotate(pixelPos, uAngle);
     vec2 gridUv = fract(rotatedPos / uDotSize);
     vec2 cellCenter = (floor(rotatedPos / uDotSize) + 0.5) * uDotSize;
     
-    // Reverse rotation to sample original image at cell center
     vec2 samplePos = rotate(cellCenter, -uAngle);
-    vec4 cellColor = texture2D(uTexImage, clamp((floor(samplePos) + 0.5) / uTexSize, 0.0, 1.0));
-    float cellLuminance = dot(cellColor.rgb, vec3(0.299, 0.587, 0.114));
-    
-    float dist = distance(gridUv, vec2(0.5));
-    float radius = cellLuminance * 0.707; // 0.707 is approx sqrt(0.5) to fill diagonal
-    result = smoothstep(radius, radius - 0.1, dist);
+    float lum = getRawLuminance((floor(samplePos) + 0.5) / uTexSize, uTexImage);
 
-  } else if (uPatternType == 1) { // LINE SCREEN
+    // Dynamic Density: 
+    // New Formula: (Threshold * 2 - lum) ensures that:
+    // Threshold 0.0 -> max is (0.0 - 0.0) = 0.0 -> All White
+    // Threshold 1.0 -> min is (2.0 - 1.0) = 1.0 -> All Black
+    float density = clamp(uThreshold * 2.0 - lum, 0.0, 1.0);
+
+    float dist = distance(gridUv, vec2(0.5));
+    float radius = density * 0.707;
+
+    // Explicit overrides for the absolute edges of the slider
+    if (uThreshold >= 0.99) {
+      isInk = 1.0;
+    } else if (uThreshold <= 0.01) {
+      isInk = 0.0;
+    } else if (density >= 0.99) {
+      isInk = 1.0;
+    } else if (density <= 0.01) {
+      isInk = 0.0;
+    } else {
+      isInk = smoothstep(radius, radius - 0.1, dist);
+    }
+
+    } else if (uPatternType == 1) { // LINE SCREEN
     vec2 rotatedPos = rotate(pixelPos, uAngle);
     float wave = sin(rotatedPos.x * (6.28318 / uDotSize)) * 0.5 + 0.5;
-    result = step(wave, 1.0 - luminance);
+    float lum = getRawLuminance((floor(pixelPos) + 0.5) / uTexSize, uTexImage);
 
-  } else if (uPatternType == 2) { // BAYER DITHER
-    float threshold = bayer8x8(pixelPos);
-    result = luminance > threshold ? 1.0 : 0.0;
-  }
+    float density = clamp(uThreshold * 2.0 - lum, 0.0, 1.0);
+    if (uThreshold >= 0.99) isInk = 1.0;
+    else if (uThreshold <= 0.01) isInk = 0.0;
+    else isInk = step(wave, density);
 
+    } else if (uPatternType == 2) { // BAYER DITHER
+    float thresholdMat = bayer8x8(pixelPos);
+    float lum = getRawLuminance((floor(pixelPos) + 0.5) / uTexSize, uTexImage);
+
+    float density = clamp(uThreshold * 2.0 - lum, 0.0, 1.0);
+    if (uThreshold >= 0.99) isInk = 1.0;
+    else if (uThreshold <= 0.01) isInk = 0.0;
+    else isInk = density > thresholdMat ? 1.0 : 0.0;
+    }
   // Apply Invert
   if (uInvert) {
-    result = 1.0 - result;
+    isInk = 1.0 - isInk;
   }
 
-  // Composite Output
-  if (uTransparencyMode) {
-    // Halftone Transparency Logic: 
-    // Usually, we want the pattern to represent "ink".
-    // 1.0 (White in halftone logic) becomes transparent.
-    // 0.0 (Black in halftone logic) stays black.
-    if (result > 0.5) {
+  // Final Output
+  if (isInk > 0.5) {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+  } else {
+    if (uTransparencyMode) {
       gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
     } else {
-      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    }
-  } else {
-    // Standard Mode: result 1.0 is Background, 0.0 is Black
-    if (result > 0.5) {
       gl_FragColor = vec4(uBackgroundColor, 1.0);
-    } else {
-      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     }
   }
 }
