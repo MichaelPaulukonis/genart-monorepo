@@ -45,9 +45,8 @@ function makeDraggable(element, options = {}) {
       if (['INPUT', 'SELECT', 'BUTTON', 'LABEL', 'A'].includes(e.target.tagName)) return
     }
 
-    // Special check for infoBox to allow dragging on box + headers (legacy logic preserved/adapted)
-    // The original logic was: if (e.target === infoBox || e.target.tagName === 'H2' || e.target.tagName === 'H3')
-    // We can generalize: don't drag if interacting with controls.
+    // Prevent event from reaching p5.js canvas
+    e.stopPropagation()
     
     initialX = e.clientX - xOffset
     initialY = e.clientY - yOffset

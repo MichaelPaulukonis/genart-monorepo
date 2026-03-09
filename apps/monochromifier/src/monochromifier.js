@@ -195,11 +195,11 @@ const sketch = function (p) {
     gridOpacity.value = state.gridOpacity
     gridThickness.value = state.gridThickness
 
-    gridToggle.addEventListener('change', (e) => { state.showGrid = e.target.checked; state.dirty = true; saveSettings() })
-    gridType.addEventListener('change', (e) => { state.gridType = e.target.value; state.dirty = true; saveSettings() })
-    gridColor.addEventListener('input', (e) => { state.gridColor = e.target.value; state.dirty = true; saveSettings() })
-    gridOpacity.addEventListener('input', (e) => { state.gridOpacity = e.target.value; state.dirty = true; saveSettings() })
-    gridThickness.addEventListener('input', (e) => { state.gridThickness = e.target.value; state.dirty = true; saveSettings() })
+    gridToggle.addEventListener('change', (e) => { e.stopPropagation(); state.showGrid = e.target.checked; state.dirty = true; saveSettings() })
+    gridType.addEventListener('change', (e) => { e.stopPropagation(); state.gridType = e.target.value; state.dirty = true; saveSettings() })
+    gridColor.addEventListener('input', (e) => { e.stopPropagation(); state.gridColor = e.target.value; state.dirty = true; saveSettings() })
+    gridOpacity.addEventListener('input', (e) => { e.stopPropagation(); state.gridOpacity = e.target.value; state.dirty = true; saveSettings() })
+    gridThickness.addEventListener('input', (e) => { e.stopPropagation(); state.gridThickness = e.target.value; state.dirty = true; saveSettings() })
   }
 
   const initHalftoneControls = () => {
@@ -216,24 +216,28 @@ const sketch = function (p) {
     angle.value = state.halftone.angle
 
     toggle.addEventListener('change', (e) => { 
+      e.stopPropagation()
       state.halftone.enabled = e.target.checked
       state.dirty = true
       saveSettings() 
       buildCombinedLayer(state.img)
     })
     type.addEventListener('change', (e) => { 
+      e.stopPropagation()
       state.halftone.patternType = parseInt(e.target.value)
       state.dirty = true
       saveSettings()
       buildCombinedLayer(state.img)
     })
     size.addEventListener('input', (e) => { 
+      e.stopPropagation()
       state.halftone.dotSize = parseFloat(e.target.value)
       state.dirty = true
       saveSettings()
       buildCombinedLayer(state.img)
     })
     angle.addEventListener('input', (e) => { 
+      e.stopPropagation()
       state.halftone.angle = parseFloat(e.target.value)
       state.dirty = true
       saveSettings()

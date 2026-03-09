@@ -118,7 +118,20 @@ export function mouseReleased(p, state, { drawLine, performCrop }) {
   state.previousMouse = { x: 0, y: 0 }
 }
 
+function isUIElement(event) {
+  if (!event || !event.target) return false
+  const target = event.target
+  // Ignore events if they originate from a control panel or info box
+  return target.closest('.control-panel') || target.closest('.info-box')
+}
+
 export function mousePressed(p, state, { drawPaintLine }) {
+  // Best practice: Ignore events that originate from UI overlays
+  if (isUIElement(p.mouseEvent)) return
+
+  // Definitive check: only allow processing if the target is the canvas
+  if (p.mouseEvent && p.mouseEvent.target && p.mouseEvent.target.tagName !== 'CANVAS') return
+
   if (state.appMode === state.modes.EDIT && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
     if (state.editTool === state.editTools.PAINT) {
       if (p.keyIsDown(91)) {
