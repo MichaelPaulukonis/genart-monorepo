@@ -66,6 +66,8 @@ export class WebGLProcessor {
     activeShader.setUniform('uInvert', state.invert);
     activeShader.setUniform('uTransparencyMode', state.transparencyModeEnabled);
     activeShader.setUniform('uTransparencyThreshold', state.transparencyThreshold);
+    activeShader.setUniform('uColorMode', state.colorMode ?? 0);
+    activeShader.setUniform('uChannelWeights', state.channelWeights ?? [1.0, 0.0, 0.0]);
     
     const bg = state.backgroundColor;
     activeShader.setUniform('uBackgroundColor', [

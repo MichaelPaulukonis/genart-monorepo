@@ -175,12 +175,20 @@
   --version-text-color: #888;
 }
 
+/* Sidebar that holds all control panels */
+#controls-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+  width: 230px;
+  min-width: 230px;
+}
+
 /* Control Panels (Grid, Halftone, etc.) */
 .control-panel {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 220px;
+  position: relative;
+  width: auto;
   padding: 15px;
   background-color: rgba(30, 30, 30, 0.8);
   color: #eeeeee;
@@ -190,12 +198,6 @@
   z-index: 500;
   font-family: sans-serif;
   text-align: left;
-}
-
-/* Specific offsets for initial positioning if multiple are visible */
-#halftone-controls {
-  top: 10px;
-  right: 250px;
 }
 
 .control-panel.draggable {
@@ -255,4 +257,37 @@
 
 .control-group input[type="range"] {
   padding: 0;
+}
+
+/* Slider row: range input + value display side by side */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slider-row input[type="range"] {
+  flex: 1;
+  width: auto; /* override the 100% from .control-group */
+}
+
+.slider-value {
+  font-size: 0.82em;
+  color: #aaa;
+  min-width: 40px;
+  text-align: right;
+  font-family: monospace;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+/* Disabled slider */
+.control-group input[type="range"]:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Dim the custom-weights section when another mode is active */
+#custom-weights-group.weights-inactive {
+  opacity: 0.45;
 }

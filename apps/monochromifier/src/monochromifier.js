@@ -88,6 +88,12 @@ const sketch = function (p) {
       angle: 45
     },
 
+    // Color / grayscale source mode
+    // 0=avg (full color pass), 1=red, 2=green, 3=blue, 4=luminance (Rec.709), 5=custom
+    showColorModeControls: true,
+    colorMode: 0,
+    channelWeights: [1.0, 0.0, 0.0],
+
     webglProcessor: null
   }
 
@@ -124,6 +130,7 @@ const sketch = function (p) {
     loadSettings()
     initGridControls()
     initHalftoneControls()
+    initColorModeControls()
 
     processImage(state.img)
   }
@@ -150,6 +157,14 @@ const sketch = function (p) {
         state.halftone.dotSize = h.dotSize ?? state.halftone.dotSize
         state.halftone.angle = h.angle ?? state.halftone.angle
       }
+
+      const savedColorMode = localStorage.getItem('monochromifier_colormode_settings')
+      if (savedColorMode) {
+        const c = JSON.parse(savedColorMode)
+        state.showColorModeControls = c.showColorModeControls ?? state.showColorModeControls
+        state.colorMode = c.colorMode ?? state.colorMode
+        state.channelWeights = c.channelWeights ?? state.channelWeights
+      }
     } catch (e) {
       console.error('Failed to load settings', e)
     }
@@ -175,6 +190,13 @@ const sketch = function (p) {
         angle: state.halftone.angle
       }
       localStorage.setItem('monochromifier_halftone_settings', JSON.stringify(halftoneSettings))
+
+      const colorModeSettings = {
+        showColorModeControls: state.showColorModeControls,
+        colorMode: state.colorMode,
+        channelWeights: state.channelWeights
+      }
+      localStorage.setItem('monochromifier_colormode_settings', JSON.stringify(colorModeSettings))
     } catch (e) {
       console.error('Failed to save settings', e)
     }
@@ -186,6 +208,8 @@ const sketch = function (p) {
     const gridColor = document.getElementById('grid-color')
     const gridOpacity = document.getElementById('grid-opacity')
     const gridThickness = document.getElementById('grid-thickness')
+    const gridOpacityVal = document.getElementById('grid-opacity-value')
+    const gridThicknessVal = document.getElementById('grid-thickness-value')
 
     if (!gridToggle) return // Elements might not exist if HTML not updated
 
@@ -194,12 +218,26 @@ const sketch = function (p) {
     gridColor.value = state.gridColor
     gridOpacity.value = state.gridOpacity
     gridThickness.value = state.gridThickness
+    if (gridOpacityVal) gridOpacityVal.textContent = state.gridOpacity
+    if (gridThicknessVal) gridThicknessVal.textContent = state.gridThickness
 
     gridToggle.addEventListener('change', (e) => { e.stopPropagation(); state.showGrid = e.target.checked; state.dirty = true; saveSettings() })
     gridType.addEventListener('change', (e) => { e.stopPropagation(); state.gridType = e.target.value; state.dirty = true; saveSettings() })
     gridColor.addEventListener('input', (e) => { e.stopPropagation(); state.gridColor = e.target.value; state.dirty = true; saveSettings() })
-    gridOpacity.addEventListener('input', (e) => { e.stopPropagation(); state.gridOpacity = e.target.value; state.dirty = true; saveSettings() })
-    gridThickness.addEventListener('input', (e) => { e.stopPropagation(); state.gridThickness = e.target.value; state.dirty = true; saveSettings() })
+    gridOpacity.addEventListener('input', (e) => {
+      e.stopPropagation()
+      state.gridOpacity = e.target.value
+      if (gridOpacityVal) gridOpacityVal.textContent = e.target.value
+      state.dirty = true
+      saveSettings()
+    })
+    gridThickness.addEventListener('input', (e) => {
+      e.stopPropagation()
+      state.gridThickness = e.target.value
+      if (gridThicknessVal) gridThicknessVal.textContent = e.target.value
+      state.dirty = true
+      saveSettings()
+    })
   }
 
   const initHalftoneControls = () => {
@@ -207,6 +245,8 @@ const sketch = function (p) {
     const type = document.getElementById('halftone-type')
     const size = document.getElementById('halftone-size')
     const angle = document.getElementById('halftone-angle')
+    const sizeVal = document.getElementById('halftone-size-value')
+    const angleVal = document.getElementById('halftone-angle-value')
 
     if (!toggle) return
 
@@ -214,35 +254,110 @@ const sketch = function (p) {
     type.value = state.halftone.patternType
     size.value = state.halftone.dotSize
     angle.value = state.halftone.angle
+    if (sizeVal) sizeVal.textContent = state.halftone.dotSize
+    if (angleVal) angleVal.textContent = `${state.halftone.angle}°`
 
-    toggle.addEventListener('change', (e) => { 
+    toggle.addEventListener('change', (e) => {
       e.stopPropagation()
       state.halftone.enabled = e.target.checked
       state.dirty = true
-      saveSettings() 
+      saveSettings()
       buildCombinedLayer(state.img)
     })
-    type.addEventListener('change', (e) => { 
+    type.addEventListener('change', (e) => {
       e.stopPropagation()
       state.halftone.patternType = parseInt(e.target.value)
       state.dirty = true
       saveSettings()
       buildCombinedLayer(state.img)
     })
-    size.addEventListener('input', (e) => { 
+    size.addEventListener('input', (e) => {
       e.stopPropagation()
       state.halftone.dotSize = parseFloat(e.target.value)
+      if (sizeVal) sizeVal.textContent = e.target.value
       state.dirty = true
       saveSettings()
       buildCombinedLayer(state.img)
     })
-    angle.addEventListener('input', (e) => { 
+    angle.addEventListener('input', (e) => {
       e.stopPropagation()
       state.halftone.angle = parseFloat(e.target.value)
+      if (angleVal) angleVal.textContent = `${e.target.value}°`
       state.dirty = true
       saveSettings()
       buildCombinedLayer(state.img)
     })
+  }
+
+  const initColorModeControls = () => {
+    const modeSelect = document.getElementById('color-mode')
+    const customWeightsGroup = document.getElementById('custom-weights-group')
+    const weightR = document.getElementById('weight-r')
+    const weightG = document.getElementById('weight-g')
+    const weightB = document.getElementById('weight-b')
+    const weightRVal = document.getElementById('weight-r-value')
+    const weightGVal = document.getElementById('weight-g-value')
+    const weightBVal = document.getElementById('weight-b-value')
+
+    if (!modeSelect) return
+
+    // Effective weight vectors shown in the (disabled) sliders for each non-custom mode
+    const EFFECTIVE_WEIGHTS = {
+      0: [1 / 3, 1 / 3, 1 / 3],
+      1: [1.0, 0.0, 0.0],
+      2: [0.0, 1.0, 0.0],
+      3: [0.0, 0.0, 1.0],
+      4: [0.2126, 0.7152, 0.0722]
+    }
+
+    const fmt = (v) => parseFloat(v).toFixed(3)
+
+    const updateWeightSliders = () => {
+      const isCustom = state.colorMode === 5
+      const weights = isCustom
+        ? state.channelWeights
+        : (EFFECTIVE_WEIGHTS[state.colorMode] || [1 / 3, 1 / 3, 1 / 3])
+
+      weightR.disabled = !isCustom
+      weightG.disabled = !isCustom
+      weightB.disabled = !isCustom
+      customWeightsGroup.classList.toggle('weights-inactive', !isCustom)
+
+      weightR.value = weights[0]
+      weightG.value = weights[1]
+      weightB.value = weights[2]
+      if (weightRVal) weightRVal.textContent = fmt(weights[0])
+      if (weightGVal) weightGVal.textContent = fmt(weights[1])
+      if (weightBVal) weightBVal.textContent = fmt(weights[2])
+    }
+
+    modeSelect.value = state.colorMode
+    updateWeightSliders()
+
+    modeSelect.addEventListener('change', (e) => {
+      e.stopPropagation()
+      state.colorMode = parseInt(e.target.value)
+      updateWeightSliders()
+      saveSettings()
+      buildCombinedLayer(state.img)
+    })
+
+    const onWeightChange = () => {
+      state.channelWeights = [
+        parseFloat(weightR.value),
+        parseFloat(weightG.value),
+        parseFloat(weightB.value)
+      ]
+      if (weightRVal) weightRVal.textContent = fmt(weightR.value)
+      if (weightGVal) weightGVal.textContent = fmt(weightG.value)
+      if (weightBVal) weightBVal.textContent = fmt(weightB.value)
+      saveSettings()
+      buildCombinedLayer(state.img)
+    }
+
+    weightR.addEventListener('input', (e) => { e.stopPropagation(); onWeightChange() })
+    weightG.addEventListener('input', (e) => { e.stopPropagation(); onWeightChange() })
+    weightB.addEventListener('input', (e) => { e.stopPropagation(); onWeightChange() })
   }
 
   const updatePaintScale = (w, h) => {
@@ -406,6 +521,15 @@ const sketch = function (p) {
           halftoneControls.classList.remove('hidden')
         } else {
           halftoneControls.classList.add('hidden')
+        }
+      }
+
+      const colorModeControls = document.getElementById('color-mode-controls')
+      if (colorModeControls) {
+        if (state.modal.showUI && state.showColorModeControls) {
+          colorModeControls.classList.remove('hidden')
+        } else {
+          colorModeControls.classList.add('hidden')
         }
       }
 

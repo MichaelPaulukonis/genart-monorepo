@@ -1,17 +1,23 @@
-html,
+html {
+  margin: 0;
+  padding: 0;
+  background-color: grey;
+}
+
 body {
   margin: 0;
-  padding: 5px;
-  align-items: center;
-  text-align: center;
+  padding: 10px;
   background-color: grey;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 canvas {
   display: block;
-  margin: auto;
-  /* margin-top: 50px; */
-  display: block;
+  flex-shrink: 0;
+  order: -1; /* p5 appends canvas after sidebar in DOM; this pulls it visually first */
 }
 
 /* Options in index.html */

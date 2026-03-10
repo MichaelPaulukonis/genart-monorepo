@@ -5,6 +5,7 @@ import { formatVersion } from './utils/version.js'
 const infoBox = document.getElementById('info-box')
 const gridControls = document.getElementById('grid-controls')
 const halftoneControls = document.getElementById('halftone-controls')
+const colorModeControls = document.getElementById('color-mode-controls')
 const closeButton = document.getElementById('close-info-box')
 
 // Check for required DOM elements
@@ -89,12 +90,13 @@ function setTranslate(xPos, yPos, el, centered) {
 makeDraggable(infoBox, { centered: true })
 makeDraggable(gridControls, { centered: false })
 makeDraggable(halftoneControls, { centered: false })
+makeDraggable(colorModeControls, { centered: false })
 
 // GLOBAL UI PROTECTION: Block all mouse events from reaching the p5.js canvas
 // when clicking anywhere inside a UI panel. This fixes bleed-through for
 // sliders, dropdowns, and buttons.
 const blockBleedThrough = (e) => e.stopPropagation()
-;[infoBox, gridControls, halftoneControls].forEach(panel => {
+;[infoBox, gridControls, halftoneControls, colorModeControls].forEach(panel => {
   if (panel) {
     panel.addEventListener('mousedown', blockBleedThrough)
     panel.addEventListener('touchstart', blockBleedThrough, { passive: false })

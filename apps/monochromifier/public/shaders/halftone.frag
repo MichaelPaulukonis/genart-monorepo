@@ -13,6 +13,26 @@ uniform bool uInvert;
 uniform vec3 uBackgroundColor;
 uniform bool uTransparencyMode;
 uniform float uTransparencyThreshold;
+uniform int uColorMode;       // 0=avg, 1=red, 2=green, 3=blue, 4=luminance, 5=custom
+uniform vec3 uChannelWeights; // used when uColorMode == 5
+
+// --- Color-mode helpers ---
+
+float luminance(vec3 color) {
+  return dot(color, vec3(0.2126, 0.7152, 0.0722));
+}
+
+// Returns the processed color vec3.
+// For grayscale modes (1-5) all components are equal.
+// For mode 0 (full color pass) returns the original RGB.
+vec3 applyColorMode(vec3 color) {
+  if (uColorMode == 1) return vec3(color.r);
+  if (uColorMode == 2) return vec3(color.g);
+  if (uColorMode == 3) return vec3(color.b);
+  if (uColorMode == 4) return vec3(luminance(color));
+  if (uColorMode == 5) return vec3(dot(color, uChannelWeights));
+  return color; // mode 0: full color pass (average used downstream)
+}
 
 // 8x8 Bayer Matrix for Ordered Dithering
 float bayer8x8(vec2 uv) {
@@ -37,7 +57,7 @@ float bayer8x8(vec2 uv) {
   if (index == 52) return 13.0/64.0; if (index == 53) return 45.0/64.0; if (index == 54) return 5.0/64.0; if (index == 55) return 37.0/64.0;
   if (index == 56) return 63.0/64.0; if (index == 57) return 31.0/64.0; if (index == 58) return 55.0/64.0; if (index == 59) return 23.0/64.0;
   if (index == 60) return 61.0/64.0; if (index == 61) return 29.0/64.0; if (index == 62) return 53.0/64.0; if (index == 63) return 21.0/64.0;
-  
+
   return 0.0;
 }
 
@@ -47,27 +67,30 @@ vec2 rotate(vec2 pt, float angle) {
   return vec2(pt.x * c - pt.y * s, pt.x * s + pt.y * c);
 }
 
+// Returns a single gray value in [0,1] for the pixel at `uv` in `tex`,
+// respecting the active uColorMode.
 float getRawLuminance(vec2 uv, sampler2D tex) {
   vec4 color = texture2D(tex, clamp(uv, 0.0, 1.0));
-  if (color.a == 0.0) return 1.0; 
-  return dot(color.rgb, vec3(0.299, 0.587, 0.114));
+  if (color.a == 0.0) return 1.0;
+  vec3 processed = applyColorMode(color.rgb);
+  return dot(processed, vec3(1.0 / 3.0));
 }
 
 void main() {
   vec2 clampedUV = clamp(vTexCoord, 0.0, 0.999999);
   vec2 pixelPos = clampedUV * uTexSize;
-  
-  float isInk = 0.0; 
+
+  float isInk = 0.0;
 
   if (uPatternType == 0) { // CIRCULAR DOTS
     vec2 rotatedPos = rotate(pixelPos, uAngle);
     vec2 gridUv = fract(rotatedPos / uDotSize);
     vec2 cellCenter = (floor(rotatedPos / uDotSize) + 0.5) * uDotSize;
-    
+
     vec2 samplePos = rotate(cellCenter, -uAngle);
     float lum = getRawLuminance((floor(samplePos) + 0.5) / uTexSize, uTexImage);
 
-    // Dynamic Density: 
+    // Dynamic Density:
     // New Formula: (Threshold * 2 - lum) ensures that:
     // Threshold 0.0 -> max is (0.0 - 0.0) = 0.0 -> All White
     // Threshold 1.0 -> min is (2.0 - 1.0) = 1.0 -> All Black
@@ -89,7 +112,7 @@ void main() {
       isInk = smoothstep(radius, radius - 0.1, dist);
     }
 
-    } else if (uPatternType == 1) { // LINE SCREEN
+  } else if (uPatternType == 1) { // LINE SCREEN
     vec2 rotatedPos = rotate(pixelPos, uAngle);
     float wave = sin(rotatedPos.x * (6.28318 / uDotSize)) * 0.5 + 0.5;
     float lum = getRawLuminance((floor(pixelPos) + 0.5) / uTexSize, uTexImage);
@@ -99,7 +122,7 @@ void main() {
     else if (uThreshold <= 0.01) isInk = 0.0;
     else isInk = step(wave, density);
 
-    } else if (uPatternType == 2) { // BAYER DITHER
+  } else if (uPatternType == 2) { // BAYER DITHER
     float thresholdMat = bayer8x8(pixelPos);
     float lum = getRawLuminance((floor(pixelPos) + 0.5) / uTexSize, uTexImage);
 
@@ -107,7 +130,8 @@ void main() {
     if (uThreshold >= 0.99) isInk = 1.0;
     else if (uThreshold <= 0.01) isInk = 0.0;
     else isInk = density > thresholdMat ? 1.0 : 0.0;
-    }
+  }
+
   // Apply Invert
   if (uInvert) {
     isInk = 1.0 - isInk;
