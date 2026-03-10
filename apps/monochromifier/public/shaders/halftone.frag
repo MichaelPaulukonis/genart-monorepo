@@ -3,6 +3,7 @@ precision highp float;
 varying vec2 vTexCoord;
 
 uniform sampler2D uTexImage;
+uniform sampler2D uTexPaint;
 uniform vec2 uTexSize;
 uniform float uThreshold;
 uniform int uPatternType; // 0: Dots, 1: Lines, 2: Dither
@@ -113,13 +114,34 @@ void main() {
   }
 
   // Final Output
+  vec4 finalColor;
   if (isInk > 0.5) {
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    finalColor = vec4(0.0, 0.0, 0.0, 1.0);
   } else {
     if (uTransparencyMode) {
-      gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+      finalColor = vec4(0.0, 0.0, 0.0, 0.0);
     } else {
-      gl_FragColor = vec4(uBackgroundColor, 1.0);
+      finalColor = vec4(uBackgroundColor, 1.0);
     }
+  }
+
+  // Composite Paint Layer on top (same logic as monochrome shader)
+  vec2 paintUV = clamp(vTexCoord, 0.0, 0.999999);
+  vec2 paintPixel = paintUV * uTexSize;
+  vec2 paintSnapped = floor(paintPixel) + 0.5;
+  vec4 paintColor = texture2D(uTexPaint, paintSnapped / uTexSize);
+
+  // Unpremultiply: canvas2d backing store is premultiplied alpha
+  vec4 paint;
+  if (paintColor.a > 0.0001) {
+    paint = vec4(paintColor.rgb / paintColor.a, paintColor.a);
+  } else {
+    paint = vec4(0.0);
+  }
+
+  if (uTransparencyMode) {
+    gl_FragColor = mix(finalColor, vec4(0.0, 0.0, 0.0, 0.0), paint.a);
+  } else {
+    gl_FragColor = mix(finalColor, vec4(paint.rgb, 1.0), paint.a);
   }
 }

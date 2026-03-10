@@ -60,5 +60,21 @@ void main() {
   }
 
   // 5. Composite Paint Layer on top
-  gl_FragColor = mix(finalColor, vec4(paintColor.rgb, 1.0), paintColor.a);
+  // Unpremultiply paint color: canvas2d backing store uses premultiplied alpha,
+  // so edge pixels arrive as (R*a, G*a, B*a, a) instead of (R, G, B, a).
+  // Without unpremultiplying, semi-transparent stroke edges appear much darker (black halos).
+  vec4 paint;
+  if (paintColor.a > 0.0001) {
+    paint = vec4(paintColor.rgb / paintColor.a, paintColor.a);
+  } else {
+    paint = vec4(0.0);
+  }
+
+  if (uTransparencyMode) {
+    // In transparency mode, white paint = transparent (same rule as white pixels).
+    // Blend toward transparent so painted areas export as transparent, not opaque white.
+    gl_FragColor = mix(finalColor, vec4(0.0, 0.0, 0.0, 0.0), paint.a);
+  } else {
+    gl_FragColor = mix(finalColor, vec4(paint.rgb, 1.0), paint.a);
+  }
 }
