@@ -69,10 +69,26 @@ vec2 rotate(vec2 pt, float angle) {
 
 // Returns a single gray value in [0,1] for the pixel at `uv` in `tex`,
 // respecting the active uColorMode.
+// Paint is composited onto the source BEFORE computing luminance so that
+// paint strokes influence halftone density rather than being stamped over
+// the finished pattern (which would produce scalloped dot/line edges).
 float getRawLuminance(vec2 uv, sampler2D tex) {
-  vec4 color = texture2D(tex, clamp(uv, 0.0, 1.0));
-  if (color.a == 0.0) return 1.0;
-  vec3 processed = applyColorMode(color.rgb);
+  vec4 imgColor = texture2D(tex, clamp(uv, 0.0, 1.0));
+  vec4 paintColor = texture2D(uTexPaint, clamp(uv, 0.0, 1.0));
+
+  // Unpremultiply paint (canvas2d backing store is premultiplied)
+  vec4 paint;
+  if (paintColor.a > 0.0001) {
+    paint = vec4(paintColor.rgb / paintColor.a, paintColor.a);
+  } else {
+    paint = vec4(0.0);
+  }
+
+  float effectiveAlpha = imgColor.a + paint.a * (1.0 - imgColor.a);
+  if (effectiveAlpha < 0.001) return 1.0; // fully transparent — no ink
+
+  vec3 combined = mix(imgColor.rgb, paint.rgb, paint.a);
+  vec3 processed = applyColorMode(combined);
   return dot(processed, vec3(1.0 / 3.0));
 }
 
@@ -83,33 +99,37 @@ void main() {
   float isInk = 0.0;
 
   if (uPatternType == 0) { // CIRCULAR DOTS
-    vec2 rotatedPos = rotate(pixelPos, uAngle);
-    vec2 gridUv = fract(rotatedPos / uDotSize);
-    vec2 cellCenter = (floor(rotatedPos / uDotSize) + 0.5) * uDotSize;
-
-    vec2 samplePos = rotate(cellCenter, -uAngle);
-    float lum = getRawLuminance((floor(samplePos) + 0.5) / uTexSize, uTexImage);
-
-    // Dynamic Density:
-    // New Formula: (Threshold * 2 - lum) ensures that:
-    // Threshold 0.0 -> max is (0.0 - 0.0) = 0.0 -> All White
-    // Threshold 1.0 -> min is (2.0 - 1.0) = 1.0 -> All Black
-    float density = clamp(uThreshold * 2.0 - lum, 0.0, 1.0);
-
-    float dist = distance(gridUv, vec2(0.5));
-    float radius = density * 0.707;
-
-    // Explicit overrides for the absolute edges of the slider
     if (uThreshold >= 0.99) {
       isInk = 1.0;
     } else if (uThreshold <= 0.01) {
       isInk = 0.0;
-    } else if (density >= 0.99) {
-      isInk = 1.0;
-    } else if (density <= 0.01) {
-      isInk = 0.0;
     } else {
-      isInk = smoothstep(radius, radius - 0.1, dist);
+      vec2 rotatedPos = rotate(pixelPos, uAngle);
+      vec2 cellCoord = floor(rotatedPos / uDotSize);
+
+      // Check this cell and its 8 neighbors.
+      // When density is high a dot's radius exceeds its cell boundary. Without
+      // neighbor checks, those overflow pixels fall back to their own cell's
+      // (smaller) dot and the large circle gets clipped into a rounded-rectangle
+      // blob. Sampling adjacent cells ensures every pixel that geometrically
+      // falls inside any dot is correctly marked as ink.
+      for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+          vec2 nc        = cellCoord + vec2(float(dx), float(dy));
+          vec2 ncCenter  = (nc + 0.5) * uDotSize;                        // rotated space
+          vec2 ncWorld   = rotate(ncCenter, -uAngle);
+          float lum      = getRawLuminance((floor(ncWorld) + 0.5) / uTexSize, uTexImage);
+          float density  = clamp(uThreshold * 2.0 - lum, 0.0, 1.0);
+          if (density <= 0.01) continue;
+
+          // dist is in cell units; radius 1.414 (= 2 * sqrt(2)/2) lets dots
+          // overlap neighbours at high density, closing corner gaps and enabling
+          // large abstract dots at extreme settings.
+          float dist   = distance(rotatedPos, ncCenter) / uDotSize;
+          float radius = density * 1.414;
+          isInk = max(isInk, smoothstep(radius, radius - 0.1, dist));
+        }
+      }
     }
 
   } else if (uPatternType == 1) { // LINE SCREEN
@@ -137,35 +157,15 @@ void main() {
     isInk = 1.0 - isInk;
   }
 
-  // Final Output
-  vec4 finalColor;
+  // Final Output — paint is already baked into the luminance via getRawLuminance,
+  // so no separate paint composite step is needed here.
   if (isInk > 0.5) {
-    finalColor = vec4(0.0, 0.0, 0.0, 1.0);
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
   } else {
     if (uTransparencyMode) {
-      finalColor = vec4(0.0, 0.0, 0.0, 0.0);
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
     } else {
-      finalColor = vec4(uBackgroundColor, 1.0);
+      gl_FragColor = vec4(uBackgroundColor, 1.0);
     }
-  }
-
-  // Composite Paint Layer on top (same logic as monochrome shader)
-  vec2 paintUV = clamp(vTexCoord, 0.0, 0.999999);
-  vec2 paintPixel = paintUV * uTexSize;
-  vec2 paintSnapped = floor(paintPixel) + 0.5;
-  vec4 paintColor = texture2D(uTexPaint, paintSnapped / uTexSize);
-
-  // Unpremultiply: canvas2d backing store is premultiplied alpha
-  vec4 paint;
-  if (paintColor.a > 0.0001) {
-    paint = vec4(paintColor.rgb / paintColor.a, paintColor.a);
-  } else {
-    paint = vec4(0.0);
-  }
-
-  if (uTransparencyMode) {
-    gl_FragColor = mix(finalColor, vec4(0.0, 0.0, 0.0, 0.0), paint.a);
-  } else {
-    gl_FragColor = mix(finalColor, vec4(paint.rgb, 1.0), paint.a);
   }
 }

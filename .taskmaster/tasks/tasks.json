@@ -2812,7 +2812,7 @@
   "monochrome": {
     "tasks": [
       {
-        "id": 1,
+        "id": "1",
         "title": "Research and evaluate WebGL for performance optimization",
         "description": "Investigate WebGL implementation to determine if it can provide significant performance improvements for image processing operations compared to current Canvas2D approach.",
         "details": "1. **Initial Research & Benchmarking**\n   - Research existing WebGL libraries for image processing (e.g., glfx.js, TWGL.js, GPU.js)\n   - Create performance benchmarks comparing Canvas2D vs WebGL for common operations (blur, brightness/contrast, color adjustments)\n   - Measure FPS, memory usage, and processing time for various image sizes (512x512, 1024x1024, 2048x2048)\n   - Document browser compatibility and WebGL feature support matrix\n\n2. **Proof of Concept Implementation**\n   - Set up basic WebGL context and shader compilation system\n   - Implement 2-3 core image processing operations as WebGL shaders:\n     - Fragment shader for brightness/contrast adjustment\n     - Fragment shader for Gaussian blur\n     - Fragment shader for hue/saturation adjustment\n   - Create wrapper class to abstract WebGL complexity (WebGLProcessor)\n   - Ensure graceful fallback to Canvas2D if WebGL is unavailable\n\n3. **Integration Architecture Design**\n   - Design interface that mirrors current Canvas2D processor API for drop-in replacement\n   - Plan texture management strategy (creating, updating, and disposing WebGL textures)\n   - Design shader program caching mechanism to avoid recompilation\n   - Document memory management considerations (framebuffer cleanup, context loss handling)\n\n4. **Technical Considerations**\n   - Handle WebGL context loss/restoration events\n   - Implement proper error handling for shader compilation failures\n   - Consider mobile device performance and GPU limitations\n   - Evaluate security implications (CORS issues with WebGL textures)\n   - Assess impact on bundle size when adding WebGL dependencies",
@@ -2828,7 +2828,8 @@
             "dependencies": [],
             "details": "1. Evaluate WebGL libraries: glfx.js for filter effects, TWGL.js for low-level WebGL helpers, GPU.js for GPU computation\n2. Create benchmark suite measuring: FPS during continuous processing, memory usage (heap snapshots), processing time per operation\n3. Test with representative image sizes: 512x512, 1024x1024, 2048x2048, 4096x4096\n4. Benchmark operations: brightness/contrast, Gaussian blur, thresholding, inversion\n5. Document browser compatibility matrix (Chrome, Firefox, Safari, Edge) and WebGL feature support\n6. Measure bundle size impact of each library\n7. Create baseline metrics with current Canvas2D implementation for comparison",
             "status": "done",
-            "testStrategy": "Run automated benchmark suite across 5 different image sizes and 4 browsers. Verify statistical significance of results with minimum 100 iterations per test. Document performance improvement thresholds (target: 2x+ improvement for blur operations)."
+            "testStrategy": "Run automated benchmark suite across 5 different image sizes and 4 browsers. Verify statistical significance of results with minimum 100 iterations per test. Document performance improvement thresholds (target: 2x+ improvement for blur operations).",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2839,7 +2840,8 @@
             ],
             "details": "1. Initialize p5.js instance with WEBGL mode instead of default renderer\n2. Create shader compilation utility class that handles: vertex shader setup, fragment shader compilation, error logging for compilation failures\n3. Implement WebGL context loss/restoration event handlers (webglcontextlost, webglcontextrestored)\n4. Create WebGLProcessor wrapper class to abstract p5.js shader API complexity\n5. Set up framebuffer object (FBO) for offscreen rendering to maintain image state\n6. Implement graceful fallback detection: check for WebGL support, fallback to Canvas2D if unavailable\n7. Create basic passthrough shader that simply renders input texture to screen",
             "status": "done",
-            "testStrategy": ""
+            "testStrategy": "",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2850,7 +2852,8 @@
             ],
             "details": "1. Implement thresholding shader: sample texture color, convert to grayscale, apply threshold value as uniform, output binary result\n2. Implement inversion shader: sample texture color, invert RGB channels (1.0 - color), preserve alpha\n3. Implement transparency shader: sample texture color, multiply alpha channel by transparency uniform\n4. Solve coordinate mapping: either transform UV coordinates in shaders to match top-left origin, or adjust p5.js rendering logic to use translated coordinate system\n5. Create uniform management system for passing parameters (threshold value, invert toggle, transparency level) to shaders\n6. Optimize shader code for mobile GPUs (minimize texture lookups, use lowp/mediump precision qualifiers where appropriate)\n7. Test shaders with various image aspect ratios to ensure proper mapping",
             "status": "done",
-            "testStrategy": ""
+            "testStrategy": "",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2861,7 +2864,8 @@
             ],
             "details": "1. Design WebGLProcessor API that matches current Canvas2D processor method signatures (processImage, adjustBrightness, etc.) for drop-in replacement\n2. Plan texture lifecycle management: create textures from image data, update textures when source changes, dispose textures on cleanup to prevent memory leaks\n3. Design shader program caching mechanism: cache compiled shader programs based on operation type, reuse programs across multiple frames, implement LRU eviction for memory-constrained environments\n4. Design dual-buffer rendering strategy: use separate p5.Graphics 2D buffer for UI overlays (OSD, grid) that gets composited over WebGL processed image\n5. Plan synchronization between WebGL processing and 2D overlay rendering to maintain correct z-ordering\n6. Document memory management considerations: framebuffer cleanup in setup/draw cycle, context loss texture recreation, GPU memory limits on mobile\n7. Create integration guide showing how to replace existing Canvas2D calls with WebGLProcessor",
             "status": "done",
-            "testStrategy": ""
+            "testStrategy": "",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2872,19 +2876,20 @@
             ],
             "details": "1. Run performance benchmarks on high-resolution images (4K and 8K) to verify GPU acceleration benefits scale with image size\n2. Test UI overlay rendering: verify OSD elements, grid lines, and interactive handles render correctly over WebGL processed image\n3. Conduct cross-device testing: test on low-end mobile devices to ensure shaders don't exceed GPU capabilities, test on high-DPI displays for rendering quality\n4. Measure actual vs perceived performance: ensure FPS improvements translate to responsive UI, check for frame drops during shader compilation\n5. Test rapid parameter adjustment: quickly change threshold/transparency values to ensure real-time updates without frame drops\n6. Validate memory usage: monitor GPU memory consumption during extended use, check for leaks after multiple image loads\n7. Create performance report comparing Canvas2D vs WebGL implementation with recommendations on adoption criteria (minimum image size, device capabilities)",
             "status": "done",
-            "testStrategy": "Automated performance tests on 10 high-resolution images (up to 8192x8192). Manual UI/UX testing across 6 device profiles (low-end mobile, mid-range mobile, high-end mobile, laptop, desktop, tablet). Memory profiling over 30-minute continuous use session. A/B test with 20 users to validate perceived performance improvement."
+            "testStrategy": "Automated performance tests on 10 high-resolution images (up to 8192x8192). Manual UI/UX testing across 6 device profiles (low-end mobile, mid-range mobile, high-end mobile, laptop, desktop, tablet). Memory profiling over 30-minute continuous use session. A/B test with 20 users to validate perceived performance improvement.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 2,
+        "id": "2",
         "title": "Implement halftone effects using WebGL shaders",
         "description": "Research and implement halftone effects in the 'monochromifier' app using WebGL shaders, including circular dots, line screens, and stochastic dithering with real-time rendering and UI controls.",
         "details": "## 1. Research Halftone Algorithms\n- **Circular Dots**: Classic halftone pattern using varying dot sizes based on luminance\n- **Line Screens**: Parallel lines with varying thickness/spacing\n- **Stochastic Dithering**: Randomized patterns (blue noise, Bayer matrices) for smoother gradients\n- **Hybrid Approaches**: Combine multiple techniques for artistic effects\n- Reference academic papers and existing implementations (Photoshop, GIMP plugins)\n\n## 2. Fragment Shader Implementation\n```glsl\n// Core halftone shader structure\nprecision highp float;\nuniform sampler2D u_image;\nuniform vec2 u_resolution;\nuniform float u_dotSize;\nuniform float u_angle;\nuniform int u_patternType;\nuniform bool u_transparencyAware;\n\n// Pattern type constants\n#define PATTERN_CIRCULAR 0\n#define PATTERN_LINE 1\n#define PATTERN_STOCHASTIC 2\n\nvoid main() {\n    vec2 uv = gl_FragCoord.xy / u_resolution;\n    vec4 color = texture2D(u_image, uv);\n    float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));\n    \n    // Apply halftone pattern based on type\n    if (u_patternType == PATTERN_CIRCULAR) {\n        // Circular dot implementation\n    } else if (u_patternType == PATTERN_LINE) {\n        // Line screen implementation\n    } else {\n        // Stochastic dithering\n    }\n    \n    // Handle transparency if enabled\n    if (u_transparencyAware) {\n        // Alpha channel considerations\n    }\n}\n```\n\n## 3. WebGLProcessor Integration\n- Extend existing WebGLProcessor class with halftone-specific uniforms\n- Add shader compilation and linking in processor initialization\n- Implement texture management for input/output buffers\n- Ensure proper framebuffer handling for multi-pass effects\n- Maintain compatibility with existing filter pipeline\n\n## 4. UI Controls Implementation\n- **Pattern Type Selector**: Dropdown with Circular Dots, Line Screens, Stochastic options\n- **Dot Size Slider**: Range 1-50px with real-time preview\n- **Angle Control**: 0-360 degree rotation for line screens and dot patterns\n- **Transparency Toggle**: Checkbox for alpha channel handling\n- **Preset Manager**: Save/load common halftone configurations\n- **Live Preview**: Update shader parameters without recompilation\n\n## 5. Performance Optimization\n- Use uniform buffers for parameter updates\n- Implement level-of-detail (LOD) for large images\n- Optimize fragment shader with early exit conditions\n- Consider compute shaders for advanced stochastic generation\n- Benchmark against Canvas2D equivalent implementation\n\n## 6. Browser Compatibility\n- Test WebGL 1.0 and 2.0 shader compilation\n- Provide fallbacks for unsupported features\n- Handle mobile GPU limitations (precision issues, texture size limits)\n- Implement graceful degradation for older browsers",
         "testStrategy": "## 1. Shader Unit Tests\n- **Visual Regression Testing**: Capture shader output for known input images\n- **Parameter Validation**: Test all uniform combinations produce valid results\n- **Edge Cases**: Pure black/white images, transparency gradients, high-frequency patterns\n- **Cross-browser Rendering**: Verify consistent output across Chrome, Firefox, Safari, Edge\n\n## 2. Integration Testing\n- **Pipeline Compatibility**: Ensure halftone effect works with other WebGL filters\n- **Memory Leak Detection**: Monitor GPU memory usage during repeated application\n- **Error Handling**: Test shader compilation failures and fallback behavior\n- **Performance Benchmarks**: Measure FPS at various image resolutions (512x512 to 4096x4096)\n\n## 3. UI Testing\n- **Control Responsiveness**: Verify sliders update shader in real-time (<16ms delay)\n- **Preset Functionality**: Test save/load operations preserve all parameters\n- **Accessibility**: Keyboard navigation and screen reader compatibility\n- **Mobile Touch Support**: Test gesture controls for angle and size adjustment\n\n## 4. Algorithm Validation\n- **Luminance Accuracy**: Compare output against reference implementations\n- **Pattern Consistency**: Verify dot/line patterns maintain proper spacing\n- **Transparency Handling**: Test compositing with various background colors\n- **Artistic Quality**: Peer review of output quality by design team\n\n## 5. Automated Test Suite\n- **Visual Diff Testing**: Use pixelmatch or similar for screenshot comparisons\n- **Performance Regression**: Fail tests if FPS drops below baseline\n- **Shader Compilation**: Automated validation of GLSL syntax across targets\n- **Cross-platform CI**: Run tests on Windows, macOS, Linux, iOS, Android",
         "status": "done",
         "dependencies": [
-          1
+          "1"
         ],
         "priority": "medium",
         "subtasks": [
@@ -2895,7 +2900,8 @@
             "dependencies": [],
             "details": "Study academic papers and existing implementations (Photoshop, GIMP plugins). Document algorithm specifics for each pattern type including dot size calculations, line thickness formulas, and stochastic matrix generation. Define GLSL uniform structure including dot size, angle, pattern type, and transparency settings. Create technical specification document outlining shader architecture and integration points with existing WebGLProcessor class.",
             "status": "done",
-            "testStrategy": null
+            "testStrategy": null,
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2906,7 +2912,8 @@
             ],
             "details": "Implement three pattern algorithms in a single modular GLSL fragment shader: circular dot size calculation based on luminance thresholds, line screen thickness/spacing with rotation matrix, and stochastic dithering using 8x8 Bayer matrices. Add transparency-aware branching for alpha channel handling. Use high precision floats and define pattern type constants. Implement efficient distance calculations and modular arithmetic for pattern repetition. Add early exit conditions for performance.",
             "status": "done",
-            "testStrategy": "Create visual regression tests for each pattern type with known input images. Test edge cases including pure black/white images, smooth gradients, transparency gradients, and high-frequency source patterns. Verify shader compilation on both WebGL 1.0 and 2.0 contexts."
+            "testStrategy": "Create visual regression tests for each pattern type with known input images. Test edge cases including pure black/white images, smooth gradients, transparency gradients, and high-frequency source patterns. Verify shader compilation on both WebGL 1.0 and 2.0 contexts.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2917,7 +2924,8 @@
             ],
             "details": "Add shader compilation and linking to WebGLProcessor initialization method. Implement uniform location caching for halftone parameters (dotSize, angle, patternType, transparencyAware). Set up input/output texture management with proper framebuffer handling for multi-pass effects. Ensure compatibility with existing filter pipeline architecture by adding halftone as a new filter type. Add error handling for shader compilation failures with fallback mechanisms. Implement texture buffer lifecycle management and cleanup.",
             "status": "done",
-            "testStrategy": "Unit test shader compilation and uniform updates. Verify integration doesn't break existing filters in the pipeline. Test texture buffer lifecycle management including creation, binding, and deletion. Validate framebuffer completeness and error handling."
+            "testStrategy": "Unit test shader compilation and uniform updates. Verify integration doesn't break existing filters in the pipeline. Test texture buffer lifecycle management including creation, binding, and deletion. Validate framebuffer completeness and error handling.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2928,7 +2936,8 @@
             ],
             "details": "Implement dropdown component for pattern type selection (circular dots, line screens, stochastic). Create range slider for dot size (1-50px) with real-time preview updates. Add angle control (0-360 degrees) with visual rotation indicator. Build transparency checkbox for alpha channel handling. Implement preset save/load system using localStorage with JSON serialization. Ensure all controls update shader uniforms without recompilation. Add debouncing for slider inputs to prevent performance issues.",
             "status": "done",
-            "testStrategy": "Test UI component interactions and state management. Verify parameter updates reflect correctly in shader output within 16ms frame budget. Test preset save/load functionality across browser sessions. Validate UI responsiveness on mobile devices with touch controls."
+            "testStrategy": "Test UI component interactions and state management. Verify parameter updates reflect correctly in shader output within 16ms frame budget. Test preset save/load functionality across browser sessions. Validate UI responsiveness on mobile devices with touch controls.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2939,20 +2948,21 @@
             ],
             "details": "Add uniform buffers for efficient parameter updates without CPU-GPU sync. Implement level-of-detail (LOD) system for images larger than 2048px using downsampled textures. Optimize fragment shader with early exit conditions for pure white/black areas. Test on WebGL 1.0 and 2.0 contexts with feature detection. Handle mobile GPU precision issues by detecting lowp/mediump support. Implement graceful degradation for older browsers without WebGL. Benchmark performance against Canvas2D equivalent implementation across 5 image sizes.",
             "status": "done",
-            "testStrategy": "Run automated performance benchmarks on Chrome, Firefox, Safari, and Edge. Test fallback mechanisms by simulating WebGL 1.0 environment. Verify mobile compatibility on iOS Safari and Chrome Android with various device pixel ratios. Measure FPS and frame time consistency during parameter adjustments."
+            "testStrategy": "Run automated performance benchmarks on Chrome, Firefox, Safari, and Edge. Test fallback mechanisms by simulating WebGL 1.0 environment. Verify mobile compatibility on iOS Safari and Chrome Android with various device pixel ratios. Measure FPS and frame time consistency during parameter adjustments.",
+            "parentId": "undefined"
           }
         ]
       },
       {
-        "id": 3,
+        "id": "3",
         "title": "Implement color-channel based threshold filtering",
         "description": "Research and implement color-channel specific threshold transformations that allow isolating and converting specific color ranges (e.g., blue/cyan) to black/white, enabling creative positive/negative space manipulation especially for solid-color graphics.",
         "details": "## 1. Research Color Channel Threshold Techniques\n- **Channel Isolation Methods**: RGB channel extraction, CMYK color space simulation, HSL/HSV hue-based selection\n- **Threshold Algorithms**: Adaptive thresholding based on single channel intensity, range-based thresholding for color intervals, weighted multi-channel thresholding\n- **Color Range Targeting**: Define color ranges for specific hues (blue/cyan, red/magenta, etc.) with configurable tolerance\n- **Reference Implementation**: Study Photoshop channel operations, GIMP color threshold tools, and academic papers on color-based segmentation\n\n## 2. WebGL Fragment Shader Implementation\n```glsl\n// Uniforms: channelMode (0=Red,1=Green,2=Blue,3=Hue), thresholdValue, tolerance, invert\nprecision highp float;\nuniform sampler2D u_image;\nuniform vec2 u_textureSize;\nuniform int u_channelMode;\nuniform float u_threshold;\nuniform float u_tolerance;\nuniform bool u_invert;\n\nvec3 rgb2hsv(vec3 c) {\n    vec4 K = vec4(0.0, -1.0/3.0, 2.0/3.0, -1.0);\n    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));\n    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));\n    float d = q.x - min(q.w, q.y);\n    float e = 1.0e-10;\n    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);\n}\n\nvoid main() {\n    vec2 uv = gl_FragCoord.xy / u_textureSize;\n    vec4 color = texture2D(u_image, uv);\n    float channelValue;\n    \n    if (u_channelMode == 0) { // Red channel\n        channelValue = color.r;\n    } else if (u_channelMode == 1) { // Green channel\n        channelValue = color.g;\n    } else if (u_channelMode == 2) { // Blue channel\n        channelValue = color.b;\n    } else { // Hue-based (for blue/cyan targeting)\n        vec3 hsv = rgb2hsv(color.rgb);\n        // Map blue/cyan hue range (180-240 degrees) to 0-1\n        channelValue = mod((hsv.x * 360.0 - 180.0) / 60.0, 1.0);\n    }\n    \n    float thresholded = step(u_threshold, channelValue);\n    if (u_channelMode == 3) {\n        // Apply tolerance for hue-based selection\n        thresholded = 1.0 - smoothstep(0.0, u_tolerance, abs(channelValue - 0.5));\n    }\n    \n    if (u_invert) thresholded = 1.0 - thresholded;\n    \n    gl_FragColor = vec4(vec3(thresholded), color.a);\n}\n```\n\n## 3. UI Controls and Parameters\n- **Channel Selector**: Dropdown for Red, Green, Blue, Hue (Blue/Cyan), Saturation, Lightness\n- **Threshold Slider**: 0-255 range with real-time preview\n- **Tolerance Slider**: For hue/saturation ranges (0-60 degrees for hue)\n- **Invert Toggle**: Swap black/white output\n- **Blend Mode**: Option to overlay threshold on original image\n- **Preset Buttons**: Quick selections for common scenarios (blueprints, cyanotypes, red channel masks)\n\n## 4. Performance Optimization\n- **Shader Compilation**: Pre-compile shaders for each channel mode\n- **Texture Lookup**: Single-pass processing with minimal branching\n- **Parameter Batching**: Update uniforms only when user changes controls\n- **Mobile Considerations**: Lower precision fallback for mobile GPUs",
         "testStrategy": "## 1. Visual Regression Testing\n- **Reference Images**: Create test set with pure RGB colors, gradients, and real photos\n- **Channel Isolation**: Verify red channel filter only responds to red components\n- **Hue-based Selection**: Test blue/cyan detection on color wheel image\n- **Threshold Accuracy**: Compare output against CPU-based reference implementation\n- **Snapshot Testing**: Capture shader output for 10 standard test images across all channel modes\n\n## 2. Parameter Validation\n- **Threshold Range**: Test boundary values (0, 128, 255) produce expected black/white ratios\n- **Tolerance Effect**: Verify tolerance slider smoothly expands/shrinks selected hue range\n- **Invert Functionality**: Confirm pixel-perfect inversion of threshold result\n- **Channel Mode Switching**: Ensure no visual glitches when changing modes\n\n## 3. Edge Case Handling\n- **Pure Colors**: Test (255,0,0), (0,255,0), (0,0,255) produce clean channel separation\n- **Grayscale Images**: Verify consistent behavior across all channel modes\n- **Transparent Images**: Ensure alpha channel is preserved in output\n- **High-Frequency Patterns**: Test with moiré patterns and fine textures\n- **Extreme Thresholds**: Validate behavior at 0% and 100% threshold settings\n\n## 4. Cross-Platform Compatibility\n- **Browser Testing**: Chrome, Firefox, Safari, Edge with WebGL 1.0 and 2.0\n- **Mobile GPUs**: Test on Adreno, Mali, PowerVR GPUs for precision issues\n- **Color Space**: Verify consistent results across sRGB and Display-P3 displays\n\n## 5. Performance Benchmarks\n- **Processing Time**: Measure milliseconds for 4K image processing\n- **Frame Rate**: Maintain 60fps during slider adjustments on 1024x1024 images\n- **Memory Usage**: Track GPU memory allocation for textures and framebuffers",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          1,
-          2
+          "1",
+          "2"
         ],
         "priority": "medium",
         "subtasks": [
@@ -2963,7 +2973,8 @@
             "dependencies": [],
             "details": "Analyze Photoshop channel operations, GIMP threshold tools, and academic papers on color segmentation. Define requirements for channel modes (RGB, Hue, Saturation, Lightness), threshold algorithms (adaptive, range-based, weighted), and color range targeting with tolerance settings. Create technical specification document outlining shader uniform structure and parameter ranges.",
             "status": "pending",
-            "testStrategy": "Validate research findings through literature review and benchmark planning. Create test image suite covering pure colors, gradients, and real photos for each channel mode."
+            "testStrategy": "Validate research findings through literature review and benchmark planning. Create test image suite covering pure colors, gradients, and real photos for each channel mode.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2974,7 +2985,8 @@
             ],
             "details": "Code the fragment shader using provided GLSL template. Implement channelMode uniform for Red/Green/Blue/Hue modes. Add rgb2hsv conversion function for hue targeting (180-240° for blue/cyan). Implement step() and smoothstep() for thresholding with tolerance. Add invert toggle support. Ensure high precision and optimize branching.",
             "status": "pending",
-            "testStrategy": "Create shader unit tests verifying each channel mode produces correct output. Test with reference images: pure color patches, color wheel for hue selection, and grayscale gradients for threshold accuracy."
+            "testStrategy": "Create shader unit tests verifying each channel mode produces correct output. Test with reference images: pure color patches, color wheel for hue selection, and grayscale gradients for threshold accuracy.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2985,7 +2997,8 @@
             ],
             "details": "Develop React components or vanilla JS controls for all parameters. Implement real-time slider updates with live preview. Add preset system for blueprints, cyanotypes, and red channel masks. Include blend mode options (replace, overlay, multiply). Ensure responsive design and accessibility (ARIA labels, keyboard navigation).",
             "status": "pending",
-            "testStrategy": "Perform interaction testing for all UI controls. Verify sliders update shader parameters in real-time. Test preset buttons apply correct parameter combinations. Validate accessibility compliance."
+            "testStrategy": "Perform interaction testing for all UI controls. Verify sliders update shader parameters in real-time. Test preset buttons apply correct parameter combinations. Validate accessibility compliance.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2997,7 +3010,8 @@
             ],
             "details": "Write JavaScript glue code using WebGL API to bind UI controls to shader uniforms (u_channelMode, u_threshold, u_tolerance, u_invert). Implement change detection to update uniforms only when values change. Add texture size uniform handling. Create state management system for preset loading and parameter synchronization.",
             "status": "pending",
-            "testStrategy": "Conduct end-to-end integration tests verifying UI changes reflect in shader output. Test uniform update efficiency by monitoring WebGL calls. Validate parameter persistence across mode switches."
+            "testStrategy": "Conduct end-to-end integration tests verifying UI changes reflect in shader output. Test uniform update efficiency by monitoring WebGL calls. Validate parameter persistence across mode switches.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -3008,15 +3022,21 @@
             ],
             "details": "Pre-compile shader variants for each channel mode to reduce runtime branching. Add low-precision fallback (mediump) for mobile devices. Implement single-pass texture processing. Create test suite with 20+ reference images covering edge cases (pure black/white, transparency, high-frequency patterns). Benchmark performance across desktop and mobile GPUs.",
             "status": "pending",
-            "testStrategy": "Run visual regression tests comparing output against reference images. Measure FPS and frame time on 512x512, 1024x1024, and 2048x2048 images. Test on multiple browsers and mobile devices. Verify mobile fallback activates correctly."
+            "testStrategy": "Run visual regression tests comparing output against reference images. Measure FPS and frame time on 512x512, 1024x1024, and 2048x2048 images. Test on multiple browsers and mobile devices. Verify mobile fallback activates correctly.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2026-03-13T19:19:47.598Z"
       }
     ],
     "metadata": {
-      "created": "2026-03-07T21:54:41.544Z",
-      "updated": "2026-03-09T18:31:04.898Z",
-      "description": "Tag created on 3/7/2026"
+      "version": "1.0.0",
+      "lastModified": "2026-03-13T19:19:47.612Z",
+      "taskCount": 3,
+      "completedCount": 3,
+      "tags": [
+        "monochrome"
+      ]
     }
   }
 }

@@ -34,7 +34,6 @@ vec3 applyColorMode(vec3 color) {
 void main() {
   // Snap UV coordinates to the center of the nearest pixel to avoid
   // linear interpolation artifacts at texture boundaries.
-  // We clamp to a tiny inset to ensure we never hit the exact edge where wrap modes kick in.
   vec2 clampedUV = clamp(vTexCoord, 0.0, 0.999999);
   vec2 pixel = clampedUV * uTexSize;
   vec2 snapped = floor(pixel) + 0.5;
@@ -44,49 +43,11 @@ void main() {
   vec4 imgColor = texture2D(uTexImage, uv);
   vec4 paintColor = texture2D(uTexPaint, uv);
 
-  // 1. Apply color mode, then reduce to a single gray value for the B&W pipeline.
-  //    For grayscale modes the three components are equal so dot(v, 1/3) == v.r.
-  //    For mode 0 (full color) dot(rgb, 1/3) gives the simple average — matching
-  //    the original behaviour.
-  vec3 processed = applyColorMode(imgColor.rgb);
-  float gray = dot(processed, vec3(1.0 / 3.0));
-
-  // 2. Apply threshold
-  float bw = gray > uThreshold ? 1.0 : 0.0;
-
-  // 3. Apply Invert
-  if (uInvert) {
-    bw = 1.0 - bw;
-  }
-
-  // 4. Determine final base color (black or white)
-  vec4 finalColor;
-
-  if (uTransparencyMode) {
-    // Transparency Mode: White pixels become transparent, Black stay black
-    // White is bw = 1.0 (or 0.0 if inverted? No, bw is normalized 0.0 or 1.0)
-    // Current JS logic: shouldBeTransparent = bw >= 255 - transparencyThreshold
-    float transparencyLimit = (255.0 - uTransparencyThreshold) / 255.0;
-
-    if (bw >= transparencyLimit || imgColor.a == 0.0) {
-      finalColor = vec4(0.0, 0.0, 0.0, 0.0);
-    } else {
-      finalColor = vec4(0.0, 0.0, 0.0, 1.0);
-    }
-  } else {
-    // Standard Mode: Replace "white/transparent" with background color
-    if (imgColor.a == 0.0 || bw == (uInvert ? 0.0 : 1.0)) {
-      finalColor = vec4(uBackgroundColor, 1.0);
-    } else {
-      float val = uInvert ? 1.0 : 0.0;
-      finalColor = vec4(val, val, val, 1.0);
-    }
-  }
-
-  // 5. Composite Paint Layer on top
-  // Unpremultiply paint color: canvas2d backing store uses premultiplied alpha,
-  // so edge pixels arrive as (R*a, G*a, B*a, a) instead of (R, G, B, a).
-  // Without unpremultiplying, semi-transparent stroke edges appear much darker (black halos).
+  // 1. Unpremultiply and composite paint onto source BEFORE the B&W pipeline.
+  //    This ensures paint strokes raise source luminance naturally, so they
+  //    influence the threshold decision rather than being stamped over the result.
+  //    canvas2d backing store is premultiplied alpha, so we unpremultiply first
+  //    to avoid dark halos on semi-transparent stroke edges.
   vec4 paint;
   if (paintColor.a > 0.0001) {
     paint = vec4(paintColor.rgb / paintColor.a, paintColor.a);
@@ -94,11 +55,36 @@ void main() {
     paint = vec4(0.0);
   }
 
+  vec3 sourceRgb = mix(imgColor.rgb, paint.rgb, paint.a);
+  // Alpha compositing: painted areas over transparent source become opaque
+  float effectiveAlpha = imgColor.a + paint.a * (1.0 - imgColor.a);
+
+  // 2. Apply color mode, then reduce to a single gray value for the B&W pipeline.
+  vec3 processed = applyColorMode(sourceRgb);
+  float gray = dot(processed, vec3(1.0 / 3.0));
+
+  // 3. Apply threshold
+  float bw = gray > uThreshold ? 1.0 : 0.0;
+
+  // 4. Apply Invert
+  if (uInvert) {
+    bw = 1.0 - bw;
+  }
+
+  // 5. Determine final color
   if (uTransparencyMode) {
-    // In transparency mode, white paint = transparent (same rule as white pixels).
-    // Blend toward transparent so painted areas export as transparent, not opaque white.
-    gl_FragColor = mix(finalColor, vec4(0.0, 0.0, 0.0, 0.0), paint.a);
+    float transparencyLimit = (255.0 - uTransparencyThreshold) / 255.0;
+    if (bw >= transparencyLimit || effectiveAlpha < 0.001) {
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+    } else {
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
   } else {
-    gl_FragColor = mix(finalColor, vec4(paint.rgb, 1.0), paint.a);
+    if (effectiveAlpha < 0.001 || bw == (uInvert ? 0.0 : 1.0)) {
+      gl_FragColor = vec4(uBackgroundColor, 1.0);
+    } else {
+      float val = uInvert ? 1.0 : 0.0;
+      gl_FragColor = vec4(val, val, val, 1.0);
+    }
   }
 }
