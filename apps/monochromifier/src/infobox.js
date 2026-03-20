@@ -92,6 +92,38 @@ makeDraggable(gridControls, { centered: false })
 makeDraggable(halftoneControls, { centered: false })
 makeDraggable(colorModeControls, { centered: false })
 
+// Collapsible panels with localStorage persistence
+function makeCollapsible(panel, storageKey) {
+  if (!panel) return
+  const btn = panel.querySelector('.panel-collapse-btn')
+  if (!btn) return
+
+  // Restore persisted state
+  try {
+    if (localStorage.getItem(storageKey) === 'true') {
+      panel.classList.add('is-collapsed')
+      btn.textContent = '+'
+    }
+  } catch (err) {
+    // localStorage unavailable — proceed without persistence
+  }
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation()
+    const collapsed = panel.classList.toggle('is-collapsed')
+    btn.textContent = collapsed ? '+' : '−'
+    try {
+      localStorage.setItem(storageKey, collapsed)
+    } catch (err) {
+      // ignore storage errors
+    }
+  })
+}
+
+makeCollapsible(gridControls, 'monochromifier_panel_grid_collapsed')
+makeCollapsible(halftoneControls, 'monochromifier_panel_halftone_collapsed')
+makeCollapsible(colorModeControls, 'monochromifier_panel_color-mode_collapsed')
+
 // GLOBAL UI PROTECTION: Block all mouse events from reaching the p5.js canvas
 // when clicking anywhere inside a UI panel. This fixes bleed-through for
 // sliders, dropdowns, and buttons.

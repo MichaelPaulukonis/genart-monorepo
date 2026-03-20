@@ -1,3 +1,12 @@
+## [Unreleased]
+
+### Added
+- **monochromifier:** collapsible control panels (Grid, Halftone, Color Mode) with collapsed state persisted to localStorage
+- **monochromifier:** draggable control panels — reposition anywhere on screen
+- **monochromifier:** halftone effect panel with pattern, size/frequency, and angle controls
+- **monochromifier:** grayscale channel-mode panel with custom RGB weight sliders
+- **monochromifier:** panel heading rows — section title and enable checkbox share one line, reducing visual redundancy while preserving screen-reader accessibility via `aria-labelledby`
+
 ## 0.6.0 (2025-12-30)
 
 ### 🚀 Features
