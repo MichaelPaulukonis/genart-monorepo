@@ -167,6 +167,7 @@ dev-debug.log
 test-results/
 playwright-report/
 playwright/.cache/
+.playwright-mcp/
 
 # misc chat-related
 conversation/
@@ -186,3 +187,5 @@ apps/duo-chrome/public/images_*/
 
 # Allow images_production (contains official images for deployment)
 !apps/duo-chrome/public/images_production/
+
+.nx/polygraph

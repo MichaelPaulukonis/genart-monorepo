@@ -3027,13 +3027,142 @@
           }
         ],
         "updatedAt": "2026-03-13T19:19:47.598Z"
+      },
+      {
+        "id": "4",
+        "title": "Add collapsible panels to Monochromifier UI with localStorage persistence",
+        "description": "Implement collapsible panel components for the Monochromifier UI to organize controls and settings, with collapsed/expanded states persisted to localStorage. Investigate existing implementations in the duo-chrome project and extract common functionality into a shared library if applicable.",
+        "details": "## 1. Research Existing Implementations\n- Analyze the duo-chrome project's collapsible panel implementation patterns\n- Identify reusable patterns, components, and utility functions for state persistence\n- Document the API design and state management approach used in duo-chrome\n- Evaluate whether to extract a common library or implement project-specific solution based on complexity and reusability\n\n## 2. Design Panel Architecture\n- Identify UI control groups that would benefit from collapsible organization (e.g., halftone controls, color-channel filters, output settings, preview options)\n- Design component hierarchy: PanelContainer, PanelHeader, PanelContent with clear separation of concerns\n- Define props interface: `id`, `title`, `defaultExpanded`, `persistKey`, `children`, `className`\n- Determine animation strategy using CSS transitions for smooth height/opacity changes with hardware acceleration\n- Consider mobile-responsive behavior and touch interaction patterns\n\n## 3. Implement Core Panel Components\n```typescript\n// Panel component with built-in persistence\ninterface CollapsiblePanelProps {\n  id: string;\n  title: string;\n  persistKey?: string;\n  defaultExpanded?: boolean;\n  children: React.ReactNode;\n  className?: string;\n}\n\nconst CollapsiblePanel: React.FC<CollapsiblePanelProps> = ({...}) => {\n  // Use localStorage hook to manage persisted state with error handling\n  const [isExpanded, setIsExpanded] = useLocalStorage(\n    `monochromifier_panel_${persistKey || id}`,\n    defaultExpanded !== false\n  );\n  \n  return (\n    <div className=\"collapsible-panel\" data-panel-id={id}>\n      <PanelHeader \n        title={title} \n        isExpanded={isExpanded} \n        onToggle={() => setIsExpanded(!isExpanded)}\n        ariaControls={`panel-content-${id}`}\n      />\n      <PanelContent \n        isExpanded={isExpanded}\n        id={`panel-content-${id}`}\n      >\n        {children}\n      </PanelContent>\n    </div>\n  );\n};\n```\n\n## 4. Create Persistence Utility\n- Implement a robust `useLocalStorage` hook with JSON serialization/deserialization\n- Add error handling for localStorage quota exceeded and security exceptions\n- Implement debouncing (150ms) to reduce storage operations during rapid toggling\n- Add versioning mechanism to handle future schema changes in persisted data\n- Consider adding migration strategy for existing localStorage keys if needed\n\n## 5. Integrate with Existing UI\n- Wrap existing control groups from previous tasks in appropriately configured collapsible panels\n- Update CSS/layout to accommodate panel margins, borders, and animation containers\n- Ensure WebGL canvas rendering area adjusts appropriately when panels collapse/expand using flexbox or grid layouts\n- Maintain responsive design for mobile devices with proper touch target sizes (minimum 44x44px)\n- Add smooth transitions that don't block the main thread or impact WebGL performance\n\n## 6. Extract Common Library (if applicable)\n- If duo-chrome implementation is robust and reusable, create `@monorepo/ui-components` package in monorepo\n- Move Panel components, useLocalStorage hook, and associated CSS to shared library\n- Update build configuration (webpack/rollup) to include new package with proper tree-shaking\n- Write comprehensive documentation and usage examples for other projects\n- Establish versioning strategy and publish to internal npm registry\n\n## 7. Accessibility Considerations\n- Implement proper ARIA attributes: `aria-expanded`, `aria-controls`, `role=\"region\"` on content\n- Ensure keyboard navigation support (Enter/Space to toggle, focus management)\n- Maintain visible focus indicators with 3:1 contrast ratio minimum\n- Verify screen reader compatibility (NVDA, JAWS, VoiceOver)\n- Test reduced motion preferences and respect `prefers-reduced-motion` media query",
+        "testStrategy": "## 1. Unit Tests for Panel Component\n- Test rendering with expanded and collapsed states using React Testing Library\n- Verify toggle functionality calls onToggle callback with correct boolean values\n- Test defaultExpanded prop behavior when no localStorage value exists\n- Mock localStorage and verify persistence operations occur on toggle with correct keys\n- Test edge cases: missing persistKey, invalid JSON in localStorage, corrupted data\n- Verify animation state classes are applied correctly during transitions\n\n## 2. Integration Tests for Persistence\n- Simulate page reload and verify panel states are restored from localStorage\n- Test multiple panels with independent state management and unique keys\n- Verify localStorage keys are namespaced correctly (`monochromifier_panel_${id}`)\n- Test localStorage quota exceeded handling with graceful fallback to memory state\n- Verify state synchronization across multiple browser tabs using storage event listeners\n- Test debouncing behavior: rapid toggles should only write to storage once\n\n## 3. Visual Regression Testing\n- Capture screenshots of fully expanded, fully collapsed, and mixed states\n- Test animation smoothness and timing using browser performance APIs (no jank, maintain 60fps)\n- Verify layout stability during expand/collapse transitions (no layout shifts)\n- Test responsive behavior at multiple viewport sizes (320px, 768px, 1024px, 1440px)\n- Cross-browser visual comparison (Chrome, Firefox, Safari, Edge) using Playwright\n- Verify dark mode compatibility if applicable\n\n## 4. Accessibility Testing\n- Run axe-core automated accessibility scans with WCAG 2.1 AA standard\n- Manual screen reader testing: NVDA on Windows, VoiceOver on macOS/iOS\n- Keyboard-only navigation test: verify all panels can be toggled without mouse using Tab/Enter/Space\n- Verify focus indicators are visible, properly positioned, and have sufficient contrast\n- Test high contrast mode compatibility in Windows and browser extensions\n- Verify ARIA attributes are correctly announced by screen readers\n\n## 5. End-to-End User Flow Tests\n- Test typical user workflow: collapse halftone panel, expand color-channel panel, reload page, verify state persistence\n- Verify panel states don't interfere with image processing functionality or WebGL rendering\n- Test rapid successive toggles (stress test) to ensure no race conditions or memory leaks\n- Verify mobile touch interaction: proper touch targets, no double-tap zoom issues\n- Test that panel collapse doesn't cause WebGL context loss, shader recompilation, or rendering errors\n- Verify scroll position is maintained when panels expand/collapse\n\n## 6. Monorepo Integration Tests\n- If shared library created: verify it can be imported and used in duo-chrome project without modification\n- Test that library build doesn't break existing duo-chrome functionality (backward compatibility)\n- Verify version management and dependency resolution in monorepo (yarn/lerna/pnpm workspaces)\n- Run duo-chrome test suite against extracted library to ensure compatibility\n- Test that library components can be themed/overridden by consuming applications\n- Verify tree-shaking works correctly to avoid bloating bundle sizes",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Research Existing Collapsible Panel Implementations",
+            "description": "Analyze collapsible panel patterns in duo-chrome project and evaluate reusability",
+            "dependencies": [],
+            "details": "Examine duo-chrome project's collapsible panel implementation to identify reusable patterns, components, and utility functions. Document API design and state management approach. Evaluate whether to extract common functionality into shared library or implement project-specific solution based on complexity and reusability. Review CoreUI, Ant Design, and other frameworks for best practices in collapsible components.",
+            "status": "pending",
+            "testStrategy": "Verify documentation of existing patterns, assess code quality metrics, and document decision on shared library vs project-specific implementation",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Design Collapsible Panel Architecture",
+            "description": "Define component structure, props interface, and animation strategy for collapsible panels",
+            "dependencies": [
+              1
+            ],
+            "details": "Identify UI control groups needing collapsible organization (halftone controls, color-channel filters, etc.). Design component hierarchy with PanelContainer, PanelHeader, PanelContent. Define props interface including id, title, defaultExpanded, persistKey. Determine CSS transition strategy for smooth height/opacity changes with hardware acceleration. Ensure mobile-responsive behavior and touch interaction patterns. Consider accessibility requirements including ARIA attributes and keyboard navigation.",
+            "status": "pending",
+            "testStrategy": "Validate component design against WCAG 2.1 guidelines, verify touch target sizes meet 44x44px minimum, and confirm animation strategy avoids layout thrashing",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Implement Core Panel Components with Persistence",
+            "description": "Build collapsible panel components with localStorage state persistence",
+            "dependencies": [
+              2
+            ],
+            "details": "Create CollapsiblePanel component with built-in localStorage persistence using useLocalStorage hook. Implement proper ARIA attributes (aria-expanded, aria-controls). Ensure smooth transitions using CSS transforms instead of height/width animations for performance. Add error handling for localStorage quota issues. Implement debouncing for storage operations. Verify compatibility with prefers-reduced-motion media query. Test with multiple screen readers (NVDA, JAWS) for accessibility compliance.",
+            "status": "pending",
+            "testStrategy": "Unit tests for rendering states, toggle functionality, and localStorage interaction. Verify animation performance metrics stay within 16ms/frame. Test with reduced motion settings enabled. Validate screen reader announcements for state changes.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Develop Robust localStorage Utility",
+            "description": "Create enhanced useLocalStorage hook with error handling and versioning",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement useLocalStorage hook with JSON serialization/deserialization. Add comprehensive error handling for localStorage quota exceeded and security exceptions. Implement debouncing (150ms) to reduce storage operations during rapid toggling. Add versioning mechanism to handle future schema changes. Create migration strategy for existing localStorage keys. Ensure compatibility with browser storage limitations across different environments. Test with storage-migrator pattern for version transitions.",
+            "status": "pending",
+            "testStrategy": "Test edge cases including quota exceeded scenarios, invalid JSON, and cross-browser compatibility. Verify version migration works correctly. Measure performance impact of debouncing mechanism.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Integrate Panels with Monochromifier UI",
+            "description": "Wrap existing UI controls in collapsible panels and ensure responsive layout",
+            "dependencies": [
+              4
+            ],
+            "details": "Wrap existing control groups from previous tasks in appropriately configured collapsible panels. Update CSS/layout to accommodate panel margins, borders, and animation containers. Ensure WebGL canvas rendering area adjusts appropriately when panels collapse/expand using flexbox or grid layouts. Maintain responsive design for mobile devices with proper touch target sizes. Verify smooth transitions don't block main thread or impact WebGL performance. Test with different viewport sizes and device orientations.",
+            "status": "pending",
+            "testStrategy": "End-to-end tests verifying UI layout adjustments when panels toggle. Performance tests measuring impact on WebGL rendering. Cross-browser and cross-device testing for responsive behavior. Verify touch target sizes meet accessibility requirements.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Research duo-chrome and design panel architecture",
+            "description": "Analyze duo-chrome's collapsible panel implementation patterns and design the component architecture for Monochromifier UI",
+            "dependencies": [],
+            "details": "Investigate duo-chrome project to identify reusable patterns, components, and state management approaches. Document API design and evaluate library extraction feasibility. Identify UI control groups for panel organization (halftone controls, color-channel filters, output settings, preview options). Design component hierarchy with PanelContainer, PanelHeader, and PanelContent. Define props interface including id, title, persistKey, defaultExpanded, children, className. Determine CSS transition strategy for smooth animations with hardware acceleration and plan mobile-responsive touch interactions.",
+            "status": "pending",
+            "testStrategy": "Document research findings and create design specification document for team review. Validate design decisions through peer review.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 7,
+            "title": "Implement useLocalStorage persistence hook",
+            "description": "Create a robust React hook for localStorage persistence with error handling, debouncing, and versioning",
+            "dependencies": [
+              6
+            ],
+            "details": "Implement useLocalStorage hook with JSON serialization/deserialization. Add comprehensive error handling for localStorage quota exceeded and security exceptions. Implement 150ms debouncing to reduce storage operations during rapid toggling. Add versioning mechanism to handle future schema changes. Include migration strategy for existing localStorage keys. Ensure hook gracefully degrades when localStorage is unavailable. Write TypeScript definitions with generic type support for type-safe storage.",
+            "status": "pending",
+            "testStrategy": "Unit tests covering localStorage operations, error scenarios (QuotaExceededError, SecurityError), debouncing behavior verification, and versioning/migration logic.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 8,
+            "title": "Build collapsible panel React components",
+            "description": "Develop PanelContainer, PanelHeader, and PanelContent components with integrated persistence and animations",
+            "dependencies": [
+              7
+            ],
+            "details": "Create CollapsiblePanel main component using useLocalStorage hook for state management. Implement PanelHeader with toggle button, title, and expand/collapse indicators. Build PanelContent with height-based CSS transitions using max-height technique for smooth animations. Support props: id (required), title (required), persistKey (optional), defaultExpanded (optional), children, className. Ensure proper event handling and state synchronization. Add support for custom header content and action buttons. Implement performance optimizations to prevent re-renders of nested controls.",
+            "status": "pending",
+            "testStrategy": "Unit tests using React Testing Library to verify rendering in expanded/collapsed states, toggle functionality, persistence integration, and callback execution with correct boolean values.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 9,
+            "title": "Integrate panels into Monochromifier UI with accessibility",
+            "description": "Wrap existing control groups in collapsible panels and implement comprehensive accessibility features",
+            "dependencies": [
+              8
+            ],
+            "details": "Integrate panels into Monochromifier by wrapping existing control groups: halftone controls, color-channel filters, output settings, and preview options. Update CSS/layout with flexbox/grid to accommodate panel margins, borders, and animation containers. Ensure WebGL canvas rendering area adjusts dynamically when panels collapse/expand. Implement ARIA attributes: aria-expanded, aria-controls, role='region' on content. Add keyboard navigation support (Enter/Space to toggle, Tab navigation). Maintain visible focus indicators with 3:1 contrast ratio. Respect prefers-reduced-motion media query. Ensure touch targets are minimum 44x44px on mobile.",
+            "status": "pending",
+            "testStrategy": "Integration tests verifying panel interactions with WebGL canvas. Accessibility audit using axe-core. Manual keyboard navigation testing. Screen reader testing with NVDA/JAWS/VoiceOver. Visual regression testing for layout changes.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 10,
+            "title": "Extract shared library for duo-chrome reuse",
+            "description": "Create @monorepo/ui-components package if duo-chrome implementation is reusable, including build configuration and documentation",
+            "dependencies": [
+              9
+            ],
+            "details": "If research indicates reusability, create new @monorepo/ui-components package in monorepo structure. Move CollapsiblePanel components, useLocalStorage hook, and associated CSS/TypeScript definitions to shared library. Configure build system (webpack/rollup) with proper tree-shaking support and sideEffects flags. Create comprehensive documentation with usage examples, props API reference, and migration guide. Establish semantic versioning strategy. Configure CI/CD pipeline for automated publishing to internal npm registry. Update both Monochromifier and duo-chrome projects to consume the shared library.",
+            "status": "pending",
+            "testStrategy": "Verify package builds without errors. Test tree-shaking effectiveness by analyzing bundle size. Validate imports in both Monochromifier and duo-chrome projects. Run integration tests across both consuming applications.",
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2026-03-20T03:39:00.614Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-03-13T19:19:47.612Z",
-      "taskCount": 3,
-      "completedCount": 3,
+      "lastModified": "2026-03-20T03:39:00.619Z",
+      "taskCount": 4,
+      "completedCount": 4,
       "tags": [
         "monochrome"
       ]
