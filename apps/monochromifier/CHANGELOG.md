@@ -1,3 +1,28 @@
+## 0.7.0 (2026-03-20)
+
+### 🚀 Features
+
+- **monochromifier:** add collapsible panels with inline enable toggles ([65886c0](https://github.com/MichaelPaulukonis/genart-monorepo/commit/65886c0))
+- **monochromifier:** add grayscale channel-mode system and sidebar layout ([d338e13](https://github.com/MichaelPaulukonis/genart-monorepo/commit/d338e13))
+- **monochromifier:** finalize halftone effects and implement UI event protection ([72cb3cf](https://github.com/MichaelPaulukonis/genart-monorepo/commit/72cb3cf))
+- **monochromifier:** implement halftone effects with WebGL shaders ([5d05540](https://github.com/MichaelPaulukonis/genart-monorepo/commit/5d05540))
+- **monochromifier:** implement p5.js WEBGL mode for GPU-accelerated image processing ([dba5563](https://github.com/MichaelPaulukonis/genart-monorepo/commit/dba5563))
+- **duo-chrome:** implement theme management and A/B assignment ([#8](https://github.com/MichaelPaulukonis/genart-monorepo/issues/8), [#5](https://github.com/MichaelPaulukonis/genart-monorepo/issues/5))
+- **duo-chrome:** fix broken tests and implement enhanced image filtering ([#10](https://github.com/MichaelPaulukonis/genart-monorepo/issues/10), [#4](https://github.com/MichaelPaulukonis/genart-monorepo/issues/4))
+- fix deployment issues ([2d9189b](https://github.com/MichaelPaulukonis/genart-monorepo/commit/2d9189b))
+
+### 🩹 Fixes
+
+- **monochromifier:** correct paint order and halftone dot clipping ([2e380a4](https://github.com/MichaelPaulukonis/genart-monorepo/commit/2e380a4))
+- **monochromifier:** fix paint layer compositing in WebGL shaders ([26d0e9d](https://github.com/MichaelPaulukonis/genart-monorepo/commit/26d0e9d))
+- **monochromifier:** prevent UI interaction from bleeding through to canvas ([7f08592](https://github.com/MichaelPaulukonis/genart-monorepo/commit/7f08592))
+- **duo-chrome:** resolve loop panel event propagation and playback issues ([2e1d798](https://github.com/MichaelPaulukonis/genart-monorepo/commit/2e1d798))
+
+### ❤️ Thank You
+
+- Michael Paul Ukonis
+- MichaelPaulukonis
+
 ## [Unreleased]
 
 ### Added
