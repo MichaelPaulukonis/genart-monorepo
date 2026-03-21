@@ -1,3 +1,13 @@
+## 0.8.0 (2026-03-21)
+
+### 🚀 Features
+
+- **monochromifier:** add About screen and createModal() factory ([8d73927](https://github.com/MichaelPaulukonis/genart-monorepo/commit/8d73927))
+
+### ❤️ Thank You
+
+- Michael Paul Ukonis
+
 ## [Unreleased]
 
 ### Added
