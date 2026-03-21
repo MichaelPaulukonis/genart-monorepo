@@ -1,3 +1,11 @@
+## [Unreleased]
+
+### Added
+- **monochromifier:** About screen with app description, usage summary, and links to GitHub and author homepage
+- **monochromifier:** first-visit auto-show for About screen (localStorage, no consent required)
+- **monochromifier:** `a` key toggles About screen; Help and About close each other via conflict resolution
+- **monochromifier:** `createModal()` factory in `infobox.js` — shared pattern for draggable overlays with mutual conflict resolution; documented in `docs/guides/modal-factory-pattern.md`
+
 ## 0.7.0 (2026-03-20)
 
 ### 🚀 Features

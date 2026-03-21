@@ -319,8 +319,14 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
     }
   }
 
+  if (p.key === 'a') {
+    if (window.aboutControls) window.aboutControls.toggle()
+    return false
+  }
+
   if (p.key === 'e') {
     if (window.infoBoxControls) window.infoBoxControls.hide()
+    if (window.aboutControls) window.aboutControls.hide()
     if (state.appMode === state.modes.ADJUST) {
       setupEditMode()
     } else {

@@ -2,18 +2,12 @@
 
 import { formatVersion } from './utils/version.js'
 
-const infoBox = document.getElementById('info-box')
 const gridControls = document.getElementById('grid-controls')
 const halftoneControls = document.getElementById('halftone-controls')
 const colorModeControls = document.getElementById('color-mode-controls')
-const closeButton = document.getElementById('close-info-box')
 
-// Check for required DOM elements
-if (!infoBox) {
-  console.error('Info box element not found')
-}
+// --- Draggable ---
 
-// Draggable setup
 function makeDraggable(element, options = {}) {
   if (!element) return
 
@@ -24,8 +18,7 @@ function makeDraggable(element, options = {}) {
   let initialY
   let xOffset = 0
   let yOffset = 0
-  
-  // Default options
+
   const config = {
     centered: false, // If true, maintains translate(-50%, -50%)
     handleSelector: null, // If provided, only this child triggers drag
@@ -37,18 +30,13 @@ function makeDraggable(element, options = {}) {
   document.addEventListener('mouseup', stopDragging)
 
   function startDragging(e) {
-    // Should we drag?
-    // If handleSelector is defined, check if target matches or is inside handle
     if (config.handleSelector) {
       if (!e.target.closest(config.handleSelector)) return
     } else {
-      // Default behavior: specific check for inputs/buttons to avoid dragging when interacting
       if (['INPUT', 'SELECT', 'BUTTON', 'LABEL', 'A'].includes(e.target.tagName)) return
     }
 
-    // Prevent event from reaching p5.js canvas
     e.stopPropagation()
-    
     initialX = e.clientX - xOffset
     initialY = e.clientY - yOffset
 
@@ -60,18 +48,15 @@ function makeDraggable(element, options = {}) {
   function drag(e) {
     if (isDragging) {
       e.preventDefault()
-
       currentX = e.clientX - initialX
       currentY = e.clientY - initialY
-
       xOffset = currentX
       yOffset = currentY
-
       setTranslate(currentX, currentY, element, config.centered)
     }
   }
 
-  function stopDragging(e) {
+  function stopDragging() {
     initialX = currentX
     initialY = currentY
     isDragging = false
@@ -86,19 +71,66 @@ function setTranslate(xPos, yPos, el, centered) {
   }
 }
 
-// Initialize draggables
-makeDraggable(infoBox, { centered: true })
-makeDraggable(gridControls, { centered: false })
-makeDraggable(halftoneControls, { centered: false })
-makeDraggable(colorModeControls, { centered: false })
+// --- Modal factory ---
+//
+// Creates a modal instance with show/hide/toggle/isVisible.
+// conflictsWith is a mutable array — assign after all modals are created so
+// opening one automatically closes the other(s).
+//
+// Portability: copy this factory + makeDraggable/setTranslate to any vanilla-JS
+// app. See docs/guides/modal-factory-pattern.md for the adoption checklist.
 
-// Collapsible panels with localStorage persistence
+function createModal({ id, centered = false, ariaLabel }) {
+  const el = document.getElementById(id)
+  if (!el) {
+    console.error(`createModal: element #${id} not found`)
+    return null
+  }
+
+  makeDraggable(el, { centered })
+
+  // Block all pointer events from reaching the p5.js canvas
+  el.addEventListener('mousedown', e => e.stopPropagation())
+  el.addEventListener('touchstart', e => e.stopPropagation(), { passive: false })
+  el.addEventListener('pointerdown', e => e.stopPropagation())
+
+  if (ariaLabel) {
+    el.setAttribute('role', 'dialog')
+    el.setAttribute('aria-label', ariaLabel)
+    el.setAttribute('aria-modal', 'false')
+  }
+
+  const instance = {
+    conflictsWith: [],
+
+    show() {
+      this.conflictsWith.forEach(m => m && m.hide())
+      el.classList.remove('hidden')
+    },
+    hide() {
+      el.classList.add('hidden')
+    },
+    toggle() {
+      this.isVisible() ? this.hide() : this.show()
+    },
+    isVisible() {
+      return !el.classList.contains('hidden')
+    }
+  }
+
+  const closeBtn = el.querySelector('.close-button')
+  if (closeBtn) closeBtn.addEventListener('click', () => instance.hide())
+
+  return instance
+}
+
+// --- Collapsible control panels ---
+
 function makeCollapsible(panel, storageKey) {
   if (!panel) return
   const btn = panel.querySelector('.panel-collapse-btn')
   if (!btn) return
 
-  // Restore persisted state
   try {
     if (localStorage.getItem(storageKey) === 'true') {
       panel.classList.add('is-collapsed')
@@ -120,15 +152,50 @@ function makeCollapsible(panel, storageKey) {
   })
 }
 
+// --- Instantiate modals ---
+
+const helpModal = createModal({
+  id: 'info-box',
+  centered: true,
+  ariaLabel: 'Keyboard shortcuts help'
+})
+
+const aboutModal = createModal({
+  id: 'about-box',
+  centered: true,
+  ariaLabel: 'About Monochromifier'
+})
+
+// Mutual conflict resolution: opening one closes the other
+if (helpModal && aboutModal) {
+  helpModal.conflictsWith = [aboutModal]
+  aboutModal.conflictsWith = [helpModal]
+}
+
+// Cross-navigation buttons between dialogs
+const openAboutBtn = document.getElementById('open-about-btn')
+if (openAboutBtn && aboutModal) {
+  openAboutBtn.addEventListener('click', () => aboutModal.show())
+}
+
+const openHelpBtn = document.getElementById('open-help-btn')
+if (openHelpBtn && helpModal) {
+  openHelpBtn.addEventListener('click', () => helpModal.show())
+}
+
+// --- Draggable + collapsible control panels ---
+
+makeDraggable(gridControls, { centered: false })
+makeDraggable(halftoneControls, { centered: false })
+makeDraggable(colorModeControls, { centered: false })
+
 makeCollapsible(gridControls, 'monochromifier_panel_grid_collapsed')
 makeCollapsible(halftoneControls, 'monochromifier_panel_halftone_collapsed')
 makeCollapsible(colorModeControls, 'monochromifier_panel_color-mode_collapsed')
 
-// GLOBAL UI PROTECTION: Block all mouse events from reaching the p5.js canvas
-// when clicking anywhere inside a UI panel. This fixes bleed-through for
-// sliders, dropdowns, and buttons.
+// Block bleed-through on control panels
 const blockBleedThrough = (e) => e.stopPropagation()
-;[infoBox, gridControls, halftoneControls, colorModeControls].forEach(panel => {
+;[gridControls, halftoneControls, colorModeControls].forEach(panel => {
   if (panel) {
     panel.addEventListener('mousedown', blockBleedThrough)
     panel.addEventListener('touchstart', blockBleedThrough, { passive: false })
@@ -136,69 +203,58 @@ const blockBleedThrough = (e) => e.stopPropagation()
   }
 })
 
+// --- First-visit: auto-show About ---
 
-// Set up accessibility attributes for infoBox
-if (infoBox) {
-  infoBox.setAttribute('role', 'dialog')
-  infoBox.setAttribute('aria-label', 'Keyboard shortcuts help')
-  infoBox.setAttribute('aria-modal', 'false')
-}
-
-// Close button listener
-if (closeButton) {
-  closeButton.addEventListener('click', hideInfoBox)
-}
-
-function hideInfoBox () {
-  if (infoBox) {
-    infoBox.classList.add('hidden')
+const ABOUT_SEEN_KEY = 'monochromifier_about_seen'
+if (aboutModal) {
+  try {
+    if (!localStorage.getItem(ABOUT_SEEN_KEY)) {
+      aboutModal.show()
+      localStorage.setItem(ABOUT_SEEN_KEY, '1')
+    }
+  } catch (e) {
+    // localStorage unavailable — skip first-visit logic
   }
 }
 
-function showInfoBox () {
-  if (infoBox) {
-    infoBox.classList.remove('hidden')
-  }
-}
+// --- ESC key: close any visible modal ---
 
-function toggleInfoBox () {
-  if (infoBox) {
-    infoBox.classList.toggle('hidden')
-  }
-}
-
-// Export functions for use in sketch.js
-window.infoBoxControls = {
-  toggle: toggleInfoBox,
-  show: showInfoBox,
-  hide: hideInfoBox
-}
-
-// ESC key handler is also handled in global input, but good to have here too as fallback
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && infoBox && !infoBox.classList.contains('hidden')) {
-    hideInfoBox()
+  if (e.key === 'Escape') {
+    ;[helpModal, aboutModal].forEach(m => {
+      if (m && m.isVisible()) m.hide()
+    })
   }
 })
 
-// Initialize version display
-async function initializeVersionDisplay () {
+// --- Exports for input.js ---
+
+window.infoBoxControls = {
+  toggle: () => helpModal && helpModal.toggle(),
+  show: () => helpModal && helpModal.show(),
+  hide: () => helpModal && helpModal.hide()
+}
+
+window.aboutControls = {
+  toggle: () => aboutModal && aboutModal.toggle(),
+  show: () => aboutModal && aboutModal.show(),
+  hide: () => aboutModal && aboutModal.hide()
+}
+
+// --- Version display ---
+
+async function initializeVersionDisplay() {
+  const setVersion = (text) => {
+    document.querySelectorAll('.version-text').forEach(el => { el.textContent = text })
+  }
   try {
-    const version = await formatVersion()
-    const versionElement = document.getElementById('version-info')
-    if (versionElement) {
-      versionElement.textContent = version
-    }
+    setVersion(await formatVersion())
   } catch (error) {
     console.warn('Could not initialize version display:', error)
-    const versionElement = document.getElementById('version-info')
-    if (versionElement) {
-      versionElement.textContent = 'v1.0.0'
-    }
+    setVersion('v1.0.0')
   }
 }
 
-// Initialize version display when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeVersionDisplay)
 } else {
