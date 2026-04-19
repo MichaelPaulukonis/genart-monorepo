@@ -15,6 +15,14 @@
 - **monochromifier:** first-visit auto-show for About screen (localStorage, no consent required)
 - **monochromifier:** `a` key toggles About screen; Help and About close each other via conflict resolution
 - **monochromifier:** `createModal()` factory in `infobox.js` — shared pattern for draggable overlays with mutual conflict resolution; documented in `docs/guides/modal-factory-pattern.md`
+- **monochromifier:** migrate canvas OSD status text to HTML control panels (View, Image Controls, Edit Controls) with two-way sync to all existing keyboard shortcuts
+- **monochromifier:** View panel shows live mode/zoom/pan status and minimap toggle
+- **monochromifier:** Image Controls panel exposes threshold slider, invert, transparency, and auto-crop toggles
+- **monochromifier:** Edit Controls panel exposes tool selection, erase mode, and brush size slider
+
+### Fixed
+- **monochromifier:** arrow keys no longer scroll the browser page when used for threshold/zoom adjustment
+- **monochromifier:** toggling invert no longer turns the canvas background black
 
 ## 0.7.0 (2026-03-20)
 

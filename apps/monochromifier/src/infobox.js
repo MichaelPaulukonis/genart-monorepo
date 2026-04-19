@@ -5,6 +5,9 @@ import { formatVersion } from './utils/version.js'
 const gridControls = document.getElementById('grid-controls')
 const halftoneControls = document.getElementById('halftone-controls')
 const colorModeControls = document.getElementById('color-mode-controls')
+const imageControls = document.getElementById('image-controls')
+const viewStatus = document.getElementById('view-status')
+const editControls = document.getElementById('edit-controls')
 
 // --- Draggable ---
 
@@ -126,13 +129,15 @@ function createModal({ id, centered = false, ariaLabel }) {
 
 // --- Collapsible control panels ---
 
-function makeCollapsible(panel, storageKey) {
+function makeCollapsible(panel, storageKey, defaultCollapsed = false) {
   if (!panel) return
   const btn = panel.querySelector('.panel-collapse-btn')
   if (!btn) return
 
   try {
-    if (localStorage.getItem(storageKey) === 'true') {
+    const stored = localStorage.getItem(storageKey)
+    const shouldCollapse = stored !== null ? stored === 'true' : defaultCollapsed
+    if (shouldCollapse) {
       panel.classList.add('is-collapsed')
       btn.textContent = '+'
     }
@@ -188,14 +193,20 @@ if (openHelpBtn && helpModal) {
 makeDraggable(gridControls, { centered: false })
 makeDraggable(halftoneControls, { centered: false })
 makeDraggable(colorModeControls, { centered: false })
+makeDraggable(imageControls, { centered: false })
+makeDraggable(viewStatus, { centered: false })
+makeDraggable(editControls, { centered: false })
 
-makeCollapsible(gridControls, 'monochromifier_panel_grid_collapsed')
-makeCollapsible(halftoneControls, 'monochromifier_panel_halftone_collapsed')
-makeCollapsible(colorModeControls, 'monochromifier_panel_color-mode_collapsed')
+makeCollapsible(gridControls, 'monochromifier_panel_grid_collapsed', true)
+makeCollapsible(halftoneControls, 'monochromifier_panel_halftone_collapsed', true)
+makeCollapsible(colorModeControls, 'monochromifier_panel_color-mode_collapsed', true)
+makeCollapsible(imageControls, 'monochromifier_panel_image_collapsed')
+makeCollapsible(viewStatus, 'monochromifier_panel_view_collapsed')
+makeCollapsible(editControls, 'monochromifier_panel_edit_collapsed')
 
 // Block bleed-through on control panels
 const blockBleedThrough = (e) => e.stopPropagation()
-;[gridControls, halftoneControls, colorModeControls].forEach(panel => {
+;[gridControls, halftoneControls, colorModeControls, imageControls, viewStatus, editControls].forEach(panel => {
   if (panel) {
     panel.addEventListener('mousedown', blockBleedThrough)
     panel.addEventListener('touchstart', blockBleedThrough, { passive: false })

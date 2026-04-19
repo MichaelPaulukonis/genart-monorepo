@@ -1,7 +1,7 @@
 import { p5 } from 'p5js-wrapper'
 import '../css/style.css'
 import '../../../libs/version-display/version-display.css'
-import { displayUI, drawOSD, displayProcessingText, drawGrid } from './ui.js'
+import { drawOSD, displayProcessingText, drawGrid } from './ui.js'
 import { mouseDragged, mouseReleased, mousePressed, specialKeys, handleKeys, keyReleased, handleFile, getHandleAtPosition, isInsideRect } from './input.js'
 import { WebGLProcessor } from './webgl-processor.js'
 
@@ -131,6 +131,9 @@ const sketch = function (p) {
     initGridControls()
     initHalftoneControls()
     initColorModeControls()
+    initImageControls()
+    initViewControls()
+    initEditControls()
 
     processImage(state.img)
   }
@@ -360,6 +363,125 @@ const sketch = function (p) {
     weightB.addEventListener('input', (e) => { e.stopPropagation(); onWeightChange() })
   }
 
+  // --- DOM helpers ---
+
+  const setElValue = (id, v) => { const el = document.getElementById(id); if (el) el.value = v }
+  const setElText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v }
+  const setCheckbox = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v }
+  const toggleHidden = (id, hide) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', hide) }
+  const toggleActive = (id, active) => { const el = document.getElementById(id); if (el) el.classList.toggle('active', active) }
+
+  const syncUI = () => {
+    // Image controls
+    setElValue('threshold-slider', state.threshold)
+    setElText('threshold-value', Math.round(state.threshold))
+    setCheckbox('invert-toggle', state.invert)
+    setCheckbox('transparency-toggle', state.transparencyModeEnabled)
+    toggleHidden('transparency-threshold-group', !state.transparencyModeEnabled)
+    setElValue('transparency-threshold-slider', state.transparencyThreshold)
+    setElText('transparency-threshold-value', state.transparencyThreshold)
+    setCheckbox('autocrop-toggle', state.autoCrop)
+
+    // View status
+    setElText('status-mode', state.appMode)
+    setElText('status-zoom', `${(state.view.zoom * 100).toFixed(0)}%`)
+    setElText('status-pan', `${Math.round(state.view.x)}, ${Math.round(state.view.y)}`)
+    setCheckbox('osd-toggle', state.showOSD)
+
+    // Edit controls
+    toggleHidden('edit-controls', state.appMode !== state.modes.EDIT)
+    toggleActive('tool-paint', state.editTool === state.editTools.PAINT)
+    toggleActive('tool-crop', state.editTool === state.editTools.CROP)
+    setCheckbox('erase-toggle', state.modal.eraseMode)
+    setElValue('brush-size-slider', state.brushSize)
+    setElText('brush-size-value', state.brushSize)
+    toggleHidden('brush-size-group', state.editTool !== state.editTools.PAINT)
+
+    // Panel visibility (controlled by showUI)
+    const panelVisibility = [
+      { id: 'grid-controls', show: state.modal.showUI && state.showGridControls },
+      { id: 'halftone-controls', show: state.modal.showUI && state.showHalftoneControls },
+      { id: 'color-mode-controls', show: state.modal.showUI && state.showColorModeControls },
+      { id: 'image-controls', show: state.modal.showUI },
+      { id: 'view-status', show: state.modal.showUI }
+    ]
+    panelVisibility.forEach(({ id, show }) => toggleHidden(id, !show))
+  }
+
+  const initImageControls = () => {
+    if (!document.getElementById('threshold-slider')) return
+
+    document.getElementById('threshold-slider').addEventListener('input', (e) => {
+      e.stopPropagation()
+      state.threshold = parseFloat(e.target.value)
+      state.bwCachedImage = null
+      if (state.img) buildCombinedLayer(state.img)
+    })
+
+    document.getElementById('invert-toggle').addEventListener('change', (e) => {
+      e.stopPropagation()
+      state.invert = e.target.checked
+      state.bwCachedImage = null
+      if (state.img) buildCombinedLayer(state.img)
+    })
+
+    document.getElementById('transparency-toggle').addEventListener('change', (e) => {
+      e.stopPropagation()
+      state.transparencyModeEnabled = e.target.checked
+      state.bwCachedImage = null
+      if (state.img) buildCombinedLayer(state.img)
+    })
+
+    document.getElementById('transparency-threshold-slider').addEventListener('input', (e) => {
+      e.stopPropagation()
+      state.transparencyThreshold = parseInt(e.target.value)
+      state.bwCachedImage = null
+      if (state.img) buildCombinedLayer(state.img)
+    })
+
+    document.getElementById('autocrop-toggle').addEventListener('change', (e) => {
+      e.stopPropagation()
+      state.autoCrop = e.target.checked
+      if (state.img) buildCombinedLayer(state.img)
+    })
+  }
+
+  const initViewControls = () => {
+    document.getElementById('osd-toggle')?.addEventListener('change', (e) => {
+      e.stopPropagation()
+      state.showOSD = e.target.checked
+      state.dirty = true
+    })
+
+  }
+
+  const initEditControls = () => {
+    document.getElementById('tool-paint')?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      state.editTool = state.editTools.PAINT
+      state.cropState = 'idle'
+      state.dirty = true
+    })
+
+    document.getElementById('tool-crop')?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      state.editTool = state.editTools.CROP
+      state.dirty = true
+    })
+
+    document.getElementById('erase-toggle')?.addEventListener('change', (e) => {
+      e.stopPropagation()
+      state.modal.eraseMode = e.target.checked
+      state.dirty = true
+    })
+
+    document.getElementById('brush-size-slider')?.addEventListener('input', (e) => {
+      e.stopPropagation()
+      state.brushSize = parseInt(e.target.value)
+      if (state.img) buildPaintLayer(state.img)
+    })
+  }
+
   const updatePaintScale = (w, h) => {
     const maxSize = Math.max(w, h)
     state.paintScale = state.displaySize / maxSize
@@ -503,35 +625,7 @@ const sketch = function (p) {
         state.hoveredHandle = null
       }
 
-      if (state.modal.showUI) displayUI(p, state)
-
-      // Update HTML UI visibility
-      const gridControls = document.getElementById('grid-controls')
-      if (gridControls) {
-        if (state.modal.showUI && state.showGridControls) {
-          gridControls.classList.remove('hidden')
-        } else {
-          gridControls.classList.add('hidden')
-        }
-      }
-
-      const halftoneControls = document.getElementById('halftone-controls')
-      if (halftoneControls) {
-        if (state.modal.showUI && state.showHalftoneControls) {
-          halftoneControls.classList.remove('hidden')
-        } else {
-          halftoneControls.classList.add('hidden')
-        }
-      }
-
-      const colorModeControls = document.getElementById('color-mode-controls')
-      if (colorModeControls) {
-        if (state.modal.showUI && state.showColorModeControls) {
-          colorModeControls.classList.remove('hidden')
-        } else {
-          colorModeControls.classList.add('hidden')
-        }
-      }
+      syncUI()
 
       if (state.showOSD && state.appMode === state.modes.ADJUST) drawOSD(p, state)
 

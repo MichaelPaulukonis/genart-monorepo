@@ -222,6 +222,12 @@ export function specialKeys(p, state, { buildPaintLayer, buildCombinedLayer }) {
 }
 
 export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, setupAdjustMode, setupEditMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop }) {
+  // Prevent browser scroll on arrow keys — actual handling is in specialKeys (draw loop)
+  if (p.keyCode === p.UP_ARROW || p.keyCode === p.DOWN_ARROW ||
+      p.keyCode === p.LEFT_ARROW || p.keyCode === p.RIGHT_ARROW) {
+    return false
+  }
+
   // Commit Crop on Enter
   if (state.cropState === 'adjusting' && p.keyCode === p.ENTER) {
     performCrop()
@@ -240,7 +246,6 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
   }
   if (p.key === 'i') {
     state.invert = !state.invert
-    state.backgroundColor = state.invert ? p.color(0, 0, 0) : p.color(255, 255, 255)
     state.bwCachedImage = null
     buildCombinedLayer(state.img)
     state.dirty = true
