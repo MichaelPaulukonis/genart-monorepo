@@ -11,6 +11,7 @@
 
 <body>
   <script type="module" src="/src/monochromifier.js"></script>
+<aside aria-label="Controls">
 <div id="controls-sidebar">
 
 <div id="view-status" class="control-panel draggable">
@@ -120,7 +121,7 @@
         <option value="5">Custom Weights</option>
       </select>
     </div>
-    <div id="custom-weights-group" class="weights-inactive">
+    <div id="custom-weights-group" class="weights-inactive" aria-hidden="true">
       <div class="control-group">
         <label for="weight-r">R Weight</label>
         <div class="slider-row">
@@ -224,6 +225,7 @@
 </div>
 
 </div><!-- #controls-sidebar -->
+</aside>
 
   <div id="about-box" class="info-box hidden">
     <h2>Monochromifier</h2>
@@ -235,7 +237,7 @@
       <li>Press <kbd>e</kbd> to enter edit mode (paint &amp; crop)</li>
       <li>Press <kbd>?</kbd> to view all keyboard shortcuts</li>
     </ul>
-    <footer class="info-footer">
+    <footer class="info-footer" role="none">
       <div class="footer-content">
         <div class="footer-links">
           <span>© 2025 <a href="http://michaelpaulukonis.github.io" target="_blank" rel="noopener">Michael Paulukonis</a></span>
@@ -313,7 +315,7 @@
       </div>
     </div>
 
-    <footer class="info-footer">
+    <footer class="info-footer" role="none">
       <div class="footer-content">
         <div class="footer-links">
           <span>© 2025 <a href="http://michaelpaulukonis.github.io" target="_blank" rel="noopener">Michael Paulukonis</a></span>

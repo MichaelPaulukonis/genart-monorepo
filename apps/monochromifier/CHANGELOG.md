@@ -23,6 +23,10 @@
 ### Fixed
 - **monochromifier:** arrow keys no longer scroll the browser page when used for threshold/zoom adjustment
 - **monochromifier:** toggling invert no longer turns the canvas background black
+- **monochromifier:** drag handle label and collapse button text contrast raised to meet WCAG AA (4.5:1)
+- **monochromifier:** control panels wrapped in `<aside>` landmark for screen reader navigation
+- **monochromifier:** modal `<footer>` elements marked `role="none"` to prevent duplicate contentinfo landmarks
+- **monochromifier:** inactive custom-weight value outputs hidden to avoid low-contrast dimmed text
 
 ## 0.7.0 (2026-03-20)
 

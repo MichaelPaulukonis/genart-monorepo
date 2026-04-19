@@ -220,7 +220,7 @@
   align-items: center;
   justify-content: space-between;
   font-size: 0.7em;
-  color: #888;
+  color: #aaa;
   margin-bottom: 5px;
   border-bottom: 1px solid #444;
   padding-bottom: 2px;
@@ -317,6 +317,10 @@
   opacity: 0.45;
 }
 
+#custom-weights-group.weights-inactive .slider-value {
+  visibility: hidden;
+}
+
 /* Collapsible panel support */
 .control-panel.is-collapsed .panel-body {
   display: none;
@@ -325,7 +329,7 @@
 .panel-collapse-btn {
   background: none;
   border: none;
-  color: #888;
+  color: #aaa;
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
