@@ -1,0 +1,9 @@
+{
+  "name": "local-save-server",
+  "version": "0.1.0",
+  "description": "Local file save server for genart apps",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
