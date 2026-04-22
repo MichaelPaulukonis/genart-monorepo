@@ -4,6 +4,7 @@ import '../../../libs/version-display/version-display.css'
 import { drawOSD, displayProcessingText, drawGrid } from './ui.js'
 import { mouseDragged, mouseReleased, mousePressed, specialKeys, handleKeys, keyReleased, handleFile, getHandleAtPosition, isInsideRect } from './input.js'
 import { WebGLProcessor } from './webgl-processor.js'
+import { checkServer, saveWithFallback } from './utils/save-local.js'
 
 const sketch = function (p) {
   const state = {
@@ -136,6 +137,7 @@ const sketch = function (p) {
     initEditControls()
 
     processImage(state.img)
+    checkServer() // async fire-and-forget — caches availability before first save
   }
 
   const loadSettings = () => {
@@ -793,7 +795,7 @@ const sketch = function (p) {
     buildCombinedLayer(state.img)
   }
 
-  p.keyPressed = () => handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, setupAdjustMode, setupEditMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop })
+  p.keyPressed = () => handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, setupAdjustMode, setupEditMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop, saveWithFallback })
 
   p.keyReleased = function () { keyReleased(p, state, { drawLine }) }
 

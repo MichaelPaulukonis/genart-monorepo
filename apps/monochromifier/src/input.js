@@ -221,7 +221,7 @@ export function specialKeys(p, state, { buildPaintLayer, buildCombinedLayer }) {
   return handledKey ? false : undefined
 }
 
-export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, setupAdjustMode, setupEditMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop }) {
+export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintLayer, setupAdjustMode, setupEditMode, createSaveImage, generateFilename, fitBoth, fitWidth, fitHeight, performCrop, saveWithFallback }) {
   // Prevent browser scroll on arrow keys — actual handling is in specialKeys (draw loop)
   if (p.keyCode === p.UP_ARROW || p.keyCode === p.DOWN_ARROW ||
       p.keyCode === p.LEFT_ARROW || p.keyCode === p.RIGHT_ARROW) {
@@ -376,7 +376,7 @@ export function handleKeys(p, state, { undoCrop, buildCombinedLayer, buildPaintL
     (p.keyIsDown(p.CONTROL) || p.keyIsDown(91))
   ) {
     const saveImage = createSaveImage()
-    p.save(saveImage, generateFilename())
+    saveWithFallback(p, saveImage, generateFilename())
     return false
   }
 }
