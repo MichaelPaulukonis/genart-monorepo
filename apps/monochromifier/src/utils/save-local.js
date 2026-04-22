@@ -1,15 +1,14 @@
 const SERVER_URL = 'http://localhost:7654'
 let serverAvailable = null
+let checkInFlight = null
 
-export async function checkServer() {
-  try {
-    const res = await fetch(`${SERVER_URL}/ping`, {
-      signal: AbortSignal.timeout(1000)
-    })
-    serverAvailable = res.ok
-  } catch {
-    serverAvailable = false
-  }
+export function checkServer() {
+  if (checkInFlight) return checkInFlight
+  checkInFlight = fetch(`${SERVER_URL}/ping`, { signal: AbortSignal.timeout(1000) })
+    .then(res => { serverAvailable = res.ok })
+    .catch(() => { serverAvailable = false })
+    .finally(() => { checkInFlight = null })
+  return checkInFlight
 }
 
 async function saveToServer(graphics, filename) {
