@@ -60,7 +60,7 @@ const server = http.createServer(async (req, res) => {
 
       const base64Data = dataURL.replace(/^data:image\/png;base64,/, '')
       const buffer = Buffer.from(base64Data, 'base64')
-      const name = filename || generateFilename()
+      const name = path.basename(filename || generateFilename())
 
       fs.mkdirSync(outputDir, { recursive: true })
       const filepath = path.join(outputDir, name)
