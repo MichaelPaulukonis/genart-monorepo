@@ -37,6 +37,8 @@ This changelog aggregates infrastructure and shared-library changes across the w
   - Fix release-deploy targets across computational-collage, crude-collage-painter, dragline, duo-chrome, those-shape-things, and monochromifier
   - Ensure proper version bumping and changelog generation for all apps
 
+- **tools:** add `local-save-server` — lightweight Node.js HTTP server (`tools/local-save-server/`) that accepts PNG save requests from browser apps and writes files directly to `~/projects/images/genart-output/`; exposes `/ping` and `POST /save` with CORS support; run with `node tools/local-save-server/server.js`
+
 - From **monochromifier**:
   - **monochromifier:** add save-as-transparent option with proper invert mode support ([#37](https://github.com/MichaelPaulukonis/genart-monorepo/issues/37))
   - resolve nx release configuration conflicts for proper versioning ([0dbd2db0](https://github.com/MichaelPaulukonis/genart-monorepo/commit/0dbd2db0))

@@ -3179,9 +3179,9 @@
         "dependencies": [
           "5"
         ],
-        "status": "cancelled",
+        "status": "done",
         "subtasks": [],
-        "updatedAt": "2026-03-21T03:22:39.768Z"
+        "updatedAt": "2026-04-22T02:41:37.826Z"
       },
       {
         "id": "7",
@@ -3193,9 +3193,9 @@
         "dependencies": [
           "6"
         ],
-        "status": "cancelled",
+        "status": "done",
         "subtasks": [],
-        "updatedAt": "2026-03-21T03:22:39.793Z"
+        "updatedAt": "2026-04-22T02:47:11.387Z"
       },
       {
         "id": "8",
@@ -3208,9 +3208,9 @@
           "5",
           "6"
         ],
-        "status": "cancelled",
+        "status": "done",
         "subtasks": [],
-        "updatedAt": "2026-03-21T03:22:39.812Z"
+        "updatedAt": "2026-04-22T02:49:17.750Z"
       },
       {
         "id": "9",
@@ -3311,9 +3311,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-03-21T03:52:10.963Z",
+      "lastModified": "2026-04-22T02:49:17.750Z",
       "taskCount": 15,
-      "completedCount": 7,
+      "completedCount": 10,
       "tags": [
         "monochrome"
       ]

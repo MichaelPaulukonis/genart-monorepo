@@ -11,6 +11,7 @@
 ## [Unreleased]
 
 ### Added
+- **monochromifier:** Ctrl+S saves directly to `~/projects/images/genart-output/` when local save server is running; falls back silently to browser download when server is absent or unreachable
 - **monochromifier:** About screen with app description, usage summary, and links to GitHub and author homepage
 - **monochromifier:** first-visit auto-show for About screen (localStorage, no consent required)
 - **monochromifier:** `a` key toggles About screen; Help and About close each other via conflict resolution
