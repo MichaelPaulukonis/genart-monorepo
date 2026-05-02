@@ -1,0 +1,43 @@
+{
+  "name": "aggressive-text-waves",
+  "sourceRoot": "apps/aggressive-text-waves/src",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "aggressive-text-waves:build",
+        "port": 5179
+      }
+    },
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/aggressive-text-waves",
+        "configFile": "apps/aggressive-text-waves/vite.config.js"
+      }
+    },
+    "preview": {
+      "executor": "@nx/vite:preview-server",
+      "options": {
+        "buildTarget": "aggressive-text-waves:build",
+        "port": 4179
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/aggressive-text-waves/**/*.{js,jsx}"]
+      }
+    },
+    "deploy": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx gh-pages -d dist/apps/aggressive-text-waves --repo https://github.com/MichaelPaulukonis/aggressive-text-waves.git"
+      }
+    }
+  }
+}
