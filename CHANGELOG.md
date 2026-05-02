@@ -6,6 +6,11 @@ This changelog aggregates infrastructure and shared-library changes across the w
 
 ### Infrastructure & Shared Libraries
 
+- **aggressive-text-waves:** add new app — text animated on character grid via 2D Perlin noise
+  - Ported from `my-sketches` canvas-sketch repo; canvas-sketch removed in favor of plain p5 instance mode
+  - Tweakpane v3 → v4 (`addInput` → `addBinding`)
+  - Deployed to https://michaelpaulukonis.github.io/aggressive-text-waves/
+
 - **monorepo:** narrow Vitest workspace project discovery to explicit config files
   - Updated `vitest.workspace.js` to target only `vitest.config.*` paths under `apps/*` and `libs/*`
   - Reduces VS Code Vitest extension project over-detection and avoids max-config warnings
