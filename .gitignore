@@ -189,3 +189,10 @@ apps/duo-chrome/public/images_*/
 !apps/duo-chrome/public/images_production/
 
 .nx/polygraph
+
+# MemPalace per-project files (issue #185)
+mempalace.yaml
+entities.json
+
+# Git worktrees
+.worktrees/
