@@ -7,7 +7,7 @@ function createModal (id) {
   if (!el) return null
 
   let isDragging = false
-  let startX, startY, offsetX = 0, offsetY = 0
+  let startX; let startY; let offsetX = 0; let offsetY = 0
 
   el.addEventListener('mousedown', (e) => {
     if (['INPUT', 'BUTTON', 'A'].includes(e.target.tagName)) return

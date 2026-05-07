@@ -37,7 +37,7 @@ new p5((p) => {
   let grid = []
   let wordObjects = []
   let zoff = 0
-  let gravityCenter = { x: 0, y: 0 }
+  const gravityCenter = { x: 0, y: 0 }
   let gravityCenterOff = { x: 0, y: 0 }
   let showCenter = false
   const backgroundLetters = "..........,,,,,:::::;;;;;'''''".split('')
@@ -107,7 +107,7 @@ new p5((p) => {
       if (this.isVertical === other.isVertical) {
         if (this.isVertical) {
           if (this.x !== other.x) return 0
-          let { minWord, maxWord } =
+          const { minWord, maxWord } =
             this.y < other.y
               ? { minWord: this, maxWord: other }
               : { minWord: other, maxWord: this }
@@ -115,7 +115,7 @@ new p5((p) => {
           return overlap >= 0 ? 0 : -overlap
         } else {
           if (this.y !== other.y) return 0
-          let { minWord, maxWord } =
+          const { minWord, maxWord } =
             this.x < other.x
               ? { minWord: this, maxWord: other }
               : { minWord: other, maxWord: this }
@@ -147,9 +147,9 @@ new p5((p) => {
     }
 
     resolveOverlap (words) {
-      for (let word of words) {
+      for (const word of words) {
         if (word !== this) {
-          let overlap = this.touches(word)
+          const overlap = this.touches(word)
           if (overlap > 0) {
             if (this.isVertical === word.isVertical) {
               if (this.isVertical) {
@@ -208,8 +208,8 @@ new p5((p) => {
 
     assignToGrid (grid) {
       for (let i = 0; i < this.text.length; i++) {
-        let x = this.isVertical ? this.x : (this.x + i) % cols
-        let y = this.isVertical ? (this.y + i) % rows : this.y
+        const x = this.isVertical ? this.x : (this.x + i) % cols
+        const y = this.isVertical ? (this.y + i) % rows : this.y
         if (x >= 0 && x < cols && y >= 0 && y < rows) {
           grid[y][x].setLetter(this.text.charAt(i))
         }
