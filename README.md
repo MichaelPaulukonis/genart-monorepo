@@ -12,9 +12,10 @@ A monorepo for creative coding and generative art projects using Nx.
 - **[dragline](./apps/dragline/)** (port 5177) -  A draggable text landscape
 - **[aggressive-text-waves](./apps/aggressive-text-waves/)** (port 5179) - Text animated on a character grid, driven by 2D Perlin noise
 
-<!-- TODO: add screenshot for aggressive-text-waves -->
+<img src="./apps/aggressive-text-waves/docs/screenshots/aggressive-text-waves-main.png" alt="Screenshot of aggressive-text-waves showing words drifting across a noise field" style="width:auto; height:150px;">\
+Aggressive Text Waves - words drift across a character grid toward a wandering gravity well
 
-<img src="./apps/duo-chrome/docs/screenshots/duo-chrome-info-box.png" alt="image from duo-chrome" style="width:auto; height:150px;">\
+<img src="./apps/duo-chrome/docs/reference/screenshots/duo-chrome-info-box.png" alt="image from duo-chrome" style="width:auto; height:150px;">\
 Duo-chrome composition with info-box
 
 <img src="./apps/monochromifier/docs/screenshots/monochromifier-main-00.png" alt="screenshot of main monochromifier UI" style="width:150px; height:auto;">\

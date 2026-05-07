@@ -4,7 +4,7 @@ Text animated on a character grid, driven by 2D Perlin noise. Words from a sourc
 
 **Live:** https://michaelpaulukonis.github.io/aggressive-text-waves/
 
-<!-- TODO: add screenshot -->
+![Aggressive Text Waves](./docs/screenshots/aggressive-text-waves-main.png)
 
 ## Controls
 
