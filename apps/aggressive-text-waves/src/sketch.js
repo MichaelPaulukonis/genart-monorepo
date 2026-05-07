@@ -67,6 +67,7 @@ new p5((p) => {
 
   p.keyPressed = () => {
     if (p.key === 'c' || p.key === 'C') showCenter = !showCenter
+    if (p.key === '?') window.aboutControls && window.aboutControls.toggle()
   }
 
   class Cell {
