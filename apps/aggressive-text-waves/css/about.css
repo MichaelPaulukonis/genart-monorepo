@@ -1,0 +1,151 @@
+.info-box {
+  position: absolute;
+  cursor: move;
+  user-select: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px;
+  background-color: rgba(30, 30, 30, 0.95);
+  color: #eeeeee;
+  border: 1px solid #555;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  font-family: sans-serif;
+}
+
+.info-box h2 {
+  text-align: center;
+  color: #ffffff;
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+
+.info-box h3 {
+  color: #cccccc;
+  font-weight: normal;
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+
+.info-box p {
+  color: #cccccc;
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+.info-box ul {
+  margin: 6px 0;
+  padding-left: 20px;
+  color: #cccccc;
+}
+
+.info-box li {
+  margin: 4px 0;
+  line-height: 1.5;
+  font-size: 0.9em;
+}
+
+.info-box.hidden {
+  display: none;
+}
+
+.info-box * {
+  pointer-events: none;
+}
+
+.info-box a,
+.info-box button {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.info-box kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background-color: #444;
+  border: 1px solid #666;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #fff;
+}
+
+.info-footer {
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.85em;
+  color: #888;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-links a {
+  color: #aaaaff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: #ccccff;
+  text-decoration: underline;
+}
+
+.separator {
+  color: #555;
+}
+
+.version-container {
+  font-family: monospace;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.close-button {
+  padding: 8px 24px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-button:hover {
+  background-color: #777;
+  transform: translateY(-1px);
+}
+
+.close-button:active {
+  transform: translateY(1px);
+}

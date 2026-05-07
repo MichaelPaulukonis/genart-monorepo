@@ -94,6 +94,15 @@ importers:
         specifier: ^4.0.5
         version: 4.0.5
     devDependencies:
+      eslint:
+        specifier: ^8.57.1
+        version: 8.57.1
+      eslint-plugin-p5js:
+        specifier: ^1.0.0
+        version: 1.0.0(eslint@8.57.1)
+      standard:
+        specifier: ^17.1.2
+        version: 17.1.2
       vite:
         specifier: ^5.0.0
         version: 5.4.20

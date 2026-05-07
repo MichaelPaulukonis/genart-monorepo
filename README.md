@@ -10,8 +10,12 @@ A monorepo for creative coding and generative art projects using Nx.
 - **[those-shape-things](./apps/those-shape-things/)** (port 5175) - Geometric tile-based compositions with color palettes
 - **[computational-collage](./apps/computational-collage/)** (port 5176) - Advanced collage creation with multiple composition modes
 - **[dragline](./apps/dragline/)** (port 5177) -  A draggable text landscape
+- **[aggressive-text-waves](./apps/aggressive-text-waves/)** (port 5179) - Text animated on a character grid, driven by 2D Perlin noise
 
-<img src="./apps/duo-chrome/docs/screenshots/duo-chrome-info-box.png" alt="image from duo-chrome" style="width:auto; height:150px;">\
+<img src="./apps/aggressive-text-waves/docs/screenshots/aggressive-text-waves-main.png" alt="Screenshot of aggressive-text-waves showing words drifting across a noise field" style="width:auto; height:150px;">\
+Aggressive Text Waves - words drift across a character grid toward a wandering gravity well
+
+<img src="./apps/duo-chrome/docs/reference/screenshots/duo-chrome-info-box.png" alt="image from duo-chrome" style="width:auto; height:150px;">\
 Duo-chrome composition with info-box
 
 <img src="./apps/monochromifier/docs/screenshots/monochromifier-main-00.png" alt="screenshot of main monochromifier UI" style="width:150px; height:auto;">\
@@ -57,6 +61,7 @@ nx dev those-shape-things      # http://localhost:5175
 nx dev computational-collage   # http://localhost:5176
 nx dev dragline                # http://localhost:5177
 nx dev monochromifier          # http://localhost:5178
+nx dev aggressive-text-waves   # http://localhost:5179
 
 
 # Build specific project

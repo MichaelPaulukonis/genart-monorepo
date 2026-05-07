@@ -1,0 +1,16 @@
+{
+  "name": "aggressive-text-waves",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "p5": "^1.11.10",
+    "tweakpane": "^4.0.5"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-plugin-p5js": "^1.0.0",
+    "standard": "^17.1.2",
+    "vite": "^5.0.0"
+  }
+}
