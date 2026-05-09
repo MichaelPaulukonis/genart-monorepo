@@ -201,23 +201,24 @@ new p5((p) => {
         targetY = this.ctx.floor(this.ctx.lerp(personalY, gravTargetY, avgStrength))
       } else {
         const s = Math.abs(avgStrength)
-        let fleeX = 0
-        let fleeY = 0
+        let antiX = personalX
+        let antiY = personalY
 
-        for (const src of sources) {
-          const sx = src.x - (this.isVertical ? 0 : halfLen)
-          const sy = src.y - (this.isVertical ? halfLen : 0)
-          const dx = personalX - sx
-          const dy = personalY - sy
-          fleeX += dx !== 0 ? Math.sign(dx) : (Math.random() > 0.5 ? 1 : -1)
-          fleeY += dy !== 0 ? Math.sign(dy) : (Math.random() > 0.5 ? 1 : -1)
+        if (sources.length > 0) {
+          let sumX = 0
+          let sumY = 0
+          for (const src of sources) {
+            const sx = src.x - (this.isVertical ? 0 : halfLen)
+            const sy = src.y - (this.isVertical ? halfLen : 0)
+            sumX += (sx + Math.floor(cols / 2)) % cols
+            sumY += (sy + Math.floor(rows / 2)) % rows
+          }
+          antiX = sumX / sources.length
+          antiY = sumY / sources.length
         }
 
-        if (fleeX === 0) fleeX = Math.random() > 0.5 ? 1 : -1
-        if (fleeY === 0) fleeY = Math.random() > 0.5 ? 1 : -1
-
-        targetX = this.ctx.floor(this.x + Math.sign(fleeX) * s * cols * 0.5)
-        targetY = this.ctx.floor(this.y + Math.sign(fleeY) * s * rows * 0.5)
+        targetX = this.ctx.floor(this.ctx.lerp(personalX, antiX, s))
+        targetY = this.ctx.floor(this.ctx.lerp(personalY, antiY, s))
       }
 
       const step = Math.random() < (params.speed * params.speed) ? 1 : 0
