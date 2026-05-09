@@ -25,7 +25,8 @@ const params = {
   centerSpeed: 0.005,
   xOffsetSpeed: 0.11,
   yOffsetSpeed: 0.164,
-  zOffsetSpeed: 0.001
+  zOffsetSpeed: 0.001,
+  sourceCount: 1
 }
 
 const pane = new Pane()
@@ -37,8 +38,7 @@ new p5((p) => {
   let grid = []
   let wordObjects = []
   let zoff = 0
-  const gravityCenter = { x: 0, y: 0 }
-  let gravityCenterOff = { x: 0, y: 0 }
+  let gravitySources = []
   let showCenter = false
   const backgroundLetters = "..........,,,,,:::::;;;;;'''''".split('')
 
@@ -59,11 +59,13 @@ new p5((p) => {
       init()
     })
   pane.addBinding(params, 'verticalRatio', { min: 0, max: 1, step: 0.05, label: 'vert ratio' })
-  pane.addBinding(params, 'gravityStrength', { min: 0, max: 1, step: 0.05, label: 'gravity' })
+  pane.addBinding(params, 'gravityStrength', { min: -1, max: 1, step: 0.05, label: 'gravity (+attract/-repel)' })
   pane.addBinding(params, 'centerSpeed', { min: 0.001, max: 0.1, step: 0.001, label: 'center speed' })
   pane.addBinding(params, 'xOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
   pane.addBinding(params, 'yOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
   pane.addBinding(params, 'zOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
+  pane.addBinding(params, 'sourceCount', { min: 0, max: 5, step: 1, label: 'sources' })
+    .on('change', () => buildSources())
 
   p.keyPressed = () => {
     if (p.key === 'c' || p.key === 'C') showCenter = !showCenter
@@ -173,16 +175,33 @@ new p5((p) => {
       }
     }
 
-    update (words, gravityCenter) {
+    update (words, sources) {
       const personalX = this.ctx.floor(this.ctx.noise(this.xoff, this.zoff) * cols)
       const personalY = this.ctx.floor(this.ctx.noise(this.yoff, this.zoff) * rows)
 
       const halfLen = this.ctx.floor(this.text.length / 2)
-      const gravityTargetX = gravityCenter.x - (this.isVertical ? 0 : halfLen)
-      const gravityTargetY = gravityCenter.y - (this.isVertical ? halfLen : 0)
 
-      const targetX = this.ctx.floor(this.ctx.lerp(personalX, gravityTargetX, params.gravityStrength))
-      const targetY = this.ctx.floor(this.ctx.lerp(personalY, gravityTargetY, params.gravityStrength))
+      let gravTargetX = personalX
+      let gravTargetY = personalY
+      if (sources.length > 0) {
+        let sumX = 0
+        let sumY = 0
+        let sumAbs = 0
+        for (const src of sources) {
+          sumX += src.x - (this.isVertical ? 0 : halfLen)
+          sumY += src.y - (this.isVertical ? halfLen : 0)
+          sumAbs += 1
+        }
+        if (sumAbs > 0) {
+          gravTargetX = sumX / sumAbs
+          gravTargetY = sumY / sumAbs
+        }
+      }
+
+      const avgStrength = params.gravityStrength
+
+      const targetX = this.ctx.floor(this.ctx.lerp(personalX, gravTargetX, avgStrength))
+      const targetY = this.ctx.floor(this.ctx.lerp(personalY, gravTargetY, avgStrength))
 
       const step = Math.random() < (params.speed * params.speed) ? 1 : 0
 
@@ -191,7 +210,7 @@ new p5((p) => {
         const dy = targetY - this.y
         this.x += dx !== 0 ? Math.sign(dx) : 0
         this.y += dy !== 0 ? Math.sign(dy) : 0
-        if (Math.random() > params.gravityStrength) {
+        if (Math.random() > Math.abs(avgStrength)) {
           this.resolveOverlap(words)
         }
       }
@@ -217,6 +236,19 @@ new p5((p) => {
     }
   }
 
+  function buildSources () {
+    gravitySources = []
+    for (let i = 0; i < params.sourceCount; i++) {
+      gravitySources.push({
+        x: 0,
+        y: 0,
+        strength: params.gravityStrength,
+        xoff: p.random(1000),
+        yoff: p.random(1000) + 1000
+      })
+    }
+  }
+
   function init () {
     cols = p.floor(p.width / params.scale)
     rows = p.floor(p.height / params.scale)
@@ -238,13 +270,14 @@ new p5((p) => {
       w.y = p.floor(p.noise(w.yoff, w.zoff) * rows)
       wordObjects.push(w)
     }
+
+    buildSources()
   }
 
   p.setup = () => {
     p.createCanvas(800, 800)
     p.frameRate(10)
     p.textAlign(p.CENTER, p.CENTER)
-    gravityCenterOff = { x: p.random(1000), y: p.random(1000) + 1000 }
     words = p.splitTokens(sourceText.toUpperCase(), ' ,.;\n')
     init()
   }
@@ -253,10 +286,12 @@ new p5((p) => {
     p.background(255)
     zoff += 0.01
 
-    gravityCenterOff.x += params.centerSpeed
-    gravityCenterOff.y += params.centerSpeed
-    gravityCenter.x = p.noise(gravityCenterOff.x) * cols
-    gravityCenter.y = p.noise(gravityCenterOff.y) * rows
+    for (const src of gravitySources) {
+      src.xoff += params.centerSpeed
+      src.yoff += params.centerSpeed
+      src.x = p.noise(src.xoff) * cols
+      src.y = p.noise(src.yoff) * rows
+    }
 
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
@@ -268,7 +303,7 @@ new p5((p) => {
     }
 
     for (let i = 0; i < wordObjects.length; i++) {
-      wordObjects[i].update(wordObjects, gravityCenter)
+      wordObjects[i].update(wordObjects, gravitySources)
       wordObjects[i].assignToGrid(grid)
     }
 
@@ -279,18 +314,16 @@ new p5((p) => {
     }
 
     if (showCenter) {
-      const cx = p.floor(gravityCenter.x)
-      const cy = p.floor(gravityCenter.y)
-      if (cx >= 0 && cx < cols && cy >= 0 && cy < rows) {
-        p.noStroke()
-        p.fill(255, 221, 0)
-        p.rect(cx * params.scale, cy * params.scale, params.scale, params.scale)
-        p.fill(0)
-        p.text(
-          grid[cy][cx].letter,
-          cx * params.scale + params.scale / 2,
-          cy * params.scale + params.scale / 2
-        )
+      for (const src of gravitySources) {
+        const cx = p.floor(src.x)
+        const cy = p.floor(src.y)
+        if (cx >= 0 && cx < cols && cy >= 0 && cy < rows) {
+          p.noStroke()
+          p.fill(255, 221, 0)
+          p.rect(cx * params.scale, cy * params.scale, params.scale, params.scale)
+          p.fill(0)
+          p.text(grid[cy][cx].letter, cx * params.scale + params.scale / 2, cy * params.scale + params.scale / 2)
+        }
       }
     }
 
