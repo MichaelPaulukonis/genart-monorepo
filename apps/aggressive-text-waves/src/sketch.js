@@ -59,7 +59,7 @@ new p5((p) => {
       init()
     })
   pane.addBinding(params, 'verticalRatio', { min: 0, max: 1, step: 0.05, label: 'vert ratio' })
-  pane.addBinding(params, 'gravityStrength', { min: 0, max: 1, step: 0.05, label: 'gravity' })
+  pane.addBinding(params, 'gravityStrength', { min: -1, max: 1, step: 0.05, label: 'gravity (+attract/-repel)' })
   pane.addBinding(params, 'centerSpeed', { min: 0.001, max: 0.1, step: 0.001, label: 'center speed' })
   pane.addBinding(params, 'xOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
   pane.addBinding(params, 'yOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
