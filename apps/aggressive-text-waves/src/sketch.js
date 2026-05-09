@@ -21,7 +21,6 @@ const params = {
   speed: 0.1,
   scale: 20,
   verticalRatio: 0.0,
-  gravityStrength: 0.6,
   centerSpeed: 0.005,
   xOffsetSpeed: 0.11,
   yOffsetSpeed: 0.164,
@@ -59,7 +58,7 @@ new p5((p) => {
       init()
     })
   pane.addBinding(params, 'verticalRatio', { min: 0, max: 1, step: 0.05, label: 'vert ratio' })
-  pane.addBinding(params, 'gravityStrength', { min: -1, max: 1, step: 0.05, label: 'gravity (+attract/-repel)' })
+  const sourcesFolder = pane.addFolder({ title: 'gravity sources' })
   pane.addBinding(params, 'centerSpeed', { min: 0.001, max: 0.1, step: 0.001, label: 'center speed' })
   pane.addBinding(params, 'xOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
   pane.addBinding(params, 'yOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
@@ -181,44 +180,31 @@ new p5((p) => {
 
       const halfLen = this.ctx.floor(this.text.length / 2)
 
-      const avgStrength = params.gravityStrength
-      let targetX, targetY
+      let targetX = personalX
+      let targetY = personalY
+      let totalWeight = 0
 
-      if (avgStrength >= 0) {
-        let gravTargetX = personalX
-        let gravTargetY = personalY
-        if (sources.length > 0) {
-          let sumX = 0
-          let sumY = 0
-          for (const src of sources) {
-            sumX += src.x - (this.isVertical ? 0 : halfLen)
-            sumY += src.y - (this.isVertical ? halfLen : 0)
-          }
-          gravTargetX = sumX / sources.length
-          gravTargetY = sumY / sources.length
+      if (sources.length > 0) {
+        let sumX = 0
+        let sumY = 0
+        for (const src of sources) {
+          const sx = src.x - (this.isVertical ? 0 : halfLen)
+          const sy = src.y - (this.isVertical ? halfLen : 0)
+          const w = Math.abs(src.strength)
+          if (w === 0) continue
+          const gx = src.strength >= 0 ? sx : (sx + Math.floor(cols / 2)) % cols
+          const gy = src.strength >= 0 ? sy : (sy + Math.floor(rows / 2)) % rows
+          sumX += gx * w
+          sumY += gy * w
+          totalWeight += w
         }
-        targetX = this.ctx.floor(this.ctx.lerp(personalX, gravTargetX, avgStrength))
-        targetY = this.ctx.floor(this.ctx.lerp(personalY, gravTargetY, avgStrength))
-      } else {
-        const s = Math.abs(avgStrength)
-        let antiX = personalX
-        let antiY = personalY
-
-        if (sources.length > 0) {
-          let sumX = 0
-          let sumY = 0
-          for (const src of sources) {
-            const sx = src.x - (this.isVertical ? 0 : halfLen)
-            const sy = src.y - (this.isVertical ? halfLen : 0)
-            sumX += (sx + Math.floor(cols / 2)) % cols
-            sumY += (sy + Math.floor(rows / 2)) % rows
-          }
-          antiX = sumX / sources.length
-          antiY = sumY / sources.length
+        if (totalWeight > 0) {
+          const gravX = sumX / totalWeight
+          const gravY = sumY / totalWeight
+          const lerpT = Math.min(totalWeight / sources.length, 1)
+          targetX = this.ctx.floor(this.ctx.lerp(personalX, gravX, lerpT))
+          targetY = this.ctx.floor(this.ctx.lerp(personalY, gravY, lerpT))
         }
-
-        targetX = this.ctx.floor(this.ctx.lerp(personalX, antiX, s))
-        targetY = this.ctx.floor(this.ctx.lerp(personalY, antiY, s))
       }
 
       const step = Math.random() < (params.speed * params.speed) ? 1 : 0
@@ -228,7 +214,8 @@ new p5((p) => {
         const dy = targetY - this.y
         this.x += dx !== 0 ? Math.sign(dx) : 0
         this.y += dy !== 0 ? Math.sign(dy) : 0
-        if (Math.random() > Math.abs(avgStrength)) {
+        const avgMag = sources.length > 0 ? totalWeight / sources.length : 0
+        if (Math.random() > avgMag) {
           this.resolveOverlap(words)
         }
       }
@@ -260,11 +247,24 @@ new p5((p) => {
       gravitySources.push({
         x: 0,
         y: 0,
-        strength: params.gravityStrength,
+        strength: 0.6,
         xoff: p.random(1000),
         yoff: p.random(1000) + 1000
       })
     }
+    rebuildSourceUI()
+  }
+
+  function rebuildSourceUI () {
+    sourcesFolder.children.slice().forEach(c => c.dispose())
+    gravitySources.forEach((src, i) => {
+      sourcesFolder.addBinding(src, 'strength', {
+        min: -1,
+        max: 1,
+        step: 0.05,
+        label: 'strength ' + (i + 1)
+      })
+    })
   }
 
   function init () {
@@ -298,6 +298,7 @@ new p5((p) => {
     p.textAlign(p.CENTER, p.CENTER)
     words = p.splitTokens(sourceText.toUpperCase(), ' ,.;\n')
     init()
+    rebuildSourceUI()
   }
 
   p.draw = () => {
