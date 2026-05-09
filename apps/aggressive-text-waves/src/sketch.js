@@ -188,10 +188,9 @@ new p5((p) => {
         let sumY = 0
         let sumAbs = 0
         for (const src of sources) {
-          const ax = Math.abs(src.strength)
-          sumX += (src.x - (this.isVertical ? 0 : halfLen)) * ax
-          sumY += (src.y - (this.isVertical ? halfLen : 0)) * ax
-          sumAbs += ax
+          sumX += src.x - (this.isVertical ? 0 : halfLen)
+          sumY += src.y - (this.isVertical ? halfLen : 0)
+          sumAbs += 1
         }
         if (sumAbs > 0) {
           gravTargetX = sumX / sumAbs
@@ -199,9 +198,7 @@ new p5((p) => {
         }
       }
 
-      const avgStrength = sources.length > 0
-        ? sources.reduce((s, src) => s + src.strength, 0) / sources.length
-        : 0
+      const avgStrength = params.gravityStrength
 
       const targetX = this.ctx.floor(this.ctx.lerp(personalX, gravTargetX, avgStrength))
       const targetY = this.ctx.floor(this.ctx.lerp(personalY, gravTargetY, avgStrength))
