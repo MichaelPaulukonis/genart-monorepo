@@ -1,6 +1,8 @@
 import '../css/style.css'
 import p5 from 'p5'
 import { Pane } from 'tweakpane'
+import { Cell } from './cell.js'
+import { Word } from './word.js'
 
 const sourceText = `Now is the winter of our discontent
 Made glorious summer by this sun of York;
@@ -18,14 +20,18 @@ To the lascivious pleasing of a lute.`
 
 const params = {
   stepMode: false,
-  speed: 0.1,
   scale: 20,
   verticalRatio: 0.0,
   centerSpeed: 0.005,
   xOffsetSpeed: 0.11,
   yOffsetSpeed: 0.164,
   zOffsetSpeed: 0.001,
-  sourceCount: 1
+  sourceCount: 1,
+  maxSpeed: 0.5,
+  damping: 0.85,
+  wanderForce: 0.08,
+  gravityForce: 0.15,
+  separationForce: 0.2
 }
 
 const pane = new Pane()
@@ -39,7 +45,7 @@ new p5((p) => {
   let zoff = 0
   let gravitySources = []
   let showCenter = false
-  const backgroundLetters = "..........,,,,,:::::;;;;;'''''".split('')
+  const backgroundChars = "..........,,,,,:::::;;;;;'''''".split('')
 
   const btn = pane.addButton({ title: 'Step: OFF' })
   btn.on('click', () => {
@@ -50,7 +56,6 @@ new p5((p) => {
   })
 
   let prevScale = params.scale
-  pane.addBinding(params, 'speed', { min: 0, max: 1, step: 0.01 })
   pane.addBinding(params, 'scale', { min: 10, max: 50, step: 1 })
     .on('change', () => {
       if (params.scale === prevScale) return
@@ -66,179 +71,16 @@ new p5((p) => {
   pane.addBinding(params, 'sourceCount', { min: 0, max: 5, step: 1, label: 'sources' })
     .on('change', () => buildSources())
 
+  const physicsFolder = pane.addFolder({ title: 'physics' })
+  physicsFolder.addBinding(params, 'maxSpeed', { min: 0.05, max: 3, step: 0.05 })
+  physicsFolder.addBinding(params, 'damping', { min: 0.5, max: 0.99, step: 0.01 })
+  physicsFolder.addBinding(params, 'wanderForce', { min: 0, max: 0.5, step: 0.01, label: 'wander' })
+  physicsFolder.addBinding(params, 'gravityForce', { min: 0, max: 1, step: 0.01, label: 'gravity' })
+  physicsFolder.addBinding(params, 'separationForce', { min: 0, max: 1, step: 0.01, label: 'separation' })
+
   p.keyPressed = () => {
     if (p.key === 'c' || p.key === 'C') showCenter = !showCenter
     if (p.key === '?') window.aboutControls && window.aboutControls.toggle()
-  }
-
-  class Cell {
-    constructor (x, y, scale) {
-      this.x = x
-      this.y = y
-      this.letter = ' '
-      this.scale = scale
-    }
-
-    clear () { this.letter = ' ' }
-    setLetter (letter) { this.letter = letter }
-
-    display () {
-      p.fill(0)
-      p.text(
-        this.letter,
-        this.x * this.scale + this.scale / 2,
-        this.y * this.scale + this.scale / 2
-      )
-    }
-  }
-
-  class Word {
-    constructor (text, x, y, ctx) {
-      this.ctx = ctx
-      this.text = text
-      this.x = x
-      this.y = y
-      this.xoff = this.ctx.random(1000)
-      this.yoff = this.ctx.random(1000)
-      this.zoff = this.ctx.random(1000)
-      this.isVertical = Math.random() < params.verticalRatio
-    }
-
-    touches (other) {
-      if (this.isVertical === other.isVertical) {
-        if (this.isVertical) {
-          if (this.x !== other.x) return 0
-          const { minWord, maxWord } =
-            this.y < other.y
-              ? { minWord: this, maxWord: other }
-              : { minWord: other, maxWord: this }
-          const overlap = maxWord.y - (minWord.y + minWord.text.length)
-          return overlap >= 0 ? 0 : -overlap
-        } else {
-          if (this.y !== other.y) return 0
-          const { minWord, maxWord } =
-            this.x < other.x
-              ? { minWord: this, maxWord: other }
-              : { minWord: other, maxWord: this }
-          const overlap = maxWord.x - (minWord.x + minWord.text.length)
-          return overlap >= 0 ? 0 : -overlap
-        }
-      } else {
-        if (this.isVertical) {
-          if (
-            other.x >= this.x &&
-            other.x < this.x + 1 &&
-            this.y >= other.y &&
-            this.y < other.y + other.text.length
-          ) {
-            return 1
-          }
-        } else {
-          if (
-            this.x >= other.x &&
-            this.x < other.x + other.text.length &&
-            other.y >= this.y &&
-            other.y < this.y + 1
-          ) {
-            return 1
-          }
-        }
-        return 0
-      }
-    }
-
-    resolveOverlap (words) {
-      for (const word of words) {
-        if (word !== this) {
-          const overlap = this.touches(word)
-          if (overlap > 0) {
-            if (this.isVertical === word.isVertical) {
-              if (this.isVertical) {
-                const dir = this.y < word.y ? -1 : 1
-                this.y += dir
-                word.y -= dir
-              } else {
-                const dir = Math.random() < 0.5 ? -1 : 1
-                this.y += dir
-                word.y -= dir
-              }
-            } else {
-              if (this.isVertical) {
-                this.y += 1
-              } else {
-                this.x += 1
-              }
-            }
-          }
-        }
-      }
-    }
-
-    update (words, sources) {
-      const personalX = this.ctx.floor(this.ctx.noise(this.xoff, this.zoff) * cols)
-      const personalY = this.ctx.floor(this.ctx.noise(this.yoff, this.zoff) * rows)
-
-      const halfLen = this.ctx.floor(this.text.length / 2)
-
-      let targetX = personalX
-      let targetY = personalY
-      let totalWeight = 0
-
-      if (sources.length > 0) {
-        let sumX = 0
-        let sumY = 0
-        for (const src of sources) {
-          const sx = src.x - (this.isVertical ? 0 : halfLen)
-          const sy = src.y - (this.isVertical ? halfLen : 0)
-          const w = Math.abs(src.strength)
-          if (w === 0) continue
-          const gx = src.strength >= 0 ? sx : (sx + Math.floor(cols / 2)) % cols
-          const gy = src.strength >= 0 ? sy : (sy + Math.floor(rows / 2)) % rows
-          sumX += gx * w
-          sumY += gy * w
-          totalWeight += w
-        }
-        if (totalWeight > 0) {
-          const gravX = sumX / totalWeight
-          const gravY = sumY / totalWeight
-          const lerpT = Math.min(totalWeight / sources.length, 1)
-          targetX = this.ctx.floor(this.ctx.lerp(personalX, gravX, lerpT))
-          targetY = this.ctx.floor(this.ctx.lerp(personalY, gravY, lerpT))
-        }
-      }
-
-      const step = Math.random() < (params.speed * params.speed) ? 1 : 0
-
-      if (step > 0) {
-        const dx = targetX - this.x
-        const dy = targetY - this.y
-        this.x += dx !== 0 ? Math.sign(dx) : 0
-        this.y += dy !== 0 ? Math.sign(dy) : 0
-        const avgMag = sources.length > 0 ? totalWeight / sources.length : 0
-        if (Math.random() > avgMag) {
-          this.resolveOverlap(words)
-        }
-      }
-
-      if (this.x < 0) this.x = cols
-      if (this.x > cols) this.x = 0
-      if (this.y < 0) this.y = rows
-      if (this.y > rows) this.y = 0
-
-      this.xoff += params.xOffsetSpeed
-      this.yoff += params.yOffsetSpeed
-      this.zoff += params.zOffsetSpeed
-    }
-
-    assignToGrid (grid) {
-      for (let i = 0; i < this.text.length; i++) {
-        const x = this.isVertical ? this.x : (this.x + i) % cols
-        const y = this.isVertical ? (this.y + i) % rows : this.y
-        if (x >= 0 && x < cols && y >= 0 && y < rows) {
-          grid[y][x].setLetter(this.text.charAt(i))
-        }
-      }
-    }
   }
 
   function buildSources () {
@@ -277,15 +119,15 @@ new p5((p) => {
     for (let y = 0; y < rows; y++) {
       const row = []
       for (let x = 0; x < cols; x++) {
-        row.push(new Cell(x, y, params.scale))
+        row.push(new Cell(x, y, params.scale, p))
       }
       grid.push(row)
     }
 
     for (let i = 0; i < words.length; i++) {
-      const w = new Word(words[i], 0, 0, p)
-      w.x = p.floor(p.noise(w.xoff, w.zoff) * cols)
-      w.y = p.floor(p.noise(w.yoff, w.zoff) * rows)
+      const startX = p.noise(p.random(1000)) * cols
+      const startY = p.noise(p.random(1000)) * rows
+      const w = new Word(words[i], startX, startY, p, params)
       wordObjects.push(w)
     }
 
@@ -316,14 +158,14 @@ new p5((p) => {
       for (let x = 0; x < cols; x++) {
         grid[y][x].clear()
         const n = p.noise(x * 0.1, y * 0.1, zoff)
-        const char = backgroundLetters[p.floor(n * backgroundLetters.length)]
+        const char = backgroundChars[p.floor(n * backgroundChars.length)]
         grid[y][x].setLetter(char)
       }
     }
 
     for (let i = 0; i < wordObjects.length; i++) {
-      wordObjects[i].update(wordObjects, gravitySources)
-      wordObjects[i].assignToGrid(grid)
+      wordObjects[i].update(wordObjects, gravitySources, cols, rows)
+      wordObjects[i].assignToGrid(grid, cols, rows)
     }
 
     for (let y = 0; y < rows; y++) {
