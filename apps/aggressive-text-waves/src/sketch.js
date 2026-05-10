@@ -46,6 +46,13 @@ new p5((p) => {
   let gravitySources = []
   let showCenter = false
   const backgroundChars = "..........,,,,,:::::;;;;;'''''".split('')
+  const SOURCE_PALETTES = [
+    { repel: [0, 150, 255],   attract: [255, 200, 0]   },
+    { repel: [180, 0, 220],   attract: [255, 120, 0]   },
+    { repel: [0, 200, 180],   attract: [255, 50, 80]   },
+    { repel: [0, 180, 80],    attract: [220, 0, 180]   },
+    { repel: [80, 80, 200],   attract: [180, 220, 0]   }
+  ]
 
   const btn = pane.addButton({ title: 'Step: OFF' })
   btn.on('click', () => {
@@ -63,20 +70,22 @@ new p5((p) => {
       init()
     })
   pane.addBinding(params, 'verticalRatio', { min: 0, max: 1, step: 0.05, label: 'vert ratio' })
-  const sourcesFolder = pane.addFolder({ title: 'gravity sources' })
-  pane.addBinding(params, 'centerSpeed', { min: 0.001, max: 0.1, step: 0.001, label: 'center speed' })
-  pane.addBinding(params, 'xOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
-  pane.addBinding(params, 'yOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
-  pane.addBinding(params, 'zOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
-  pane.addBinding(params, 'sourceCount', { min: 0, max: 5, step: 1, label: 'sources' })
+
+  const gravityFolder = pane.addFolder({ title: 'gravity' })
+  gravityFolder.addBinding(params, 'centerSpeed', { min: 0.001, max: 0.1, step: 0.001, label: 'center speed' })
+  gravityFolder.addBinding(params, 'sourceCount', { min: 0, max: 5, step: 1, label: 'sources' })
     .on('change', () => buildSources())
+  const sourcesFolder = gravityFolder.addFolder({ title: 'source strengths' })
 
   const physicsFolder = pane.addFolder({ title: 'physics' })
   physicsFolder.addBinding(params, 'maxSpeed', { min: 0.05, max: 3, step: 0.05 })
   physicsFolder.addBinding(params, 'damping', { min: 0.5, max: 0.99, step: 0.01 })
   physicsFolder.addBinding(params, 'wanderForce', { min: 0, max: 0.5, step: 0.01, label: 'wander' })
-  physicsFolder.addBinding(params, 'gravityForce', { min: 0, max: 1, step: 0.01, label: 'gravity' })
+  physicsFolder.addBinding(params, 'gravityForce', { min: 0, max: 1, step: 0.01, label: 'gravity force' })
   physicsFolder.addBinding(params, 'separationForce', { min: 0, max: 1, step: 0.01, label: 'separation' })
+  physicsFolder.addBinding(params, 'xOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
+  physicsFolder.addBinding(params, 'yOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
+  physicsFolder.addBinding(params, 'zOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
 
   p.keyPressed = () => {
     if (p.key === 'c' || p.key === 'C') showCenter = !showCenter
@@ -84,8 +93,8 @@ new p5((p) => {
   }
 
   function buildSources () {
-    gravitySources = []
-    for (let i = 0; i < params.sourceCount; i++) {
+    const target = params.sourceCount
+    while (gravitySources.length < target) {
       gravitySources.push({
         x: 0,
         y: 0,
@@ -94,6 +103,7 @@ new p5((p) => {
         yoff: p.random(1000) + 1000
       })
     }
+    gravitySources.splice(target)
     rebuildSourceUI()
   }
 
@@ -175,17 +185,27 @@ new p5((p) => {
     }
 
     if (showCenter) {
-      for (const src of gravitySources) {
+      const neutral = p.color(255, 255, 255)
+      gravitySources.forEach((src, i) => {
         const cx = p.floor(src.x)
         const cy = p.floor(src.y)
         if (cx >= 0 && cx < cols && cy >= 0 && cy < rows) {
+          const palette = SOURCE_PALETTES[i % SOURCE_PALETTES.length]
+          let col
+          if (src.strength >= 0) {
+            const hot = p.color(...palette.attract)
+            col = p.lerpColor(neutral, hot, src.strength)
+          } else {
+            const cold = p.color(...palette.repel)
+            col = p.lerpColor(neutral, cold, -src.strength)
+          }
           p.noStroke()
-          p.fill(255, 221, 0)
+          p.fill(col)
           p.rect(cx * params.scale, cy * params.scale, params.scale, params.scale)
           p.fill(0)
           p.text(grid[cy][cx].letter, cx * params.scale + params.scale / 2, cy * params.scale + params.scale / 2)
         }
-      }
+      })
     }
 
     if (params.stepMode) p.noLoop()
