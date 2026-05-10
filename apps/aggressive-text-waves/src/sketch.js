@@ -20,6 +20,7 @@ To the lascivious pleasing of a lute.`
 
 const params = {
   stepMode: false,
+  showOutline: true,
   scale: 20,
   verticalRatio: 0.0,
   centerSpeed: 0.005,
@@ -54,13 +55,18 @@ new p5((p) => {
     { repel: [80, 80, 200],   attract: [180, 220, 0]   }
   ]
 
+  pane.addBinding(params, 'showOutline', { label: 'outline' })
+    .on('change', () => { if (params.stepMode) p.redraw() })
+
   const btn = pane.addButton({ title: 'Step: OFF' })
-  btn.on('click', () => {
+
+  function toggleStep () {
     params.stepMode = !params.stepMode
     btn.title = params.stepMode ? 'Step: ON' : 'Step: OFF'
-    p.canvas.focus()
     if (!params.stepMode) p.loop()
-  })
+  }
+
+  btn.on('click', () => { toggleStep(); p.canvas.focus() })
 
   let prevScale = params.scale
   pane.addBinding(params, 'scale', { min: 10, max: 50, step: 1 })
@@ -88,7 +94,14 @@ new p5((p) => {
   physicsFolder.addBinding(params, 'zOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
 
   p.keyPressed = () => {
+    if (p.key === ' ') toggleStep()
+    if (p.key === 'n' || p.key === 'N') { if (params.stepMode) p.redraw() }
     if (p.key === 'c' || p.key === 'C') showCenter = !showCenter
+    if (p.key === 'o' || p.key === 'O') {
+      params.showOutline = !params.showOutline
+      pane.refresh()
+      if (params.stepMode) p.redraw()
+    }
     if (p.key === '?') window.aboutControls && window.aboutControls.toggle()
   }
 
@@ -183,6 +196,24 @@ new p5((p) => {
         grid[y][x].display()
       }
     }
+
+    if (params.showOutline) {
+      p.stroke(0)
+      p.strokeWeight(2)
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          if (!grid[y][x].isWord) continue
+          const px = x * params.scale
+          const py = y * params.scale
+          const s = params.scale
+          if (y === 0 || !grid[y - 1][x].isWord) p.line(px, py, px + s, py)
+          if (y === rows - 1 || !grid[y + 1][x].isWord) p.line(px, py + s, px + s, py + s)
+          if (x === 0 || !grid[y][x - 1].isWord) p.line(px, py, px, py + s)
+          if (x === cols - 1 || !grid[y][x + 1].isWord) p.line(px + s, py, px + s, py + s)
+        }
+      }
+    }
+    p.noStroke()
 
     if (showCenter) {
       const neutral = p.color(255, 255, 255)

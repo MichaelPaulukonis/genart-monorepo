@@ -5,10 +5,16 @@ export class Cell {
     this.letter = ' '
     this.scale = scale
     this.ctx = ctx
+    this.isWord = false
   }
 
-  clear () { this.letter = ' ' }
+  clear () {
+    this.letter = ' '
+    this.isWord = false
+  }
+
   setLetter (letter) { this.letter = letter }
+  setWordLetter (letter) { this.letter = letter; this.isWord = true }
 
   display () {
     this.ctx.fill(0)

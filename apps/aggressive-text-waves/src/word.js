@@ -154,7 +154,7 @@ export class Word {
       const x = this.isVertical ? this.x : (this.x + i) % cols
       const y = this.isVertical ? (this.y + i) % rows : this.y
       if (x >= 0 && x < cols && y >= 0 && y < rows) {
-        grid[y][x].setLetter(this.text.charAt(i))
+        grid[y][x].setWordLetter(this.text.charAt(i))
       }
     }
   }

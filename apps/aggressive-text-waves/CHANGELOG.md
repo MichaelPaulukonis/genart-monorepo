@@ -1,6 +1,8 @@
 ## [Unreleased]
 
 ### Added
+- **aggressive-text-waves:** word outlines toggleable via `o` key and Tweakpane checkbox; outline updates immediately when toggled while paused
+- **aggressive-text-waves:** `Space` key pauses/resumes; `n` advances one frame while paused; Tweakpane step button syncs with keyboard
 - **aggressive-text-waves:** gravity center overlay uses per-source color palettes; color interpolates white (strength=0) → warm (attraction) or cool (repulsion)
 - **aggressive-text-waves:** Tweakpane reorganized into "gravity" folder (center speed, source count, per-source strengths) and "physics" folder (force weights, noise offset speeds)
 - **aggressive-text-waves:** extract `Word` and `Cell` classes to `src/word.js` and `src/cell.js`
