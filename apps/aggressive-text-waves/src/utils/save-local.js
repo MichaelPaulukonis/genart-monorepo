@@ -2,7 +2,7 @@ const SERVER_URL = 'http://localhost:7654'
 let serverAvailable = null
 let checkInFlight = null
 
-export function checkServer() {
+export function checkServer () {
   if (checkInFlight) return checkInFlight
   checkInFlight = fetch(`${SERVER_URL}/ping`, { signal: AbortSignal.timeout(1000) })
     .then(res => { serverAvailable = res.ok })
@@ -11,7 +11,7 @@ export function checkServer() {
   return checkInFlight
 }
 
-async function saveToServer(graphics, filename) {
+async function saveToServer (graphics, filename) {
   const dataURL = graphics.canvas.toDataURL('image/png')
   const res = await fetch(`${SERVER_URL}/save`, {
     method: 'POST',
@@ -24,7 +24,7 @@ async function saveToServer(graphics, filename) {
   }
 }
 
-export async function saveWithFallback(p, graphics, filename) {
+export async function saveWithFallback (p, graphics, filename) {
   if (serverAvailable === null) {
     await checkServer()
   }
