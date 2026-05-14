@@ -153,3 +153,7 @@ node scripts/swap-duo-chrome-images.js --source images_test --dry-run
 ```
 
 Backups are created automatically before any overwrite and are never auto-deleted. Use `--dry-run` to preview before executing.
+
+## Task Master AI Instructions
+**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
+@./.taskmaster/CLAUDE.md
