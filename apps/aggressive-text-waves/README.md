@@ -10,18 +10,33 @@ Text animated on a character grid, driven by 2D Perlin noise. Words from a sourc
 
 | Control | Description |
 |---------|-------------|
-| `C` | Toggle gravity center visualizer |
-| Step button | Toggle single-step mode (advance one frame per click) |
+| `Space` | Pause / resume |
+| `n` | Step one frame (when paused) |
+| `c` | Toggle gravity center indicators |
+| `o` | Toggle word outlines |
+| `s` | Save current frame as PNG |
+| `r` | Toggle frame recording (sequential PNGs) |
+| `?` | Show/hide about screen |
+| Step button | Toggle single-step mode |
+| Record button | Toggle frame recording |
 
 ## Tweakpane Parameters
 
 | Parameter | Description |
 |-----------|-------------|
-| `speed` | Probability a word moves each frame (quadratic curve) |
+| `outline` | Toggle word outlines |
 | `scale` | Cell size in pixels; triggers grid reinit on change |
 | `vert ratio` | Fraction of words placed vertically |
-| `gravity` | Blend between personal noise target (0) and shared gravity well (1) |
-| `center speed` | How fast the gravity well drifts |
+| **gravity** | |
+| `center speed` | How fast gravity sources drift |
+| `sources` | Number of active gravity sources (0-5) |
+| `strength N` | Per-source strength (-1 repel … +1 attract) |
+| **physics** | |
+| `maxSpeed` | Maximum word velocity |
+| `damping` | Velocity damping per frame |
+| `wander` | Random wandering force |
+| `gravity force` | Pull/push strength toward sources |
+| `separation` | Force keeping words apart |
 | `xOffsetSpeed` / `yOffsetSpeed` / `zOffsetSpeed` | Noise offset advance rates |
 
 ## Dev
