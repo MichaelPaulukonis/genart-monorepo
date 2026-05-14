@@ -3,6 +3,7 @@ import p5 from 'p5'
 import { Pane } from 'tweakpane'
 import { Cell } from './cell.js'
 import { Word } from './word.js'
+import { saveWithFallback, checkServer } from './utils/save-local.js'
 
 const sourceText = `Now is the winter of our discontent
 Made glorious summer by this sun of York;
@@ -68,6 +69,18 @@ new p5((p) => {
 
   btn.on('click', () => { toggleStep(); p.canvas.focus() })
 
+  let streaming = false
+  let streamFrame = 0
+  const recordBtn = pane.addButton({ title: 'Record: OFF' })
+
+  function toggleRecord () {
+    streaming = !streaming
+    streamFrame = 0
+    recordBtn.title = streaming ? 'Record: ON' : 'Record: OFF'
+  }
+
+  recordBtn.on('click', () => { toggleRecord(); p.canvas.focus() })
+
   let prevScale = params.scale
   pane.addBinding(params, 'scale', { min: 10, max: 50, step: 1 })
     .on('change', () => {
@@ -102,6 +115,11 @@ new p5((p) => {
       pane.refresh()
       if (params.stepMode) p.redraw()
     }
+    if (p.key === 's' || p.key === 'S') {
+      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+      saveWithFallback(p, { canvas: p.canvas }, `aggressive-text-waves-${ts}.png`)
+    }
+    if (p.key === 'r' || p.key === 'R') toggleRecord()
     if (p.key === '?') window.aboutControls && window.aboutControls.toggle()
   }
 
@@ -164,6 +182,7 @@ new p5((p) => {
     words = p.splitTokens(sourceText.toUpperCase(), ' ,.;\n')
     init()
     rebuildSourceUI()
+    checkServer()
   }
 
   p.draw = () => {
@@ -237,6 +256,11 @@ new p5((p) => {
           p.text(grid[cy][cx].letter, cx * params.scale + params.scale / 2, cy * params.scale + params.scale / 2)
         }
       })
+    }
+
+    if (streaming) {
+      streamFrame++
+      saveWithFallback(p, { canvas: p.canvas }, `aggressive-text-waves-${String(streamFrame).padStart(4, '0')}.png`)
     }
 
     if (params.stepMode) p.noLoop()
