@@ -1,5 +1,22 @@
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-17
+
+### Fixed
+- **aggressive-text-waves:** word initial positions now use `p.random()` spread across grid instead of noise-sampled single point — words no longer cluster at canvas center on init
+- **aggressive-text-waves:** antipodal repulsion no longer applies wrong-direction force when dx or dy is exactly zero
+- **aggressive-text-waves:** boundary wrap triggers at `>= cols/rows` (was `>`), eliminating one-frame-late wrapping
+- **aggressive-text-waves:** frame recording only runs when local-save server is confirmed available — prevents browser download spam when server is offline
+- **aggressive-text-waves:** background noise z-offset tied to `zOffsetSpeed` param instead of hardcoded `0.01`
+- **aggressive-text-waves:** all `Math.random()` calls replaced with seeded `p.random()` / `ctx.random()` — simulation is now reproducible with `randomSeed()`
+- **aggressive-text-waves:** horizontal word separation push direction determined by sub-cell `posY` instead of random coin flip — eliminates per-frame flicker
+- **aggressive-text-waves:** `noLoop()` called once in `toggleStep()` instead of every frame while step mode is active
+- **aggressive-text-waves:** `Pane` instance moved inside p5 callback — prevents module-scope side effects on import
+- **aggressive-text-waves:** background noise variable renamed `backgroundZoff` to distinguish from per-word `zoff`
+- **aggressive-text-waves:** `pointerdown` event listener options corrected from `undefined` to `{}`
+
+## [0.2.0]
+
 ### Added
 - **aggressive-text-waves:** off-screen 2000×2000 `p5.Graphics` buffer; display canvas shows scaled-down copy; saves export at full resolution regardless of display size
 - **aggressive-text-waves:** split `draw()` into `update()` (simulation) and `render()` (drawing); toggling outline or other display params while paused now redraws without advancing simulation state
