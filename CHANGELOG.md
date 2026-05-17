@@ -6,6 +6,9 @@ This changelog aggregates infrastructure and shared-library changes across the w
 
 ### Infrastructure & Shared Libraries
 
+- **libs/p5-utils:** add `createOffscreenCanvas(p, { outputSize, displaySize })` helper — creates high-res `p5.Graphics` buffer, returns `{ pg, scale, display }` for off-screen render pattern
+- **docs:** add `docs/guides/offscreen-render-pattern.md` — covers drawing context rules, coordinate scaling, sub-pixel/SSAA behavior, update/render split, and saving
+
 - **aggressive-text-waves:** add new app — text animated on character grid via 2D Perlin noise
   - Ported from `my-sketches` canvas-sketch repo; canvas-sketch removed in favor of plain p5 instance mode
   - Tweakpane v3 → v4 (`addInput` → `addBinding`)

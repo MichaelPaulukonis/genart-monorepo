@@ -118,3 +118,29 @@ export function validateImageFile(file) {
 }
 
 export { showErrorMessage } from './feedback.js'
+
+/**
+ * Create an off-screen high-resolution p5.Graphics buffer with a scaled display helper.
+ *
+ * Drawing goes to `pg` using coordinates multiplied by `scale`.
+ * Call `display()` at the end of render to blit the buffer to the main canvas.
+ *
+ * Non-integer coords from scale math cause sub-pixel anti-aliasing on the buffer,
+ * which becomes free SSAA when downscaled for display — leave coordinates unrounded
+ * unless pixel-crisp output is required.
+ *
+ * @param {p5} p - The p5 instance
+ * @param {object} options
+ * @param {number} options.outputSize - Off-screen buffer size in pixels (square)
+ * @param {number} options.displaySize - On-screen display size in pixels (square)
+ * @returns {{ pg: p5.Graphics, scale: number, display: () => void }}
+ */
+export function createOffscreenCanvas(p, { outputSize, displaySize }) {
+  const pg = p.createGraphics(outputSize, outputSize)
+  const scale = outputSize / displaySize
+  return {
+    pg,
+    scale,
+    display: () => p.image(pg, 0, 0, displaySize, displaySize)
+  }
+}
