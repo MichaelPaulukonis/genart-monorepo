@@ -3,7 +3,7 @@ import p5 from 'p5'
 import { Pane } from 'tweakpane'
 import { Cell } from './cell.js'
 import { Word } from './word.js'
-import { saveWithFallback, checkServer } from './utils/save-local.js'
+import { saveWithFallback, checkServer, isServerAvailable } from './utils/save-local.js'
 import { createOffscreenCanvas } from '@genart/p5-utils'
 
 const sourceText = `Now is the winter of our discontent
@@ -40,15 +40,14 @@ const params = {
   separationForce: 0.2
 }
 
-const pane = new Pane()
-
 // eslint-disable-next-line no-new
 new p5((p) => {
+  const pane = new Pane()
   let cols, rows
   let words
   let grid = []
   let wordObjects = []
-  let zoff = 0
+  let backgroundZoff = 0
   const gravitySources = []
   let showCenter = false
   let pg
@@ -72,6 +71,7 @@ new p5((p) => {
     params.stepMode = !params.stepMode
     btn.title = params.stepMode ? 'Step: ON' : 'Step: OFF'
     if (!params.stepMode) p.loop()
+    else p.noLoop()
   }
 
   btn.on('click', () => { toggleStep(); p.canvas.focus() })
@@ -174,8 +174,8 @@ new p5((p) => {
     }
 
     for (let i = 0; i < words.length; i++) {
-      const startX = p.noise(p.random(1000)) * cols
-      const startY = p.noise(p.random(1000)) * rows
+      const startX = p.random(cols)
+      const startY = p.random(rows)
       const w = new Word(words[i], startX, startY, p, params)
       wordObjects.push(w)
     }
@@ -184,7 +184,7 @@ new p5((p) => {
   }
 
   function update () {
-    zoff += 0.01
+    backgroundZoff += params.zOffsetSpeed
 
     for (const src of gravitySources) {
       src.xoff += params.centerSpeed
@@ -196,7 +196,7 @@ new p5((p) => {
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         grid[y][x].clear()
-        const n = p.noise(x * 0.1, y * 0.1, zoff)
+        const n = p.noise(x * 0.1, y * 0.1, backgroundZoff)
         const char = backgroundChars[p.floor(n * backgroundChars.length)]
         grid[y][x].setLetter(char)
       }
@@ -282,11 +282,9 @@ new p5((p) => {
     update()
     render()
 
-    if (streaming) {
+    if (streaming && isServerAvailable() !== false) {
       streamFrame++
       saveWithFallback(p, pg, `aggressive-text-waves-${String(streamFrame).padStart(4, '0')}.png`)
     }
-
-    if (params.stepMode) p.noLoop()
   }
 })

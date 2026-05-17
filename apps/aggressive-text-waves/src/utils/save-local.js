@@ -24,6 +24,10 @@ async function saveToServer (graphics, filename) {
   }
 }
 
+export function isServerAvailable () {
+  return serverAvailable
+}
+
 export async function saveWithFallback (p, graphics, filename) {
   if (serverAvailable === null) {
     await checkServer()

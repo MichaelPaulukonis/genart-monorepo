@@ -12,7 +12,7 @@ export class Word {
     this.xoff = this.ctx.random(1000)
     this.yoff = this.ctx.random(1000)
     this.zoff = this.ctx.random(1000)
-    this.isVertical = Math.random() < params.verticalRatio
+    this.isVertical = this.ctx.random() < params.verticalRatio
   }
 
   touches (other) {
@@ -71,7 +71,7 @@ export class Word {
           dy = this.y < word.y ? -overlap : overlap
         } else {
           dx = 0
-          dy = Math.random() < 0.5 ? -overlap : overlap
+          dy = this.posY >= word.posY ? overlap : -overlap
         }
       } else {
         dx = this.isVertical ? 0 : overlap
@@ -101,9 +101,9 @@ export class Word {
       let dx = tx - this.posX
       let dy = ty - this.posY
       if (src.strength < 0) {
-        // repulsion: flip direction toward antipodal point
-        dx = dx > 0 ? dx - cols / 2 : dx + cols / 2
-        dy = dy > 0 ? dy - rows / 2 : dy + rows / 2
+        // repulsion: flip direction toward antipodal point; guard dx===0/dy===0 to avoid wrong-direction force
+        if (dx !== 0) dx = dx > 0 ? dx - cols / 2 : dx + cols / 2
+        if (dy !== 0) dy = dy > 0 ? dy - rows / 2 : dy + rows / 2
       }
       const dist = Math.sqrt(dx * dx + dy * dy) || 1
       const forceMag = Math.abs(src.strength) * params.gravityForce
@@ -115,7 +115,7 @@ export class Word {
     const avgMag = sources.length > 0
       ? sources.reduce((s, src) => s + Math.abs(src.strength), 0) / sources.length
       : 0
-    if (Math.random() > avgMag) {
+    if (this.ctx.random() > avgMag) {
       this._applySeparation(words)
     }
 
@@ -136,9 +136,9 @@ export class Word {
 
     // wrap
     if (this.posX < 0) this.posX += cols
-    if (this.posX > cols) this.posX -= cols
+    if (this.posX >= cols) this.posX -= cols
     if (this.posY < 0) this.posY += rows
-    if (this.posY > rows) this.posY -= rows
+    if (this.posY >= rows) this.posY -= rows
 
     // integer grid coords
     this.x = Math.floor(this.posX)

@@ -28,7 +28,7 @@ function createModal (id) {
   document.addEventListener('mouseup', () => { isDragging = false })
 
   ;['mousedown', 'touchstart', 'pointerdown'].forEach(evt => {
-    el.addEventListener(evt, (e) => e.stopPropagation(), evt === 'touchstart' ? { passive: false } : undefined)
+    el.addEventListener(evt, (e) => e.stopPropagation(), evt === 'touchstart' ? { passive: false } : {})
   })
 
   const instance = {
