@@ -87,6 +87,9 @@ importers:
 
   apps/aggressive-text-waves:
     dependencies:
+      '@genart/p5-utils':
+        specifier: workspace:*
+        version: link:../../libs/p5-utils
       p5:
         specifier: ^1.11.10
         version: 1.11.10

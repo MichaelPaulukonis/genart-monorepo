@@ -4,6 +4,7 @@ import { Pane } from 'tweakpane'
 import { Cell } from './cell.js'
 import { Word } from './word.js'
 import { saveWithFallback, checkServer } from './utils/save-local.js'
+import { createOffscreenCanvas } from '@genart/p5-utils'
 
 const sourceText = `Now is the winter of our discontent
 Made glorious summer by this sun of York;
@@ -18,6 +19,9 @@ And now, instead of mounting barbed steeds
 To fright the souls of fearful adversaries,
 He capers nimbly in a lady's chamber
 To the lascivious pleasing of a lute.`
+
+const OFFSCREEN_SIZE = 2000
+const ONSCREEN_SIZE = 800
 
 const params = {
   stepMode: false,
@@ -45,19 +49,22 @@ new p5((p) => {
   let grid = []
   let wordObjects = []
   let zoff = 0
-  let gravitySources = []
+  const gravitySources = []
   let showCenter = false
+  let pg
+  let offscreenScale
+  let displayOffscreen
   const backgroundChars = "..........,,,,,:::::;;;;;'''''".split('')
   const SOURCE_PALETTES = [
-    { repel: [0, 150, 255],   attract: [255, 200, 0]   },
-    { repel: [180, 0, 220],   attract: [255, 120, 0]   },
-    { repel: [0, 200, 180],   attract: [255, 50, 80]   },
-    { repel: [0, 180, 80],    attract: [220, 0, 180]   },
-    { repel: [80, 80, 200],   attract: [180, 220, 0]   }
+    { repel: [0, 150, 255], attract: [255, 200, 0] },
+    { repel: [180, 0, 220], attract: [255, 120, 0] },
+    { repel: [0, 200, 180], attract: [255, 50, 80] },
+    { repel: [0, 180, 80], attract: [220, 0, 180] },
+    { repel: [80, 80, 200], attract: [180, 220, 0] }
   ]
 
   pane.addBinding(params, 'showOutline', { label: 'outline' })
-    .on('change', () => { if (params.stepMode) p.redraw() })
+    .on('change', () => { if (params.stepMode) render() })
 
   const btn = pane.addButton({ title: 'Step: OFF' })
 
@@ -108,16 +115,16 @@ new p5((p) => {
 
   p.keyPressed = () => {
     if (p.key === ' ') toggleStep()
-    if (p.key === 'n' || p.key === 'N') { if (params.stepMode) p.redraw() }
+    if (p.key === 'n' || p.key === 'N') { if (params.stepMode) { update(); render() } }
     if (p.key === 'c' || p.key === 'C') showCenter = !showCenter
     if (p.key === 'o' || p.key === 'O') {
       params.showOutline = !params.showOutline
       pane.refresh()
-      if (params.stepMode) p.redraw()
+      if (params.stepMode) render()
     }
     if (p.key === 's' || p.key === 'S') {
       const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-      saveWithFallback(p, { canvas: p.canvas }, `aggressive-text-waves-${ts}.png`)
+      saveWithFallback(p, pg, `aggressive-text-waves-${ts}.png`)
     }
     if (p.key === 'r' || p.key === 'R') toggleRecord()
     if (p.key === '?') window.aboutControls && window.aboutControls.toggle()
@@ -153,14 +160,15 @@ new p5((p) => {
   function init () {
     cols = p.floor(p.width / params.scale)
     rows = p.floor(p.height / params.scale)
-    p.textSize(params.scale - 4)
+    const cellSize = params.scale * offscreenScale
+    pg.textSize((params.scale - 4) * offscreenScale)
     grid = []
     wordObjects = []
 
     for (let y = 0; y < rows; y++) {
       const row = []
       for (let x = 0; x < cols; x++) {
-        row.push(new Cell(x, y, params.scale, p))
+        row.push(new Cell(x, y, cellSize, pg))
       }
       grid.push(row)
     }
@@ -175,18 +183,7 @@ new p5((p) => {
     buildSources()
   }
 
-  p.setup = () => {
-    p.createCanvas(800, 800)
-    p.frameRate(10)
-    p.textAlign(p.CENTER, p.CENTER)
-    words = p.splitTokens(sourceText.toUpperCase(), ' ,.;\n')
-    init()
-    rebuildSourceUI()
-    checkServer()
-  }
-
-  p.draw = () => {
-    p.background(255)
+  function update () {
     zoff += 0.01
 
     for (const src of gravitySources) {
@@ -209,6 +206,12 @@ new p5((p) => {
       wordObjects[i].update(wordObjects, gravitySources, cols, rows)
       wordObjects[i].assignToGrid(grid, cols, rows)
     }
+  }
+
+  function render () {
+    const cellSize = params.scale * offscreenScale
+
+    pg.background(255)
 
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
@@ -217,22 +220,22 @@ new p5((p) => {
     }
 
     if (params.showOutline) {
-      p.stroke(0)
-      p.strokeWeight(2)
+      pg.stroke(0)
+      pg.strokeWeight(2 * offscreenScale)
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
           if (!grid[y][x].isWord) continue
-          const px = x * params.scale
-          const py = y * params.scale
-          const s = params.scale
-          if (y === 0 || !grid[y - 1][x].isWord) p.line(px, py, px + s, py)
-          if (y === rows - 1 || !grid[y + 1][x].isWord) p.line(px, py + s, px + s, py + s)
-          if (x === 0 || !grid[y][x - 1].isWord) p.line(px, py, px, py + s)
-          if (x === cols - 1 || !grid[y][x + 1].isWord) p.line(px + s, py, px + s, py + s)
+          const px = x * cellSize
+          const py = y * cellSize
+          const s = cellSize
+          if (y === 0 || !grid[y - 1][x].isWord) pg.line(px, py, px + s, py)
+          if (y === rows - 1 || !grid[y + 1][x].isWord) pg.line(px, py + s, px + s, py + s)
+          if (x === 0 || !grid[y][x - 1].isWord) pg.line(px, py, px, py + s)
+          if (x === cols - 1 || !grid[y][x + 1].isWord) pg.line(px + s, py, px + s, py + s)
         }
       }
     }
-    p.noStroke()
+    pg.noStroke()
 
     if (showCenter) {
       const neutral = p.color(255, 255, 255)
@@ -249,18 +252,39 @@ new p5((p) => {
             const cold = p.color(...palette.repel)
             col = p.lerpColor(neutral, cold, -src.strength)
           }
-          p.noStroke()
-          p.fill(col)
-          p.rect(cx * params.scale, cy * params.scale, params.scale, params.scale)
-          p.fill(0)
-          p.text(grid[cy][cx].letter, cx * params.scale + params.scale / 2, cy * params.scale + params.scale / 2)
+          pg.noStroke()
+          pg.fill(col)
+          pg.rect(cx * cellSize, cy * cellSize, cellSize, cellSize)
+          pg.fill(0)
+          pg.text(grid[cy][cx].letter, cx * cellSize + cellSize / 2, cy * cellSize + cellSize / 2)
         }
       })
     }
 
+    displayOffscreen()
+  }
+
+  p.setup = () => {
+    p.createCanvas(ONSCREEN_SIZE, ONSCREEN_SIZE)
+    p.frameRate(10)
+    ;({ pg, scale: offscreenScale, display: displayOffscreen } = createOffscreenCanvas(p, {
+      outputSize: OFFSCREEN_SIZE,
+      displaySize: ONSCREEN_SIZE
+    }))
+    pg.textAlign(pg.CENTER, pg.CENTER)
+    words = p.splitTokens(sourceText.toUpperCase(), ' ,.;\n')
+    init()
+    rebuildSourceUI()
+    checkServer()
+  }
+
+  p.draw = () => {
+    update()
+    render()
+
     if (streaming) {
       streamFrame++
-      saveWithFallback(p, { canvas: p.canvas }, `aggressive-text-waves-${String(streamFrame).padStart(4, '0')}.png`)
+      saveWithFallback(p, pg, `aggressive-text-waves-${String(streamFrame).padStart(4, '0')}.png`)
     }
 
     if (params.stepMode) p.noLoop()

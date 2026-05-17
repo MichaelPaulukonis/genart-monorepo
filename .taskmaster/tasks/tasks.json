@@ -3533,6 +3533,41 @@
         "description": "Refactor the p5 draw() loop in aggressive-text-waves to separate simulation update from rendering, so that display-only changes (e.g. toggling outlines) can redraw the current frame without advancing simulation state.",
         "details": "Currently draw() interleaves simulation update (zoff advance, gravity source noise, word.update(), word.assignToGrid()) and rendering (background, grid display, border pass, center indicators). Toggling showOutline while paused calls p.redraw() which advances the simulation by one frame as a side effect.\\n\\nRefactor into two phases:\\n- update(): advance zoff, move gravity sources, call word.update() and word.assignToGrid() for all words\\n- render(): p.background(), clear+set background chars, grid display pass, border pass, center indicator pass\\n\\ndraw() calls update() then render() normally. When a display-only param changes while paused (currently only showOutline), call render() directly instead of p.redraw(). Remove the p.redraw() calls from the showOutline toggle handlers and replace with direct render() invocation.",
         "testStrategy": "Manually verify: pause with Space, toggle outline with o key and Tweakpane checkbox - outline should change without words moving. Step with n - words should advance one frame.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "low",
+        "subtasks": [],
+        "updatedAt": "2026-05-17T19:40:25.448Z"
+      },
+      {
+        "id": "11",
+        "title": "ATW: off-screen high-resolution canvas with scaled on-screen display",
+        "description": "Refactor aggressive-text-waves to render to a 2000x2000 off-screen p5.Graphics buffer, display a scaled-down copy on the visible canvas, and save the full-resolution off-screen buffer instead of the main canvas.",
+        "details": "## Context\n\nApp: `apps/aggressive-text-waves/src/sketch.js`\nStack: p5.js instance mode (not global mode). All p5 calls are `p.method()` on the instance passed to `new p5((p) => { ... })`.\n\n## Current Architecture\n\n- On-screen canvas: `p.createCanvas(800, 800)` — all drawing goes here directly\n- Grid: `cols = floor(p.width / params.scale)`, `rows = floor(p.height / params.scale)`\n- `Cell` class (`cell.js`) receives `p` (the p5 instance) in constructor, stores it, calls `p.text()`, `p.fill()`, `p.rect()`, `p.stroke()` etc. in `display()`\n- `Word` class (`word.js`) receives `p` for position/noise math only — no direct drawing\n- Draw loop in `p.draw()`: background → noise field → word update → grid display → outlines → gravity center indicators\n- Save: `saveWithFallback(p, { canvas: p.canvas }, filename)` — saves main canvas via HTMLCanvasElement adapter\n\n## Target Architecture\n\n### Off-screen buffer\n- Create with `p.createGraphics(offscreenSize, offscreenSize)` in `p.setup()` — returns a `p5.Graphics` object\n- `p5.Graphics` has its own drawing context: call `pg.background()`, `pg.text()`, `pg.fill()`, etc.\n- `p5.Graphics` has `.canvas` (the underlying HTMLCanvasElement) — compatible with existing `saveWithFallback` without adapter\n- Default size: 2000×2000. Expose as `params.offscreenSize` or a top-level CONFIG constant.\n- Must also call `pg.textAlign(pg.CENTER, pg.CENTER)` and `pg.textSize(...)` on the offscreen context (p5.Graphics has its own state)\n\n### On-screen canvas\n- Resize to fit the viewport or keep at 800×800 — either works, but a square that fits `min(windowWidth, windowHeight)` is ideal\n- Display the off-screen buffer each frame: `p.image(pg, 0, 0, p.width, p.height)` — p5 scales it automatically\n- No drawing happens directly on the main canvas\n\n### Grid/Cell scaling\n- Off-screen scale factor: `offscreenScale = offscreenSize / onscreenSize` (e.g. 2000/800 = 2.5)\n- Grid dimensions stay the same: `cols = floor(onscreenSize / params.scale)`, `rows = same` — the number of cells is unchanged\n- Cell pixel size on off-screen: `params.scale * offscreenScale`\n- `Cell` constructor currently takes `(x, y, scale, p)` — change to accept either a graphics context parameter or a pixel scale parameter so it draws to `pg` at full resolution\n- Preferred: pass `pg` as the drawing context to Cell instead of `p`, and pass the scaled pixel size\n\n### Save\n- Change all `saveWithFallback` calls to pass `pg` (the p5.Graphics) instead of `{ canvas: p.canvas }`\n- `pg` already has `.canvas` — no adapter needed\n- Single-frame save (s/S) and recording stream (r/R) both use `pg`\n\n### Params / CONFIG\n- Add `offscreenSize` (default 2000) to params or a CONFIG object\n- Keep `params.scale` as the logical cell size (on-screen pixel units) — off-screen pixel size is derived\n\n## Implementation Steps\n\n1. Add `offscreenSize = 2000` to params or CONFIG\n2. In `p.setup()`, after `createCanvas`: create `const pg = p.createGraphics(offscreenSize, offscreenSize)` and configure `pg.textAlign` / `pg.textSize`\n3. Compute `offscreenScale = offscreenSize / p.width` (assuming square canvas)\n4. In `init()`: create `Cell` objects with `params.scale * offscreenScale` as pixel size and `pg` as drawing context\n5. In `p.draw()`: replace all direct p5 draw calls with `pg.*` equivalents; at end of draw, call `p.image(pg, 0, 0, p.width, p.height)`\n6. Update `Cell.display()` to use stored graphics context (already stored as `this.p` — rename or keep, just swap what's passed in)\n7. Update save calls: `saveWithFallback(p, pg, filename)` — p5.Graphics has `.canvas` natively\n8. Update `init()` to also re-create or reconfigure `pg` if called after scale change (or just reconfigure `pg.textSize`)\n\n## Watch-outs\n\n- `p5.Graphics` noise functions: `pg.noise()` may not exist — use `p.noise()` for noise math, `pg.*` only for drawing\n- `pg.random()` same issue — keep using `p.random()` for any randomness\n- Outline drawing (word border lines) uses `p.line()` — must move to `pg.line()`\n- Gravity center indicator uses `p.rect()`, `p.text()` — must move to `pg.*`\n- `p.textSize()` in `init()` sets on-screen context — must also set `pg.textSize()`\n- When `params.scale` changes (tweakpane binding triggers `init()`), offscreenScale and pg.textSize must update too\n- `p.frameRate(10)` stays on the main p instance, not on pg",
+        "testStrategy": "- Visual check: on-screen display looks identical to current (just scaled)\n- Save a frame with s key: resulting PNG is 2000x2000\n- Enable recording (r key): sequential PNGs are 2000x2000\n- Change params.scale via tweakpane: grid reinitializes correctly at new scale\n- Verify noise field and word positions are visually consistent (no coordinate mismatch)\n- Verify outline drawing renders at correct positions on off-screen canvas",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": [],
+        "updatedAt": "2026-05-17T19:40:27.334Z"
+      },
+      {
+        "id": "12",
+        "title": "Fix logic bugs in aggressive-text-waves",
+        "description": "Fix several logic bugs identified in code review of apps/aggressive-text-waves.",
+        "details": "1. sketch.js L169-170: `p.noise(p.random(1000))` produces noise of a random value, not a spatial position. Replace with `p.random(cols)` / `p.random(rows)` directly.\n2. word.js L103-106: antipodal repulsion — when `dx === 0`, branch takes `dx + cols/2` (attracting, not repelling). Add explicit `dx === 0` guard or skip the flip when zero.\n3. word.js L138-141: wrap boundary uses `>` not `>=`. Word at exactly `cols` or `rows` wraps one frame late. Change to `>= cols` / `>= rows`.\n4. sketch.js L261-263: streaming saves every frame with no server check. If server is down, `saveWithFallback` floods browser downloads. Guard with `serverAvailable !== false` before starting streaming, or disable streaming button when server unavailable.\n5. sketch.js L190: background `zoff += 0.01` is hardcoded, ignores params. Either expose via `params.backgroundZSpeed` or tie to existing `zOffsetSpeed`.",
+        "testStrategy": "Manual visual inspection: verify word positions initialize within canvas bounds, repulsion actually repels, wrap triggers correctly at boundary, streaming does not flood downloads when server is down.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": "13",
+        "title": "Fix reproducibility and code quality in aggressive-text-waves",
+        "description": "Replace bare Math.random() calls with p5 seeded RNG and fix minor code quality issues found in code review.",
+        "details": "1. word.js L15: `Math.random()` for `isVertical` bypasses p5 seeded RNG. Replace with `ctx.random() < params.verticalRatio`.\n2. word.js L68-75: horizontal word separation picks push direction via `Math.random()`, causing per-frame flicker. Use signed `(this.y - word.y)` or word index parity for deterministic direction.\n3. word.js L118: `Math.random() > avgMag` for separation skip — also unseeded. Low priority but breaks full reproducibility.\n4. sketch.js L39: `pane` created at module scope outside p5 callback. Move inside callback for correctness if sketch is ever instantiated multiple times.\n5. sketch.js L47/L190: rename module-level `zoff` to `backgroundZoff` to distinguish from per-word `zoff` / `params.zOffsetSpeed`.\n6. sketch.js L266: `p.noLoop()` called inside `draw` every frame in stepMode — move call to `toggleStep` instead.\n7. about.js L30-31: `pointerdown` listener passes `undefined` as options. Change to `{}` or omit third arg.",
+        "testStrategy": "Set p5 randomSeed before init; verify identical runs produce same word layout. Visually confirm separation force no longer flickers direction frame-to-frame.",
         "status": "pending",
         "dependencies": [],
         "priority": "low",
@@ -3541,9 +3576,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-05-10T21:11:42.217Z",
-      "taskCount": 10,
-      "completedCount": 9,
+      "lastModified": "2026-05-17T19:40:27.335Z",
+      "taskCount": 13,
+      "completedCount": 11,
       "tags": [
         "text-waves"
       ]

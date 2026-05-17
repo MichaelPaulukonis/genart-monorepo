@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Added
+- **aggressive-text-waves:** off-screen 2000×2000 `p5.Graphics` buffer; display canvas shows scaled-down copy; saves export at full resolution regardless of display size
+- **aggressive-text-waves:** split `draw()` into `update()` (simulation) and `render()` (drawing); toggling outline or other display params while paused now redraws without advancing simulation state
+- **aggressive-text-waves:** use `createOffscreenCanvas` helper from `@genart/p5-utils`
+
+## [0.1.0]
+
+### Added
 - **aggressive-text-waves:** word outlines toggleable via `o` key and Tweakpane checkbox; outline updates immediately when toggled while paused
 - **aggressive-text-waves:** `Space` key pauses/resumes; `n` advances one frame while paused; Tweakpane step button syncs with keyboard
 - **aggressive-text-waves:** gravity center overlay uses per-source color palettes; color interpolates white (strength=0) → warm (attraction) or cool (repulsion)
