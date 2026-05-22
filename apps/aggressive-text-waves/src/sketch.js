@@ -5,20 +5,12 @@ import { Cell } from './cell.js'
 import { Word } from './word.js'
 import { saveWithFallback, checkServer, isServerAvailable } from './utils/save-local.js'
 import { createOffscreenCanvas } from '@genart/p5-utils'
+import { BUNDLED_TEXTS, createBundledSource, createUserTextSource } from './text-sources.js'
 
-const sourceText = `Now is the winter of our discontent
-Made glorious summer by this sun of York;
-And all the clouds that lour'd upon our house
-In the deep bosom of the ocean buried.
-Now are our brows bound with victorious wreaths;
-Our bruised arms hung up for monuments;
-Our stern alarums changed to merry meetings,
-Our dreadful marches to delightful measures.
-Grim-visaged war hath smooth'd his wrinkled front;
-And now, instead of mounting barbed steeds
-To fright the souls of fearful adversaries,
-He capers nimbly in a lady's chamber
-To the lascivious pleasing of a lute.`
+const textSources = [
+  ...BUNDLED_TEXTS.map(createBundledSource),
+  createUserTextSource({ getText: () => window.prompt('Enter text:') })
+]
 
 const OFFSCREEN_SIZE = 2000
 const ONSCREEN_SIZE = 800
@@ -112,6 +104,27 @@ new p5((p) => {
   physicsFolder.addBinding(params, 'xOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
   physicsFolder.addBinding(params, 'yOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
   physicsFolder.addBinding(params, 'zOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
+
+  function loadFromSource (source) {
+    const newWords = source.fetchWords()
+    if (newWords === null) return
+    words = newWords
+    init()
+  }
+
+  const textFolder = pane.addFolder({ title: 'text' })
+  const bundledOptions = BUNDLED_TEXTS.map(t => ({ text: t.name, value: t.id }))
+  textFolder.addBlade({
+    view: 'list',
+    label: 'source',
+    options: bundledOptions,
+    value: BUNDLED_TEXTS[0].id
+  }).on('change', (ev) => {
+    loadFromSource(textSources.find(s => s.id === ev.value))
+  })
+  textFolder.addButton({ title: 'Custom Text...' }).on('click', () => {
+    loadFromSource(textSources.find(s => s.id === 'user-input'))
+  })
 
   p.keyPressed = () => {
     if (p.key === ' ') toggleStep()
@@ -272,7 +285,7 @@ new p5((p) => {
       displaySize: ONSCREEN_SIZE
     }))
     pg.textAlign(pg.CENTER, pg.CENTER)
-    words = p.splitTokens(sourceText.toUpperCase(), ' ,.;\n')
+    words = textSources[0].fetchWords()
     init()
     rebuildSourceUI()
     checkServer()

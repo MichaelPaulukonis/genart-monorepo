@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Added
+- **aggressive-text-waves:** multiple text sources (Richard III, Hamlet, The Tempest) selectable via Tweakpane dropdown; "Custom Text..." button accepts arbitrary user input via prompt
+- **aggressive-text-waves:** `text-sources` module with `parseWords`, `createBundledSource`, `createUserTextSource` factories — p5-independent, fully testable
+- **aggressive-text-waves:** vitest test suite (15 tests) covering word parsing, bundled sources, and user text source
+
 ## [0.2.1] - 2026-05-17
 
 ### Fixed
