@@ -1,9 +1,14 @@
 ## [Unreleased]
 
 ### Added
-- **aggressive-text-waves:** multiple text sources (Richard III, Hamlet, The Tempest) selectable via Tweakpane dropdown; "Custom Text..." button accepts arbitrary user input via prompt
+- **aggressive-text-waves:** multiple text sources (Richard III, Hamlet, The Tempest) selectable via Tweakpane dropdown; "Custom Text..." button opens multi-line modal for arbitrary user input
 - **aggressive-text-waves:** `text-sources` module with `parseWords`, `createBundledSource`, `createUserTextSource` factories — p5-independent, fully testable
-- **aggressive-text-waves:** vitest test suite (15 tests) covering word parsing, bundled sources, and user text source
+- **aggressive-text-waves:** `text-modal` module: dark-themed multi-line textarea modal, persists last entered text across reopens
+- **aggressive-text-waves:** vitest test suite (26 tests) covering word parsing, bundled sources, user text source, and modal behavior
+
+### Fixed
+- **aggressive-text-waves:** keydown events no longer propagate from text modal to canvas — typing 's' no longer triggers save while editing
+- **aggressive-text-waves:** animation pauses while text modal is open, resumes on close
 
 ## [0.2.1] - 2026-05-17
 

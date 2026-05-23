@@ -14,8 +14,8 @@ export function createUserTextSource ({ getText }) {
   return {
     id: 'user-input',
     name: 'Custom Text',
-    fetchWords: () => {
-      const text = getText()
+    fetchWords: async () => {
+      const text = await getText()
       if (!text) return null
       return parseWords(text)
     }

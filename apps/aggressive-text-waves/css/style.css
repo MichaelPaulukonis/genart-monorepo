@@ -11,3 +11,105 @@ canvas {
   display: block;
   margin: 0 auto;
 }
+
+.text-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.text-modal-content {
+  background: rgba(30, 30, 30, 0.97);
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 20px;
+  width: 480px;
+  max-width: 90vw;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  font-family: sans-serif;
+}
+
+.text-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.text-modal-header h3 {
+  margin: 0;
+  color: #fff;
+}
+
+.text-modal-header button {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.text-modal-header button:hover {
+  color: #fff;
+}
+
+.text-modal-textarea {
+  width: 100%;
+  height: 200px;
+  box-sizing: border-box;
+  background: #1a1a1a;
+  color: #eee;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 0.9em;
+  resize: vertical;
+  margin-bottom: 12px;
+}
+
+.text-modal-textarea:focus {
+  outline: none;
+  border-color: #888;
+}
+
+.text-modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.text-modal-footer button {
+  padding: 7px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.text-modal-footer button[data-action="submit"] {
+  background: #0066cc;
+  color: #fff;
+}
+
+.text-modal-footer button[data-action="submit"]:hover {
+  background: #0080ff;
+}
+
+.text-modal-footer button[data-action="cancel"] {
+  background: #555;
+  color: #eee;
+}
+
+.text-modal-footer button[data-action="cancel"]:hover {
+  background: #777;
+}

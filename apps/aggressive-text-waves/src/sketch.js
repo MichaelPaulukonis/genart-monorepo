@@ -6,10 +6,12 @@ import { Word } from './word.js'
 import { saveWithFallback, checkServer, isServerAvailable } from './utils/save-local.js'
 import { createOffscreenCanvas } from '@genart/p5-utils'
 import { BUNDLED_TEXTS, createBundledSource, createUserTextSource } from './text-sources.js'
+import { createTextModal } from './text-modal.js'
 
+const textModal = createTextModal()
 const textSources = [
   ...BUNDLED_TEXTS.map(createBundledSource),
-  createUserTextSource({ getText: () => window.prompt('Enter text:') })
+  createUserTextSource({ getText: () => textModal.open() })
 ]
 
 const OFFSCREEN_SIZE = 2000
@@ -105,11 +107,15 @@ new p5((p) => {
   physicsFolder.addBinding(params, 'yOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
   physicsFolder.addBinding(params, 'zOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
 
-  function loadFromSource (source) {
-    const newWords = source.fetchWords()
-    if (newWords === null) return
-    words = newWords
-    init()
+  async function loadFromSource (source) {
+    const wasStepping = params.stepMode
+    if (!wasStepping) p.noLoop()
+    const newWords = await source.fetchWords()
+    if (newWords !== null) {
+      words = newWords
+      init()
+    }
+    if (!wasStepping) p.loop()
   }
 
   const textFolder = pane.addFolder({ title: 'text' })

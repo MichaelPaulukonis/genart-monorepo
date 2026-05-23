@@ -50,19 +50,19 @@ describe('createUserTextSource', () => {
     expect(src.name).toBe('Custom Text')
   })
 
-  it('fetchWords calls getText and returns parsed words', () => {
+  it('fetchWords calls getText and returns parsed words', async () => {
     const src = createUserTextSource({ getText: () => 'custom text input' })
-    expect(src.fetchWords()).toEqual(['CUSTOM', 'TEXT', 'INPUT'])
+    expect(await src.fetchWords()).toEqual(['CUSTOM', 'TEXT', 'INPUT'])
   })
 
-  it('fetchWords returns null when getText returns empty string', () => {
+  it('fetchWords returns null when getText returns empty string', async () => {
     const src = createUserTextSource({ getText: () => '' })
-    expect(src.fetchWords()).toBeNull()
+    expect(await src.fetchWords()).toBeNull()
   })
 
-  it('fetchWords returns null when getText returns null (prompt cancelled)', () => {
+  it('fetchWords returns null when getText returns null (prompt cancelled)', async () => {
     const src = createUserTextSource({ getText: () => null })
-    expect(src.fetchWords()).toBeNull()
+    expect(await src.fetchWords()).toBeNull()
   })
 })
 
