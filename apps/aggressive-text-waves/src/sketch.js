@@ -112,6 +112,7 @@ new p5((p) => {
   const textStatus = { status: '' }
 
   async function loadFromSource (source) {
+    if (!source) return
     const wasStepping = params.stepMode
     if (!wasStepping) p.noLoop()
     if (source.isNetworkSource) {

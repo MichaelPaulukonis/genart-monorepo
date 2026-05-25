@@ -12,8 +12,14 @@
 - **aggressive-text-waves:** Tweakpane Load and Custom Text buttons return canvas focus after async completion — Space no longer re-fires button after load
 
 ### Added (continued)
-- **aggressive-text-waves:** Tumblr source (`poeticalbot.tumblr.com`) — fetches single random post per load, falls back to last active bundled source on network failure
+- **aggressive-text-waves:** Tumblr source (`poeticalbot.tumblr.com`) — fetches single random text post per load, falls back to last active bundled source on network failure
 - **aggressive-text-waves:** explicit Load button replaces auto-load-on-dropdown-change; Tweakpane status label shows loading/error state
+
+### Fixed (continued)
+- **aggressive-text-waves:** Tumblr API key moved to `VITE_TUMBLR_API_KEY` env var — no longer hardcoded in source
+- **aggressive-text-waves:** Tumblr fetch filtered to `type=text` — non-text post types (photo, video, etc.) no longer silently load word "UNDEFINED"
+- **aggressive-text-waves:** `loadFromSource(undefined)` now returns early — sketch loop can no longer freeze if source lookup fails
+- **aggressive-text-waves:** non-text post body now throws explicitly instead of silently corrupting word list
 
 ## [0.2.1] - 2026-05-17
 

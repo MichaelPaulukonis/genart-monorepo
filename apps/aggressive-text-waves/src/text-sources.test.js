@@ -93,10 +93,12 @@ describe('createTumblrSource', () => {
   beforeEach(() => {
     mockFetch = vi.fn()
     vi.stubGlobal('fetch', mockFetch)
+    vi.stubEnv('VITE_TUMBLR_API_KEY', 'test-key')
   })
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
   })
 
   it('has id tumblr, name Tumblr, isNetworkSource true', () => {
@@ -154,6 +156,14 @@ describe('createTumblrSource', () => {
     mockFetch
       .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { total_posts: 10 } }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { posts: [] } }) })
+
+    await expect(createTumblrSource({ random: () => 0 }).fetchWords()).rejects.toThrow()
+  })
+
+  it('throws when post has no body (non-text post type)', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { total_posts: 10 } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { posts: [{ type: 'photo', photos: [] }] } }) })
 
     await expect(createTumblrSource({ random: () => 0 }).fetchWords()).rejects.toThrow()
   })

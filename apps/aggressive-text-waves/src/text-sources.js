@@ -23,7 +23,6 @@ export function createUserTextSource ({ getText }) {
 }
 
 const TUMBLR_BLOG = 'poeticalbot.tumblr.com'
-const TUMBLR_API_KEY = 'soMpL6oJLZq5ovoVYVzU5Qhx5DE87MMrxou6J7tGYLec6XeT6L'
 
 export function createTumblrSource ({ random = Math.random } = {}) {
   return {
@@ -31,7 +30,8 @@ export function createTumblrSource ({ random = Math.random } = {}) {
     name: 'Tumblr',
     isNetworkSource: true,
     fetchWords: async () => {
-      const baseUrl = `https://api.tumblr.com/v2/blog/${TUMBLR_BLOG}/posts?api_key=${TUMBLR_API_KEY}`
+      const apiKey = import.meta.env.VITE_TUMBLR_API_KEY
+      const baseUrl = `https://api.tumblr.com/v2/blog/${TUMBLR_BLOG}/posts?api_key=${apiKey}&type=text`
 
       const infoRes = await fetch(baseUrl)
       if (!infoRes.ok) throw new Error(`Tumblr error: ${infoRes.status}`)
@@ -44,6 +44,7 @@ export function createTumblrSource ({ random = Math.random } = {}) {
       const data = await postRes.json()
       const post = data.response.posts[0]
       if (!post) throw new Error('No post at offset')
+      if (!post.body) throw new Error(`Non-text post type: ${post.type}`)
 
       const parser = new DOMParser()
       const doc = parser.parseFromString(post.body, 'text/html')
