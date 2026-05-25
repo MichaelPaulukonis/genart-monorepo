@@ -45,7 +45,8 @@ apps/
   dragline/            (port 5176)
   monochromifier/      (port 5177)
   those-shape-things/  (port 5178)
-  # new apps increment from 5179+
+  aggressive-text-waves/ (port 5179)
+  # new apps increment from 5180+
 libs/
   p5-utils/            → @genart/p5-utils
   color-palettes/      → @genart/color-palettes
@@ -111,6 +112,7 @@ function keyPressed() {
 
 When asked to create a commit, follow these steps in order — do not skip or reorder:
 
+0. **Run `/code-review` on the changes first.** Do not skip this step. If the user explicitly says they have already reviewed or asks to skip review, proceed — otherwise treat this as mandatory.
 1. Run `git status` and `git diff --staged` to understand the changes
 2. Check `.github/changelog-management.md` to evaluate changelog impact
 3. Classify the change:

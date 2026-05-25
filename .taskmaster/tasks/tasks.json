@@ -3579,11 +3579,11 @@
         "id": 14,
         "title": "Implement Multiple Text Source Providers",
         "description": "Add support for multiple text sources with graceful network failure fallback. Bundled texts (Richard III, Hamlet, Tempest) and user-provided text via modal are already implemented. Remaining work: add Tumblr API source and refine Tweakpane UI with explicit Load button and status feedback.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
-          9,
-          10,
-          13
+          "9",
+          "10",
+          "13"
         ],
         "priority": "low",
         "details": "## Implementation Status & Revised Scope\n\n### ✅ COMPLETED (Already Implemented)\n- **Bundled texts**: Inline Shakespeare texts (Richard III, Hamlet, Tempest) in `text-sources.js` via `createBundledSource()` factory\n- **User text source**: `createUserTextSource()` factory with multi-line textarea modal (`text-modal.js`) that persists text, blocks key propagation, and pauses animation\n- **Tweakpane integration**: Text folder with source dropdown and Custom Text button\n- **Test coverage**: 26 passing unit tests for existing source factories\n\n### 🎯 REVISED SCOPE (Remaining Work)\n\n#### 1. Add Tumblr API Source\n- Implement `createTumblrSource()` in `text-sources.js`\n- Fetch single random post from `poeticalbot.tumblr.com` using same API key as dragline\n- Parse post content and split into words array\n- Set metadata flag `isNetworkSource: true` for remote sources\n- **Decision**: Load single post per fetch (not all 20)\n\n#### 2. Refactor Tweakpane UI\n- Replace auto-load-on-dropdown-change behavior\n- Add explicit \"Load\" button that triggers source fetch\n- Keep \"Custom Text\" button separate to open textarea modal\n- **Decision**: User must intentionally click Load to fetch new text\n\n#### 3. Add Tweakpane Status Label\n- Add status text blade to text folder: `pane.addBlade({ type: 'text', title: 'status' })`\n- Display \"Loading...\" during fetch\n- Show \"Error: [message], using [fallback source]\" on failure\n- Clear status after successful load\n- **Decision**: Tweakpane status is primary feedback mechanism (no canvas UI needed)\n\n#### 4. Implement loadFromSource Flow\n- **Pause loop**: Call `p.noLoop()` before fetching to freeze animation\n- **Fetch**: Execute `selectedSource.fetchText()` with 5-second timeout\n- **Error handling**: On failure, automatically fall back to last active bundled source (not always Richard III)\n- **Resume loop**: Call `p.loop()` after fetch completes (success or fallback)\n- **Status update**: Show appropriate status message via Tweakpane label\n- **Decision**: Fallback targets last active bundled source to preserve user context\n\n#### 5. Test Coverage for New Functionality\n- Mock `fetch()` for Tumblr source responses\n- Test error path: network failure triggers fallback to bundled source\n- Verify status messages appear correctly in Tweakpane\n- Test rapid Load button clicks are debounced (300ms)\n- Validate pause/resume loop behavior during fetch\n\n### ⏸️ DEFERRED (Separate Tasks)\n- PoetryDB source\n- Quotable source  \n- File drop (drag .txt onto canvas)\n- Caching (sessionStorage)\n\n### 📋 DESIGN DECISIONS\n- **No word deduplication**: Keep repeats to preserve source text character\n- **No canvas loading UI**: No opacity reduction or spinner — Tweakpane status sufficient\n- **Fallback target**: Last active bundled source (not hardcoded to first source)\n- **Tumblr behavior**: Single post per load (not batch of 20)\n\n## Code Example Structure\n```javascript\n// text-sources.js\nexport const createTumblrSource = (apiKey) => ({\n  id: 'tumblr',\n  name: 'Poetical Bot',\n  isNetworkSource: true,\n  async fetchText() {\n    const response = await fetch(`https://api.tumblr.com/v2/blog/poeticalbot/posts?api_key=${apiKey}&limit=1&offset=${Math.floor(Math.random() * 100)}`);\n    const data = await response.json();\n    return data.response.posts[0].summary.split(/\\s+/).filter(w => w.length > 0);\n  }\n});\n\n// sketch.js\nlet lastBundledSource = textSources.find(s => !s.isNetworkSource);\n\nasync function loadFromSource() {\n  p.noLoop();\n  statusBlade.value = 'Loading...';\n  try {\n    const newWords = await selectedSource.fetchText();\n    reinitializeWords(newWords);\n    if (!selectedSource.isNetworkSource) lastBundledSource = selectedSource;\n    statusBlade.value = 'Loaded successfully';\n  } catch (error) {\n    statusBlade.value = `Error: ${error.message}, using ${lastBundledSource.name}`;\n    const fallbackWords = await lastBundledSource.fetchText();\n    reinitializeWords(fallbackWords);\n  } finally {\n    p.loop();\n    setTimeout(() => statusBlade.value = '', 3000);\n  }\n}\n```",
@@ -3595,8 +3595,10 @@
             "description": "Add createTumblrSource() factory to text-sources.js that fetches single random post from poeticalbot.tumblr.com using shared API key",
             "dependencies": [],
             "details": "- Use same API key as dragline (assume available in environment/config)- Fetch with limit=1 and random offset- Parse post.summary field into words array- Set isNetworkSource: true in metadata- Handle API errors with descriptive messages",
-            "status": "pending",
-            "testStrategy": "- Mock fetch() to return sample Tumblr post- Verify words array is correctly parsed- Test error handling for 404/500 responses- Validate isNetworkSource flag is true"
+            "status": "done",
+            "testStrategy": "- Mock fetch() to return sample Tumblr post- Verify words array is correctly parsed- Test error handling for 404/500 responses- Validate isNetworkSource flag is true",
+            "updatedAt": "2026-05-25T15:17:21.220Z",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -3604,8 +3606,10 @@
             "description": "Replace auto-load-on-dropdown-change with explicit Load button in Tweakpane text folder",
             "dependencies": [],
             "details": "- Remove onChange handler from source dropdown- Add new 'Load' button that calls loadFromSource()- Keep Custom Text button separate- Ensure Load button is disabled while isLoading",
-            "status": "pending",
-            "testStrategy": "- Verify dropdown change does not trigger load- Test Load button click initiates fetch- Test button disabled state during loading"
+            "status": "done",
+            "testStrategy": "- Verify dropdown change does not trigger load- Test Load button click initiates fetch- Test button disabled state during loading",
+            "parentId": "undefined",
+            "updatedAt": "2026-05-25T15:17:21.243Z"
           },
           {
             "id": 3,
@@ -3613,8 +3617,10 @@
             "description": "Add status label to Tweakpane text folder for loading/error feedback",
             "dependencies": [],
             "details": "- Add text blade with title 'status'- Update value during loadFromSource() flow- Show 'Loading...' on start- Show 'Error: X, using Y' on failure- Clear after 3 seconds on success",
-            "status": "pending",
-            "testStrategy": "- Verify status updates correctly- Test error message format- Test auto-clear after success"
+            "status": "done",
+            "testStrategy": "- Verify status updates correctly- Test error message format- Test auto-clear after success",
+            "parentId": "undefined",
+            "updatedAt": "2026-05-25T15:17:21.340Z"
           },
           {
             "id": 4,
@@ -3622,8 +3628,10 @@
             "description": "Implement pause/resume loop and fallback logic in loadFromSource()",
             "dependencies": [],
             "details": "- Call p.noLoop() before fetch- On error, fetch from lastBundledSource (not always first source)- Call p.loop() in finally block- Update Tweakpane status throughout- Track lastBundledSource when non-network source loads successfully",
-            "status": "pending",
-            "testStrategy": "- Test p.noLoop() called before fetch- Test p.loop() called after completion- Verify fallback uses correct source- Test lastBundledSource tracking logic"
+            "status": "done",
+            "testStrategy": "- Test p.noLoop() called before fetch- Test p.loop() called after completion- Verify fallback uses correct source- Test lastBundledSource tracking logic",
+            "parentId": "undefined",
+            "updatedAt": "2026-05-25T15:17:21.366Z"
           },
           {
             "id": 5,
@@ -3631,10 +3639,13 @@
             "description": "Add unit tests for Tumblr source and error/fallback paths",
             "dependencies": [],
             "details": "- Mock fetch for Tumblr API responses- Test successful word parsing- Test network failure triggers fallback- Test fallback loads last bundled source- Verify 26 existing tests still pass",
-            "status": "pending",
-            "testStrategy": "- Use jest.mock() for fetch- Test happy path with sample post- Test error path with 500 response- Verify fallback source is called on error"
+            "status": "done",
+            "testStrategy": "- Use jest.mock() for fetch- Test happy path with sample post- Test error path with 500 response- Verify fallback source is called on error",
+            "parentId": "undefined",
+            "updatedAt": "2026-05-25T15:17:21.383Z"
           }
-        ]
+        ],
+        "updatedAt": "2026-05-25T15:17:21.383Z"
       },
       {
         "id": 15,
@@ -3644,9 +3655,9 @@
         "testStrategy": "## Testing Approach\n\n### 1. Unit Tests for Similarity Algorithms\n- Test Levenshtein distance with known string pairs: \"cat\"/\"bat\" = 1, \"hello\"/\"world\" = 4\n- Verify rhyme key extraction: \"running\" → \"ing\", \"play\"/\"stay\" match\n- Validate mass calculation: 5-letter word with `lengthMassFactor=2` → mass=1.5\n\n### 2. Force Calculation Verification\n- Create test suite with 3 words at known positions\n- Manually calculate expected attraction/repulsion vectors\n- Assert `WordForces.calculateForce()` returns correct magnitude and direction\n- Test force accumulation: verify multiple forces sum correctly via `word.applyForce()`\n\n### 3. Visual Integration Tests\n- **Semantic Test**: Load text with clear similar pairs (\"big\"/\"large\", \"small\"/\"tiny\")\n- **Source Test**: Load 2 sources with distinct vocabularies; verify separation into two flocks\n- **Phonetic Test**: Use rhyming poem; confirm rhyming words cluster tighter than non-rhymes\n- **Lexical Test**: Mix short (\"a\", \"the\") and long words (\"antidisestablishmentarianism\"); observe velocity differences\n\n### 4. Performance Benchmarking\n- Measure `draw()` frame time with 100, 500, 1000 words\n- Verify 60fps maintained at target word count (200-300)\n- Profile force calculation functions; optimize if >5ms per frame\n\n### 5. Reproducibility Check (Task 13)\n- Set `p.randomSeed(42)` and record initial frame word positions\n- Restart with same seed; assert positions match within 0.01 pixels\n- Toggle each force type individually; verify deterministic behavior\n\n### 6. Parameter Tuning Validation\n- Test extreme values: `semanticAttraction=0` (no effect) vs `10` (strong clustering)\n- Verify `sourceRepulsion` creates clear boundaries between source flocks\n- Confirm `phoneticRadius` limits interaction distance correctly\n\n### 7. Manual QA Checklist\n- [ ] Words from same source form cohesive flocks with distinct colors\n- [ ] Semantic pairs (synonyms) slowly drift together over 5-10 seconds\n- [ ] Long words move noticeably slower than short words\n- [ ] Rhyming words in poems show subtle clustering\n- [ ] Toggling any force in Tweakpane produces immediate visual change\n- [ ] No performance degradation when all forces enabled simultaneously",
         "status": "pending",
         "dependencies": [
-          9,
-          14,
-          13
+          "9",
+          "14",
+          "13"
         ],
         "priority": "low",
         "subtasks": []
@@ -3659,9 +3670,9 @@
         "testStrategy": "## Manual Visual Testing Protocol\n\n### 1. Mode Toggle Testing\n- Switch between 'gibberish' and 'nonOverlap' modes via Tweakpane\n- Verify immediate behavior change without restart\n- Confirm visual indicator updates correctly\n\n### 2. Overlap Prevention Validation\n- **Gibberish Mode**: Use 50+ words, observe overlapping characters in cells (expected)\n- **Non-Overlap Mode**: Verify no cell contains multiple word fragments\n- Enable debug overlay: render cell occupancy grid with colored highlights\n\n### 3. Gravity Source Pileup Scenarios\n- Configure 3-4 gravity sources in triangular/square formation\n- Observe word clustering at equilibrium points\n- Verify chosen pileup strategy prevents complete gridlock\n- Test with `params.gravityStrength = 0` (no pileup pressure)\n\n### 4. Edge Case Testing\n- **High Density**: 300 words in 100x100 grid - should not crash\n- **Boundary Conditions**: Words pushed to canvas edges must wrap correctly\n- **Rapid Mode Switching**: Toggle 10x quickly - no memory leaks or state corruption\n\n### 5. Performance Benchmarking\n- Measure FPS in both modes with 200 words\n- Target: maintain 60fps on mid-range hardware\n- Use browser profiler to identify hot spots in overlap detection\n\n### 6. Regression Testing\n- Verify existing features unaffected: recording, high-res export, source switching\n- Test with negative gravity (repulsion) - non-overlap should still function\n- Confirm seeded RNG produces identical results in both modes when no overlaps occur",
         "status": "pending",
         "dependencies": [
-          3,
-          12,
-          13
+          "3",
+          "12",
+          "13"
         ],
         "priority": "low",
         "subtasks": []
@@ -3676,19 +3687,30 @@
         "dependencies": [],
         "priority": "low",
         "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "Add PoetryDB and Quotable remote text sources",
+        "description": "Deferred from task 14. Add two CORS-friendly, no-key API sources using the existing createXSource factory pattern from text-sources.js.",
+        "details": "## Sources\n\n### PoetryDB\n- Endpoint: `https://poetrydb.org/random/1`\n- Response: array of poem objects with `lines` array\n- Parse: join `lines`, split into words via `parseWords()`\n- No API key needed, CORS-friendly\n\n### Quotable\n- Endpoint: `https://api.quotable.io/random`\n- Response: `{ content: \"quote text\", author: \"name\" }`\n- Parse: `parseWords(content)` (optionally append author)\n- No API key needed, CORS-friendly\n\n## Implementation\n\nFollow exact same pattern as `createTumblrSource`:\n- Factory function `createPoetryDBSource()` and `createQuotableSource()`\n- `isNetworkSource: true`\n- Throws on non-ok response or empty result\n- TDD: write failing tests first, mock `fetch` with `vi.stubGlobal`\n\nAdd both to `textSources` array in sketch.js alongside Tumblr.\n\n## Test Strategy\n\nSame pattern as Tumblr tests in text-sources.test.js:\n- Identity (id, name, isNetworkSource)\n- Returns parsed words from mocked response\n- Throws on non-ok fetch\n- Throws on empty/missing content field",
+        "testStrategy": "TDD with vi.stubGlobal fetch mocks. Mirror existing Tumblr test structure.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "low",
+        "subtasks": []
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-05-17T21:22:58.187Z",
-      "taskCount": 13,
-      "completedCount": 13,
+      "lastModified": "2026-05-25T15:17:21.383Z",
+      "taskCount": 17,
+      "completedCount": 14,
       "tags": [
         "text-waves"
       ],
-      "created": "2026-05-17T21:28:05.161Z",
+      "created": "2026-05-25T15:18:57.006Z",
       "description": "Tasks for text-waves context",
-      "updated": "2026-05-25T15:13:55.279Z"
+      "updated": "2026-05-25T15:18:57.012Z"
     }
   }
 }
