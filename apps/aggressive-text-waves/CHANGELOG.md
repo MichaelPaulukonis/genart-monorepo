@@ -9,6 +9,11 @@
 ### Fixed
 - **aggressive-text-waves:** keydown events no longer propagate from text modal to canvas — typing 's' no longer triggers save while editing
 - **aggressive-text-waves:** animation pauses while text modal is open, resumes on close
+- **aggressive-text-waves:** Tweakpane Load and Custom Text buttons return canvas focus after async completion — Space no longer re-fires button after load
+
+### Added (continued)
+- **aggressive-text-waves:** Tumblr source (`poeticalbot.tumblr.com`) — fetches single random post per load, falls back to last active bundled source on network failure
+- **aggressive-text-waves:** explicit Load button replaces auto-load-on-dropdown-change; Tweakpane status label shows loading/error state
 
 ## [0.2.1] - 2026-05-17
 

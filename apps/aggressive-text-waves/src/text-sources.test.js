@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { parseWords, createBundledSource, createUserTextSource, BUNDLED_TEXTS } from './text-sources.js'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { parseWords, createBundledSource, createUserTextSource, createTumblrSource, BUNDLED_TEXTS } from './text-sources.js'
 
 describe('parseWords', () => {
   it('splits text on whitespace', () => {
@@ -84,5 +84,77 @@ describe('BUNDLED_TEXTS', () => {
       const src = createBundledSource(t)
       expect(src.fetchWords().length).toBeGreaterThanOrEqual(10)
     }
+  })
+})
+
+describe('createTumblrSource', () => {
+  let mockFetch
+
+  beforeEach(() => {
+    mockFetch = vi.fn()
+    vi.stubGlobal('fetch', mockFetch)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('has id tumblr, name Tumblr, isNetworkSource true', () => {
+    const src = createTumblrSource()
+    expect(src.id).toBe('tumblr')
+    expect(src.name).toBe('Tumblr')
+    expect(src.isNetworkSource).toBe(true)
+  })
+
+  it('makes two fetch calls: total_posts then random post', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { total_posts: 100 } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { posts: [{ body: '<p>hello world</p>' }] } }) })
+
+    await createTumblrSource({ random: () => 0.5 }).fetchWords()
+
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('uses random value to compute fetch offset from total_posts', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { total_posts: 100 } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { posts: [{ body: '<p>hello</p>' }] } }) })
+
+    await createTumblrSource({ random: () => 0.5 }).fetchWords()
+
+    expect(mockFetch.mock.calls[1][0]).toContain('offset=50')
+  })
+
+  it('returns parsed words from post HTML body', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { total_posts: 10 } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { posts: [{ body: '<p>Hello world foo</p>' }] } }) })
+
+    const words = await createTumblrSource({ random: () => 0 }).fetchWords()
+
+    expect(words).toEqual(['HELLO', 'WORLD', 'FOO'])
+  })
+
+  it('throws when first fetch returns non-ok response', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 403 })
+
+    await expect(createTumblrSource().fetchWords()).rejects.toThrow()
+  })
+
+  it('throws when second fetch returns non-ok response', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { total_posts: 10 } }) })
+      .mockResolvedValueOnce({ ok: false, status: 500 })
+
+    await expect(createTumblrSource({ random: () => 0 }).fetchWords()).rejects.toThrow()
+  })
+
+  it('throws when response contains no posts', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { total_posts: 10 } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ response: { posts: [] } }) })
+
+    await expect(createTumblrSource({ random: () => 0 }).fetchWords()).rejects.toThrow()
   })
 })

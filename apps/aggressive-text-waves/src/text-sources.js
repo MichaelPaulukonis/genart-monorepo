@@ -22,6 +22,37 @@ export function createUserTextSource ({ getText }) {
   }
 }
 
+const TUMBLR_BLOG = 'poeticalbot.tumblr.com'
+const TUMBLR_API_KEY = 'soMpL6oJLZq5ovoVYVzU5Qhx5DE87MMrxou6J7tGYLec6XeT6L'
+
+export function createTumblrSource ({ random = Math.random } = {}) {
+  return {
+    id: 'tumblr',
+    name: 'Tumblr',
+    isNetworkSource: true,
+    fetchWords: async () => {
+      const baseUrl = `https://api.tumblr.com/v2/blog/${TUMBLR_BLOG}/posts?api_key=${TUMBLR_API_KEY}`
+
+      const infoRes = await fetch(baseUrl)
+      if (!infoRes.ok) throw new Error(`Tumblr error: ${infoRes.status}`)
+      const info = await infoRes.json()
+      const total = info.response.total_posts
+      const offset = Math.floor(random() * total)
+
+      const postRes = await fetch(`${baseUrl}&offset=${offset}&limit=1`)
+      if (!postRes.ok) throw new Error(`Tumblr error: ${postRes.status}`)
+      const data = await postRes.json()
+      const post = data.response.posts[0]
+      if (!post) throw new Error('No post at offset')
+
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(post.body, 'text/html')
+      const text = (doc.body.textContent || '').replace(/\s+/g, ' ')
+      return parseWords(text)
+    }
+  }
+}
+
 export const BUNDLED_TEXTS = [
   {
     id: 'richard-iii',

@@ -5,12 +5,13 @@ import { Cell } from './cell.js'
 import { Word } from './word.js'
 import { saveWithFallback, checkServer, isServerAvailable } from './utils/save-local.js'
 import { createOffscreenCanvas } from '@genart/p5-utils'
-import { BUNDLED_TEXTS, createBundledSource, createUserTextSource } from './text-sources.js'
+import { BUNDLED_TEXTS, createBundledSource, createUserTextSource, createTumblrSource } from './text-sources.js'
 import { createTextModal } from './text-modal.js'
 
 const textModal = createTextModal()
 const textSources = [
   ...BUNDLED_TEXTS.map(createBundledSource),
+  createTumblrSource(),
   createUserTextSource({ getText: () => textModal.open() })
 ]
 
@@ -107,30 +108,56 @@ new p5((p) => {
   physicsFolder.addBinding(params, 'yOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
   physicsFolder.addBinding(params, 'zOffsetSpeed', { min: 0.001, max: 1, step: 0.001 })
 
+  let lastBundledSource = textSources[0]
+  const textStatus = { status: '' }
+
   async function loadFromSource (source) {
     const wasStepping = params.stepMode
     if (!wasStepping) p.noLoop()
-    const newWords = await source.fetchWords()
-    if (newWords !== null) {
-      words = newWords
-      init()
+    if (source.isNetworkSource) {
+      textStatus.status = 'Loading...'
+      statusBlade.refresh()
     }
+    try {
+      const newWords = await source.fetchWords()
+      if (newWords !== null) {
+        words = newWords
+        init()
+        if (!source.isNetworkSource && source.id !== 'user-input') {
+          lastBundledSource = source
+        }
+      }
+      textStatus.status = ''
+    } catch (_err) {
+      const fallback = lastBundledSource
+      textStatus.status = `Failed — using ${fallback.name}`
+      words = fallback.fetchWords()
+      init()
+      setTimeout(() => { textStatus.status = ''; statusBlade.refresh() }, 3000)
+    }
+    statusBlade.refresh()
     if (!wasStepping) p.loop()
+    p.canvas.focus()
   }
 
   const textFolder = pane.addFolder({ title: 'text' })
-  const bundledOptions = BUNDLED_TEXTS.map(t => ({ text: t.name, value: t.id }))
+  const sourceOptions = textSources
+    .filter(s => s.id !== 'user-input')
+    .map(s => ({ text: s.name, value: s.id }))
+  let selectedSourceId = textSources[0].id
   textFolder.addBlade({
     view: 'list',
     label: 'source',
-    options: bundledOptions,
-    value: BUNDLED_TEXTS[0].id
-  }).on('change', (ev) => {
-    loadFromSource(textSources.find(s => s.id === ev.value))
+    options: sourceOptions,
+    value: selectedSourceId
+  }).on('change', (ev) => { selectedSourceId = ev.value })
+  textFolder.addButton({ title: 'Load' }).on('click', () => {
+    loadFromSource(textSources.find(s => s.id === selectedSourceId))
   })
   textFolder.addButton({ title: 'Custom Text...' }).on('click', () => {
     loadFromSource(textSources.find(s => s.id === 'user-input'))
   })
+  const statusBlade = textFolder.addBinding(textStatus, 'status', { readonly: true, label: 'info' })
 
   p.keyPressed = () => {
     if (p.key === ' ') toggleStep()
