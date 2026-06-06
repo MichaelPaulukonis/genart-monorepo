@@ -17,6 +17,18 @@ describe('softExclusion strategy', () => {
     expect(w.vy).toBeCloseTo(0)
   })
 
+  it('scales repulsion by word.params.softRepulsion', () => {
+    const blocker = new Word('CD', 3, 5, fakeCtx, params)
+    blocker.posX = 3; blocker.posY = 5
+    const weak = new Word('AB', 5, 5, fakeCtx, { verticalRatio: 0, softRepulsion: 0.1 })
+    weak.posX = 5; weak.posY = 5; weak.vx = 0; weak.vy = 0
+    const strong = new Word('AB', 5, 5, fakeCtx, { verticalRatio: 0, softRepulsion: 1.0 })
+    strong.posX = 5; strong.posY = 5; strong.vx = 0; strong.vy = 0
+    softExclusion(weak, { blockers: [blocker], tryClaim: () => false })
+    softExclusion(strong, { blockers: [blocker], tryClaim: () => false })
+    expect(strong.vx).toBeGreaterThan(weak.vx)
+  })
+
   it('returns true when the claim succeeds', () => {
     const w = new Word('AB', 5, 5, fakeCtx, params)
     expect(softExclusion(w, { blockers: [], tryClaim: () => true })).toBe(true)

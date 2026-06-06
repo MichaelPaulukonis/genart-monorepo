@@ -36,7 +36,8 @@ const params = {
   gravityForce: 0.15,
   separationForce: 0.2,
   overlapMode: 'gibberish',
-  pileupStrategy: 'rejectBounce'
+  pileupStrategy: 'rejectBounce',
+  softRepulsion: 0.3
 }
 
 // eslint-disable-next-line no-new
@@ -113,6 +114,8 @@ new p5((p) => {
     options: PILEUP_STRATEGY_OPTIONS,
     value: params.pileupStrategy
   }).on('change', (ev) => { params.pileupStrategy = ev.value })
+
+  pane.addBinding(params, 'softRepulsion', { min: 0, max: 2, step: 0.05, label: 'soft repel' })
 
   const gravityFolder = pane.addFolder({ title: 'gravity' })
   gravityFolder.addBinding(params, 'centerSpeed', { min: 0.001, max: 0.1, step: 0.001, label: 'center speed' })

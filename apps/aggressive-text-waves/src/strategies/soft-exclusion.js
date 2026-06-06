@@ -4,9 +4,11 @@
 // claim this frame; if still blocked, hold position. The repulsion persists
 // into next frame's physics, so words ease apart instead of hard-bouncing.
 // ctx = { blockers, grid, cols, rows, tryClaim, strategy, depth? }
-const REPULSION = 0.3
+// Strength comes from the live params (Tweakpane 'soft repel' slider).
+const DEFAULT_REPULSION = 0.3
 
 export function softExclusion (word, ctx) {
+  const repulsion = word.params.softRepulsion ?? DEFAULT_REPULSION
   for (const blocker of ctx.blockers) {
     let dx = word.posX - blocker.posX
     let dy = word.posY - blocker.posY
@@ -18,7 +20,7 @@ export function softExclusion (word, ctx) {
       dist2 = dx * dx + dy * dy || 1
     }
     const mag = Math.sqrt(dist2) || 1
-    const force = REPULSION / (dist2 + 1)
+    const force = repulsion / (dist2 + 1)
     word.vx += (dx / mag) * force
     word.vy += (dy / mag) * force
   }
