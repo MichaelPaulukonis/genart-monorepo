@@ -49,7 +49,15 @@ export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode }
       continue
     }
     const blockers = blockingWords(word, grid, cols, rows)
-    word.handleOverlap({ blockers, grid, cols, rows, tryClaim })
+    // handleOverlap returns true if it placed the word (claimed cells via tryClaim).
+    // On success, commit its position and clear the stuck counter so a word that
+    // legitimately re-places every frame never trips the gridlock fallback.
+    const claimed = word.handleOverlap({ blockers, grid, cols, rows, tryClaim })
+    if (claimed) {
+      word.prevPosX = word.posX
+      word.prevPosY = word.posY
+      word.stuckFrames = 0
+    }
   }
 
   return { relaxed }

@@ -107,6 +107,30 @@ describe('resolveOccupancy', () => {
     expect(res.relaxed).toBe(1)
   })
 
+  it('commits prevPos and resets stuckFrames when handleOverlap returns true', () => {
+    const grid = makeGrid(10, 10)
+    const a = makeWord('AB', 0, 0)
+    const b = makeWord('CD', 0, 0) // blocked by a
+    b.stuckFrames = 4
+    b.posX = 7; b.posY = 8
+    // strategy stub: claims elsewhere and reports success
+    b.handleOverlap = () => true
+    resolveOccupancy({ wordObjects: [a, b], grid, cols: 10, rows: 10, overlapMode: 'nonOverlap' })
+    expect(b.stuckFrames).toBe(0)
+    expect(b.prevPosX).toBe(7)
+    expect(b.prevPosY).toBe(8)
+  })
+
+  it('does not reset stuckFrames when handleOverlap returns false', () => {
+    const grid = makeGrid(10, 10)
+    const a = makeWord('AB', 0, 0)
+    const b = makeWord('CD', 0, 0)
+    b.stuckFrames = 4
+    b.handleOverlap = () => false // default-style: gave up
+    resolveOccupancy({ wordObjects: [a, b], grid, cols: 10, rows: 10, overlapMode: 'nonOverlap' })
+    expect(b.stuckFrames).toBe(5)
+  })
+
   it('nonOverlap mode: every occupied cell is consistent with its occupant', () => {
     const grid = makeGrid(10, 10)
     // overlapping + adjacent words competing for cells

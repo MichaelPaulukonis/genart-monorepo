@@ -171,12 +171,4 @@ export class Word {
     }
     return cells
   }
-
-  assignToGrid (grid, cols, rows) {
-    for (const { x, y, char } of this.stripCells(cols, rows)) {
-      if (x >= 0 && x < cols && y >= 0 && y < rows) {
-        grid[y][x].setWordLetter(char)
-      }
-    }
-  }
 }
