@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { Cell } from './cell.js'
-import { cellsFree, stampWord } from './occupancy.js'
+import { cellsFree, stampWord, resolveOccupancy } from './occupancy.js'
 import { Word } from './word.js'
 
 const fakeCtx = { random: () => 0.5, noise: () => 0.5 }
@@ -66,5 +66,44 @@ describe('stampWord', () => {
     expect(grid[0][0].isWord).toBe(true)
     expect(grid[0][0].occupiedBy).toBe(w)
     expect(grid[0][1].occupiedBy).toBe(w)
+  })
+})
+
+describe('resolveOccupancy', () => {
+  it('gibberish mode stamps all words even if overlapping', () => {
+    const grid = makeGrid(10, 10)
+    const a = makeWord('AB', 0, 0)
+    const b = makeWord('CD', 0, 0) // same cells
+    resolveOccupancy({ wordObjects: [a, b], grid, cols: 10, rows: 10, overlapMode: 'gibberish' })
+    expect(grid[0][0].letter).toBe('C') // last write wins
+  })
+
+  it('nonOverlap mode: first word claims, second is blocked (handleOverlap called)', () => {
+    const grid = makeGrid(10, 10)
+    const a = makeWord('AB', 0, 0)
+    const b = makeWord('CD', 0, 0)
+    b.prevPosX = 5; b.prevPosY = 5
+    resolveOccupancy({ wordObjects: [a, b], grid, cols: 10, rows: 10, overlapMode: 'nonOverlap' })
+    expect(grid[0][0].occupiedBy).toBe(a)
+    expect(b.posX).toBe(5) // b reverted via default handleOverlap
+  })
+
+  it('resets stuckFrames on successful claim', () => {
+    const grid = makeGrid(10, 10)
+    const a = makeWord('AB', 0, 0)
+    a.stuckFrames = 5
+    resolveOccupancy({ wordObjects: [a], grid, cols: 10, rows: 10, overlapMode: 'nonOverlap' })
+    expect(a.stuckFrames).toBe(0)
+  })
+
+  it('gridlock fallback force-stamps a word stuck > 60 frames', () => {
+    const grid = makeGrid(10, 10)
+    const a = makeWord('AB', 0, 0)
+    const b = makeWord('CD', 0, 0)
+    b.prevPosX = 0; b.prevPosY = 0
+    b.stuckFrames = 61
+    const res = resolveOccupancy({ wordObjects: [a, b], grid, cols: 10, rows: 10, overlapMode: 'nonOverlap' })
+    expect(b.stuckFrames).toBe(0) // reset after relax
+    expect(res.relaxed).toBe(1)
   })
 })
