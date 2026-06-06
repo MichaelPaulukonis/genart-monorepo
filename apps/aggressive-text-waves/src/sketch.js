@@ -48,6 +48,7 @@ new p5((p) => {
   let lastResolve = { relaxed: 0 }
   const gravitySources = []
   let showCenter = false
+  let showOccupancy = false
   let pg
   let offscreenScale
   let displayOffscreen
@@ -94,6 +95,15 @@ new p5((p) => {
       init()
     })
   pane.addBinding(params, 'verticalRatio', { min: 0, max: 1, step: 0.05, label: 'vert ratio' })
+  pane.addBlade({
+    view: 'list',
+    label: 'overlap',
+    options: [
+      { text: 'gibberish', value: 'gibberish' },
+      { text: 'nonOverlap', value: 'nonOverlap' }
+    ],
+    value: params.overlapMode
+  }).on('change', (ev) => { params.overlapMode = ev.value })
 
   const gravityFolder = pane.addFolder({ title: 'gravity' })
   gravityFolder.addBinding(params, 'centerSpeed', { min: 0.001, max: 0.1, step: 0.001, label: 'center speed' })
@@ -167,6 +177,7 @@ new p5((p) => {
     if (p.key === ' ') toggleStep()
     if (p.key === 'n' || p.key === 'N') { if (params.stepMode) { update(); render() } }
     if (p.key === 'c' || p.key === 'C') showCenter = !showCenter
+    if (p.key === 'd' || p.key === 'D') showOccupancy = !showOccupancy
     if (p.key === 'o' || p.key === 'O') {
       params.showOutline = !params.showOutline
       pane.refresh()
@@ -318,6 +329,31 @@ new p5((p) => {
         }
       })
     }
+
+    if (showOccupancy && params.overlapMode === 'nonOverlap') {
+      pg.noStroke()
+      pg.fill(0, 180, 255, 80)
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          if (grid[y][x].occupiedBy !== null) {
+            pg.rect(x * cellSize, y * cellSize, cellSize, cellSize)
+          }
+        }
+      }
+    }
+
+    // mode badge
+    const badgeFlash = lastResolve.relaxed > 0
+    pg.noStroke()
+    pg.fill(badgeFlash ? p.color(220, 40, 40) : p.color(0, 0, 0, 160))
+    pg.rect(0, 0, 220 * offscreenScale, 34 * offscreenScale)
+    pg.fill(255)
+    pg.textSize(18 * offscreenScale)
+    pg.textAlign(pg.LEFT, pg.CENTER)
+    pg.text(`mode: ${params.overlapMode}${badgeFlash ? ' (relax!)' : ''}`,
+      8 * offscreenScale, 17 * offscreenScale)
+    pg.textAlign(pg.CENTER, pg.CENTER)
+    pg.textSize((params.scale - 4) * offscreenScale)
 
     displayOffscreen()
   }
