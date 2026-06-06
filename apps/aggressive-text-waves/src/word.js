@@ -1,3 +1,5 @@
+import { PILEUP_STRATEGIES } from './pileup-strategies.js'
+
 export class Word {
   constructor (text, x, y, ctx, params) {
     this.ctx = ctx
@@ -9,6 +11,9 @@ export class Word {
     this.y = y
     this.vx = 0
     this.vy = 0
+    this.prevPosX = x
+    this.prevPosY = y
+    this.stuckFrames = 0
     this.xoff = this.ctx.random(1000)
     this.yoff = this.ctx.random(1000)
     this.zoff = this.ctx.random(1000)
@@ -149,13 +154,37 @@ export class Word {
     this.zoff += params.zOffsetSpeed
   }
 
-  assignToGrid (grid, cols, rows) {
+  // mark the current position as the last successfully-placed one
+  commitPosition () {
+    this.prevPosX = this.posX
+    this.prevPosY = this.posY
+    this.stuckFrames = 0
+  }
+
+  // revert to previous committed position; returns false (word not newly placed)
+  revert () {
+    this.posX = this.prevPosX
+    this.posY = this.prevPosY
+    this.x = Math.floor(this.posX)
+    this.y = Math.floor(this.posY)
+    return false
+  }
+
+  // ctx: { blockers, grid, cols, rows, tryClaim, strategy, depth? }
+  // dispatch to the selected pileup strategy; fall back to revert if unknown
+  handleOverlap (ctx) {
+    const strategy = PILEUP_STRATEGIES[ctx.strategy]
+    if (strategy) return strategy(this, ctx)
+    return this.revert()
+  }
+
+  stripCells (cols, rows) {
+    const cells = []
     for (let i = 0; i < this.text.length; i++) {
       const x = this.isVertical ? this.x : (this.x + i) % cols
       const y = this.isVertical ? (this.y + i) % rows : this.y
-      if (x >= 0 && x < cols && y >= 0 && y < rows) {
-        grid[y][x].setWordLetter(this.text.charAt(i))
-      }
+      cells.push({ x, y, char: this.text.charAt(i) })
     }
+    return cells
   }
 }
