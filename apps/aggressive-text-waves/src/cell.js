@@ -6,11 +6,13 @@ export class Cell {
     this.scale = scale
     this.ctx = ctx
     this.isWord = false
+    this.occupiedBy = null
   }
 
   clear () {
     this.letter = ' '
     this.isWord = false
+    this.occupiedBy = null
   }
 
   setLetter (letter) { this.letter = letter }
