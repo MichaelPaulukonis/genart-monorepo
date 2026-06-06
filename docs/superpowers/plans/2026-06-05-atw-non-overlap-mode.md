@@ -670,14 +670,56 @@ git add apps/aggressive-text-waves/src/sketch.js
 git commit -m "feat(aggressive-text-waves): overlap mode control, badge, occupancy debug overlay"
 ```
 
-**Foundation complete.** Create worktrees before Tasks 8 / 9:
+**Foundation complete.**
+
+---
+
+## PLAN REVISION (2026-06-06): selectable strategies, keep both
+
+After foundation review, the bake-off ("pick one winner") is dropped. Both
+strategies ship as **live-selectable** options — better fit for a parametric
+art tool. Architecture changes from "override `Word.handleOverlap`" to a
+**strategy registry** keyed by a `params.pileupStrategy` param.
+
+### New file layout
+
+- `src/strategies/reject-bounce.js` → `export function rejectBounce (word, ctx)`
+- `src/strategies/cascade.js` → `export function cascade (word, ctx)`
+- `src/pileup-strategies.js` (registry) → imports both, `export const PILEUP_STRATEGIES = { rejectBounce, cascade }`
+- `Word.handleOverlap(ctx)` dispatches: `PILEUP_STRATEGIES[ctx.strategy]?.(this, ctx) ?? this.revert()`
+- `Word.revert()` — extracted from the old default handleOverlap body
+- `resolveOccupancy` adds `strategy` to the ctx it passes to `handleOverlap`
+- `sketch.js` — second Tweakpane list bound to `params.pileupStrategy`
+
+### Strategy contract (both agents code to this)
+
+`(word, ctx) => boolean`. `ctx = { blockers, grid, cols, rows, tryClaim, strategy, depth? }`.
+Return `true` if the word was placed (you called `ctx.tryClaim(word)` and it
+succeeded); return `false` if you gave up (call `word.revert()` and return its
+value). On `true`, the resolver commits `prevPos` and resets `stuckFrames`.
+`word.revert()` is available (reverts to prevPos, returns false).
+
+### Task 7.5 (prep, done inline before agents)
+
+Extract `Word.revert()`; make `handleOverlap` dispatch via registry; create the
+two strategy files with **placeholder bodies** (`return word.revert()`); create
+the registry; thread `strategy: params.pileupStrategy` through `resolveOccupancy`;
+add `params.pileupStrategy: 'rejectBounce'` + the second Tweakpane list. This
+stabilizes the contract so Tasks 8 and 9 only fill in ONE strategy file each
+(disjoint files → conflict-free parallel merge).
+
+### Worktrees (after Task 7.5 commits)
 
 ```bash
 git worktree add ../genart-atw-strategy-a -b atw/16-strategy-a atw/16-non-overlap
 git worktree add ../genart-atw-strategy-c -b atw/16-strategy-c atw/16-non-overlap
 ```
 
-Tasks 8 and 9 are implemented independently, one per worktree, in parallel.
+Agent A fills `src/strategies/reject-bounce.js` (+test). Agent C fills
+`src/strategies/cascade.js` (+test). Both branches merge into
+`atw/16-non-overlap` (no conflict — disjoint files). Tasks 8/9 below keep the
+reject-bounce and cascade ALGORITHMS as reference; only their location changes
+(exported function in its own file, not a `Word` method override).
 
 ---
 
