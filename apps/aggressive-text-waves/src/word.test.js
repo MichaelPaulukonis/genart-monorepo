@@ -31,4 +31,13 @@ describe('Word.stripCells', () => {
       { x: 0, y: 0, char: 'B' }
     ])
   })
+
+  it('wraps vertically on rows', () => {
+    const w = new Word('AB', 0, 9, fakeCtx, params)
+    w.x = 0; w.y = 9; w.isVertical = true
+    expect(w.stripCells(10, 10)).toEqual([
+      { x: 0, y: 9, char: 'A' },
+      { x: 0, y: 0, char: 'B' }
+    ])
+  })
 })
