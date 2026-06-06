@@ -106,4 +106,22 @@ describe('resolveOccupancy', () => {
     expect(b.stuckFrames).toBe(0) // reset after relax
     expect(res.relaxed).toBe(1)
   })
+
+  it('nonOverlap mode: every occupied cell is consistent with its occupant', () => {
+    const grid = makeGrid(10, 10)
+    // overlapping + adjacent words competing for cells
+    const words = [makeWord('AB', 0, 0), makeWord('CD', 0, 0), makeWord('EF', 1, 1)]
+    words.forEach(w => { w.prevPosX = w.x; w.prevPosY = w.y })
+    resolveOccupancy({ wordObjects: words, grid, cols: 10, rows: 10, overlapMode: 'nonOverlap' })
+    for (let y = 0; y < 10; y++) {
+      for (let x = 0; x < 10; x++) {
+        const occ = grid[y][x].occupiedBy
+        if (occ === null) continue
+        // the occupant must actually cover this cell with the stamped letter — no cross-word contamination
+        const owned = occ.stripCells(10, 10).find(c => c.x === x && c.y === y)
+        expect(owned).toBeTruthy()
+        expect(grid[y][x].letter).toBe(owned.char)
+      }
+    }
+  })
 })

@@ -41,6 +41,9 @@ export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode }
     word.stuckFrames++
     if (word.stuckFrames > GRIDLOCK_FRAMES) {
       stampWord(word, grid, cols, rows) // relax: force placement for one frame
+      // commit the relaxed position so a block next frame reverts here, not to a stale spot
+      word.prevPosX = word.posX
+      word.prevPosY = word.posY
       word.stuckFrames = 0
       relaxed++
       continue
