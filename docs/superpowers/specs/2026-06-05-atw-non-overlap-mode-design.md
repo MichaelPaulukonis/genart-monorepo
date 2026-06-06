@@ -82,6 +82,11 @@ jitter to break deadlock. Word re-claims its prior cells.
 
 ### Strategy C — Backpressure Propagation (worktree `atw/16-strategy-c`)
 
+Naming note: "backpressure" is task #16's label. Mechanically this is a
+**displacement cascade** (shove the blocker forward along the mover's
+velocity), not classic backpressure (which propagates resistance *backward*
+against flow to throttle a source). Kept the task's name for traceability.
+
 `handleOverlap`: push the blocking word along this word's velocity vector
 (recursive nudge toward this word's desired position), recursion depth ≤ 3,
 energy loss factor `0.8` per step. If the chain resolves, both place; if not,
