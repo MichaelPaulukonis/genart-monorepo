@@ -1,3 +1,5 @@
+import { PILEUP_STRATEGIES } from './pileup-strategies.js'
+
 export class Word {
   constructor (text, x, y, ctx, params) {
     this.ctx = ctx
@@ -152,14 +154,21 @@ export class Word {
     this.zoff += params.zOffsetSpeed
   }
 
-  // ctx: { blockers, grid, cols, rows, tryClaim }
-  // default strategy: revert to previous committed position
-  handleOverlap (ctx) {
+  // revert to previous committed position; returns false (word not newly placed)
+  revert () {
     this.posX = this.prevPosX
     this.posY = this.prevPosY
     this.x = Math.floor(this.posX)
     this.y = Math.floor(this.posY)
     return false
+  }
+
+  // ctx: { blockers, grid, cols, rows, tryClaim, strategy, depth? }
+  // dispatch to the selected pileup strategy; fall back to revert if unknown
+  handleOverlap (ctx) {
+    const strategy = PILEUP_STRATEGIES[ctx.strategy]
+    if (strategy) return strategy(this, ctx)
+    return this.revert()
   }
 
   stripCells (cols, rows) {

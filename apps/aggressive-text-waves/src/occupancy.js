@@ -15,7 +15,7 @@ export function stampWord (word, grid, cols, rows) {
 
 const GRIDLOCK_FRAMES = 60
 
-export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode }) {
+export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode, pileupStrategy }) {
   let relaxed = 0
 
   if (overlapMode !== 'nonOverlap') {
@@ -52,7 +52,7 @@ export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode }
     // handleOverlap returns true if it placed the word (claimed cells via tryClaim).
     // On success, commit its position and clear the stuck counter so a word that
     // legitimately re-places every frame never trips the gridlock fallback.
-    const claimed = word.handleOverlap({ blockers, grid, cols, rows, tryClaim })
+    const claimed = word.handleOverlap({ blockers, grid, cols, rows, tryClaim, strategy: pileupStrategy })
     if (claimed) {
       word.prevPosX = word.posX
       word.prevPosY = word.posY

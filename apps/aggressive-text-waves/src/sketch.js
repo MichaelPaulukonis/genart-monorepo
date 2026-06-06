@@ -4,6 +4,7 @@ import { Pane } from 'tweakpane'
 import { Cell } from './cell.js'
 import { Word } from './word.js'
 import { resolveOccupancy } from './occupancy.js'
+import { PILEUP_STRATEGY_OPTIONS } from './pileup-strategies.js'
 import { saveWithFallback, checkServer, isServerAvailable } from './utils/save-local.js'
 import { createOffscreenCanvas } from '@genart/p5-utils'
 import { BUNDLED_TEXTS, createBundledSource, createUserTextSource, createTumblrSource } from './text-sources.js'
@@ -34,7 +35,8 @@ const params = {
   wanderForce: 0.08,
   gravityForce: 0.15,
   separationForce: 0.2,
-  overlapMode: 'gibberish'
+  overlapMode: 'gibberish',
+  pileupStrategy: 'rejectBounce'
 }
 
 // eslint-disable-next-line no-new
@@ -104,6 +106,13 @@ new p5((p) => {
     ],
     value: params.overlapMode
   }).on('change', (ev) => { params.overlapMode = ev.value })
+
+  pane.addBlade({
+    view: 'list',
+    label: 'pileup',
+    options: PILEUP_STRATEGY_OPTIONS,
+    value: params.pileupStrategy
+  }).on('change', (ev) => { params.pileupStrategy = ev.value })
 
   const gravityFolder = pane.addFolder({ title: 'gravity' })
   gravityFolder.addBinding(params, 'centerSpeed', { min: 0.001, max: 0.1, step: 0.001, label: 'center speed' })
@@ -273,7 +282,8 @@ new p5((p) => {
       grid,
       cols,
       rows,
-      overlapMode: params.overlapMode
+      overlapMode: params.overlapMode,
+      pileupStrategy: params.pileupStrategy
     })
   }
 
