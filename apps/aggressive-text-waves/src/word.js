@@ -149,12 +149,20 @@ export class Word {
     this.zoff += params.zOffsetSpeed
   }
 
-  assignToGrid (grid, cols, rows) {
+  stripCells (cols, rows) {
+    const cells = []
     for (let i = 0; i < this.text.length; i++) {
       const x = this.isVertical ? this.x : (this.x + i) % cols
       const y = this.isVertical ? (this.y + i) % rows : this.y
+      cells.push({ x, y, char: this.text.charAt(i) })
+    }
+    return cells
+  }
+
+  assignToGrid (grid, cols, rows) {
+    for (const { x, y, char } of this.stripCells(cols, rows)) {
       if (x >= 0 && x < cols && y >= 0 && y < rows) {
-        grid[y][x].setWordLetter(this.text.charAt(i))
+        grid[y][x].setWordLetter(char)
       }
     }
   }
