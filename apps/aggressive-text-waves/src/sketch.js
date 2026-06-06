@@ -297,7 +297,9 @@ new p5((p) => {
 
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
-        grid[y][x].display()
+        const cell = grid[y][x]
+        // crystallized (locked) words render faded/ghostly
+        cell.display(cell.occupiedBy && cell.occupiedBy.isLocked ? 90 : 255)
       }
     }
 
