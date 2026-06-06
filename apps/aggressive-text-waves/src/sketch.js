@@ -3,6 +3,7 @@ import p5 from 'p5'
 import { Pane } from 'tweakpane'
 import { Cell } from './cell.js'
 import { Word } from './word.js'
+import { resolveOccupancy } from './occupancy.js'
 import { saveWithFallback, checkServer, isServerAvailable } from './utils/save-local.js'
 import { createOffscreenCanvas } from '@genart/p5-utils'
 import { BUNDLED_TEXTS, createBundledSource, createUserTextSource, createTumblrSource } from './text-sources.js'
@@ -32,7 +33,8 @@ const params = {
   damping: 0.85,
   wanderForce: 0.08,
   gravityForce: 0.15,
-  separationForce: 0.2
+  separationForce: 0.2,
+  overlapMode: 'gibberish'
 }
 
 // eslint-disable-next-line no-new
@@ -43,6 +45,7 @@ new p5((p) => {
   let grid = []
   let wordObjects = []
   let backgroundZoff = 0
+  let lastResolve = { relaxed: 0 }
   const gravitySources = []
   let showCenter = false
   let pg
@@ -249,10 +252,18 @@ new p5((p) => {
       }
     }
 
+    // Phase 1: physics (no stamping)
     for (let i = 0; i < wordObjects.length; i++) {
       wordObjects[i].update(wordObjects, gravitySources, cols, rows)
-      wordObjects[i].assignToGrid(grid, cols, rows)
     }
+    // Phase 2: deterministic occupancy commit
+    lastResolve = resolveOccupancy({
+      wordObjects,
+      grid,
+      cols,
+      rows,
+      overlapMode: params.overlapMode
+    })
   }
 
   function render () {
