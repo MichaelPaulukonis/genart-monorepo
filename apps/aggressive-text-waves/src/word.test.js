@@ -41,3 +41,16 @@ describe('Word.stripCells', () => {
     ])
   })
 })
+
+describe('Word default handleOverlap', () => {
+  it('reverts posX/posY to previous committed position', () => {
+    const w = new Word('AB', 0, 0, fakeCtx, params)
+    w.prevPosX = 2; w.prevPosY = 3
+    w.posX = 5; w.posY = 6
+    w.handleOverlap({ blockers: [], grid: [], cols: 10, rows: 10, tryClaim: () => false })
+    expect(w.posX).toBe(2)
+    expect(w.posY).toBe(3)
+    expect(w.x).toBe(2)
+    expect(w.y).toBe(3)
+  })
+})

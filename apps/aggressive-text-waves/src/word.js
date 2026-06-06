@@ -9,6 +9,9 @@ export class Word {
     this.y = y
     this.vx = 0
     this.vy = 0
+    this.prevPosX = x
+    this.prevPosY = y
+    this.stuckFrames = 0
     this.xoff = this.ctx.random(1000)
     this.yoff = this.ctx.random(1000)
     this.zoff = this.ctx.random(1000)
@@ -147,6 +150,16 @@ export class Word {
     this.xoff += params.xOffsetSpeed
     this.yoff += params.yOffsetSpeed
     this.zoff += params.zOffsetSpeed
+  }
+
+  // ctx: { blockers, grid, cols, rows, tryClaim }
+  // default strategy: revert to previous committed position
+  handleOverlap (ctx) {
+    this.posX = this.prevPosX
+    this.posY = this.prevPosY
+    this.x = Math.floor(this.posX)
+    this.y = Math.floor(this.posY)
+    return false
   }
 
   stripCells (cols, rows) {
