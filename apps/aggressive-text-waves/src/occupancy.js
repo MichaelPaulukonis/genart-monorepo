@@ -19,7 +19,11 @@ export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode, 
   let relaxed = 0
 
   if (overlapMode !== 'nonOverlap') {
-    for (const w of wordObjects) stampWord(w, grid, cols, rows)
+    for (const w of wordObjects) {
+      stampWord(w, grid, cols, rows)
+      // keep prevPos fresh so switching to nonOverlap doesn't snap words to spawn
+      w.commitPosition()
+    }
     return { relaxed }
   }
 
@@ -32,9 +36,7 @@ export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode, 
 
   for (const word of wordObjects) {
     if (tryClaim(word)) {
-      word.prevPosX = word.posX
-      word.prevPosY = word.posY
-      word.stuckFrames = 0
+      word.commitPosition()
       continue
     }
     // blocked
@@ -42,9 +44,7 @@ export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode, 
     if (word.stuckFrames > GRIDLOCK_FRAMES) {
       stampWord(word, grid, cols, rows) // relax: force placement for one frame
       // commit the relaxed position so a block next frame reverts here, not to a stale spot
-      word.prevPosX = word.posX
-      word.prevPosY = word.posY
-      word.stuckFrames = 0
+      word.commitPosition()
       relaxed++
       continue
     }
@@ -53,11 +53,7 @@ export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode, 
     // On success, commit its position and clear the stuck counter so a word that
     // legitimately re-places every frame never trips the gridlock fallback.
     const claimed = word.handleOverlap({ blockers, grid, cols, rows, tryClaim, strategy: pileupStrategy })
-    if (claimed) {
-      word.prevPosX = word.posX
-      word.prevPosY = word.posY
-      word.stuckFrames = 0
-    }
+    if (claimed) word.commitPosition()
   }
 
   return { relaxed }

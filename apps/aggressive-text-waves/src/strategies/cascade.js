@@ -10,6 +10,16 @@ const MAX_DEPTH = 3
 // (energy loss per recursion step), freeing its old cells and re-placing it;
 // recurse on still-blocked blockers up to MAX_DEPTH. Then claim the mover if
 // the path cleared, else stay put.
+//
+// KNOWN LIMITATIONS (cascade reads as disjointed vs reject-bounce; see memory
+// project-text-waves-zlayering). Not yet addressed — cascade is the lower-pref
+// strategy:
+//   1. The recursive blocker.handleOverlap({ ...ctx }) call spreads the
+//      ORIGINAL mover's ctx.blockers, not the sub-blocker's own current
+//      blockers, so deeper levels re-process the wrong words.
+//   2. At depth >= 1 the push uses the sub-blocker's own vx/vy, not the
+//      original mover's attenuated impulse, so a stationary intermediate word
+//      transmits ~zero displacement.
 export function cascade (word, ctx) {
   const depth = ctx.depth || 0
   if (depth >= MAX_DEPTH) return word.revert()

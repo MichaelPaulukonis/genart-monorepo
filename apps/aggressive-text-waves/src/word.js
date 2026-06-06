@@ -154,6 +154,13 @@ export class Word {
     this.zoff += params.zOffsetSpeed
   }
 
+  // mark the current position as the last successfully-placed one
+  commitPosition () {
+    this.prevPosX = this.posX
+    this.prevPosY = this.posY
+    this.stuckFrames = 0
+  }
+
   // revert to previous committed position; returns false (word not newly placed)
   revert () {
     this.posX = this.prevPosX
