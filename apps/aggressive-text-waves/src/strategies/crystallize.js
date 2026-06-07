@@ -13,9 +13,10 @@ const MELT_DENSITY = 0.4
 // Fraction of the cells bordering a word's strip footprint (8-neighborhood,
 // wrap-around, excluding the strip's own cells) that are currently occupied.
 export function borderDensity (word, grid, cols, rows) {
-  const stripKeys = new Set(word.stripCells(cols, rows).map(c => `${c.x},${c.y}`))
+  const strip = word.stripCells(cols, rows)
+  const stripKeys = new Set(strip.map(c => `${c.x},${c.y}`))
   const border = new Set()
-  for (const { x, y } of word.stripCells(cols, rows)) {
+  for (const { x, y } of strip) {
     for (let dy = -1; dy <= 1; dy++) {
       for (let dx = -1; dx <= 1; dx++) {
         if (dx === 0 && dy === 0) continue

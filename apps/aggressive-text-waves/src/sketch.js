@@ -98,6 +98,15 @@ new p5((p) => {
       init()
     })
   pane.addBinding(params, 'verticalRatio', { min: 0, max: 1, step: 0.05, label: 'vert ratio' })
+
+  // crystallize is the only strategy that locks words; if we leave it (or leave
+  // nonOverlap), release any locks so words don't stay frozen/faded forever
+  function clearLocksIfInactive () {
+    if (params.overlapMode !== 'nonOverlap' || params.pileupStrategy !== 'crystallize') {
+      for (const w of wordObjects) w.isLocked = false
+    }
+  }
+
   pane.addBlade({
     view: 'list',
     label: 'overlap',
@@ -106,14 +115,14 @@ new p5((p) => {
       { text: 'nonOverlap', value: 'nonOverlap' }
     ],
     value: params.overlapMode
-  }).on('change', (ev) => { params.overlapMode = ev.value })
+  }).on('change', (ev) => { params.overlapMode = ev.value; clearLocksIfInactive() })
 
   pane.addBlade({
     view: 'list',
     label: 'pileup',
     options: PILEUP_STRATEGY_OPTIONS,
     value: params.pileupStrategy
-  }).on('change', (ev) => { params.pileupStrategy = ev.value })
+  }).on('change', (ev) => { params.pileupStrategy = ev.value; clearLocksIfInactive() })
 
   pane.addBinding(params, 'softRepulsion', { min: 0, max: 2, step: 0.05, label: 'soft repel' })
 
