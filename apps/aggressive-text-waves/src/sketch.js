@@ -36,7 +36,8 @@ const params = {
   gravityForce: 0.15,
   separationForce: 0.2,
   overlapMode: 'gibberish',
-  pileupStrategy: 'rejectBounce'
+  pileupStrategy: 'rejectBounce',
+  softRepulsion: 0.3
 }
 
 // eslint-disable-next-line no-new
@@ -97,6 +98,15 @@ new p5((p) => {
       init()
     })
   pane.addBinding(params, 'verticalRatio', { min: 0, max: 1, step: 0.05, label: 'vert ratio' })
+
+  // crystallize is the only strategy that locks words; if we leave it (or leave
+  // nonOverlap), release any locks so words don't stay frozen/faded forever
+  function clearLocksIfInactive () {
+    if (params.overlapMode !== 'nonOverlap' || params.pileupStrategy !== 'crystallize') {
+      for (const w of wordObjects) w.isLocked = false
+    }
+  }
+
   pane.addBlade({
     view: 'list',
     label: 'overlap',
@@ -105,14 +115,16 @@ new p5((p) => {
       { text: 'nonOverlap', value: 'nonOverlap' }
     ],
     value: params.overlapMode
-  }).on('change', (ev) => { params.overlapMode = ev.value })
+  }).on('change', (ev) => { params.overlapMode = ev.value; clearLocksIfInactive() })
 
   pane.addBlade({
     view: 'list',
     label: 'pileup',
     options: PILEUP_STRATEGY_OPTIONS,
     value: params.pileupStrategy
-  }).on('change', (ev) => { params.pileupStrategy = ev.value })
+  }).on('change', (ev) => { params.pileupStrategy = ev.value; clearLocksIfInactive() })
+
+  pane.addBinding(params, 'softRepulsion', { min: 0, max: 2, step: 0.05, label: 'soft repel' })
 
   const gravityFolder = pane.addFolder({ title: 'gravity' })
   gravityFolder.addBinding(params, 'centerSpeed', { min: 0.001, max: 0.1, step: 0.001, label: 'center speed' })
@@ -294,7 +306,9 @@ new p5((p) => {
 
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
-        grid[y][x].display()
+        const cell = grid[y][x]
+        // crystallized (locked) words render faded/ghostly
+        cell.display(cell.occupiedBy && cell.occupiedBy.isLocked ? 90 : 255)
       }
     }
 

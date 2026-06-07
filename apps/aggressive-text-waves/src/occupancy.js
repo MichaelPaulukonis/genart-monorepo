@@ -1,3 +1,5 @@
+import { PILEUP_POST } from './pileup-strategies.js'
+
 export function cellsFree (cells, grid, word) {
   for (const { x, y } of cells) {
     const occ = grid[y][x].occupiedBy
@@ -34,7 +36,12 @@ export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode, 
     return true
   }
 
-  for (const word of wordObjects) {
+  // locked (crystallized) words claim first so they hold their cells against
+  // mobile claimants. No word is locked outside crystallize mode, so this is a
+  // no-op (stable order preserved) for the other strategies.
+  const ordered = wordObjects.filter(w => w.isLocked).concat(wordObjects.filter(w => !w.isLocked))
+
+  for (const word of ordered) {
     if (tryClaim(word)) {
       word.commitPosition()
       continue
@@ -55,6 +62,10 @@ export function resolveOccupancy ({ wordObjects, grid, cols, rows, overlapMode, 
     const claimed = word.handleOverlap({ blockers, grid, cols, rows, tryClaim, strategy: pileupStrategy })
     if (claimed) word.commitPosition()
   }
+
+  // optional global post-pass for strategies that need one (e.g. crystallize)
+  const post = PILEUP_POST[pileupStrategy]
+  if (post) post(wordObjects, grid, cols, rows)
 
   return { relaxed }
 }

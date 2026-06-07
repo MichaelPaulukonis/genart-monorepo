@@ -14,6 +14,7 @@ export class Word {
     this.prevPosX = x
     this.prevPosY = y
     this.stuckFrames = 0
+    this.isLocked = false
     this.xoff = this.ctx.random(1000)
     this.yoff = this.ctx.random(1000)
     this.zoff = this.ctx.random(1000)
@@ -89,6 +90,7 @@ export class Word {
   }
 
   update (words, sources, cols, rows) {
+    if (this.isLocked) return // crystallized: immovable, no physics
     const params = this.params
     const halfLen = Math.floor(this.text.length / 2)
 

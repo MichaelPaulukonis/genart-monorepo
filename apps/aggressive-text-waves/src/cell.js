@@ -18,8 +18,8 @@ export class Cell {
   setLetter (letter) { this.letter = letter }
   setWordLetter (letter) { this.letter = letter; this.isWord = true }
 
-  display () {
-    this.ctx.fill(0)
+  display (alpha = 255) {
+    this.ctx.fill(0, alpha)
     this.ctx.text(
       this.letter,
       this.x * this.scale + this.scale / 2,
