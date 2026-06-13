@@ -105,6 +105,17 @@ describe('Word._applySeparation', () => {
     expect(a.vy).toBe(0)
   })
 
+  it('pushes a horizontal word away from a crossing vertical word\'s center', () => {
+    // v occupies x=5, y=[3,7); h occupies x=[5,8), y=3 -> touches() returns 1 (crossing)
+    // h center = (6.5, 3.5), v center = (5.5, 5) -> dx=+1.0, dy=-1.5
+    // push direction is away from v's center: +x (right) and -y (up)
+    const v = makeWord('ABCD', 5, 3, true)
+    const h = makeWord('XYZ', 5, 3, false)
+    h._applySeparation([h, v])
+    expect(h.vx).toBeGreaterThan(0)
+    expect(h.vy).toBeLessThan(0)
+  })
+
   it('is reproducible across runs for coincident centers', () => {
     const run = () => {
       const a = makeWord('AB', 5, 5, false)
