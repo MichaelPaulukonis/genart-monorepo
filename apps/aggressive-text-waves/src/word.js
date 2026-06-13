@@ -64,6 +64,13 @@ export class Word {
     }
   }
 
+  _bboxCenter () {
+    const half = this.text.length / 2
+    return this.isVertical
+      ? { cx: this.posX + 0.5, cy: this.posY + half }
+      : { cx: this.posX + half, cy: this.posY + 0.5 }
+  }
+
   _applySeparation (words) {
     const params = this.params
     for (const word of words) {

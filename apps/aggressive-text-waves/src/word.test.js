@@ -54,3 +54,17 @@ describe('Word default handleOverlap', () => {
     expect(w.y).toBe(3)
   })
 })
+
+describe('Word._bboxCenter', () => {
+  it('horizontal word center is offset by half length on X', () => {
+    const w = new Word('ABCD', 2, 3, fakeCtx, params)
+    w.posX = 2; w.posY = 3; w.isVertical = false
+    expect(w._bboxCenter()).toEqual({ cx: 4, cy: 3.5 })
+  })
+
+  it('vertical word center is offset by half length on Y', () => {
+    const w = new Word('ABCD', 2, 3, fakeCtx, params)
+    w.posX = 2; w.posY = 3; w.isVertical = true
+    expect(w._bboxCenter()).toEqual({ cx: 2.5, cy: 5 })
+  })
+})
