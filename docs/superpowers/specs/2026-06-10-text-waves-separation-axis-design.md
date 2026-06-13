@@ -39,9 +39,17 @@ which is exactly the current banding behavior.
 3. Both overlap modes keep working: `gibberish` (free overlap) and `nonOverlap`
    (occupancy-resolved). Separation runs before occupancy and is mode-agnostic;
    it must not muddy the clarity of nonOverlap visualization.
-4. Torus wrapping respected — grid wraps on both axes (`sketch.js:145-148`).
-5. No change to gravity, occupancy, pileup strategies, or the
+4. No change to gravity, occupancy, pileup strategies, or the
    `random() > avgMag` separation gate.
+
+### Note on torus wrapping
+
+The grid wraps (`sketch.js:145-148`), but `touches()` is **not** wrap-aware — it
+compares raw `x + length` with no modulo. So `touches()` only reports overlap for
+spatially-adjacent pairs, never for words straddling the wrap seam. Since
+separation is gated by `touches()`, a shortest-path wrap branch would be
+unreachable. It is therefore omitted. The wrap-seam overlap miss is a pre-existing
+`touches()` limitation and is out of scope.
 
 ## Technical Approach
 
@@ -54,10 +62,8 @@ For each overlapping `other` (overlap from existing `touches()`):
    - horizontal → `(posX + L/2, posY + 0.5)`
    - vertical   → `(posX + 0.5, posY + L/2)`
 2. **Vector** `d = thisCenter − otherCenter`.
-3. **Torus shortest path**: if `|dx| > cols/2` → `dx += dx > 0 ? -cols : cols`;
-   same for `dy`/`rows`. Mirrors the gravity-repulsion wrap in `word.js:112-113`.
-4. **Normalize**, scale by `overlap × separationForce`, add to `vx/vy`.
-5. **Coincident-center fallback** (`dist ≈ 0`): push along a deterministic axis
+3. **Normalize**, scale by `overlap × separationForce`, add to `vx/vy`.
+4. **Coincident-center fallback** (`dist ≈ 0`): push along a deterministic axis
    from `Math.sign(this.xoff - other.xoff)` (ties → `yoff`; final tie → +1). No
    RNG — reproducible and readable in nonOverlap.
 
@@ -97,8 +103,6 @@ New unit tests in `word.test.js` (fake ctx, no RNG dependence):
   nonzero **Y** component (slides along long axis, unchanged behavior).
 - **Coincident centers**: fully-overlapping pair → deterministic nonzero force,
   same result across runs.
-- **Torus wrap**: words near opposite edges → force takes the short way around,
-  not across the whole grid.
 
 Visual/aesthetic eval (per #17 testStrategy): same random seed, before/after
 screenshots — vertical stripe should become 2D spread. No automated visual test.
