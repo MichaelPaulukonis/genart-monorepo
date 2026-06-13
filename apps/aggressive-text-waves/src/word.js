@@ -73,26 +73,23 @@ export class Word {
 
   _applySeparation (words) {
     const params = this.params
+    const a = this._bboxCenter()
     for (const word of words) {
       if (word === this) continue
       const overlap = this.touches(word)
       if (overlap <= 0) continue
-      let dx, dy
-      if (this.isVertical === word.isVertical) {
-        if (this.isVertical) {
-          dx = 0
-          dy = this.y < word.y ? -overlap : overlap
-        } else {
-          dx = 0
-          dy = this.posY >= word.posY ? overlap : -overlap
-        }
-      } else {
-        dx = this.isVertical ? 0 : overlap
-        dy = this.isVertical ? overlap : 0
+      const b = word._bboxCenter()
+      let dx = a.cx - b.cx
+      let dy = a.cy - b.cy
+      let mag = Math.sqrt(dx * dx + dy * dy)
+      if (mag < 1e-9) {
+        // coincident centers: deterministic, RNG-free push so same-seed runs match
+        const s = Math.sign(this.xoff - word.xoff) ||
+          Math.sign(this.yoff - word.yoff) || 1
+        dx = s; dy = 0; mag = 1
       }
-      const mag = Math.sqrt(dx * dx + dy * dy) || 1
-      this.vx += (dx / mag) * params.separationForce
-      this.vy += (dy / mag) * params.separationForce
+      this.vx += (dx / mag) * overlap * params.separationForce
+      this.vy += (dy / mag) * overlap * params.separationForce
     }
   }
 
