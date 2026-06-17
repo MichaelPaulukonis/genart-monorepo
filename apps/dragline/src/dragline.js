@@ -407,7 +407,7 @@ new p5(p => {
     } else if (selectedIndex !== -1 && (p.keyCode === p.ESCAPE || p.keyCode === p.ENTER)) {
       selectedIndex = -1 // Deselect
       display()
-    } else if (p.key === 'i' || p.keyCode === p.ESCAPE) {
+    } else if (p.key === 'i' || p.key === '?' || p.keyCode === p.ESCAPE) {
       toggleInfoBox()
     } else if (p.key === ' ') {
       cycleFillChar()

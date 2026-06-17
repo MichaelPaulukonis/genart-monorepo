@@ -41,10 +41,10 @@ Generative art and creative coding monorepo managed with Nx. Multiple independen
 apps/
   duo-chrome/          (port 5173)
   crude-collage-painter/ (port 5174)
-  computational-collage/ (port 5175)
-  dragline/            (port 5176)
-  monochromifier/      (port 5177)
-  those-shape-things/  (port 5178)
+  those-shape-things/  (port 5175)
+  computational-collage/ (port 5176)
+  dragline/            (port 5177)
+  monochromifier/      (port 5178)
   aggressive-text-waves/ (port 5179)
   # new apps increment from 5180+
 libs/
