@@ -11,6 +11,7 @@ import {
   gridBoundsToPixels
 } from './grid'
 import { createBlock, setupTextAreas } from './blocks'
+import { createMotionSystem } from './motion'
 import fallbackBlocks from './grids.20250403T123247766Z.json'
 import tumblrRandomPost from './tumblr-random'
 import {
@@ -69,6 +70,7 @@ new p5(p => {
   let fillChar = fillChars[0] // Default fill character
   let monospaceFont = null // Font for rendering text
   let selectionState = createSelectionState(grid)
+  let motionSystem = null // Automated block movement, initialized in setup
 
   // DOM elements for the info box
   const infoBox = document.getElementById('info-box')
@@ -117,6 +119,13 @@ new p5(p => {
       fillChar,
       clusteringDistance
     )
+
+    motionSystem = createMotionSystem({
+      grid,
+      getBlocks: () => textAreas,
+      requestDisplay: () => display(),
+      rng: Math.random
+    })
 
     display()
 
@@ -398,6 +407,18 @@ new p5(p => {
       return
     }
 
+    // Auto-movement: 'm' throws all blocks, Shift+M cycles strategy.
+    // Disabled while dragging (selection mode already returned above).
+    if (!dragging && (p.key === 'm' || p.key === 'M')) {
+      if (p.key === 'M') {
+        motionSystem.cycleStrategy()
+        console.log('Motion strategy: ' + motionSystem.strategyName())
+      } else {
+        motionSystem.impulse()
+      }
+      return
+    }
+
     if (selectedIndex !== -1 && (p.keyCode === p.DELETE || p.keyCode === p.BACKSPACE) && textAreas.length > 1) {
       textAreas.splice(selectedIndex, 1)
       blockCount--
@@ -590,6 +611,12 @@ new p5(p => {
   // Handle continuous key presses for movement
   p.draw = () => {
     if (selectionState.isActive) {
+      return
+    }
+
+    // Auto-movement advances all blocks; update() redraws via requestDisplay.
+    if (motionSystem && motionSystem.isActive()) {
+      motionSystem.update()
       return
     }
 

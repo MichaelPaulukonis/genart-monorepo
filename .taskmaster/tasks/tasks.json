@@ -3716,11 +3716,101 @@
     }
   },
   "dragline": {
-    "tasks": [],
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Create motion system core and configuration",
+        "description": "Add MOTION_CONFIG and createMotionSystem factory in new src/motion.js.",
+        "details": "Define MOTION_CONFIG { minSpeed, maxSpeed, friction, settleEpsilon, minDuration, maxDuration }. Create factory createMotionSystem({ grid, getBlocks, requestDisplay, rng }). Internal state: active flag, current strategy index, per-block kinematics Map<area,state>. API: impulse() re-inits Map for every block via active strategy.init and sets active; update() steps all blocks, drops settled, returns isActive; isActive(); cycleStrategy(); strategyName(). Strategy registry array holds velocity-friction and ease-tween. Blocks stay plain integer-grid objects. TEST STRATEGY: Vitest unit tests with injected rng. impulse sets active; update returns correct isActive; cycleStrategy rotates; strategyName correct. Mock grid/getBlocks/requestDisplay.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-06-18T01:04:46.522Z"
+      },
+      {
+        "id": "2",
+        "title": "Implement velocity-friction strategy",
+        "description": "Random-velocity strategy with friction decay and edge bounce.",
+        "details": "init(area, grid, rng): random angle 0-2PI, random speed in [minSpeed,maxSpeed] cells/frame -> vx,vy; seed fx=area.x, fy=area.y; return {vx,vy,fx,fy}. step(area,state,grid): fx+=vx, fy+=vy; if fx<0 || fx>cols-w invert vx and clamp fx; same for fy/rows-h; vx*=friction, vy*=friction; area.x=round(fx), area.y=round(fy); done when hypot(vx,vy)<settleEpsilon. TEST STRATEGY (Vitest): init produces valid state; step advances position; boundary bounce inverts velocity + clamps; friction reduces velocity; settles below epsilon; runs to settle within bounded frames; positions never leave [0,cols-w]/[0,rows-h].",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "1"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-06-18T01:06:20.113Z"
+      },
+      {
+        "id": "3",
+        "title": "Implement ease-tween strategy",
+        "description": "Random-target ease-out glide strategy with exact stop.",
+        "details": "init(area, grid, rng): random target cell pre-clamped to [0,cols-w]/[0,rows-h]; random duration in [minDuration,maxDuration] frames; record startX/startY from area; return {targetX,targetY,startX,startY,duration,elapsed:0}. step(area,state): elapsed+=1; t=min(1,elapsed/duration); e=1-(1-t)^3 (easeOutCubic); area.x=round(lerp(startX,targetX,e)); area.y=round(lerp(startY,targetY,e)); done when t>=1. TEST STRATEGY (Vitest): init target clamped in bounds; step follows easing curve; final position equals target at t=1; done only after duration frames; bounds invariant every frame.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "1"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-06-18T01:07:40.326Z"
+      },
+      {
+        "id": "4",
+        "title": "Integrate motion system into dragline.js",
+        "description": "Wire motion system into setup, draw, keyPressed.",
+        "details": "In p.setup: motionSystem = createMotionSystem({ grid, getBlocks: () => textAreas, requestDisplay: display, rng: Math.random }). In p.draw: if (motionSystem.isActive()) { motionSystem.update(); display() }. In p.keyPressed: 'm' -> motionSystem.impulse(); Shift+M -> motionSystem.cycleStrategy(). Guard BOTH with !selectionState.isActive && !dragging. getBlocks thunk re-reads textAreas so add/remove/reset/fetch handled. No fieldIsDirty needed (diff-based populateCharGrid clears old cells). TEST STRATEGY: manual browser verify; m throws all blocks, they glide+settle, draw idles after; Shift+M cycles; disabled in selection mode and while dragging; re-throw mid-flight re-inits.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "1",
+          "2",
+          "3"
+        ],
+        "priority": "high",
+        "subtasks": [],
+        "updatedAt": "2026-06-18T03:39:23.618Z"
+      },
+      {
+        "id": "5",
+        "title": "Add strategy-change console feedback",
+        "description": "Log active strategy name on manual cycle.",
+        "details": "In cycleStrategy(), after switching, console.log('Motion strategy: ' + newStrategyName). Only on manual Shift+M cycle, not initial setup. Default UI treatment per spec (option 1, lean). TEST STRATEGY (Vitest): mock console.log, verify called with correct string on cycleStrategy; not called on factory init.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "4"
+        ],
+        "priority": "low",
+        "subtasks": [],
+        "updatedAt": "2026-06-18T03:39:25.683Z"
+      },
+      {
+        "id": "6",
+        "title": "Write motion.js unit test suite",
+        "description": "Consolidated Vitest suite for motion module.",
+        "details": "Create src/motion.test.js (Vitest, matches project test setup - NOT Jest). Cover public API: createMotionSystem, impulse, update, isActive, cycleStrategy, strategyName. Both strategies incl edge cases: boundary collision/bounce, settling threshold, easing completion, friction=1 and friction=0, zero/short duration, zero blocks. Deterministic via mocked rng. Bounds invariant across both strategies. TEST STRATEGY: high coverage of motion.js; all public methods; varied config values; verify deterministic with injected rng.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          "2",
+          "3"
+        ],
+        "priority": "medium",
+        "subtasks": [],
+        "updatedAt": "2026-06-19T01:47:58.422Z"
+      }
+    ],
     "metadata": {
-      "created": "2026-06-17T02:35:05.724Z",
-      "updated": "2026-06-17T02:35:05.724Z",
-      "description": "Tag created on 6/16/2026"
+      "version": "1.0.0",
+      "lastModified": "2026-06-19T01:47:58.422Z",
+      "taskCount": 6,
+      "completedCount": 6,
+      "tags": [
+        "dragline"
+      ]
     }
   }
 }
