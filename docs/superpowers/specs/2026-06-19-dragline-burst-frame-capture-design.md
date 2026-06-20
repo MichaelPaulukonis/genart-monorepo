@@ -85,9 +85,10 @@ Extracted from ATW's copy, re-exported from `libs/p5-utils/src/index.js`.
 - `checkServer()` — ping `localhost:7654/ping`, cache availability.
 - `isServerAvailable()`
 - `saveWithFallback(p, graphics, filename)` — existing signature (graphics-based).
-- **`saveDataURLWithFallback(p, dataURL, filename)`** — new. The recorder already
-  holds a dataURL string; this path POSTs it to the server, or on failure builds
-  an anchor/`saveCanvas`-equivalent browser download from the dataURL.
+- **`saveDataURLWithFallback(dataURL, filename, { download })`** — new. The recorder
+  already holds a dataURL string; this path POSTs it to the server, or on failure
+  builds an anchor browser download from the dataURL. `download` is injectable for
+  testing.
 
 ATW and monochromifier keep their local copies untouched.
 
