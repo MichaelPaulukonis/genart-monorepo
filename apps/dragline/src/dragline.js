@@ -26,6 +26,8 @@ import {
   nudgeSelection,
   renderSelectionOverlay
 } from './selection'
+import { createBurstRecorder } from './burst-recorder'
+import { datestring, saveDataURLWithFallback, checkServer } from '@genart/p5-utils'
 
 let blocks = fallbackBlocks // Remove .default since it's now a static import
 
@@ -71,6 +73,8 @@ new p5(p => {
   let monospaceFont = null // Font for rendering text
   let selectionState = createSelectionState(grid)
   let motionSystem = null // Automated block movement, initialized in setup
+  let burstRecorder = null
+  const recIndicator = document.getElementById('rec-indicator')
 
   // DOM elements for the info box
   const infoBox = document.getElementById('info-box')
@@ -125,6 +129,12 @@ new p5(p => {
       getBlocks: () => textAreas,
       requestDisplay: () => display(),
       rng: Math.random
+    })
+
+    burstRecorder = createBurstRecorder({
+      renderCleanFrame: renderCleanFrameDataURL,
+      datestring,
+      save: (dataURL, filename) => saveDataURLWithFallback(dataURL, filename)
     })
 
     display()
@@ -407,6 +417,15 @@ new p5(p => {
       return
     }
 
+    // 'R' arms recording for the next burst.
+    if (!dragging && p.key === 'R') {
+      burstRecorder.arm()
+      checkServer()
+      console.log('Burst recording armed')
+      updateRecIndicator()
+      return
+    }
+
     // Auto-movement: 'm' throws all blocks, Shift+M cycles strategy.
     // Disabled while dragging (selection mode already returned above).
     if (!dragging && (p.key === 'm' || p.key === 'M')) {
@@ -415,6 +434,10 @@ new p5(p => {
         console.log('Motion strategy: ' + motionSystem.strategyName())
       } else {
         motionSystem.impulse()
+        // Only latch recording if the impulse actually produced motion,
+        // so a zero-block burst can't leave the recorder stuck on.
+        if (motionSystem.isActive()) burstRecorder.onBurstStart()
+        updateRecIndicator()
       }
       return
     }
@@ -446,6 +469,21 @@ new p5(p => {
       handleArrowKeys()
     } else if (p.key === 'n') {
       await fetchNewBlocks()
+    }
+  }
+
+  // Reflect recorder state in the DOM indicator. Recorder stays DOM-free.
+  const updateRecIndicator = () => {
+    if (!recIndicator) return
+    if (burstRecorder.isRecording()) {
+      recIndicator.textContent = `● REC ${String(burstRecorder.frameCount()).padStart(4, '0')}`
+      recIndicator.className = 'rec-recording'
+    } else if (burstRecorder.isArmed()) {
+      recIndicator.textContent = '● REC armed'
+      recIndicator.className = 'rec-armed'
+    } else {
+      recIndicator.textContent = ''
+      recIndicator.className = 'rec-hidden'
     }
   }
 
@@ -639,7 +677,13 @@ new p5(p => {
 
     // Auto-movement advances all blocks; update() redraws via requestDisplay.
     if (motionSystem && motionSystem.isActive()) {
-      motionSystem.update()
+      const stillActive = motionSystem.update()
+      burstRecorder.captureFrame()
+      updateRecIndicator()
+      if (!stillActive) {
+        burstRecorder.onBurstEnd()
+        updateRecIndicator()
+      }
       return
     }
 
