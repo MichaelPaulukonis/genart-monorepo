@@ -8,6 +8,7 @@
   </head>
 
   <body>
+    <div id="rec-indicator" class="rec-hidden" aria-live="polite"></div>
     <script type="module" src="/src/dragline.js"></script>
     <div id="info-box" class="info-box hidden">
       <h1>D R A G L I N E</h1>
@@ -29,6 +30,12 @@
         <li>
           <strong>SHIFT + S:</strong> Save a black-and-white copy of the entire
           canvas as <code>dragline.YYYYMMDD.hhmmss.png</code>.
+        </li>
+        <li>
+          <strong>R then m:</strong> Arm burst recording, then throw the blocks.
+          Every frame of the movement saves as
+          <code>dragline.burst-&lt;id&gt;.frame-NNNN.png</code> via the local
+          save server (falls back to browser downloads if the server is off).
         </li>
         <li><strong>SPACE:</strong> Cycle through fill characters.</li>
         <li><strong>DELETE / BACKSPACE:</strong> Remove the selected block (if more than one remains).</li>
