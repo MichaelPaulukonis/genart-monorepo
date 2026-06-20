@@ -449,6 +449,29 @@ new p5(p => {
     }
   }
 
+  // Render the clean (white bg, no gradient, no selection highlight) composition
+  // onto the main canvas and return it as a PNG dataURL. Restores prior state.
+  const renderCleanFrameDataURL = () => {
+    refreshCharGrid()
+
+    const originalGradient = gradient
+    const originalSelectedIndex = selectedIndex
+    gradient = null
+    selectedIndex = -1
+
+    p.push()
+    p.background(255)
+    renderCharGrid(cachedCharGrid, p, grid, fillChar)
+    p.pop()
+
+    const dataURL = p.drawingContext.canvas.toDataURL('image/png')
+
+    gradient = originalGradient
+    selectedIndex = originalSelectedIndex
+
+    return dataURL
+  }
+
   const saveComposition = bounds => {
     refreshCharGrid()
 
