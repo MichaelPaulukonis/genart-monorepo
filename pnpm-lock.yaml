@@ -158,6 +158,9 @@ importers:
 
   apps/dragline:
     dependencies:
+      '@genart/p5-utils':
+        specifier: workspace:*
+        version: link:../../libs/p5-utils
       axios:
         specifier: ^1.7.7
         version: 1.12.2
