@@ -487,27 +487,29 @@ new p5(p => {
     }
   }
 
+  let frameBuffer = null // Off-screen buffer for clean burst-frame capture
+
   // Render the clean (white bg, no gradient, no selection highlight) composition
-  // onto the main canvas and return it as a PNG dataURL. Restores prior state.
+  // to an off-screen buffer and return it as a PNG dataURL. The visible canvas is
+  // never touched, so recording leaves the gradient display intact (no flicker,
+  // no stuck final frame).
   const renderCleanFrameDataURL = () => {
     refreshCharGrid()
 
-    const originalGradient = gradient
-    const originalSelectedIndex = selectedIndex
-    gradient = null
-    selectedIndex = -1
+    if (!frameBuffer) {
+      frameBuffer = p.createGraphics(p.width, p.height)
+      frameBuffer.pixelDensity(2)
+      frameBuffer.textFont(monospaceFont)
+      frameBuffer.textSize(grid.cellSize + TEXT_SIZE_ADJUSTMENT)
+      frameBuffer.textAlign(p.LEFT, p.TOP)
+      frameBuffer.noStroke()
+    }
 
-    p.push()
-    p.background(255)
-    renderCharGrid(cachedCharGrid, p, grid, fillChar)
-    p.pop()
+    frameBuffer.background(255)
+    frameBuffer.fill(0)
+    renderCharGrid(cachedCharGrid, frameBuffer, grid, fillChar)
 
-    const dataURL = p.drawingContext.canvas.toDataURL('image/png')
-
-    gradient = originalGradient
-    selectedIndex = originalSelectedIndex
-
-    return dataURL
+    return frameBuffer.canvas.toDataURL('image/png')
   }
 
   const saveComposition = bounds => {
