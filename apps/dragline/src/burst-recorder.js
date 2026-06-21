@@ -1,7 +1,11 @@
-// Records every frame of a movement burst as a numbered PNG sequence.
+// Records frames of movement bursts as a numbered PNG sequence.
+//
+// A "session" runs from when recording is toggled on until it is toggled off.
+// All bursts within a session share one id and a single continuous frame
+// counter, so the whole session stitches together as one sequence.
 //
 // DOM-agnostic and dependency-injected for testability. dragline.js supplies
-// renderCleanFrame (returns a PNG dataURL), datestring (burst id), and save
+// renderCleanFrame (returns a PNG dataURL), datestring (session id), and save
 // (persists one frame). The p5 draw loop drives onBurstStart / captureFrame /
 // onBurstEnd; key handling drives toggleArm.
 
@@ -10,7 +14,7 @@ const MAX_IN_FLIGHT = 4
 export function createBurstRecorder ({ renderCleanFrame, datestring, save }) {
   let armed = false
   let recording = false
-  let burstId = ''
+  let sessionId = ''
   let frameIndex = 0
   const queue = []
   let inFlight = 0
@@ -33,32 +37,38 @@ export function createBurstRecorder ({ renderCleanFrame, datestring, save }) {
   }
 
   return {
-    // Toggle persistent record mode. While on, every burst records until
-    // toggled off again. Returns the new state.
-    toggleArm () { armed = !armed; return armed },
+    // Toggle record mode. Turning on starts a new session: fresh id + frame
+    // counter. While on, every burst appends to the same continuous sequence
+    // until toggled off. Returns the new state.
+    toggleArm () {
+      armed = !armed
+      if (armed) {
+        // sessionId is second-resolution. Two sessions started within the same
+        // wall-clock second would collide and the later one would overwrite the
+        // earlier frames. Left unhandled: reaching it requires toggling REC off
+        // then on inside one second.
+        sessionId = datestring()
+        frameIndex = 0
+      }
+      return armed
+    },
     isArmed: () => armed,
     isRecording: () => recording,
     frameCount: () => frameIndex,
 
     onBurstStart () {
-      // Ignore if record mode is off, or if a burst is already recording — a
-      // mid-burst re-impulse must not reset the frame counter / burst id (which
-      // would overwrite already-saved frames on a same-second burst id).
-      if (!armed || recording) return
+      // Begin recording this burst into the current session. Deliberately does
+      // not touch sessionId or frameIndex, so frames number continuously across
+      // every burst until the session ends.
+      if (!armed) return
       recording = true
-      // burstId is second-resolution. Two separate bursts within the same
-      // wall-clock second would collide and the later one would overwrite the
-      // earlier frames. Left unhandled: a single burst runs ~0.5-1.5s, so two
-      // complete bursts in under a second isn't reachable by hand.
-      burstId = datestring()
-      frameIndex = 0
     },
 
     captureFrame () {
       if (!recording) return
       frameIndex += 1
       const dataURL = renderCleanFrame()
-      const filename = `dragline.burst-${burstId}.frame-${pad(frameIndex)}.png`
+      const filename = `dragline.burst-${sessionId}.frame-${pad(frameIndex)}.png`
       queue.push({ dataURL, filename })
       drain()
     },

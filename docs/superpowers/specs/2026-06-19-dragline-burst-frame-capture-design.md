@@ -72,11 +72,14 @@ dragline.burst-<datestring>.frame-<NNNN>.png
 ```
 
 - `<datestring>`: `datestring()` from `@genart/p5-utils` (`YYYYMMDDHHMMSS`),
-  captured once at burst start = the burst id.
-- `<NNNN>`: 4-digit zero-padded frame index, starting `0001`.
+  captured once when record mode is toggled **on** = the session id. All bursts
+  in that session reuse it. (Filename keeps the `burst-` literal for continuity;
+  semantically it is the session id.)
+- `<NNNN>`: 4-digit zero-padded frame index, **continuous across every burst in
+  the session**, starting `0001` and only reset when a new session begins.
 
 Grouping is by the `burst-<id>` prefix because the server writes all files flat
-into one output dir.
+into one output dir. One session = one stitchable sequence.
 
 ## Components
 
@@ -106,14 +109,15 @@ State: `armed`, `recording`, `burstId`, `frameIndex`, `queue`, `inFlight`.
 
 API:
 
-- `toggleArm()` — flips `armed` (persistent record-mode flag); returns the new
-  state. Caller kicks `checkServer()` when turning on.
+- `toggleArm()` — flips `armed` (persistent record-mode flag). When turning
+  **on**, starts a new session: `sessionId = datestring()`, `frameIndex = 0`.
+  Returns the new state. Caller kicks `checkServer()` when turning on.
 - `isArmed()`, `isRecording()`, `frameCount()` — getters for the indicator.
-- `onBurstStart()` — only if `armed`: set `recording = true`, `burstId =
-  datestring()`, `frameIndex = 0`. Does **not** clear `armed` — record mode stays
-  on so subsequent bursts keep recording until toggled off. Guard: caller invokes
-  this only when `motionSystem.isActive()` is true right after impulse, so a
-  zero-block impulse never leaves recording stuck on.
+- `onBurstStart()` — only if `armed`: set `recording = true`. Does **not** touch
+  `sessionId` or `frameIndex`, so frames number continuously across every burst
+  in the session. Does **not** clear `armed` — record mode persists until toggled
+  off. Guard: caller invokes this only when `motionSystem.isActive()` is true
+  right after impulse, so a zero-block impulse never leaves recording stuck on.
 - `captureFrame()` — no-op unless recording. `renderCleanFrame()` → dataURL;
   build filename; enqueue; `drain()`. Increments `frameIndex`.
 - `onBurstEnd()` — `recording = false`; final `drain()`.

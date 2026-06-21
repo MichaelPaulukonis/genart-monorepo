@@ -75,7 +75,7 @@ describe('burst-recorder state', () => {
     expect(recorder.isArmed()).toBe(true)
   })
 
-  it('records subsequent bursts without re-arming (record mode persists)', async () => {
+  it('numbers frames continuously across bursts in one session', async () => {
     const { recorder, saved } = setup()
     recorder.toggleArm()
 
@@ -83,14 +83,14 @@ describe('burst-recorder state', () => {
     await recorder.captureFrame()
     await recorder.onBurstEnd()
 
-    // No second toggleArm() — record mode is still on.
+    // No second toggleArm() — same session, counter continues.
     recorder.onBurstStart()
     await recorder.captureFrame()
     await recorder.onBurstEnd()
 
     expect(saved).toEqual([
       'dragline.burst-20260619120000.frame-0001.png',
-      'dragline.burst-20260619120000.frame-0001.png'
+      'dragline.burst-20260619120000.frame-0002.png'
     ])
   })
 
@@ -117,14 +117,27 @@ describe('burst-recorder state', () => {
     ])
   })
 
-  it('a fresh burst restarts the frame counter', async () => {
-    const { recorder, saved } = setup()
-    recorder.toggleArm()
+  it('a new session (toggle off then on) restarts the frame counter and id', async () => {
+    let n = 0
+    const { recorder, saved } = setup({ datestring: () => `session${n}` })
+
+    n = 1
+    recorder.toggleArm() // session1 starts
     recorder.onBurstStart()
+    await recorder.captureFrame()
     await recorder.captureFrame()
     await recorder.onBurstEnd()
+
+    recorder.toggleArm() // off
+    n = 2
+    recorder.toggleArm() // session2 starts, counter resets
     recorder.onBurstStart()
     await recorder.captureFrame()
-    expect(saved[saved.length - 1]).toBe('dragline.burst-20260619120000.frame-0001.png')
+
+    expect(saved).toEqual([
+      'dragline.burst-session1.frame-0001.png',
+      'dragline.burst-session1.frame-0002.png',
+      'dragline.burst-session2.frame-0001.png'
+    ])
   })
 })
