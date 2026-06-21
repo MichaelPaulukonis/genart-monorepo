@@ -41,7 +41,10 @@ export function createBurstRecorder ({ renderCleanFrame, datestring, save }) {
     frameCount: () => frameIndex,
 
     onBurstStart () {
-      if (!armed) return
+      // Ignore if record mode is off, or if a burst is already recording — a
+      // mid-burst re-impulse must not reset the frame counter / burst id (which
+      // would overwrite already-saved frames on a same-second burst id).
+      if (!armed || recording) return
       recording = true
       burstId = datestring()
       frameIndex = 0

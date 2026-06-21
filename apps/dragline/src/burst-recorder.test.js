@@ -104,6 +104,19 @@ describe('burst-recorder state', () => {
     expect(saved).toEqual([])
   })
 
+  it('ignores onBurstStart while already recording (no mid-burst counter reset)', async () => {
+    const { recorder, saved } = setup()
+    recorder.toggleArm()
+    recorder.onBurstStart()
+    await recorder.captureFrame() // 0001
+    recorder.onBurstStart() // mid-burst re-impulse must NOT reset the counter
+    await recorder.captureFrame() // must be 0002, not 0001
+    expect(saved).toEqual([
+      'dragline.burst-20260619120000.frame-0001.png',
+      'dragline.burst-20260619120000.frame-0002.png'
+    ])
+  })
+
   it('a fresh burst restarts the frame counter', async () => {
     const { recorder, saved } = setup()
     recorder.toggleArm()
