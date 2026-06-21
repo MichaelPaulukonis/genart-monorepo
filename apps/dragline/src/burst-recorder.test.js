@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { createBurstRecorder } from './burst-recorder.js'
 
 function setup (overrides = {}) {
@@ -19,21 +19,23 @@ describe('burst-recorder state', () => {
     expect(recorder.isRecording()).toBe(false)
   })
 
-  it('arm() sets armed', () => {
+  it('toggleArm() flips armed and returns the new state', () => {
     const { recorder } = setup()
-    recorder.arm()
+    expect(recorder.toggleArm()).toBe(true)
     expect(recorder.isArmed()).toBe(true)
+    expect(recorder.toggleArm()).toBe(false)
+    expect(recorder.isArmed()).toBe(false)
   })
 
-  it('onBurstStart() records only when armed, and clears armed', () => {
+  it('onBurstStart() records only when armed, and keeps armed on', () => {
     const { recorder } = setup()
     recorder.onBurstStart()
     expect(recorder.isRecording()).toBe(false)
 
-    recorder.arm()
+    recorder.toggleArm()
     recorder.onBurstStart()
     expect(recorder.isRecording()).toBe(true)
-    expect(recorder.isArmed()).toBe(false)
+    expect(recorder.isArmed()).toBe(true)
   })
 
   it('captureFrame() is a no-op when not recording', async () => {
@@ -44,7 +46,7 @@ describe('burst-recorder state', () => {
 
   it('captureFrame() saves padded, sequenced filenames while recording', async () => {
     const { recorder, saved } = setup()
-    recorder.arm()
+    recorder.toggleArm()
     recorder.onBurstStart()
     await recorder.captureFrame()
     await recorder.captureFrame()
@@ -57,27 +59,58 @@ describe('burst-recorder state', () => {
 
   it('frameCount() reflects captured frames', async () => {
     const { recorder } = setup()
-    recorder.arm()
+    recorder.toggleArm()
     recorder.onBurstStart()
     expect(recorder.frameCount()).toBe(0)
     await recorder.captureFrame()
     expect(recorder.frameCount()).toBe(1)
   })
 
-  it('onBurstEnd() stops recording', async () => {
+  it('onBurstEnd() stops recording but leaves record mode armed', async () => {
     const { recorder } = setup()
-    recorder.arm()
+    recorder.toggleArm()
     recorder.onBurstStart()
     await recorder.onBurstEnd()
     expect(recorder.isRecording()).toBe(false)
+    expect(recorder.isArmed()).toBe(true)
+  })
+
+  it('records subsequent bursts without re-arming (record mode persists)', async () => {
+    const { recorder, saved } = setup()
+    recorder.toggleArm()
+
+    recorder.onBurstStart()
+    await recorder.captureFrame()
+    await recorder.onBurstEnd()
+
+    // No second toggleArm() — record mode is still on.
+    recorder.onBurstStart()
+    await recorder.captureFrame()
+    await recorder.onBurstEnd()
+
+    expect(saved).toEqual([
+      'dragline.burst-20260619120000.frame-0001.png',
+      'dragline.burst-20260619120000.frame-0001.png'
+    ])
+  })
+
+  it('stops recording new bursts once toggled off', async () => {
+    const { recorder, saved } = setup()
+    recorder.toggleArm()
+    recorder.toggleArm() // off
+
+    recorder.onBurstStart()
+    await recorder.captureFrame()
+    expect(saved).toEqual([])
   })
 
   it('a fresh burst restarts the frame counter', async () => {
     const { recorder, saved } = setup()
-    recorder.arm(); recorder.onBurstStart()
+    recorder.toggleArm()
+    recorder.onBurstStart()
     await recorder.captureFrame()
     await recorder.onBurstEnd()
-    recorder.arm(); recorder.onBurstStart()
+    recorder.onBurstStart()
     await recorder.captureFrame()
     expect(saved[saved.length - 1]).toBe('dragline.burst-20260619120000.frame-0001.png')
   })

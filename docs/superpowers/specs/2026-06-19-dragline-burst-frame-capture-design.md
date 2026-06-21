@@ -19,8 +19,10 @@ individual PNGs.
 
 - Capture each rendered frame of a burst, from impulse to settle, as a numbered
   PNG sequence.
-- **Arm-then-burst** trigger: a key arms record mode; the *next* burst records
-  all its frames, then disarms. Normal bursts stay unsaved.
+- **Toggle record mode** trigger: a key (`R`) toggles record mode on/off. While
+  on, *every* subsequent burst records all its frames; record mode persists
+  across bursts until toggled off with `R` again. Normal bursts (record mode off)
+  stay unsaved. (MVP: manual on/off only — no auto-disable on other keypresses.)
 - Frames render **clean** (white background, no gradient, no selection
   highlight) — identical look to the existing Shift+S `saveComposition` output.
 - Frames persist via the shared **local-save-server** (`localhost:7654`). When
@@ -104,12 +106,14 @@ State: `armed`, `recording`, `burstId`, `frameIndex`, `queue`, `inFlight`.
 
 API:
 
-- `arm()` — `armed = true`; kick `checkServer()`.
+- `toggleArm()` — flips `armed` (persistent record-mode flag); returns the new
+  state. Caller kicks `checkServer()` when turning on.
 - `isArmed()`, `isRecording()`, `frameCount()` — getters for the indicator.
 - `onBurstStart()` — only if `armed`: set `recording = true`, `burstId =
-  datestring()`, `frameIndex = 0`, clear `armed`. Guard: caller invokes this only
-  when `motionSystem.isActive()` is true right after impulse, so a zero-block
-  impulse never leaves recording stuck on.
+  datestring()`, `frameIndex = 0`. Does **not** clear `armed` — record mode stays
+  on so subsequent bursts keep recording until toggled off. Guard: caller invokes
+  this only when `motionSystem.isActive()` is true right after impulse, so a
+  zero-block impulse never leaves recording stuck on.
 - `captureFrame()` — no-op unless recording. `renderCleanFrame()` → dataURL;
   build filename; enqueue; `drain()`. Increments `frameIndex`.
 - `onBurstEnd()` — `recording = false`; final `drain()`.
@@ -125,8 +129,8 @@ API:
 - **Setup** — build recorder after `motionSystem`:
   `burstRecorder = createBurstRecorder({ p, renderCleanFrame: renderCleanFrameDataURL, datestring })`.
 - **`p.keyPressed`** (in the `!dragging` motion branch, not in selection mode):
-  - `R` / Shift+R → `burstRecorder.arm()`; `updateRecIndicator()`. (`r`
-    lowercase already = reset; `R` is free — confirmed.)
+  - `R` / Shift+R → `burstRecorder.toggleArm()`; if now on, `checkServer()`;
+    `updateRecIndicator()`. (`r` lowercase already = reset; `R` is free.)
   - existing `m` → `motionSystem.impulse()`; if `motionSystem.isActive()` then
     `burstRecorder.onBurstStart()`; `updateRecIndicator()`.
 - **`p.draw`** burst branch:
@@ -174,8 +178,8 @@ p.draw (each frame, while active):
   flips availability false, and downloads that frame in the browser; subsequent
   frames go straight to download. Mirrors ATW's `saveWithFallback`.
 - **Zero-block impulse:** `onBurstStart` guarded by `motionSystem.isActive()`, so
-  recording never latches on with no frames; `armed` is preserved for a real
-  burst (or re-disarmed — see plan).
+  recording never latches on with no frames; `armed` (record mode) stays on for
+  the next real burst.
 - **Strategy cycled mid-record:** out of scope; record window is one burst.
 
 ## Testing Strategy

@@ -31,11 +31,14 @@
           <strong>SHIFT + S:</strong> Save a black-and-white copy of the entire
           canvas as <code>dragline.YYYYMMDD.hhmmss.png</code>.
         </li>
+        <li><strong>m:</strong> Throw all blocks into motion (auto-movement burst).</li>
+        <li><strong>SHIFT + M:</strong> Cycle the auto-movement strategy.</li>
         <li>
-          <strong>R then m:</strong> Arm burst recording, then throw the blocks.
-          Every frame of the movement saves as
+          <strong>R:</strong> Toggle burst-recording mode on/off. While on, every
+          <strong>m</strong> burst saves each frame of the movement as
           <code>dragline.burst-&lt;id&gt;.frame-NNNN.png</code> via the local
           save server (falls back to browser downloads if the server is off).
+          Stays on across bursts until you press <strong>R</strong> again.
         </li>
         <li><strong>SPACE:</strong> Cycle through fill characters.</li>
         <li><strong>DELETE / BACKSPACE:</strong> Remove the selected block (if more than one remains).</li>

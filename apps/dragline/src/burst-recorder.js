@@ -3,7 +3,7 @@
 // DOM-agnostic and dependency-injected for testability. dragline.js supplies
 // renderCleanFrame (returns a PNG dataURL), datestring (burst id), and save
 // (persists one frame). The p5 draw loop drives onBurstStart / captureFrame /
-// onBurstEnd; key handling drives arm.
+// onBurstEnd; key handling drives toggleArm.
 
 const MAX_IN_FLIGHT = 4
 
@@ -33,7 +33,9 @@ export function createBurstRecorder ({ renderCleanFrame, datestring, save }) {
   }
 
   return {
-    arm () { armed = true },
+    // Toggle persistent record mode. While on, every burst records until
+    // toggled off again. Returns the new state.
+    toggleArm () { armed = !armed; return armed },
     isArmed: () => armed,
     isRecording: () => recording,
     frameCount: () => frameIndex,
@@ -41,7 +43,6 @@ export function createBurstRecorder ({ renderCleanFrame, datestring, save }) {
     onBurstStart () {
       if (!armed) return
       recording = true
-      armed = false
       burstId = datestring()
       frameIndex = 0
     },

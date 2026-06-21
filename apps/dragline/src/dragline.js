@@ -417,11 +417,11 @@ new p5(p => {
       return
     }
 
-    // 'R' arms recording for the next burst.
+    // 'R' toggles persistent burst-recording mode on/off.
     if (!dragging && p.key === 'R') {
-      burstRecorder.arm()
-      checkServer()
-      console.log('Burst recording armed')
+      const on = burstRecorder.toggleArm()
+      if (on) checkServer()
+      console.log(on ? 'Burst recording ON' : 'Burst recording OFF')
       updateRecIndicator()
       return
     }
