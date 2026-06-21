@@ -46,6 +46,10 @@ export function createBurstRecorder ({ renderCleanFrame, datestring, save }) {
       // would overwrite already-saved frames on a same-second burst id).
       if (!armed || recording) return
       recording = true
+      // burstId is second-resolution. Two separate bursts within the same
+      // wall-clock second would collide and the later one would overwrite the
+      // earlier frames. Left unhandled: a single burst runs ~0.5-1.5s, so two
+      // complete bursts in under a second isn't reachable by hand.
       burstId = datestring()
       frameIndex = 0
     },
