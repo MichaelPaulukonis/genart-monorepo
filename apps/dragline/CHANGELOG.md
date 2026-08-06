@@ -2,6 +2,16 @@
 
 All notable changes to dragline are documented here.
 
+## Unreleased
+
+### 🐛 Fixes
+
+- **dragline:** fix info-box jumping on first click-and-drag (baseline offset assumed `translate(0,0)` instead of reading the CSS-centered starting position)
+
+### 🎨 UI
+
+- **dragline:** widen and shorten the help/info box, and trim the verbose `R` burst-recording entry (naming scheme and frame-count details moved to README)
+
 ## 0.2.0 (2026-06-19)
 
 ### 🚀 Features

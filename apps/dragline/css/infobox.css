@@ -3,10 +3,13 @@
   position: absolute;
   cursor: move;
   user-select: none;
-  top: 20%;
+  top: 10%;
   left: 50%;
-  transform: translate(-50%, -20%);
-  width: 500px;
+  transform: translate(-50%, -10%);
+  width: 700px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
   padding: 20px;
   background-color: white;
   opacity: 80%;
