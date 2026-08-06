@@ -67,10 +67,20 @@ Visit <http://localhost:5177> and start rearranging blocks.
 | Cycle fill characters             | Space                                         |
 | Reset layout                      | `r`                                           |
 | Fetch fresh Tumblr corpus         | `n`                                           |
+| Throw all blocks into motion      | `m` (Shift + `M` cycles strategy)             |
+| Toggle burst-recording mode       | `R`                                           |
 | Toggle info box                   | `i` or Escape                                 |
 | Enter selection mode              | Option/Alt + Shift + `S`                      |
 | Save crop while in selection mode | Shift + `S` or Enter                          |
 | Save full monochrome canvas       | Shift + `S` (when selection mode is inactive) |
+
+### Burst-Frame Recording
+
+Press `R` to arm burst-recording. While armed, every `m` burst saves each frame to disk via the local save server (falls back to browser downloads if the server is off), named `dragline.burst-<id>.frame-NNNN.png`.
+
+- `<id>` is assigned once, when you press `R` on — every `m` burst until you press `R` off shares that id.
+- `frame-NNNN` counts continuously across all bursts in that same `R` on/off session, so the run stitches together as one sequence (e.g. for video).
+- Press `R` again to disarm; the next `R` on starts a new id and resets the frame count.
 
 ### Advanced Play
 

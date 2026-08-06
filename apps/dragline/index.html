@@ -8,6 +8,7 @@
   </head>
 
   <body>
+    <div id="rec-indicator" class="rec-hidden" aria-live="polite"></div>
     <script type="module" src="/src/dragline.js"></script>
     <div id="info-box" class="info-box hidden">
       <h1>D R A G L I N E</h1>
@@ -30,6 +31,9 @@
           <strong>SHIFT + S:</strong> Save a black-and-white copy of the entire
           canvas as <code>dragline.YYYYMMDD.hhmmss.png</code>.
         </li>
+        <li><strong>m:</strong> Throw all blocks into motion (auto-movement burst).</li>
+        <li><strong>SHIFT + M:</strong> Cycle the auto-movement strategy.</li>
+        <li><strong>R:</strong> Toggle burst-recording: saves every frame of each <strong>m</strong> burst until toggled off. See README for file naming.</li>
         <li><strong>SPACE:</strong> Cycle through fill characters.</li>
         <li><strong>DELETE / BACKSPACE:</strong> Remove the selected block (if more than one remains).</li>
         <li><strong>RIGHT Arrow (no block selected):</strong> Add a new block.</li>

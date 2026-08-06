@@ -1,0 +1,15 @@
+{
+  "name": "@genart/p5-utils",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/p5-utils/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest --run",
+        "cwd": "libs/p5-utils"
+      }
+    }
+  }
+}

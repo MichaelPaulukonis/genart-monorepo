@@ -119,6 +119,13 @@ export function validateImageFile(file) {
 
 export { showErrorMessage } from './feedback.js'
 
+export {
+  checkServer,
+  isServerAvailable,
+  saveWithFallback,
+  saveDataURLWithFallback
+} from './save-local.js'
+
 /**
  * Create an off-screen high-resolution p5.Graphics buffer with a scaled display helper.
  *

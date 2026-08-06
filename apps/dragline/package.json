@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {},
   "dependencies": {
+    "@genart/p5-utils": "workspace:*",
     "p5": "^1.11.1",
     "p5js-wrapper": "^1.2.3",
     "axios": "^1.7.7"
