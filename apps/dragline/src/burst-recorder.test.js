@@ -94,6 +94,21 @@ describe('burst-recorder state', () => {
     ])
   })
 
+  it('disarming mid-burst stops recording immediately', async () => {
+    const { recorder, saved } = setup()
+    recorder.toggleArm()
+    recorder.onBurstStart()
+    await recorder.captureFrame() // 0001
+
+    recorder.toggleArm() // disarm mid-burst
+
+    expect(recorder.isRecording()).toBe(false)
+    await recorder.captureFrame() // must be a no-op now
+    expect(saved).toEqual([
+      'dragline.burst-20260619120000.frame-0001.png'
+    ])
+  })
+
   it('stops recording new bursts once toggled off', async () => {
     const { recorder, saved } = setup()
     recorder.toggleArm()

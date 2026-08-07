@@ -7,6 +7,7 @@ All notable changes to dragline are documented here.
 ### 🐛 Fixes
 
 - **dragline:** fix info-box jumping on first click-and-drag (baseline offset assumed `translate(0,0)` instead of reading the CSS-centered starting position)
+- **dragline:** fix `R` (burst-recording) not stopping capture immediately when disarmed mid-burst (recording flag was left on until the burst naturally settled)
 
 ### 🎨 UI
 

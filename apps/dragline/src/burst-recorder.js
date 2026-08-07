@@ -49,6 +49,10 @@ export function createBurstRecorder ({ renderCleanFrame, datestring, save }) {
         // then on inside one second.
         sessionId = datestring()
         frameIndex = 0
+      } else {
+        // Disarming must stop an in-progress capture immediately rather than
+        // waiting for onBurstEnd, which only fires once motion settles.
+        recording = false
       }
       return armed
     },
